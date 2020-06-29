@@ -1,0 +1,18 @@
+Bob:
+{
+    Table1<ALTER INDEX SELECT>
+    Table2<INSERT UPDATE(col1 col2 col3)>
+    Table3<INSERT>
+}
+Jim:
+{
+    Table1<INSERT SELECT>
+    Table3<REFERENCES(col1, col2)>
+}
+Dan:
+{
+    Table2<DELETE>
+}
+Tom:
+{
+}

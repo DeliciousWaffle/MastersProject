@@ -1,0 +1,26 @@
+Table: Table1
+    Column: Col1 Number 4
+        FileStructure: SECONDARY_B_TREE CLUSTERED_B_TREE
+    Column: Col2 Char 5
+        FileStructure: HASH_TABLE
+    Column: Col3 Char 8
+        FileStructure: NONE
+    IsClustered: false
+Table: Table2
+    Column: Col1 Number 7
+        FileStructure: NONE
+    Column: Col2 Char 3
+        FileStructure: SECONDARY_B_TREE HASH_TABLE
+    IsClustered: false
+Table: Table3
+    Column: Col1 Char 4
+        FileStructure: NONE
+    Column: Col2 Char 6
+        FileStructure: NONE
+    IsClustered: true
+Table: Table4
+    Column: Col1 Char 5
+        FileStructure: NONE
+    Column: Col2 Number 9
+        FileStructure: NONE
+    IsClustered: true

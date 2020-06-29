@@ -1,0 +1,26 @@
+User: Bob
+    PrivilegesOnTable: Table1
+        Privilege: ALTER
+        Privilege: DELETE
+    PrivilegesOnTable: Table2
+        Privilege: UPDATE
+    PrivilegesOnTable: Table3
+        Privilege: REFERENCES
+            Columns: Col1 Col2 Col3
+        Privilege: SELECT
+        Privilege: INDEX
+User: John
+    PrivilegesOnTable: Table2
+        Privilege: INSERT
+User: Dan
+    PrivilegesOnTable: Table1
+        Privilege: UPDATE
+            Columns: Col2
+    PrivilegesOnTable: Table4
+        Privilege: UPDATE
+            Columns: Col1 Col2
+        Privilege: REFERENCES
+            Columns: Col1 Col4
+        Privilege: DELETE
+User: Sally
+    PrivilegesOnTable: NONE
