@@ -1,6 +1,6 @@
 package systemcatalog.components;
 
-import utilities.InputType;
+import utilities.enums.InputType;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.table.Table;
 import datastructures.user.User;

@@ -9,12 +9,48 @@ public class Table {
 
     private String name;
     private ArrayList<Column> columns;
+    private int numRows;
 
     public Table(String name, ArrayList<Column> columns) {
 
         this.name    = name;
         this.columns = columns;
     }
+
+    // static utility methods ------------------------------------------------------------------------------------------
+
+    /**
+     * Formats raw table file meta data into something usable.
+     * @param tablesFileData is data about the tables in the system
+     */
+    public static Table createTableFrom(String tablesFileData) {
+
+        // TODO
+
+        return null;
+    }
+
+    /**
+     * Returns the rows and columns of a given table.
+     * @param table contains information about the table
+     * @param tablesFileData basically all the rows of a given table
+     * @return rows and columns containing data of a table
+     */
+    public String[][] createTableDataFrom(Table table, String tablesFileData) {
+
+        String[][] tableData = new String[table.getNumCols()][table.getNumRows()];
+        String[] data = tablesFileData.split("\\s+");
+
+        for(int cols = 0; cols < tableData.length; cols++) {
+            for(int rows = 0; rows < tableData[cols].length; rows++) {
+                tableData[cols][rows] = data[cols + rows];
+            }
+        }
+
+        return tableData;
+    }
+
+    // instance methods ------------------------------------------------------------------------------------------------
 
     /**
      * @return the name of this table
@@ -24,6 +60,8 @@ public class Table {
     public ArrayList<Column> getColumns() { return columns; }
 
     public int getNumCols() { return columns.size(); }
+
+    public int getNumRows() { return numRows; }
 
     public Column getColumn(String columnName) {
 

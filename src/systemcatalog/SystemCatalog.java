@@ -5,7 +5,7 @@ import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.RuleGraphTypes;
 import systemcatalog.components.Parser;
 import datastructures.user.User;
-import utilities.InputType;
+import utilities.enums.InputType;
 import systemcatalog.components.Verifier;
 import datastructures.table.Table;
 import systemcatalog.components.SecurityChecker;

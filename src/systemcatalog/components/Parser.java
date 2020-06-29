@@ -1,11 +1,14 @@
 package systemcatalog.components;
 
-import utilities.InputType;
-import utilities.Keyword;
+import utilities.enums.InputType;
+import utilities.enums.Keyword;
 import datastructures.rulegraph.RuleGraph;
 
 /**
- * Responsible for checking the syntax of the input to ensure it abides.
+ * Responsible for checking the syntax of the input to ensure it is syntactically correct.
+ * Also handles miscellaneous functions that involve parsing input.
+ * Please refer to the diagrams in "datastructures.rulegraph.diagrams" for information about
+ * the syntax accepted.
  */
 public class Parser {
 
@@ -13,18 +16,16 @@ public class Parser {
 
     public Parser() {}
 
-    public static boolean isNumeric(String candidate) {
+    // static utility methods ------------------------------------------------------------------------------------------
 
-        try {
-            Double.parseDouble(candidate);
-        } catch(NumberFormatException e) {
-            return false;
-        }
+    /**
+     * Formats raw options file data into something usable.
+     * @param optionsFileData options that are saved when restarting the program
+     */
+    public static void formatOptionsFileData(String optionsFileData) {
 
-        return true;
+        // TODO
     }
-
-    public void setRuleGraph(RuleGraph ruleGraph) { this.ruleGraph = ruleGraph; }
 
     /**
      * Cleans raw input so that it can be used by other methods without hassle.
@@ -82,6 +83,32 @@ public class Parser {
         return formatted.toString().split("\\s+");
     }
 
+    /**
+     * @param candidate the string to test
+     * @return whether the given candidate is numeric
+     */
+    public static boolean isNumeric(String candidate) {
+
+        try {
+            Double.parseDouble(candidate);
+        } catch(NumberFormatException e) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // instance methods ------------------------------------------------------------------------------------------------
+
+    public void setRuleGraph(RuleGraph ruleGraph) {
+        this.ruleGraph = ruleGraph;
+    }
+
+    /**
+     * Given a tokenized command, returns the type that it is or UNKNOWN.
+     * @param command tokenized command
+     * @return the input type
+     */
     public InputType determineInputType(String[] command) {
 
         String firstToken = command[0];
@@ -127,6 +154,13 @@ public class Parser {
         }
     }
 
+    /**
+     * This returns whether the input is syntactically correct depending on the rule graph set
+     * and the input type.
+     * @param inputType the type of input
+     * @param input - input from the user
+     * @return whether the input is syntactically correct
+     */
     public boolean isValid(InputType inputType, String[] input) {
         switch(inputType) {
             case QUERY:

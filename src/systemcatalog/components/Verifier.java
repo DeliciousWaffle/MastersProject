@@ -4,7 +4,7 @@ import datastructures.rulegraph.RuleGraph;
 import datastructures.table.Table;
 import datastructures.table.component.Column;
 import datastructures.user.User;
-import utilities.InputType;
+import utilities.enums.InputType;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,6 +1,6 @@
 package datastructures.user;
 
-import utilities.Privilege;
+import utilities.enums.Privilege;
 
 import java.util.ArrayList;
 
@@ -10,6 +10,8 @@ public class TablePrivileges {
     private ArrayList<Privilege> privileges;
     private boolean hasAllPrivileges;
     private ArrayList<String> updateColumns, referenceColumns;
+
+    public TablePrivileges() {}
 
     public TablePrivileges(String tableName, ArrayList<Privilege> privileges) {
 

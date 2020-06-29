@@ -1,7 +1,7 @@
 package datastructures.rulegraph;
 
-import utilities.Keyword;
-import utilities.Symbol;
+import utilities.enums.Keyword;
+import utilities.enums.Symbol;
 import utilities.Utilities;
 
 import java.util.ArrayList;

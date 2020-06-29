@@ -3,10 +3,9 @@ package systemcatalog.components;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.table.Table;
 import datastructures.table.component.Column;
-import datastructures.user.TablePrivileges;
 import datastructures.user.User;
-import utilities.InputType;
-import utilities.Privilege;
+import utilities.enums.InputType;
+import utilities.enums.Privilege;
 
 import java.util.ArrayList;
 import java.util.HashMap;

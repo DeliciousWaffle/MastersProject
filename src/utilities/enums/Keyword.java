@@ -1,4 +1,4 @@
-package utilities;
+package utilities.enums;
 
 public enum Keyword {
     SELECT, MIN, MAX, AVG, COUNT, SUM, FROM, JOIN, USING, WHERE, AND, OR,

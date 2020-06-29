@@ -1,4 +1,4 @@
-package utilities;
+package utilities.enums;
 
 public enum InputType {
 

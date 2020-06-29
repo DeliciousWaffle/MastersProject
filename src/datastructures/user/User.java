@@ -1,36 +1,111 @@
 package datastructures.user;
 
-import utilities.Privilege;
+import utilities.enums.Privilege;
 
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class User {
 
-    private String userName;
-    private boolean allPrivileges;
+    private String username;
+    private boolean hasAllPrivileges;
     private ArrayList<TablePrivileges> tablePrivileges;
-    private ArrayList<TablePrivileges> grantedTablePrivileges;
+    private ArrayList<TablePrivileges> passableTablePrivileges;
 
-    public User() {
-        userName = "Database Administrator";
-        allPrivileges = true;
-    }
+    public User() {}
 
-    public User(String userName, ArrayList<TablePrivileges> tablePrivileges) {
+    public User(String username, boolean hasAllPrivileges, ArrayList<TablePrivileges> tablePrivileges,
+                ArrayList<TablePrivileges> passableTablePrivileges) {
 
-        this.userName = userName;
-        allPrivileges = false;
+        this.username = username;
+        this.hasAllPrivileges = hasAllPrivileges;
         this.tablePrivileges = tablePrivileges;
-        grantedTablePrivileges = new ArrayList<>();
+        this.passableTablePrivileges = passableTablePrivileges;
     }
 
-    public void setUserName(String userName) { this.userName = userName; }
+    /**
+     * Special user of the system that can basically do whatever he wants.
+     * @return the DBA
+     */
+    public static User DatabaseAdministrator() {
+        return new User("DatabaseAdministrator", true, new ArrayList<>(), new ArrayList<>());
+    }
 
-    public String getUserName() { return userName; }
+    /**
+     * Formats raw user file data into something usable.
+     * @param usersFileData is data about the users in the system
+     */
+    public static ArrayList<User> createUserData(String usersFileData) {
 
-    public void setAllPrivileges(boolean allPrivileges) { this.allPrivileges = allPrivileges; }
+        ArrayList<User> users = new ArrayList<>();
 
-    public boolean hasAllPrivileges() { return allPrivileges; }
+        String username = "";
+
+        ArrayList<TablePrivileges> tablePrivilegesList = new ArrayList<>();
+        ArrayList<TablePrivileges> passableTablePrivilegesList = new ArrayList<>();
+        TablePrivileges tablePrivileges = new TablePrivileges();
+        String tableName = "";
+        ArrayList<Privilege> privileges = new ArrayList<>();
+        Privilege privilege;
+
+        ArrayList<String> updateColumns = new ArrayList<>();
+        ArrayList<String> referenceColumns = new ArrayList<>();
+
+        Scanner scanner = new Scanner(usersFileData);
+
+        while(scanner.hasNext()) {
+
+            String currentLine = scanner.nextLine();
+            currentLine = currentLine.trim();
+
+            if(currentLine.equals("USER DONE")) {
+                users.add(new User(username, false, tablePrivilegesList, passableTablePrivilegesList));
+                continue;
+            }
+
+            String[] tokens = currentLine.split(": ");
+            String type = tokens[0];
+            String data = tokens[1];
+
+            switch(type) {
+                case "User":
+                    username = data;
+                    break;
+                case "TablePrivileges":
+                    continue;
+                case "Table":
+                    tableName = data;
+                    break;
+                case "Privilege":
+                    privilege = Privilege.convertToPrivilege(data);
+                    break;
+                case "References Columns":
+                    referenceColumns = new ArrayList<>(); // TODO
+                    break;
+                case "Update Columns":
+                    updateColumns = new ArrayList<>();
+                    break;
+                case "PassableTablePrivileges":
+                    passableTablePrivilegesList = new ArrayList<>();
+                    break;
+                default:
+                    System.out.println("In User.createUserData()");
+                    System.out.println("Unknown Input");
+                    return new ArrayList<User>();
+            }
+
+        }
+
+        return users;
+    }
+
+    public void setUserName(String username) { this.username = username; }
+
+    public String getUsername() { return username; }
+
+    public void setHasAllPrivileges(boolean hasAllPrivileges) { this.hasAllPrivileges = hasAllPrivileges; }
+
+    public boolean hasAllPrivileges() { return hasAllPrivileges; }
 
     public void setTablePrivileges(ArrayList<TablePrivileges> tablePrivileges) {
         this.tablePrivileges = tablePrivileges;
@@ -49,10 +124,10 @@ public class User {
         return null;
     }
 
-    public ArrayList<TablePrivileges> getGrantedTablePrivileges() { return grantedTablePrivileges; }
+    public ArrayList<TablePrivileges> getPassableTablePrivileges() { return passableTablePrivileges; }
 
-    public void setGrantedTablePrivileges(ArrayList<TablePrivileges> grantedTablePrivileges) {
-        this.grantedTablePrivileges = grantedTablePrivileges;
+    public void setPassableTablePrivileges(ArrayList<TablePrivileges> passableTablePrivileges) {
+        this.passableTablePrivileges = passableTablePrivileges;
     }
 
     public boolean hasTablePrivilege(String candidateTable, Privilege candidatePrivilege) {
@@ -107,7 +182,7 @@ public class User {
 
     public boolean hasGrantedTablePrivilege(String candidateTable, Privilege candidatePrivilege) {
 
-        for(TablePrivileges tablePrivilege : grantedTablePrivileges) {
+        for(TablePrivileges tablePrivilege : passableTablePrivileges) {
             if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
                 if(tablePrivilege.hasPrivilege(candidatePrivilege)) {
                     return true;
@@ -123,7 +198,7 @@ public class User {
 
         TablePrivileges referencedTablePrivileges = null;
 
-        for(TablePrivileges tablePrivilege : grantedTablePrivileges) {
+        for(TablePrivileges tablePrivilege : passableTablePrivileges) {
             if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
                 referencedTablePrivileges = tablePrivilege;
             }
@@ -159,7 +234,7 @@ public class User {
 
         StringBuilder userData = new StringBuilder();
 
-        userData.append("Username: ").append(userName).append("\n");
+        userData.append("Username: ").append(username).append("\n");
 
         for(TablePrivileges tablePrivilege : tablePrivileges) {
 

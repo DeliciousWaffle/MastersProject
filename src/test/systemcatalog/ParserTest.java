@@ -1,11 +1,11 @@
-package test;
+package test.systemcatalog;
 
 import datastructures.rulegraph.RuleGraphTypes;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Parser;
-import utilities.InputType;
+import utilities.enums.InputType;
 
 import java.util.Arrays;
 

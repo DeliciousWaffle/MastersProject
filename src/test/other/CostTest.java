@@ -1,4 +1,4 @@
-package test;
+package test.other;
 
 import org.junit.jupiter.api.Test;
 import utilities.Cost;
