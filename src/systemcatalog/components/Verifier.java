@@ -456,7 +456,7 @@ public class Verifier {
             boolean foundUser = false;
 
             for(User user : users) {
-                String username = user.getUserName();
+                String username = user.getUsername();
                 if(username.equals(candidate)) {
                     foundUser = true;
                 }

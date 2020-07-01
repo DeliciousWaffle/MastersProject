@@ -11,7 +11,14 @@ public class TablePrivileges {
     private boolean hasAllPrivileges;
     private ArrayList<String> updateColumns, referenceColumns;
 
-    public TablePrivileges() {}
+    public TablePrivileges() {
+
+        this.tableName   = "";
+        this.privileges  = new ArrayList<>();
+        hasAllPrivileges = false;
+        updateColumns    = new ArrayList<>();
+        referenceColumns = new ArrayList<>();
+    }
 
     public TablePrivileges(String tableName, ArrayList<Privilege> privileges) {
 
@@ -34,13 +41,6 @@ public class TablePrivileges {
             return;
         }
 
-        // don't be dumb
-        if(privilege == Privilege.UPDATE || privilege == Privilege.REFERENCES) {
-            System.out.println("In TablePrivileges.grantPrivilege()");
-            System.out.println("Used wrong method!");
-            return;
-        }
-
         // don't add duplicate privileges to the list of privileges
         for(int i = 0; i < privileges.size(); i++) {
             Privilege current = privileges.get(i);
@@ -52,6 +52,7 @@ public class TablePrivileges {
         privileges.add(privilege);
     }
 
+    // TODO remove
     /**
      * Adds either an UPDATE or REFERENCES privilege to the list of privileges.
      * @param privilege
@@ -171,6 +172,10 @@ public class TablePrivileges {
         }
     }
 
+    public void addUpdateColumn(String updateColumn) {
+        updateColumns.add(updateColumn);
+    }
+
     public ArrayList<String> getUpdateColumns() { return updateColumns;}
 
     public void setReferenceColumns(ArrayList<String> referenceColumns) {
@@ -181,6 +186,10 @@ public class TablePrivileges {
             System.out.println("In TablePrivileges.setReferenceColumns()");
             System.out.println("No REFERENCE privilege found");
         }
+    }
+
+    public void addReferenceColumn(String referenceColumn) {
+        referenceColumns.add(referenceColumn);
     }
 
     public ArrayList<String> getReferenceColumns() { return referenceColumns; }

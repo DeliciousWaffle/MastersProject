@@ -1,53 +1,69 @@
 User: Bob
-    TablePrivileges:
-        Table: Table1
+    TablePrivilegesList: NOT EMPTY
+        TablePrivileges: Table1
             Privilege: ALTER
             Privilege: DELETE
-        TABLE COMPLETE
-        Table: Table2
+        TABLE PRIVILEGES DONE
+        TablePrivileges: Table2
             Privilege: UPDATE
-        TABLE COMPLETE
-        Table: Table3
+                UpdateColumns: Col1 Col4
+        TABLE PRIVILEGES DONE
+        TablePrivileges: Table3
             Privilege: REFERENCES
-                Columns: Col1 Col2 Col3
+                ReferencesColumns: Col1 Col2 Col3
+            REFERENCES PRIVILEGE DONE
             Privilege: SELECT
             Privilege: INDEX
-        TABLE COMPLETE
-    TABLE PRIVILEGES COMPLETE
-    PassableTablePrivileges:
-            Table: Table1
-                Privilege: DELETE
-    PASSABLE TABLE PRIVILEGES COMPLETE
-USER COMPLETE
-User: John
-    TablePrivileges:
-        Table: Table2
-            Privilege: INSERT
-    TABLE PRIVILEGES COMPLETE
-    PassableTablePrivileges:
-USER COMPLETE
-User: Dan
-    TablePrivileges: YES
-        Table: Table1
-            Privilege: UPDATE
-                Columns: Col2
-        Table: Table4
-            Privilege: UPDATE
-                Columns: Col1 Col2
-            Privilege: REFERENCES
-                Columns: Col1 Col4
+        TABLE PRIVILEGES DONE
+    TABLE PRIVILEGES LIST DONE
+    PassableTablePrivilegesList: NOT EMPTY
+        TablePrivileges: Table1
             Privilege: DELETE
-    TABLE PRIVILEGES COMPLETE
-    PassableTablePrivileges: YES
-        Table: Table1
+        TABLE PRIVILEGES DONE
+    PASSABLE TABLE PRIVILEGES LIST DONE
+USER DONE
+User: John
+    TablePrivilegesList: NOT EMPTY
+        TablePrivileges: Table2
+            Privilege: INSERT
+        TABLE PRIVILEGES DONE
+    TABLE PRIVILEGES LIST DONE
+    PassableTablePrivilegesList: EMPTY
+    PASSABLE TABLE PRIVILEGES LIST DONE
+USER DONE
+User: Dan
+    TablePrivilegesList: NOT EMPTY
+        TablePrivileges: Table1
             Privilege: UPDATE
-                Columns: Col2
-        Table: Table4
+                UpdateColumns: Col2
+            UPDATE PRIVILEGE DONE
+        TABLE PRIVILEGES DONE
+        TablePrivileges: Table4
             Privilege: UPDATE
-                Columns: Col1 Col4
-    PASSABLE TABLE PRIVILEGES COMPLETE
-USER COMPLETE
+                UpdateColumns: Col1 Col2
+            UPDATE PRIVILEGE DONE
+            Privilege: REFERENCES
+                ReferencesColumns: Col1 Col4
+            REFERENCES PRIVILEGE DONE
+            Privilege: DELETE
+        TABLE PRIVILEGES DONE
+    TABLE PRIVILEGES LIST DONE
+    PassableTablePrivilegesList: NOT EMPTY
+        TablePrivileges: Table1
+            Privilege: UPDATE
+                UpdateColumns: Col2
+            UPDATE PRIVILEGE DONE
+        TABLE PRIVILEGES DONE
+        TablePrivileges: Table4
+            Privilege: UPDATE
+                UpdateColumns: Col1 Col4
+            UPDATE PRIVILEGE DONE
+        TABLE PRIVILEGES DONE
+    PASSABLE TABLE PRIVILEGES LIST DONE
+USER DONE
 User: Sally
-    TablePrivileges:
-    PassableTablePrivileges:
-USER COMPLETE
+    TablePrivilegesList: EMPTY
+    TABLE PRIVILEGES LIST DONE
+    PassableTablePrivilegesList: EMPTY
+    PASSABLE TABLE PRIVILEGES LIST DONE
+USER DONE

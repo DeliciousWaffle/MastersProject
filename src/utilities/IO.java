@@ -10,6 +10,7 @@ import java.util.Scanner;
 
 /**
  * Handles IO operations.
+ * TODO change back to real files not test ones
  */
 public class IO {
 
@@ -28,7 +29,7 @@ public class IO {
             Scanner scanner = new Scanner(userFile);
 
             while(scanner.hasNext()) {
-                data.append(scanner.next());
+                data.append(scanner.nextLine()).append("\n");
             }
 
         } catch (FileNotFoundException e) {
@@ -80,7 +81,7 @@ public class IO {
                 localPath = "\\tables\\Tables.txt";
                 break;
             case USERS:
-                localPath = "\\users\\Users.txt";
+                localPath = "\\users\\TestUsers.txt"; // TODO change back to Users.txt
                 break;
         }
 
