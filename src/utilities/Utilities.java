@@ -5,7 +5,6 @@ import datastructures.user.User;
 import utilities.enums.Privilege;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * For now, basically where I stick methods that don't necessarily belong to any other class.
@@ -13,10 +12,12 @@ import java.util.Arrays;
 public class Utilities {
 
     /**
-     * Formats raw user file data into something usable.
+     * Formats raw user file data into something usable. Basically takes the contents of
+     * the user file, parsers it, and returns a list of Users.
      * @param usersFileData is data about the users in the system
+     * @return list of users within the system
      */
-    public static ArrayList<User> createUserData(String usersFileData) {
+    public static ArrayList<User> unSerializeUserData(String usersFileData) {
 
         String[] lines = usersFileData.split("\n");
 
@@ -30,8 +31,9 @@ public class Utilities {
         // "has a" relationship working downward
         // data associated with a single user
         User user = new User();
+
+        // acts as a passable table privileges list too
         ArrayList<TablePrivileges> tablePrivilegesList = new ArrayList<>();
-        ArrayList<TablePrivileges> passableTablePrivilegesList = new ArrayList<>();
 
         // data associated with a single tablePrivilegesList or passableTablePrivilegesList
         TablePrivileges tablePrivileges = new TablePrivileges();
@@ -55,8 +57,8 @@ public class Utilities {
                     tablePrivilegesList = new ArrayList<>();
                     break;
                 case "PASSABLE TABLE PRIVILEGES LIST DONE":
-                    user.setPassableTablePrivilegesList(passableTablePrivilegesList);
-                    passableTablePrivilegesList = new ArrayList<>();
+                    user.setPassableTablePrivilegesList(tablePrivilegesList);
+                    tablePrivilegesList = new ArrayList<>();
                     break;
                 case "TABLE PRIVILEGES DONE":
                     tablePrivilegesList.add(tablePrivileges);
@@ -72,9 +74,7 @@ public class Utilities {
                     break;
                 // lines that don't contain "DONE" have some form of data to add
                 default: {
-                    // TODO don't know if split into 2 if "something:"
-                    System.out.println(currentLine);
-                    String[] tokens = currentLine.split(": ");System.out.println(Arrays.toString(tokens));
+                    String[] tokens = currentLine.split(": ");
                     String type = tokens[0];
                     String data = tokens[1];
 
@@ -94,13 +94,13 @@ public class Utilities {
                         case "UpdateColumns":
                             String[] updateColumnsTokens = data.split("\\s+");
                             for(String updateColumn : updateColumnsTokens) {
-                                tablePrivileges.addUpdateColumn((updateColumn));
+                                updateColumns.add(updateColumn);
                             }
                             break;
                         case "ReferencesColumns":
                             String[] referenceColumnsTokens = data.split("\\s+");
                             for(String referenceColumn : referenceColumnsTokens) {
-                                tablePrivileges.addReferenceColumn(referenceColumn);
+                                referenceColumns.add(referenceColumn);
                             }
                             break;
                         default: {
@@ -116,5 +116,15 @@ public class Utilities {
         }
 
         return users;
+    }
+
+    /**
+     * Takes all the users within the system and converts all of their data into
+     * a string which will eventually be written out to disk. Stores every users'
+     * state so that it can be restored when the application is re-launched.
+     * @param users
+     */
+    public static void serializeUserData(ArrayList<User> users) {
+
     }
 }

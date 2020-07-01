@@ -87,6 +87,7 @@ class UtilitiesTest {
 
         tablePrivileges.setTableName("Table2");
         tablePrivileges.grantPrivilege(Privilege.INSERT);
+        tablePrivilegesList.add(tablePrivileges);
 
         john.setTablePrivilegesList(tablePrivilegesList);
         john.setPassableTablePrivilegesList(new ArrayList<>());
@@ -150,10 +151,18 @@ class UtilitiesTest {
         expected.add(john);
         expected.add(dan);
         expected.add(sally);
-
+//TODO
+        //for(User user : expected) {
+        //    System.out.println(user);
+        //}
         String userData = IO.readData(FileName.USERS);
-        ArrayList<User> actual = Utilities.createUserData(userData);
+        ArrayList<User> actual = Utilities.unSerializeUserData(userData);
 
+        System.out.println("\n\n");
+        // TODO
+        for(User user : actual) {
+            System.out.println(user);
+        }
         assertEquals(expected.size(), actual.size());
         System.out.println("Expected Users size: " + expected.size() + "\nActual Users Size: " + actual.size());
 
@@ -173,8 +182,8 @@ class UtilitiesTest {
 
             for(int j = 0; j < expectedTablePrivilegesList.size(); j++) {
 
-                String expectedTableName = expectedTablePrivilegesList.get(i).getTableName();
-                String actualTableName = actualTablePrivilegesList.get(i).getTableName();
+                String expectedTableName = expectedTablePrivilegesList.get(j).getTableName();
+                String actualTableName = actualTablePrivilegesList.get(j).getTableName();
                 assertEquals(expectedTableName, actualTableName);
                 System.out.println("Expected Table Name: " + expectedTableName + "\nActual Table Name: " + actualTableName);
 
@@ -235,8 +244,8 @@ class UtilitiesTest {
 
             for(int j = 0; j < expectedPassableTablePrivilegesList.size(); j++) {
 
-                String expectedTableName = expectedPassableTablePrivilegesList.get(i).getTableName();
-                String actualTableName = actualPassableTablePrivilegesList.get(i).getTableName();
+                String expectedTableName = expectedPassableTablePrivilegesList.get(j).getTableName();
+                String actualTableName = actualPassableTablePrivilegesList.get(j).getTableName();
                 System.out.println("Expected Passable Table Name: " + expectedTableName +
                         "\nActual Passable Table Name: " + actualTableName);
                 assertEquals(expectedTableName, actualTableName);
@@ -287,5 +296,7 @@ class UtilitiesTest {
                 }
             }
         }
+
+        System.out.println();
     }
 }

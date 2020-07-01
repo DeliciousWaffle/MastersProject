@@ -169,6 +169,57 @@ public class User {
         return true;
     }
 
+    /**
+     * @return a string representation of the data within this object
+     */
+    @Override
+    public String toString() {
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("Username: ").append(username).append("\n");
+        stringBuilder.append("Has All Privileges: ").append(hasAllPrivileges ? "Yes" : "No").append("\n");
+        stringBuilder.append("Privileges: ");
+
+        if(! tablePrivilegesList.isEmpty()) {
+
+            stringBuilder.append("\n");
+
+            for (TablePrivileges tablePrivilege : tablePrivilegesList) {
+                stringBuilder.append("\t").append("Privileges On Table: ").append(tablePrivilege.getTableName()).
+                        append("\n").append(tablePrivilege).append("\n");
+            }
+
+            // remove "\n"
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+
+        } else {
+
+            stringBuilder.append("None");
+        }
+
+        stringBuilder.append("\n").append("Passable Privileges: ");
+
+        if(! passableTablePrivilegesList.isEmpty()) {
+
+            stringBuilder.append("\n");
+
+            for (TablePrivileges tablePrivilege : passableTablePrivilegesList) {
+                stringBuilder.append("\t").append("Privileges On Table: ").append(tablePrivilege.getTableName()).
+                        append("\n").append(tablePrivilege).append("\n");
+            }
+
+            // remove "\n"
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+
+        } else {
+
+            stringBuilder.append("None");
+        }
+
+        return stringBuilder.toString();
+    }
+
     public void printUserData() {
 
         StringBuilder userData = new StringBuilder();

@@ -7,26 +7,26 @@ import java.util.ArrayList;
 public class TablePrivileges {
 
     private String tableName;
-    private ArrayList<Privilege> privileges;
     private boolean hasAllPrivileges;
+    private ArrayList<Privilege> privileges;
     private ArrayList<String> updateColumns, referenceColumns;
 
     public TablePrivileges() {
 
         this.tableName   = "";
+        this.hasAllPrivileges = false;
         this.privileges  = new ArrayList<>();
-        hasAllPrivileges = false;
-        updateColumns    = new ArrayList<>();
-        referenceColumns = new ArrayList<>();
+        this.updateColumns    = new ArrayList<>();
+        this.referenceColumns = new ArrayList<>();
     }
 
     public TablePrivileges(String tableName, ArrayList<Privilege> privileges) {
 
         this.tableName   = tableName;
         this.privileges  = privileges;
-        hasAllPrivileges = false;
-        updateColumns    = new ArrayList<>();
-        referenceColumns = new ArrayList<>();
+        this.hasAllPrivileges = false;
+        this.updateColumns    = new ArrayList<>();
+        this.referenceColumns = new ArrayList<>();
     }
 
     /**
@@ -203,5 +203,67 @@ public class TablePrivileges {
         }
 
         return false;
+    }
+
+    /**
+     * @return a string representation of the data within this object
+     */
+    @Override
+    public String toString() {
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("\t\t").append("Has All Privileges: ").append(hasAllPrivileges ? "Yes" : "No").append("\n");
+        stringBuilder.append("\t\t").append("Privileges: ");
+
+        if(! privileges.isEmpty()) {
+
+            for(Privilege privilege : privileges) {
+                stringBuilder.append(privilege).append(", ");
+            }
+
+            // remove ", "
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+
+        } else {
+
+            stringBuilder.append("None");
+        }
+
+        stringBuilder.append("\n").append("\t\t").append("Update Columns: ");
+
+        if(! updateColumns.isEmpty()) {
+
+            for(String updateColumn : updateColumns) {
+                stringBuilder.append(updateColumn).append(", ");
+            }
+
+            // remove ", "
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+
+        } else {
+
+            stringBuilder.append("None");
+        }
+
+        stringBuilder.append("\n").append("\t\t").append("Reference Columns: ");
+
+        if(! referenceColumns.isEmpty()) {
+
+            for(String referenceColumn : referenceColumns) {
+                stringBuilder.append(referenceColumn).append(", ");
+            }
+
+            // remove ", "
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+
+        } else {
+
+            stringBuilder.append("None");
+        }
+        return stringBuilder.toString();
     }
 }

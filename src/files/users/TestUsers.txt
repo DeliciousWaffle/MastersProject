@@ -7,6 +7,7 @@ User: Bob
         TablePrivileges: Table2
             Privilege: UPDATE
                 UpdateColumns: Col1 Col4
+            UPDATE PRIVILEGE DONE
         TABLE PRIVILEGES DONE
         TablePrivileges: Table3
             Privilege: REFERENCES
