@@ -1,5 +1,7 @@
 package utilities;
 
+import datastructures.table.ResultSet;
+import datastructures.table.Table;
 import datastructures.user.TablePrivileges;
 import datastructures.user.User;
 import utilities.enums.Privilege;
@@ -122,9 +124,186 @@ public class Utilities {
      * Takes all the users within the system and converts all of their data into
      * a string which will eventually be written out to disk. Stores every users'
      * state so that it can be restored when the application is re-launched.
-     * @param users
+     * @param users the users within the system
+     * @return string representation of all the users within the system to write out
      */
-    public static void serializeUserData(ArrayList<User> users) {
+    public static String serializeUserData(ArrayList<User> users) {
 
+        StringBuilder toSerialize = new StringBuilder();
+
+        for(User user : users) {
+
+            toSerialize.append("User: ").append(user.getUsername()).append("\n");
+
+            ArrayList<TablePrivileges> tablePrivilegesList = user.getTablePrivilegesList();
+            toSerialize.append("\t").append("TablePrivilegesList: ");
+
+            if(! tablePrivilegesList.isEmpty()) {
+
+                toSerialize.append("NOT EMPTY").append("\n");
+
+                for(TablePrivileges tablePrivileges : tablePrivilegesList) {
+
+                    toSerialize.append("\t\t").append("TablePrivileges: ").
+                            append(tablePrivileges.getTableName()).append("\n");
+
+                    ArrayList<Privilege> privileges = tablePrivileges.getPrivileges();
+
+                    for(Privilege privilege : privileges) {
+
+                        toSerialize.append("\t\t\t").append("Privilege: ").append(privilege).append("\n");
+
+                        if(privilege == Privilege.UPDATE) {
+
+                            ArrayList<String> updateColumns = tablePrivileges.getUpdateColumns();
+                            toSerialize.append("\t\t\t\t").append("UpdateColumns: ");
+
+                            for(String updateColumn : updateColumns) {
+                                toSerialize.append(updateColumn).append(" ");
+                            }
+
+                            // remove " "
+                            toSerialize.deleteCharAt(toSerialize.length() - 1);
+
+                            toSerialize.append("\n");
+                            toSerialize.append("\t\t\t").append("UPDATE PRIVILEGE DONE").append("\n");
+                        }
+
+                        if(privilege == Privilege.REFERENCES) {
+
+                            ArrayList<String> referenceColumns = tablePrivileges.getReferenceColumns();
+                            toSerialize.append("\t\t\t\t").append("ReferencesColumns: ");
+
+                            for(String referenceColumn : referenceColumns) {
+                                toSerialize.append(referenceColumn).append(" ");
+                            }
+
+                            // remove " "
+                            toSerialize.deleteCharAt(toSerialize.length() - 1);
+
+                            toSerialize.append("\n");
+                            toSerialize.append("\t\t\t").append("REFERENCES PRIVILEGE DONE").append("\n");
+                        }
+                    }
+
+                    toSerialize.append("\t\t").append("TABLE PRIVILEGES DONE").append("\n");
+                }
+
+            } else {
+                toSerialize.append("EMPTY").append("\n");
+            }
+
+            toSerialize.append("\t").append("TABLE PRIVILEGES LIST DONE").append("\n");
+
+            // huge repeat of a bunch for passable table privileges
+            ArrayList<TablePrivileges> passableTablePrivilegesList = user.getPassableTablePrivilegesList();
+            toSerialize.append("\t").append("PassableTablePrivilegesList: ");
+
+            if(! passableTablePrivilegesList.isEmpty()) {
+
+                toSerialize.append("NOT EMPTY").append("\n");
+
+                for(TablePrivileges tablePrivileges : passableTablePrivilegesList) {
+
+                    toSerialize.append("\t\t").append("TablePrivileges: ").
+                            append(tablePrivileges.getTableName()).append("\n");
+
+                    ArrayList<Privilege> privileges = tablePrivileges.getPrivileges();
+
+                    for(Privilege privilege : privileges) {
+
+                        toSerialize.append("\t\t\t").append("Privilege: ").append(privilege).append("\n");
+
+                        if(privilege == Privilege.UPDATE) {
+
+                            ArrayList<String> updateColumns = tablePrivileges.getUpdateColumns();
+                            toSerialize.append("\t\t\t\t").append("UpdateColumns: ");
+
+                            for(String updateColumn : updateColumns) {
+                                toSerialize.append(updateColumn).append(" ");
+                            }
+
+                            // remove " "
+                            toSerialize.deleteCharAt(toSerialize.length() - 1);
+
+                            toSerialize.append("\n");
+                            toSerialize.append("\t\t\t").append("UPDATE PRIVILEGE DONE").append("\n");
+                        }
+
+                        if(privilege == Privilege.REFERENCES) {
+
+                            ArrayList<String> referenceColumns = tablePrivileges.getReferenceColumns();
+                            toSerialize.append("\t\t\t\t").append("ReferencesColumns: ");
+
+                            for(String referenceColumn : referenceColumns) {
+                                toSerialize.append(referenceColumn).append(" ");
+                            }
+
+                            // remove " "
+                            toSerialize.deleteCharAt(toSerialize.length() - 1);
+
+                            toSerialize.append("\n");
+                            toSerialize.append("\t\t\t").append("REFERENCES PRIVILEGE DONE").append("\n");
+                        }
+                    }
+
+                    toSerialize.append("\t\t").append("TABLE PRIVILEGES DONE").append("\n");
+                }
+
+            } else {
+                toSerialize.append("EMPTY").append("\n");
+            }
+
+            toSerialize.append("\t").append("PASSABLE TABLE PRIVILEGES LIST DONE").append("\n");
+            toSerialize.append("USER DONE").append("\n");
+        }
+
+        return toSerialize.toString();
+    }
+
+    public static ResultSet unSerializeTableData(String tableData) {
+
+        String[] foo = tableData.split("\n");
+        int numRows = foo.length;
+        int numCols = foo[0].split("\\s+").length;
+
+        String[][] data = new String[numRows][numCols];
+
+        for(int rows = 0; rows < numRows; rows++) {
+            data[rows] = tableData.split("\\s+");
+        }
+
+        return new ResultSet(new String[]{}, data);
+    }
+
+    public static void serializeTableData(ResultSet resultSet) {
+
+        StringBuilder toSerialize = new StringBuilder();
+
+        String[][] data = resultSet.getData();
+
+        // this will be used for formatting the table data to look pretty
+        int[] largestColSizes = new int[resultSet.getNumCols()];
+
+        // going column then row
+        int totalRows = data[0].length;
+
+        // TODO doing this thing with spaces and junk
+        for(int cols = 0; cols < data.length; cols++) {
+            int largestRowSize = 0;
+            for(int rows = 0; rows < data[cols].length; rows++) {
+                int rowSize = data[cols][rows].length();
+                if(rowSize > largestRowSize) {
+                    largestRowSize = rowSize;
+                }
+            }
+        }
+
+        for(String[] rows : data) {
+            for(String col : rows) {
+                toSerialize.append(col).append(" ");
+            }
+            toSerialize.append("\n");
+        }
     }
 }

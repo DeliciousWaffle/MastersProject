@@ -40,6 +40,29 @@ public class IO {
     }
 
     /**
+     * Reads the data within the table and returns it in a string format.
+     */
+    public static String readTableData(String tableFileName) {
+
+        StringBuilder data = new StringBuilder();
+
+        try {
+
+            File userFile = new File(getAbsPath(tableFileName));
+            Scanner scanner = new Scanner(userFile);
+
+            while(scanner.hasNext()) {
+                data.append(scanner.nextLine()).append("\n");
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return data.toString();
+    }
+
+    /**
      * Writes a string of data to the supplied filename.
      * @param data is the data to write out
      */
@@ -86,6 +109,18 @@ public class IO {
         }
 
         return absPath + "\\src\\files\\" + localPath;
+    }
+
+    private static String getAbsPath(String filename) {
+
+        // hack: gets the absolute path to the supplied filename
+        File foo = new File(".");
+        String absPath = foo.getAbsolutePath();
+
+        // removes "\."
+        absPath = absPath.substring(0, absPath.length() - 2);
+
+        return absPath + "\\src\\files\\tables\\data\\" + filename;
     }
 }
 

@@ -2,6 +2,7 @@ package test;
 
 import datastructures.user.TablePrivileges;
 import datastructures.user.User;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import utilities.IO;
 import utilities.Utilities;
@@ -11,31 +12,18 @@ import utilities.enums.Privilege;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
-// TODO figure out why table3 is not being set for bob
-// TODO add a way to print out user data too
+
 class UtilitiesTest {
 
-    ArrayList<TablePrivileges> tablePrivilegesList;
-    ArrayList<TablePrivileges> passableTablePrivilegesList;
-    TablePrivileges tablePrivileges;
-    ArrayList<String> referenceColumns;
-    ArrayList<String> updateColumns;
+    private static ArrayList<User> expectedUsers = new ArrayList<>();
+    private static ArrayList<TablePrivileges> tablePrivilegesList;
+    private static ArrayList<TablePrivileges> passableTablePrivilegesList;
+    private static TablePrivileges tablePrivileges;
+    private static ArrayList<String> referenceColumns;
+    private static ArrayList<String> updateColumns;
 
-    private void clearData() {
-        tablePrivileges = new TablePrivileges();
-        referenceColumns = new ArrayList<>();
-        updateColumns = new ArrayList<>();
-    }
-
-    private void clearLists() {
-        tablePrivilegesList = new ArrayList<>();
-        passableTablePrivilegesList = new ArrayList<>();
-    }
-
-    @Test
-    public void testCreateUserData() {
-
-        ArrayList<User> expected = new ArrayList<>();
+    @BeforeAll
+    public static void init() {
 
         clearLists();
         clearData();
@@ -147,34 +135,41 @@ class UtilitiesTest {
         sally.setTablePrivilegesList(new ArrayList<>());
         sally.setPassableTablePrivilegesList(new ArrayList<>());
 
-        expected.add(bob);
-        expected.add(john);
-        expected.add(dan);
-        expected.add(sally);
-//TODO
-        //for(User user : expected) {
-        //    System.out.println(user);
-        //}
+        expectedUsers.add(bob);
+        expectedUsers.add(john);
+        expectedUsers.add(dan);
+        expectedUsers.add(sally);
+    }
+
+    private static void clearData() {
+        tablePrivileges = new TablePrivileges();
+        referenceColumns = new ArrayList<>();
+        updateColumns = new ArrayList<>();
+    }
+
+    private static void clearLists() {
+        tablePrivilegesList = new ArrayList<>();
+        passableTablePrivilegesList = new ArrayList<>();
+    }
+
+    @Test
+    public void testUnSerializeUserData() {
+
         String userData = IO.readData(FileName.USERS);
-        ArrayList<User> actual = Utilities.unSerializeUserData(userData);
+        ArrayList<User> actualUsers = Utilities.unSerializeUserData(userData);
 
-        System.out.println("\n\n");
-        // TODO
-        for(User user : actual) {
-            System.out.println(user);
-        }
-        assertEquals(expected.size(), actual.size());
-        System.out.println("Expected Users size: " + expected.size() + "\nActual Users Size: " + actual.size());
+        assertEquals(expectedUsers.size(), actualUsers.size());
+        System.out.println("Expected Users size: " + expectedUsers.size() + "\nActual Users Size: " + actualUsers.size());
 
-        for(int i = 0; i < expected.size(); i++) {
+        for(int i = 0; i < expectedUsers.size(); i++) {
 
-            String expectedName = expected.get(i).getUsername();
-            String actualName = actual.get(i).getUsername();
+            String expectedName = expectedUsers.get(i).getUsername();
+            String actualName = actualUsers.get(i).getUsername();
             assertEquals(expectedName, actualName);
             System.out.println("Expected Name: " + expectedName + "\nActual Name: " + actualName);
 
-            ArrayList<TablePrivileges> expectedTablePrivilegesList = expected.get(i).getTablePrivilegesList();
-            ArrayList<TablePrivileges> actualTablePrivilegesList = actual.get(i).getTablePrivilegesList();
+            ArrayList<TablePrivileges> expectedTablePrivilegesList = expectedUsers.get(i).getTablePrivilegesList();
+            ArrayList<TablePrivileges> actualTablePrivilegesList = actualUsers.get(i).getTablePrivilegesList();
 
             assertEquals(expectedTablePrivilegesList.size(), actualTablePrivilegesList.size());
             System.out.println("Expected Table Privileges List size: " + expectedTablePrivilegesList.size() +
@@ -235,8 +230,8 @@ class UtilitiesTest {
                 }
             }
 
-            ArrayList<TablePrivileges> expectedPassableTablePrivilegesList = expected.get(i).getPassableTablePrivilegesList();
-            ArrayList<TablePrivileges> actualPassableTablePrivilegesList = actual.get(i).getPassableTablePrivilegesList();
+            ArrayList<TablePrivileges> expectedPassableTablePrivilegesList = expectedUsers.get(i).getPassableTablePrivilegesList();
+            ArrayList<TablePrivileges> actualPassableTablePrivilegesList = actualUsers.get(i).getPassableTablePrivilegesList();
 
             System.out.println("Expected Passable Table Privileges List size: " + expectedPassableTablePrivilegesList.size() +
                     "\nActual Passable Table Privileges List Size: " + actualPassableTablePrivilegesList.size());
@@ -298,5 +293,33 @@ class UtilitiesTest {
         }
 
         System.out.println();
+    }
+
+    @Test
+    public void testSerializeUserData() {
+
+        String expectedSerialized = Utilities.serializeUserData(expectedUsers);
+        System.out.println(expectedSerialized);
+
+        String actualSerialized = IO.readData(FileName.USERS);
+
+        // whitespaces may differ ever so slightly, so trimming
+        String[] expected = expectedSerialized.split("\n");
+        String[] actual = actualSerialized.split("\n");
+
+        for(int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i].trim(), actual[i].trim());
+        }
+    }
+
+    @Test
+    public void testUnSerializeTableData() {
+
+        String tableData = IO.readTableData("TestTable.txt");
+    }
+
+    @Test
+    public void testSerializeTableData() {
+        assertTrue(true);
     }
 }
