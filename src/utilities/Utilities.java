@@ -1,7 +1,6 @@
 package utilities;
 
 import datastructures.table.ResultSet;
-import datastructures.table.Table;
 import datastructures.user.TablePrivileges;
 import datastructures.user.User;
 import utilities.enums.Privilege;
@@ -263,47 +262,27 @@ public class Utilities {
 
     public static ResultSet unSerializeTableData(String tableData) {
 
-        String[] foo = tableData.split("\n");
-        int numRows = foo.length;
-        int numCols = foo[0].split("\\s+").length;
+        String[] tableRows = tableData.split("\n");
+        int numRows = tableRows.length;
+        int numCols = tableRows[0].split("\\s+").length;
 
         String[][] data = new String[numRows][numCols];
 
         for(int rows = 0; rows < numRows; rows++) {
-            data[rows] = tableData.split("\\s+");
+            data[rows] = tableRows[rows].split("\\s+");
         }
 
         return new ResultSet(new String[]{}, data);
     }
 
-    public static void serializeTableData(ResultSet resultSet) {
+    public static String serializeTableData(ResultSet resultSet) {
 
         StringBuilder toSerialize = new StringBuilder();
 
         String[][] data = resultSet.getData();
 
-        // this will be used for formatting the table data to look pretty
-        int[] largestColSizes = new int[resultSet.getNumCols()];
 
-        // going column then row
-        int totalRows = data[0].length;
 
-        // TODO doing this thing with spaces and junk
-        for(int cols = 0; cols < data.length; cols++) {
-            int largestRowSize = 0;
-            for(int rows = 0; rows < data[cols].length; rows++) {
-                int rowSize = data[cols][rows].length();
-                if(rowSize > largestRowSize) {
-                    largestRowSize = rowSize;
-                }
-            }
-        }
-
-        for(String[] rows : data) {
-            for(String col : rows) {
-                toSerialize.append(col).append(" ");
-            }
-            toSerialize.append("\n");
-        }
+        return toSerialize.toString();
     }
 }

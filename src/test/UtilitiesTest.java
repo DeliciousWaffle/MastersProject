@@ -1,5 +1,6 @@
 package test;
 
+import datastructures.table.ResultSet;
 import datastructures.user.TablePrivileges;
 import datastructures.user.User;
 import org.junit.jupiter.api.BeforeAll;
@@ -315,11 +316,15 @@ class UtilitiesTest {
     @Test
     public void testUnSerializeTableData() {
 
-        String tableData = IO.readTableData("TestTable.txt");
+        String tableData = IO.readTableData("Customers.txt");
+        ResultSet resultSet = Utilities.unSerializeTableData(tableData);
+        System.out.println(resultSet);
+        assertEquals(true, true);
     }
 
     @Test
     public void testSerializeTableData() {
         assertTrue(true);
+
     }
 }

@@ -1,0 +1,77 @@
+1	Chais	1	1	18
+2	Chang	1	1	19
+3	Aniseed Syrup	1	2	10
+4	Chef Anton's Cajun Seasoning	2	2	22
+5	Chef Anton's Gumbo Mix	2	2	21.35
+6	Grandma's Boysenberry Spread	3	2	25
+7	Uncle Bob's Organic Dried Pears	3	7	30
+8	Northwoods Cranberry Sauce	3	2	40
+9	Mishi Kobe Niku	4	6	97
+10	Ikura	4	8	31
+11	Queso Cabrales	5	4	21
+12	Queso Manchego La Pastora	5	4	38
+13	Konbu	6	8	6
+14	Tofu	6	7	23.25
+15	Genen Shouyu	6	2	15.5
+16	Pavlova	7	3	17.45
+17	Alice Mutton	7	6	39
+18	Carnarvon Tigers	7	8	62.5
+19	Teatime Chocolate Biscuits	8	3	9.2
+20	Sir Rodney's Marmalade	8	3	81
+21	Sir Rodney's Scones	8	3	10
+22	Gustaf's Knäckebröd	9	5	21
+23	Tunnbröd	9	5	9
+24	Guaraná Fantástica	10	1	4.5
+25	NuNuCa Nuß-Nougat-Creme	11	3	14
+26	Gumbär Gummibärchen	11	3	31.23
+27	Schoggi Schokolade	11	3	43.9
+28	Rössle Sauerkraut	12	7	45.6
+29	Thüringer Rostbratwurst	12	6	123.79
+30	Nord-Ost Matjeshering	13	8	25.89
+31	Gorgonzola Telino	14	4	12.5
+32	Mascarpone Fabioli	14	4	32
+33	Geitost	15	4	2.5
+34	Sasquatch Ale	16	1	14
+35	Steeleye Stout	16	1	18
+36	Inlagd Sill	17	8	19
+37	Gravad lax	17	8	26
+38	Côte de Blaye	18	1	263.5
+39	Chartreuse verte	18	1	18
+40	Boston Crab Meat	19	8	18.4
+41	Jack's New England Clam Chowder	19	8	9.65
+42	Singaporean Hokkien Fried Mee	20	5	14
+43	Ipoh Coffee	20	1	46
+44	Gula Malacca	20	2	19.45
+45	Røgede sild	21	8	9.5
+46	Spegesild	21	8	12
+47	Zaanse koeken	22	3	9.5
+48	Chocolade	22	3	12.75
+49	Maxilaku	23	3	20
+50	Valkoinen suklaa	23	3	16.25
+51	Manjimup Dried Apples	24	7	53
+52	Filo Mix	24	5	7
+53	Perth Pasties	24	6	32.8
+54	Tourtière	25	6	7.45
+55	Pâté chinois	25	6	24
+56	Gnocchi di nonna Alice	26	5	38
+57	Ravioli Angelo	26	5	19.5
+58	Escargots de Bourgogne	27	8	13.25
+59	Raclette Courdavault	28	4	55
+60	Camembert Pierrot	28	4	34
+61	Sirop d'érable	29	2	28.5
+62	Tarte au sucre	29	3	49.3
+63	Vegie-spread	7	2	43.9
+64	Wimmers gute Semmelknödel	12	5	33.25
+65	Louisiana Fiery Hot Pepper Sauce	2	2	21.05
+66	Louisiana Hot Spiced Okra	2	2	17
+67	Laughing Lumberjack Lager	16	1	14
+68	Scottish Longbreads	8	3	12.5
+69	Gudbrandsdalsost	15	4	36
+70	Outback Lager	7	1	15
+71	Fløtemysost	15	4	21.5
+72	Mozzarella di Giovanni	14	4	34.8
+73	Röd Kaviar	17	8	15
+74	Longlife Tofu	4	7	10
+75	Rhönbräu Klosterbier	12	1	7.75
+76	Lakkalikööri	23	1	18
+77	Original Frankfurter grüne Soße	12	2	13
