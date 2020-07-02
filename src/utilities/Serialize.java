@@ -8,9 +8,12 @@ import utilities.enums.Privilege;
 import java.util.ArrayList;
 
 /**
- * For now, basically where I stick methods that don't necessarily belong to any other class.
+ * Responsible for serializing and un-serializing all data so that it can be used in
+ * a meaningful way. This essentially saves the states of all objects used so that they
+ * be accessed later when the application is relaunched.
+ * Right now, this class is accessed statically for convenience. May change later.
  */
-public class Utilities {
+public class Serialize {
 
     /**
      * Formats raw user file data into something usable. Basically takes the contents of

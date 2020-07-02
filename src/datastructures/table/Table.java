@@ -1,67 +1,84 @@
 package datastructures.table;
 
 import datastructures.table.component.Column;
-import datastructures.table.component.FileStructure;
+import datastructures.table.component.TableData;
 
 import java.util.ArrayList;
 
+/**
+ * A representation of the table stored within the database. This stores stuff
+ * like the table name, columns, whether there's a primary key, and the data itself.
+ */
 public class Table {
 
     private String name;
     private ArrayList<Column> columns;
-    private int numRows;
+    private Column primaryKey;
+    private TableData tableData;
 
-    public Table(String name, ArrayList<Column> columns) {
+    public Table(String name, ArrayList<Column> columns, Column primaryKey, TableData tableData) {
 
-        this.name    = name;
-        this.columns = columns;
+        this.name       = name;
+        this.columns    = columns;
+        this.primaryKey = primaryKey;
+        this.tableData  = tableData;
     }
 
-    // static utility methods ------------------------------------------------------------------------------------------
+    // getters, setters ------------------------------------------------------------------------------------------------
 
-    /**
-     * Formats raw table file meta data into something usable.
-     * @param tablesFileData is data about the tables in the system
-     */
-    public static Table createTableFrom(String tablesFileData) {
-
-        // TODO
-
-        return null;
-    }
-
-    /**
-     * Returns the rows and columns of a given table.
-     * @param table contains information about the table
-     * @param tablesFileData basically all the rows of a given table
-     * @return rows and columns containing data of a table
-     */
-    public String[][] createTableDataFrom(Table table, String tablesFileData) {
-
-        String[][] tableData = new String[table.getNumCols()][table.getNumRows()];
-        String[] data = tablesFileData.split("\\s+");
-
-        for(int cols = 0; cols < tableData.length; cols++) {
-            for(int rows = 0; rows < tableData[cols].length; rows++) {
-                tableData[cols][rows] = data[cols + rows];
-            }
-        }
-
-        return tableData;
-    }
-
-    // instance methods ------------------------------------------------------------------------------------------------
-
-    /**
-     * @return the name of this table
-     */
     public String getName() { return name; }
+
+    public void setName(String name) { this.name = name; }
 
     public ArrayList<Column> getColumns() { return columns; }
 
+    public void setColumns(ArrayList<Column> columns) {
+        this.columns = columns;
+    }
+
+    public void addColumn(Column column) {
+        columns.add(column);
+        tableData.addColumn();
+    }
+
+    public boolean removeColumn(Column columnToRemove) {
+
+        if(! hasColumn(columnToRemove)) {
+            return false;
+
+        } else {
+            for(int i = 0; i < columns.size(); i++) {
+                String columnName = columns.get(i).getName();
+
+                if(columnName.equals(columnToRemove)) {
+                    columns.remove(i);
+                    break;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public Column getPrimaryKey() { return primaryKey; }
+
+    public void setPrimaryKey(Column primaryKey) {
+        this.primaryKey = primaryKey;
+    }
+
+    public TableData getTableData() {
+        return tableData;
+    }
+
+    public void setTableData(TableData tableData) {
+        this.tableData = tableData;
+    }
+
+    // utility methods -------------------------------------------------------------------------------------------------
+
     public int getNumCols() { return columns.size(); }
 
-    public int getNumRows() { return numRows; }
+    public int getNumRows() { return tableData.getNumRows(); }
 
     public Column getColumn(String columnName) {
 
@@ -71,12 +88,19 @@ public class Table {
             }
         }
 
-        return null;
+        return new Column("null", "null", false, 0);
     }
 
     /**
-     * Returns whether the candidate column is a member of this table.
      * @param candidate the column to check
+     * @return whether the candidate column is a member of this table
+     */
+    public boolean hasColumn(Column candidate) {
+        return hasColumn(candidate.getName());
+    }
+
+    /**
+     * @param candidate the column name to check
      * @return whether the candidate column is a member of this table
      */
     public boolean hasColumn(String candidate) {
@@ -107,35 +131,13 @@ public class Table {
         return totalColSize;
     }
 
-    /**
-     * Removes all file structures on this table. Typically called before clustering this table
-     * with another table since clustered files don't allow intermingling of other file structures.
-     */
-    /*public void removeAllFileStructures() {
-        for(Column column : columns) {
-            column.removeAllFileStructures();
-        }
+    @Override
+    public boolean equals() {
+        
     }
 
     @Override
     public String toString() {
-
-        StringBuilder table = new StringBuilder();
-        table.append("Table: ").append(name).append(" (");
-
-        for(Column column : columns) {
-            table.append("Column: ").append(column).append("\n");
-            for(FileStructure fileStructure : column.getFileStructures()) {
-                table.append("File Structure(s): ").append(fileStructure).append(" ");
-            }
-            if(! column.getFileStructures().isEmpty()) {
-                table.deleteCharAt(table.length() - 1);
-                table.append("\n");
-            } else {
-                table.deleteCharAt(table.length() - 1);
-            }
-        }
-
-        return table.toString();
-    }*/
+        return null;
+    }
 }

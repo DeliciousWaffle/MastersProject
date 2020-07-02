@@ -2,11 +2,11 @@ package datastructures.table.component;
 
 public class Column {
 
-    private String  name;
-    private String  dataType; // make into an enum or just remove entirely
+    private String name;
+    private String dataType; // make into an enum or just remove entirely
     private boolean isNumeric;
     private boolean canAlterCharToInt;
-    private int     size;
+    private int size;
     private FileStructure fileStructure;
 
     public Column(String name, String dataType, boolean isNumeric, int size) {

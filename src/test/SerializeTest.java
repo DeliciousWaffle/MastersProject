@@ -6,7 +6,7 @@ import datastructures.user.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import utilities.IO;
-import utilities.Utilities;
+import utilities.Serialize;
 import utilities.enums.FileName;
 import utilities.enums.Privilege;
 
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UtilitiesTest {
+class SerializeTest {
 
     private static ArrayList<User> expectedUsers = new ArrayList<>();
     private static ArrayList<TablePrivileges> tablePrivilegesList;
@@ -157,7 +157,7 @@ class UtilitiesTest {
     public void testUnSerializeUserData() {
 
         String userData = IO.readData(FileName.USERS);
-        ArrayList<User> actualUsers = Utilities.unSerializeUserData(userData);
+        ArrayList<User> actualUsers = Serialize.unSerializeUserData(userData);
 
         assertEquals(expectedUsers.size(), actualUsers.size());
         System.out.println("Expected Users size: " + expectedUsers.size() + "\nActual Users Size: " + actualUsers.size());
@@ -299,7 +299,7 @@ class UtilitiesTest {
     @Test
     public void testSerializeUserData() {
 
-        String expectedSerialized = Utilities.serializeUserData(expectedUsers);
+        String expectedSerialized = Serialize.serializeUserData(expectedUsers);
         System.out.println(expectedSerialized);
 
         String actualSerialized = IO.readData(FileName.USERS);
@@ -317,7 +317,7 @@ class UtilitiesTest {
     public void testUnSerializeTableData() {
 
         String tableData = IO.readTableData("Customers.txt");
-        ResultSet resultSet = Utilities.unSerializeTableData(tableData);
+        ResultSet resultSet = Serialize.unSerializeTableData(tableData);
         System.out.println(resultSet);
         assertEquals(true, true);
     }

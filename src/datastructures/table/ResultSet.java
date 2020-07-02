@@ -1,20 +1,14 @@
 package datastructures.table;
 
 /**
- * The rows and columns returned after executing a query.
+ * Represents the data returned after execution of a query.
  */
 public class ResultSet {
 
-    private final String[] columnNames;
     private final String[][] data;
 
-    public ResultSet(String[] columnNames, String[][] data) {
-        this.columnNames = columnNames;
+    public ResultSet(String[][] data) {
         this.data = data;
-    }
-
-    public String[] getColumnNames() {
-        return columnNames;
     }
 
     public String[][] getData() {

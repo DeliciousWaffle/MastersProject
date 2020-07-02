@@ -1,13 +1,5 @@
 package main;
 
-import systemcatalog.parser.PrivilegeParser;
-import utilities.Utilities;
-import systemcatalog.parser.DMLParser;
-import systemcatalog.parser.QueryParser;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
 /**
  * Masters Project that emulates a subset of SQL's System Catalog. The System Catalog
  * is responsible for validating queries, DDL statements, and making sure users
