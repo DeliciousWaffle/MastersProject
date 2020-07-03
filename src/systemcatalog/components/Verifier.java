@@ -62,7 +62,7 @@ public class Verifier {
 
         for(Table currentTable : tables) {
 
-            String tableName = currentTable.getName();
+            String tableName = currentTable.getTableName();
             boolean foundTable = false;
 
             for(String candidateTable : candidateTables) {
@@ -126,7 +126,7 @@ public class Verifier {
 
                 for(Table table : tables) {
 
-                    if(joinTable.equalsIgnoreCase(table.getName()) && table.hasColumn(joinColumn)) {
+                    if(joinTable.equalsIgnoreCase(table.getTableName()) && table.hasColumn(joinColumn)) {
 
                         if(foundFirstColumn) {
                             foundSecondColumn = true;
@@ -199,7 +199,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 foundTable = true;
                 break;
             }
@@ -229,7 +229,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 foundTable = true;
                 break;
             }
@@ -246,7 +246,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 foundTable = true;
                 break;
             }
@@ -293,7 +293,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 referencedTable = table;
                 foundTable = true;
                 break;
@@ -337,7 +337,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 foundTable = true;
                 referencedTable = table;
                 break;
@@ -376,7 +376,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 referencedTable = table;
                 foundTable = true;
                 break;
@@ -428,7 +428,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 referencedTable = table;
                 foundTable = true;
             }
@@ -478,7 +478,7 @@ public class Verifier {
         boolean foundTable = false;
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 referencedTable = table;
                 foundTable = true;
             }
@@ -505,7 +505,7 @@ public class Verifier {
         boolean foundTable2 = false;
 
         for(Table table : tables) {
-            String tableName = table.getName();
+            String tableName = table.getTableName();
             if(tableName.equalsIgnoreCase(table1)) {
                 foundTable1 = true;
             }

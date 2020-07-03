@@ -108,7 +108,7 @@ public class SecurityChecker {
         ArrayList<String> columnNames = new ArrayList<>();
 
         for(Table table : tables) {
-            if(table.getName().equalsIgnoreCase(tableName)) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
                 for(Column column : table.getColumns()) {
                     columnNames.add(column.getName());
                 }

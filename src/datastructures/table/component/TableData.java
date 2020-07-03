@@ -1,37 +1,26 @@
 package datastructures.table.component;
 
-import datastructures.table.ResultSet;
-
 import java.util.ArrayList;
 
 /**
  * Represents all the rows and columns stored within a particular table.
  * Rows and columns can grow, shrink, have their contents changed, and
- * and accept null values.
+ * and accept null values. These will be the direct result of a DMl statement.
  */
 public class TableData {
 
+    private ArrayList<Integer> columnSizes;    // for formatting
     private ArrayList<ArrayList<String>> tableData;
 
-    public TableData(ArrayList<ArrayList<String>> tableData) {
+    public TableData(ArrayList<Integer> columnSizes, ArrayList<ArrayList<String>> tableData) {
+        this.columnSizes = columnSizes;
         this.tableData = tableData;
     }
 
     /**
-     * @return the table data as a result set
+     * @return columnSizes a list of all the column sizes
      */
-    public ResultSet getTableData() {
-
-        String[][] data = new String[getNumRows()][getNumCols()];
-
-        for(int rows = 0; rows < getNumRows(); rows++) {
-            for(int cols = 0; cols < getNumCols(); cols++) {
-                data[rows][cols] = tableData.get(rows).get(cols);
-            }
-        }
-
-        return new ResultSet(data);
-    }
+    public ArrayList<Integer> getColumnSizes() { return columnSizes; }
 
     /**
      * @return the number of rows in this table
@@ -60,9 +49,12 @@ public class TableData {
      * @param index the location of the column to delete
      */
     public void deleteColumnAt(int index) {
+
         for(int rows = 0; rows < tableData.size(); rows++) {
             tableData.get(rows).remove(index);
         }
+
+        columnSizes.remove(index);
     }
 
     /**
@@ -90,11 +82,15 @@ public class TableData {
     /**
      * Adds a column to the table. New columns are appended to right of the table.
      * The rows within this new column will be null.
+     * @param columnSize is the size of the new column to add
      */
-    public void addColumn() {
+    public void addColumn(int columnSize) {
+
         for(int rows = 0; rows < tableData.size(); rows++) {
             tableData.get(rows).add("null");
         }
+
+        columnSizes.add(columnSize);
     }
 
     /**
@@ -115,6 +111,27 @@ public class TableData {
         }
 
         TableData otherTableData = (TableData) other;
+
+        if(otherTableData.getColumnSizes() != this.getColumnSizes()) {
+            System.out.println("Table Data not equal");
+            System.out.println("Other Column Sizes: " + otherTableData.getColumnSizes() +
+                    "This Column Sizes: " + this.getColumnSizes());
+            return false;
+        }
+
+        // check each column size for equality
+        for(int i = 0; i < columnSizes.size(); i++) {
+
+            int otherColumnSize = otherTableData.getColumnSizes().get(i);
+            int thisColumnSize  = this.getColumnSizes().get(i);
+
+            if(otherColumnSize != thisColumnSize) {
+                System.out.println("Table Data not equal");
+                System.out.println("Other Column Size: " + otherColumnSize +
+                        "This Column Size: " + thisColumnSize);
+                return false;
+            }
+        }
 
         if(otherTableData.getNumRows() != this.getNumRows()) {
             System.out.println("Table Data not equal");
@@ -157,35 +174,14 @@ public class TableData {
 
         StringBuilder print = new StringBuilder();
 
-        // the following will be used for formatting the table data to look pretty
-        int[] largestColSizes = new int[getNumCols()];
-
-        // going down column by column
-        for(int cols = 0; cols < tableData.get(0).size(); cols++) {
-
-            int largestRowInColSize = 0;
-
-            for(int rows = 0; rows < tableData.size(); rows++) {
-
-                System.out.println(tableData.get(rows).get(cols));
-                int rowInColSize = tableData.get(rows).get(cols).length();
-
-                if(rowInColSize > largestRowInColSize) {
-                    largestRowInColSize = rowInColSize;
-                }
-            }
-
-            largestColSizes[cols] = largestRowInColSize;
-        }
-
         for(int rows = 0; rows < tableData.size(); rows++) {
 
             for(int cols = 0; cols < tableData.get(rows).size(); cols++) {
 
                 // space formatting
                 int colSize = tableData.get(rows).get(cols).length();
-                int largestColSize = largestColSizes[cols];
-                int spaceOffset = Math.abs(colSize - largestColSize);
+                int maxColSize = columnSizes.get(cols);
+                int spaceOffset = Math.abs(colSize - maxColSize);
 
                 StringBuilder spaces = new StringBuilder();
 

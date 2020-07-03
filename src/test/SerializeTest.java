@@ -1,6 +1,8 @@
 package test;
 
-import datastructures.table.ResultSet;
+import datastructures.table.Table;
+import datastructures.table.component.Column;
+import datastructures.table.component.TableData;
 import datastructures.user.TablePrivileges;
 import datastructures.user.User;
 import org.junit.jupiter.api.BeforeAll;
@@ -157,7 +159,7 @@ class SerializeTest {
     public void testUnSerializeUserData() {
 
         String userData = IO.readData(FileName.USERS);
-        ArrayList<User> actualUsers = Serialize.unSerializeUserData(userData);
+        ArrayList<User> actualUsers = Serialize.unSerializeUsers(userData);
 
         assertEquals(expectedUsers.size(), actualUsers.size());
         System.out.println("Expected Users size: " + expectedUsers.size() + "\nActual Users Size: " + actualUsers.size());
@@ -299,7 +301,7 @@ class SerializeTest {
     @Test
     public void testSerializeUserData() {
 
-        String expectedSerialized = Serialize.serializeUserData(expectedUsers);
+        String expectedSerialized = Serialize.serializedUsers(expectedUsers);
         System.out.println(expectedSerialized);
 
         String actualSerialized = IO.readData(FileName.USERS);
@@ -316,15 +318,25 @@ class SerializeTest {
     @Test
     public void testUnSerializeTableData() {
 
-        String tableData = IO.readTableData("Customers.txt");
-        ResultSet resultSet = Serialize.unSerializeTableData(tableData);
-        System.out.println(resultSet);
-        assertEquals(true, true);
+        Table customersTable = new Table("Customers");
+        ArrayList<Column> columns = new ArrayList<>();
+        columns.add(new Column("CustomerID", "", true, 5));
+        columns.add(new Column("CustomerName", "", false, 40));
+        columns.add(new Column("ContactName", "", false, 30));
+        columns.add(new Column("Address", "", false, 50));
+        columns.add(new Column("City", "", false, 20));
+        columns.add(new Column("PostalCode", "", true, 10));
+        columns.add(new Column("Country", "", false, 15));
+        customersTable.setColumns(columns);
+
+        String tableDataString = IO.readTableData("Customers.txt");
+        TableData tableData = Serialize.unSerializeTableData(tableDataString, customersTable);
+        System.out.println(tableData.toString());
+        assertTrue(true);
     }
 
     @Test
     public void testSerializeTableData() {
         assertTrue(true);
-
     }
 }

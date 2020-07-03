@@ -1,46 +1,66 @@
 package datastructures.table;
 
+import java.util.ArrayList;
+
 /**
- * Represents the data returned after execution of a query.
+ * Represents the data returned after execution of a query. Raw data is set initially, afterwards
+ * rows and columns are changed to reflect what the query is asking.
  */
 public class ResultSet {
 
-    private final String[][] data;
+    private ArrayList<String> rawColumnNames, filteredColumnNames;
+    private ArrayList<ArrayList<String>> rawData, filteredData;
 
-    public ResultSet(String[][] data) {
-        this.data = data;
+    public ResultSet(ArrayList<String> rawColumnNames, ArrayList<ArrayList<String>> rawData) {
+        this.rawColumnNames = rawColumnNames;
+        this.rawData = rawData;
     }
 
-    public String[][] getData() {
-        return data;
+    public ArrayList<String> getRawColumnNames() { return rawColumnNames; }
+
+    public ArrayList<String> getFilteredColumnNames() { return filteredColumnNames; }
+
+    public ArrayList<ArrayList<String>> getRawData() {
+        return rawData;
     }
 
-    public int getNumRows() {
-        return data.length;
+    public ArrayList<ArrayList<String>> getFilteredData() { return filteredData; }
+
+    // utility methods -------------------------------------------------------------------------------------------------
+
+    public int getRawNumRows() {
+        return rawData.size();
     }
 
-    public int getNumCols() {
-        return data[0].length;
+    public int getRawNumCols() {
+        return ! rawData.isEmpty() ? rawData.get(0).size() : 0;
     }
 
+    public int getFilteredNumRows() { return filteredData.size(); }
+
+    public int getFilteredNumCols() { return ! filteredData.isEmpty() ? filteredData.get(0).size() : 0; }
+
+    // applying transformations on the raw data to fit the query request -----------------------------------------------
+
+    /**
+     * @return a string representation of the FILTERED data
+     */
     @Override
     public String toString() {
 
         StringBuilder print = new StringBuilder();
 
-        // the following will be used for formatting the table data to look pretty
-        int[] largestColSizes = new int[getNumCols()];
+        // the following will be used for formatting the result set data to look pretty
+        int[] largestColSizes = new int[getFilteredNumCols()];
 
         // going down column by column
-        for(int cols = 0; cols < data[0].length; cols++) {
+        for(int cols = 0; cols < filteredData.get(0).size(); cols++) {
 
             int largestRowInColSize = 0;
 
-            for(int rows = 0; rows < data.length; rows++) {
+            for(int rows = 0; rows < filteredData.size(); rows++) {
 
-
-                System.out.println(data[rows][cols]);
-                int rowInColSize = data[rows][cols].length();
+                int rowInColSize = filteredData.get(rows).get(cols).length();
 
                 if(rowInColSize > largestRowInColSize) {
                     largestRowInColSize = rowInColSize;
@@ -50,12 +70,12 @@ public class ResultSet {
             largestColSizes[cols] = largestRowInColSize;
         }
 
-        for(int rows = 0; rows < data.length; rows++) {
+        for(int rows = 0; rows < filteredData.size(); rows++) {
 
-            for(int cols = 0; cols < data[rows].length; cols++) {
+            for(int cols = 0; cols < filteredData.get(rows).size(); cols++) {
 
                 // space formatting
-                int colSize = data[rows][cols].length();
+                int colSize = filteredData.get(rows).get(cols).length();
                 int largestColSize = largestColSizes[cols];
                 int spaceOffset = Math.abs(colSize - largestColSize);
 
@@ -65,7 +85,7 @@ public class ResultSet {
                     spaces.append(" ");
                 }
 
-                print.append(data[rows][cols]).append(spaces).append("\n");
+                print.append(filteredData.get(rows).get(cols)).append(spaces).append("\n");
             }
         }
 

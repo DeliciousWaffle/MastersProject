@@ -1,6 +1,8 @@
 package utilities;
 
-import datastructures.table.ResultSet;
+import datastructures.table.Table;
+import datastructures.table.component.Column;
+import datastructures.table.component.TableData;
 import datastructures.user.TablePrivileges;
 import datastructures.user.User;
 import utilities.enums.Privilege;
@@ -11,19 +13,19 @@ import java.util.ArrayList;
  * Responsible for serializing and un-serializing all data so that it can be used in
  * a meaningful way. This essentially saves the states of all objects used so that they
  * be accessed later when the application is relaunched.
- * Right now, this class is accessed statically for convenience. May change later.
+ * Right now, methods of this class is accessed statically for convenience. May change later.
  */
 public class Serialize {
 
     /**
      * Formats raw user file data into something usable. Basically takes the contents of
      * the user file, parsers it, and returns a list of Users.
-     * @param usersFileData is data about the users in the system
+     * @param serializedUsers is data about the users in the system
      * @return list of users within the system
      */
-    public static ArrayList<User> unSerializeUserData(String usersFileData) {
+    public static ArrayList<User> unSerializeUsers(String serializedUsers) {
 
-        String[] lines = usersFileData.split("\n");
+        String[] lines = serializedUsers.split("\n");
 
         // remove any leading or trailing whitespace
         for(int i = 0; i < lines.length; i++) {
@@ -129,7 +131,7 @@ public class Serialize {
      * @param users the users within the system
      * @return string representation of all the users within the system to write out
      */
-    public static String serializeUserData(ArrayList<User> users) {
+    public static String serializedUsers(ArrayList<User> users) {
 
         StringBuilder toSerialize = new StringBuilder();
 
@@ -263,28 +265,115 @@ public class Serialize {
         return toSerialize.toString();
     }
 
-    public static ResultSet unSerializeTableData(String tableData) {
+    /**
+     * Formats raw table file data into something usable. Basically takes the contents of
+     * the tables file, parsers it, and returns a list of Tables.
+     * @param serializedTables is data about the tables in the system
+     * @return list of tables within the system
+     */
+    public static ArrayList<Table> unSerializeTables(String serializedTables) {
 
-        String[] tableRows = tableData.split("\n");
+        return new ArrayList<>();
+    }
+
+    /**
+     * Takes all the tables within the system and converts all of their data into
+     * a string which will eventually be written out to disk. Stores every tables'
+     * state so that it can be restored when the application is re-launched.
+     * @param tables a list of tables within the system
+     * @return string representation of all the tables within the system to write out
+     */
+    public static String serializeTables(ArrayList<Table> tables) {
+
+        return "";
+    }
+
+    // TODO cant split along spaces, need to split along the size of each column in the table
+    /**
+     * Formats raw table data (ie. the rows and columns of a table) into something usable.
+     * Basically takes the contents of a table data file, parsers it, and returns the Table Data.
+     * @param serializedTableData is data from a single table
+     * @param table contains information about what the table data means
+     * @return the table data
+     */
+    public static TableData unSerializeTableData(String serializedTableData, Table table) {
+
+        // string.split() will be very useful here
+        String[] tableRows = serializedTableData.split("\n");
+
         int numRows = tableRows.length;
         int numCols = tableRows[0].split("\\s+").length;
 
-        String[][] data = new String[numRows][numCols];
+        // store the size of each column
+        ArrayList<Integer> columnSizes = new ArrayList<>();
 
-        for(int rows = 0; rows < numRows; rows++) {
-            data[rows] = tableRows[rows].split("\\s+");
+        for(Column column : table.getColumns()) {
+            columnSizes.add(column.size());
         }
 
-        return new ResultSet(new String[]{}, data);
+        // skip the column names and dashed lines
+        String[][] splitTableData = new String[numRows - 2][numCols];
+
+        for(int rows = 2; rows < numRows; rows++) {
+            splitTableData[rows - 2] = tableRows[rows].split("\\s+");
+        }
+
+        // convert 2D array to 2D array list for Table Data
+        ArrayList<ArrayList<String>> tableData = new ArrayList<>();
+
+        for(int rows = 0; rows < numRows - 2; rows++) {
+            tableData.add(new ArrayList<>());
+            for(int cols = 0; cols < numCols; cols++) {
+                tableData.get(rows).add(splitTableData[rows][cols]);
+            }
+        }
+
+        return new TableData(columnSizes, tableData);
     }
 
-    public static String serializeTableData(ResultSet resultSet) {
+    /**
+     * Takes the table data of a table and converts it into a string which will
+     * eventually be written out to disk. This means a single tables' table data
+     * can be restored when the application is re-launched.
+     * @param table contains information about what the table data means
+     * @return string representation of the table data to write out
+     */
+    public static String serializeTableData(Table table) {
 
         StringBuilder toSerialize = new StringBuilder();
 
-        String[][] data = resultSet.getData();
+        // to make things pretty and organized
+        StringBuilder columnNames = new StringBuilder();
+        StringBuilder dashes = new StringBuilder();
 
+        // adding column names so we know what we're looking at
+        for(Column column : table.getColumns()) {
 
+            String columnName = column.getName();
+
+            StringBuilder spaces = new StringBuilder();
+            int columnNameLength = columnName.length();
+            int maxNumSpaces = column.size();
+            int numSpacesToPad = Math.abs(maxNumSpaces - columnNameLength);
+
+            for(int i = 0; i < numSpacesToPad; i++) {
+                spaces.append(" ");
+            }
+
+            for(int i = 0; i < maxNumSpaces; i++) {
+                dashes.append("-");
+            }
+
+            columnNames.append(columnName).append(spaces).append(" ");
+            dashes.append(" ");
+        }
+
+        toSerialize.append(columnNames).append("\n");
+        toSerialize.append(dashes).append("\n");
+
+        // add the table data
+        TableData tableData = table.getTableData();
+        toSerialize.append(tableData.toString());
 
         return toSerialize.toString();
     }
