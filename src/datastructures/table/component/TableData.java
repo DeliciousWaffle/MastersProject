@@ -9,18 +9,18 @@ import java.util.ArrayList;
  */
 public class TableData {
 
-    private ArrayList<Integer> columnSizes;    // for formatting
+    private ArrayList<Integer> paddingAmountList;    // for formatting
     private ArrayList<ArrayList<String>> tableData;
 
-    public TableData(ArrayList<Integer> columnSizes, ArrayList<ArrayList<String>> tableData) {
-        this.columnSizes = columnSizes;
+    public TableData(ArrayList<Integer> paddingAmountList, ArrayList<ArrayList<String>> tableData) {
+        this.paddingAmountList = paddingAmountList;
         this.tableData = tableData;
     }
 
     /**
      * @return columnSizes a list of all the column sizes
      */
-    public ArrayList<Integer> getColumnSizes() { return columnSizes; }
+    public ArrayList<Integer> getPaddingAmountList() { return paddingAmountList; }
 
     /**
      * @return the number of rows in this table
@@ -54,7 +54,7 @@ public class TableData {
             tableData.get(rows).remove(index);
         }
 
-        columnSizes.remove(index);
+        paddingAmountList.remove(index);
     }
 
     /**
@@ -90,7 +90,7 @@ public class TableData {
             tableData.get(rows).add("null");
         }
 
-        columnSizes.add(columnSize);
+        paddingAmountList.add(columnSize);
     }
 
     /**
@@ -112,18 +112,18 @@ public class TableData {
 
         TableData otherTableData = (TableData) other;
 
-        if(otherTableData.getColumnSizes() != this.getColumnSizes()) {
+        if(otherTableData.getPaddingAmountList() != this.getPaddingAmountList()) {
             System.out.println("Table Data not equal");
-            System.out.println("Other Column Sizes: " + otherTableData.getColumnSizes() +
-                    "This Column Sizes: " + this.getColumnSizes());
+            System.out.println("Other Column Sizes: " + otherTableData.getPaddingAmountList() +
+                    "This Column Sizes: " + this.getPaddingAmountList());
             return false;
         }
 
         // check each column size for equality
-        for(int i = 0; i < columnSizes.size(); i++) {
+        for(int i = 0; i < paddingAmountList.size(); i++) {
 
-            int otherColumnSize = otherTableData.getColumnSizes().get(i);
-            int thisColumnSize  = this.getColumnSizes().get(i);
+            int otherColumnSize = otherTableData.getPaddingAmountList().get(i);
+            int thisColumnSize  = this.getPaddingAmountList().get(i);
 
             if(otherColumnSize != thisColumnSize) {
                 System.out.println("Table Data not equal");
@@ -180,7 +180,7 @@ public class TableData {
 
                 // space formatting
                 int colSize = tableData.get(rows).get(cols).length();
-                int maxColSize = columnSizes.get(cols);
+                int maxColSize = paddingAmountList.get(cols);
                 int spaceOffset = Math.abs(colSize - maxColSize);
 
                 StringBuilder spaces = new StringBuilder();
@@ -189,9 +189,14 @@ public class TableData {
                     spaces.append(" ");
                 }
 
-                print.append(tableData.get(rows).get(cols)).append(spaces).append("\n");
+                print.append(tableData.get(rows).get(cols)).append(spaces).append(" ");
             }
+
+            print.append("\n");
         }
+
+        // remove "\n"
+        print.deleteCharAt(print.length() - 1);
 
         return print.toString();
     }

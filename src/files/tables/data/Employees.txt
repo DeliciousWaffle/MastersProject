@@ -1,3 +1,5 @@
+EmployeeID	LastName	FirstName	BirthDate
+skip
 1	Davolio	Nancy	1968-12-08
 2	Fuller	Andrew	1952-02-19
 3	Leverling	Janet	1963-08-30

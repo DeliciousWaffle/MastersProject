@@ -287,23 +287,30 @@ public class Table {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("Table Name: ").append(tableName).append("\n");
-        stringBuilder.append("Columns: ").append("\n");
+        stringBuilder.append("Columns: ");
 
         for(Column column : columns) {
             stringBuilder.append(column.toString()).append(", ");
         }
 
         // remove ", "
-        stringBuilder.deleteCharAt(stringBuilder.length());
-        stringBuilder.deleteCharAt(stringBuilder.length());
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
-        stringBuilder.append("\n").append("Primary Key: " + primaryKey.getName()).append("\n");
+        stringBuilder.append("\n").append("Primary Key: " + primaryKey.getName()).append("\n\n");
 
         // adding table data stuff
         for(Column column : columns) {
 
-            int columnNameLength = column.getName().length();
+            // cut off any column names whose lengths are larger than their sizes
+            StringBuilder columnName = new StringBuilder(column.getName());
             int maxColumnNameLength = column.size();
+
+            while(columnName.length() > maxColumnNameLength) {
+                columnName.deleteCharAt(columnName.length() - 1);
+            }
+
+            int columnNameLength = columnName.length();
             int numSpaces = Math.abs(columnNameLength - maxColumnNameLength);
 
             StringBuilder spaces = new StringBuilder();
@@ -312,7 +319,7 @@ public class Table {
                 spaces.append(" ");
             }
 
-            stringBuilder.append(column.getName()).append(spaces).append(" ");
+            stringBuilder.append(columnName).append(spaces).append(" ");
         }
 
         stringBuilder.append("\n");

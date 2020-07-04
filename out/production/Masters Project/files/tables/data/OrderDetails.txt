@@ -1,3 +1,5 @@
+OrderDetailID	OrderID	ProductID	Quantity
+skip
 1	10248	11	12
 2	10248	42	10
 3	10248	72	5

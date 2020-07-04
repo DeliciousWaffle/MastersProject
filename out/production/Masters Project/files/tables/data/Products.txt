@@ -1,3 +1,5 @@
+ProductID	ProductName	SupplierID	CategoryID	Price
+skip
 1	Chais	1	1	18
 2	Chang	1	1	19
 3	Aniseed Syrup	1	2	10

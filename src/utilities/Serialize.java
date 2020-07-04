@@ -8,6 +8,7 @@ import datastructures.user.User;
 import utilities.enums.Privilege;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Responsible for serializing and un-serializing all data so that it can be used in
@@ -288,7 +289,8 @@ public class Serialize {
         return "";
     }
 
-    // TODO cant split along spaces, need to split along the size of each column in the table
+    // TODO will need to split along the size of each column!!!
+
     /**
      * Formats raw table data (ie. the rows and columns of a table) into something usable.
      * Basically takes the contents of a table data file, parsers it, and returns the Table Data.
@@ -302,33 +304,54 @@ public class Serialize {
         String[] tableRows = serializedTableData.split("\n");
 
         int numRows = tableRows.length;
-        int numCols = tableRows[0].split("\\s+").length;
+        int numCols = tableRows[0].split("\\t+").length;
 
-        // store the size of each column
-        ArrayList<Integer> columnSizes = new ArrayList<>();
+        // used for formatting purposes
+        ArrayList<Integer> paddingAmountList = new ArrayList<>();
 
         for(Column column : table.getColumns()) {
-            columnSizes.add(column.size());
-        }
 
+            //int columnNameLength = column.getName().length();
+            //int columnSize = column.size();
+            //int paddingAmount = columnNameLength + columnSize;
+System.out.println(column.size());
+            paddingAmountList.add(column.size());
+        }
+System.out.println();
         // skip the column names and dashed lines
-        String[][] splitTableData = new String[numRows - 2][numCols];
+        String[][] splitTableData = new String[numRows - 2][];
 
         for(int rows = 2; rows < numRows; rows++) {
-            splitTableData[rows - 2] = tableRows[rows].split("\\s+");
+            splitTableData[rows - 2] = tableRows[rows].split("\\t+");
         }
+
+        // TODO remove
+        /*for(String[] rows : splitTableData) {
+            StringBuilder sb = new StringBuilder();
+            for(String cols : rows) {
+                sb.append("\"").append(cols).append("\"").append(", ");
+            }
+            sb.deleteCharAt(sb.length() - 1);
+            sb.deleteCharAt(sb.length() - 1);
+            System.out.println(sb.toString());
+        }*/
 
         // convert 2D array to 2D array list for Table Data
         ArrayList<ArrayList<String>> tableData = new ArrayList<>();
 
         for(int rows = 0; rows < numRows - 2; rows++) {
-            tableData.add(new ArrayList<>());
+
+            ArrayList<String> columns = new ArrayList<>();
+            // TODO remove
+            //System.out.println(Arrays.toString(splitTableData[rows]));
             for(int cols = 0; cols < numCols; cols++) {
-                tableData.get(rows).add(splitTableData[rows][cols]);
+                columns.add(splitTableData[rows][cols]);
             }
+
+            tableData.add(columns);
         }
 
-        return new TableData(columnSizes, tableData);
+        return new TableData(paddingAmountList, tableData);
     }
 
     /**

@@ -1,3 +1,5 @@
+CategoryID	CategoryName
+skip
 1	Beverages
 2	Condiments
 3	Confections
