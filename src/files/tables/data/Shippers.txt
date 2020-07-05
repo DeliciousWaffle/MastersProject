@@ -1,5 +1,5 @@
-ShipperID	ShipperName
-skip
-1	Speedy Express
-2	United Package
-3	Federal Shipping
+ShipperID ShipperName          
+--------- -------------------- 
+1         Speedy Express       
+2         United Package       
+3         Federal Shipping

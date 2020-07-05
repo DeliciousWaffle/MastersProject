@@ -289,8 +289,6 @@ public class Serialize {
         return "";
     }
 
-    // TODO will need to split along the size of each column!!!
-
     /**
      * Formats raw table data (ie. the rows and columns of a table) into something usable.
      * Basically takes the contents of a table data file, parsers it, and returns the Table Data.
@@ -304,37 +302,60 @@ public class Serialize {
         String[] tableRows = serializedTableData.split("\n");
 
         int numRows = tableRows.length;
-        int numCols = tableRows[0].split("\\t+").length;
+        int numCols = table.getNumCols();
+
+        // used for determining where to split each column in a row
+        ArrayList<Integer> columnSizes = new ArrayList<>();
+        ArrayList<Integer> columnNameLengths = new ArrayList<>();
 
         // used for formatting purposes
         ArrayList<Integer> paddingAmountList = new ArrayList<>();
 
+        // figuring out padding amounts and adding to the list of column sizes
         for(Column column : table.getColumns()) {
 
-            //int columnNameLength = column.getName().length();
-            //int columnSize = column.size();
-            //int paddingAmount = columnNameLength + columnSize;
-System.out.println(column.size());
-            paddingAmountList.add(column.size());
+            int columnNameLength = column.getName().length();
+            int maxNumSpaces = column.size();
+
+            if(columnNameLength > maxNumSpaces) {
+                paddingAmountList.add(columnNameLength);
+            } else {
+                paddingAmountList.add(column.size());
+            }
+
+            // add these guys for later
+            columnSizes.add(column.size());
+            columnNameLengths.add(columnNameLength);
         }
-System.out.println();
+
         // skip the column names and dashed lines
-        String[][] splitTableData = new String[numRows - 2][];
+        String[][] splitTableData = new String[numRows - 2][numCols];
 
         for(int rows = 2; rows < numRows; rows++) {
-            splitTableData[rows - 2] = tableRows[rows].split("\\t+");
-        }
 
-        // TODO remove
-        /*for(String[] rows : splitTableData) {
-            StringBuilder sb = new StringBuilder();
-            for(String cols : rows) {
-                sb.append("\"").append(cols).append("\"").append(", ");
+            int beginIndex = 0;
+
+            for(int cols = 0; cols < numCols; cols++) {
+
+                int columnNameLength = table.getColumns().get(cols).getName().length();
+                int columnSize = Math.max(columnNameLength, columnSizes.get(cols));
+                int endIndex = columnSize + beginIndex;
+
+                String formattedColumn = "";
+
+                // last column can be too small for endIndex
+                if(cols == numCols - 1) {
+                    formattedColumn = tableRows[rows].substring(beginIndex, tableRows[rows].length() - 1);
+                }else {
+                    formattedColumn = tableRows[rows].substring(beginIndex, endIndex).trim();
+                }
+
+                splitTableData[rows - 2][cols] = formattedColumn;
+
+                // + 1 to account for that extra space between columns,
+                beginIndex = endIndex + 1;
             }
-            sb.deleteCharAt(sb.length() - 1);
-            sb.deleteCharAt(sb.length() - 1);
-            System.out.println(sb.toString());
-        }*/
+        }
 
         // convert 2D array to 2D array list for Table Data
         ArrayList<ArrayList<String>> tableData = new ArrayList<>();
@@ -345,7 +366,7 @@ System.out.println();
             // TODO remove
             //System.out.println(Arrays.toString(splitTableData[rows]));
             for(int cols = 0; cols < numCols; cols++) {
-                columns.add(splitTableData[rows][cols]);
+                columns.add(splitTableData[rows][cols].trim());
             }
 
             tableData.add(columns);
@@ -377,13 +398,18 @@ System.out.println();
             StringBuilder spaces = new StringBuilder();
             int columnNameLength = columnName.length();
             int maxNumSpaces = column.size();
-            int numSpacesToPad = Math.abs(maxNumSpaces - columnNameLength);
+            int numSpacesToPad = maxNumSpaces - columnNameLength;
+            int numDashes = Math.max(maxNumSpaces, columnNameLength);
 
-            for(int i = 0; i < numSpacesToPad; i++) {
-                spaces.append(" ");
+            boolean needsPadding = numSpacesToPad > 0;
+
+            if(needsPadding) {
+                for(int i = 0; i < numSpacesToPad; i++) {
+                    spaces.append(" ");
+                }
             }
 
-            for(int i = 0; i < maxNumSpaces; i++) {
+            for(int i = 0; i < numDashes; i++) {
                 dashes.append("-");
             }
 

@@ -302,21 +302,19 @@ public class Table {
         // adding table data stuff
         for(Column column : columns) {
 
-            // cut off any column names whose lengths are larger than their sizes
-            StringBuilder columnName = new StringBuilder(column.getName());
-            int maxColumnNameLength = column.size();
-
-            while(columnName.length() > maxColumnNameLength) {
-                columnName.deleteCharAt(columnName.length() - 1);
-            }
-
-            int columnNameLength = columnName.length();
-            int numSpaces = Math.abs(columnNameLength - maxColumnNameLength);
+            String columnName = column.getName();
 
             StringBuilder spaces = new StringBuilder();
+            int columnNameLength = columnName.length();
+            int maxNumSpaces = column.size();
+            int numSpacesToPad = maxNumSpaces - columnNameLength;
 
-            for(int i = 0; i < numSpaces; i++) {
-                spaces.append(" ");
+            boolean needsPadding = numSpacesToPad > 0;
+
+            if(needsPadding) {
+                for(int i = 0; i < numSpacesToPad; i++) {
+                    spaces.append(" ");
+                }
             }
 
             stringBuilder.append(columnName).append(spaces).append(" ");
@@ -324,12 +322,16 @@ public class Table {
 
         stringBuilder.append("\n");
 
+        // adding a dashed line
         for(Column column : columns) {
 
             int maxColumnNameLength = column.size();
+            int columnNameLength = column.getName().length();
+            int numDashes = Math.max(maxColumnNameLength, columnNameLength);
+
             StringBuilder dashes = new StringBuilder();
 
-            for(int i = 0; i < maxColumnNameLength; i++) {
+            for(int i = 0; i < numDashes; i++) {
                 dashes.append("-");
             }
 
