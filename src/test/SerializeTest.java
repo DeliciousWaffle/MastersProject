@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import files.IO;
 import utilities.Serialize;
+import utilities.enums.DataType;
 import utilities.enums.Filename;
 import utilities.enums.Privilege;
 
@@ -16,6 +17,9 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests the Serialize class and is currently hot garbage.
+ */
 class SerializeTest {
 
     private static ArrayList<User> expectedUsers = new ArrayList<>();
@@ -318,27 +322,47 @@ class SerializeTest {
     @Test
     public void testUnSerializeTable() {
 
+        /*System.out.println("-------------------------------------------");
+        String serializedTables = IO.read(Filename.TEST_TABLES);
+        ArrayList<Table> tables = Serialize.unSerializeTables(serializedTables);
+        for(Table table : tables) {
+            System.out.println(table.toString());
+            System.out.println();
+        }
+
+        String serializedTables2 = Serialize.serializeTables(tables);
+        System.out.println(serializedTables2);
+
+        String[] expected = serializedTables.split("\n");
+        String[] actual = serializedTables2.split("\n");
+
+        for(int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i].trim(), actual[i].trim());
+        }
+
+        System.out.println("-------------------------------------------");*/
         assertTrue(true);
     }
 
     @Test
     public void testSerializedTable() {
-
         assertTrue(true);
     }
 
     @Test
     public void testUnSerializeTableData() {
 
+        ArrayList<Table> tables = new ArrayList<>();
+
         Table customersTable = new Table("Customers");
         ArrayList<Column> columns = new ArrayList<>();
-        columns.add(new Column("CustomerID", "", true, 5));
-        columns.add(new Column("CustomerName", "", false, 40));
-        columns.add(new Column("ContactName", "", false, 30));
-        columns.add(new Column("Address", "", false, 50));
-        columns.add(new Column("City", "", false, 20));
-        columns.add(new Column("PostalCode", "", true, 10));
-        columns.add(new Column("Country", "", false, 15));
+        columns.add(new Column("CustomerID", DataType.NUMBER, 5));
+        columns.add(new Column("CustomerName", DataType.CHAR, 40));
+        columns.add(new Column("ContactName", DataType.CHAR, 30));
+        columns.add(new Column("Address", DataType.CHAR, 50));
+        columns.add(new Column("City", DataType.CHAR, 20));
+        columns.add(new Column("PostalCode", DataType.CHAR, 10));
+        columns.add(new Column("Country", DataType.CHAR, 15));
         customersTable.setColumns(columns);
 
         String tableDataString = IO.readTableData(Filename.TABLE_DATA, "Customers.txt");
@@ -348,8 +372,8 @@ class SerializeTest {
 
         Table categoriesTable = new Table("Categories");
         columns = new ArrayList<>();
-        columns.add(new Column("CategoryID", "", true, 5));
-        columns.add(new Column("CategoryName", "", false, 15));
+        columns.add(new Column("CategoryID", DataType.NUMBER, 5));
+        columns.add(new Column("CategoryName", DataType.CHAR, 15));
         categoriesTable.setColumns(columns);
 
         tableDataString = IO.readTableData(Filename.TABLE_DATA, "Categories.txt");
@@ -359,10 +383,10 @@ class SerializeTest {
 
         Table employeesTable = new Table("Employees");
         columns = new ArrayList<>();
-        columns.add(new Column("EmployeeID", "", true, 5));
-        columns.add(new Column("LastName", "", false, 10));
-        columns.add(new Column("FirstName", "", false, 10));
-        columns.add(new Column("BirthDate", "", false, 10));
+        columns.add(new Column("EmployeeID", DataType.NUMBER, 5));
+        columns.add(new Column("LastName", DataType.CHAR, 10));
+        columns.add(new Column("FirstName", DataType.CHAR, 10));
+        columns.add(new Column("BirthDate", DataType.DATE, 10));
         employeesTable.setColumns(columns);
 
         tableDataString = IO.readTableData(Filename.TABLE_DATA, "Employees.txt");
@@ -372,10 +396,10 @@ class SerializeTest {
 
         Table orderDetailsTable = new Table("OrderDetails");
         columns = new ArrayList<>();
-        columns.add(new Column("OrderDetailID", "", true, 5));
-        columns.add(new Column("OrderID", "", true, 5));
-        columns.add(new Column("ProductID", "", true, 5));
-        columns.add(new Column("Quantity", "", true, 5));
+        columns.add(new Column("OrderDetailID", DataType.NUMBER, 5));
+        columns.add(new Column("OrderID", DataType.NUMBER, 5));
+        columns.add(new Column("ProductID", DataType.NUMBER, 5));
+        columns.add(new Column("Quantity", DataType.NUMBER, 5));
         orderDetailsTable.setColumns(columns);
 
         tableDataString = IO.readTableData(Filename.TABLE_DATA, "OrderDetails.txt");
@@ -385,11 +409,11 @@ class SerializeTest {
 
         Table ordersTable = new Table("Orders");
         columns = new ArrayList<>();
-        columns.add(new Column("OrderID", "", true, 5));
-        columns.add(new Column("CustomerID", "", true, 5));
-        columns.add(new Column("EmployeeID", "", true, 5));
-        columns.add(new Column("OrderDate", "", false, 10));
-        columns.add(new Column("ShipperID", "", true, 5));
+        columns.add(new Column("OrderID", DataType.NUMBER, 5));
+        columns.add(new Column("CustomerID", DataType.NUMBER, 5));
+        columns.add(new Column("EmployeeID", DataType.NUMBER, 5));
+        columns.add(new Column("OrderDate", DataType.DATE, 10));
+        columns.add(new Column("ShipperID", DataType.NUMBER, 5));
         ordersTable.setColumns(columns);
 
         tableDataString = IO.readTableData(Filename.TABLE_DATA, "Orders.txt");
@@ -399,11 +423,11 @@ class SerializeTest {
 
         Table productsTable = new Table("Products");
         columns = new ArrayList<>();
-        columns.add(new Column("ProductID", "", true, 5));
-        columns.add(new Column("ProductName", "", false, 35));
-        columns.add(new Column("SupplierID", "", true, 5));
-        columns.add(new Column("CategoryID", "", true, 5));
-        columns.add(new Column("Price", "", true, 10));
+        columns.add(new Column("ProductID", DataType.NUMBER, 5));
+        columns.add(new Column("ProductName", DataType.CHAR, 35));
+        columns.add(new Column("SupplierID", DataType.NUMBER, 5));
+        columns.add(new Column("CategoryID", DataType.NUMBER, 5));
+        columns.add(new Column("Price", DataType.NUMBER, 10));
         productsTable.setColumns(columns);
 
         tableDataString = IO.readTableData(Filename.TABLE_DATA, "Products.txt");
@@ -413,12 +437,12 @@ class SerializeTest {
 
         Table suppliersTable = new Table("Suppliers");
         columns = new ArrayList<>();
-        columns.add(new Column("SupplierID", "", true, 5));
-        columns.add(new Column("SupplierName", "", false, 40));
-        columns.add(new Column("ContactName", "", false, 30));
-        columns.add(new Column("Address", "", false, 50));
-        columns.add(new Column("City", "", false, 20));
-        columns.add(new Column("Country", "", false, 15));
+        columns.add(new Column("SupplierID", DataType.NUMBER, 5));
+        columns.add(new Column("SupplierName", DataType.CHAR, 40));
+        columns.add(new Column("ContactName", DataType.CHAR, 30));
+        columns.add(new Column("Address", DataType.CHAR, 50));
+        columns.add(new Column("City", DataType.CHAR, 20));
+        columns.add(new Column("Country", DataType.CHAR, 15));
         suppliersTable.setColumns(columns);
 
         tableDataString = IO.readTableData(Filename.TABLE_DATA, "Suppliers.txt");
@@ -428,14 +452,27 @@ class SerializeTest {
 
         Table shippersTable = new Table("Shippers");
         columns = new ArrayList<>();
-        columns.add(new Column("ShipperID", "", true, 5));
-        columns.add(new Column("ShipperName", "", false, 20));
+        columns.add(new Column("ShipperID", DataType.NUMBER, 5));
+        columns.add(new Column("ShipperName", DataType.CHAR, 20));
         shippersTable.setColumns(columns);
 
         tableDataString = IO.readTableData(Filename.TABLE_DATA, "Shippers.txt");
         tableData = Serialize.unSerializeTableData(tableDataString, shippersTable);
         shippersTable.setTableData(tableData);
         System.out.println(shippersTable.toString());
+
+        tables.add(customersTable);
+        tables.add(categoriesTable);
+        tables.add(employeesTable);
+        tables.add(orderDetailsTable);
+        tables.add(ordersTable);
+        tables.add(productsTable);
+        tables.add(suppliersTable);
+        tables.add(shippersTable);
+
+        // TODO double check to make sure Serialize class not serializing table data
+        String serialized = Serialize.serializeTables(tables);
+        IO.write(Filename.TEST_TABLES, serialized);
 
         assertTrue(true);
     }

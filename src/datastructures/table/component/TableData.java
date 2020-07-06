@@ -94,6 +94,22 @@ public class TableData {
     }
 
     /**
+     * Returns a list of rows at the supplied column index.
+     * @param colIndex the index of the column
+     * @return a list of rows corresponding to the supplied column index
+     */
+    public ArrayList<String> getRowsAt(int colIndex) {
+
+        ArrayList<String> columnsRowData = new ArrayList<>();
+
+        for(int rows = 0; rows < tableData.size(); rows++) {
+            columnsRowData.add(tableData.get(rows).get(colIndex));
+        }
+
+        return columnsRowData;
+    }
+
+    /**
      * Returns whether the data stored within this table is deeply equal to
      * the object provided. Pretty much just used for testing purposes.
      * @param other object for comparison

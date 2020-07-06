@@ -1,36 +1,44 @@
 package datastructures.table.component;
 
+import utilities.enums.DataType;
+
 public class Column {
 
     private String name;
-    private String dataType; // make into an enum or just remove entirely
-    private boolean isNumeric;
-    private boolean canAlterCharToInt;
+    private DataType dataType;
     private int size;
     private FileStructure fileStructure;
 
-    public Column(String name, String dataType, boolean isNumeric, int size) {
+    /**
+     * Default constructor used for un-serializing serialized data.
+     * Should not be used for anything else.
+     */
+    public Column() {
+
+        this.name      = "";
+        this.dataType  = DataType.CHAR;
+        this.size      = 0;
+        fileStructure  = FileStructure.NONE;
+    }
+
+    public Column(String name, DataType dataType, int size) {
 
         this.name      = name;
         this.dataType  = dataType;
         this.size      = size;
-        this.isNumeric = isNumeric;
         fileStructure  = FileStructure.NONE;
+    }
+
+    public Column(String name, DataType dataType, int size, FileStructure fileStructure) {
+        this(name, dataType, size);
+        this.fileStructure = fileStructure;
     }
 
     public String getName() { return name; }
 
-    public void setDataType(String dataType) { this.dataType = dataType; }
+    public void setDataType(DataType dataType) { this.dataType = dataType; }
 
-    public String getDataType() { return dataType; }
-
-    public void setIsNumeric(boolean isNumeric) { this.isNumeric = isNumeric; }
-
-    public boolean isNumeric() { return isNumeric; }
-
-    public void setCanAlterCharToInt(boolean canAlterCharToInt) { this.canAlterCharToInt = canAlterCharToInt; }
-
-    public boolean canAlterCharToInt() { return canAlterCharToInt; }
+    public DataType getDataType() { return dataType; }
 
     public void setSize(int size) { this.size = size; }
 
@@ -40,7 +48,7 @@ public class Column {
 
     public void setFileStructure(FileStructure fileStructure) { this.fileStructure = fileStructure; }
 
-    public void removeFileStructure() { fileStructure = fileStructure.NONE; }
+    public void removeFileStructure() { this.fileStructure = FileStructure.NONE; }
 
     /**
      * Returns whether this column is deeply equal to the object provided.
@@ -72,21 +80,6 @@ public class Column {
             System.out.println("Columns not equal");
             System.out.println("Other Column data type: " + otherColumn.getDataType() +
                     " This Column data type: " + this.getDataType());
-            return false;
-        }
-
-        if(otherColumn.isNumeric() != this.isNumeric()) {
-            System.out.println("Columns not equal");
-            System.out.println("Other Column is numeric: " + otherColumn.isNumeric() +
-                    " This Column is numeric: " + this.isNumeric());
-            return false;
-        }
-
-        if(otherColumn.canAlterCharToInt() != this.canAlterCharToInt()) {
-            System.out.println("Columns not equal");
-            System.out.println("Other Column can alter char to int: " +
-                    otherColumn.canAlterCharToInt() + " This Column can alter char to int: " +
-                    this.canAlterCharToInt());
             return false;
         }
 

@@ -1,26 +1,56 @@
 Table: Table1
-    Column: Col1 Number 4
-        FileStructure: SECONDARY_B_TREE CLUSTERED_B_TREE
-    Column: Col2 Char 5
-        FileStructure: HASH_TABLE
-    Column: Col3 Char 8
-        FileStructure: NONE
-    IsClustered: false
+    ColumnList: NOT EMPTY
+        Column: Col1 NUMBER 5 SECONDARY_B_TREE
+        COLUMN DONE
+        Column: Col2 CHAR 5 HASH_TABLE
+        COLUMN DONE
+        Column: Col3 CHAR 10 NONE
+        COLUMN DONE
+        Column: Col4 NUMBER 10 NONE
+        COLUMN DONE
+    COLUMN LIST DONE
+    PrimaryKey: Col1
+    ForeignKeyList: Col4
+    FOREIGN KEY LIST DONE
+    IsClusteredWith: none
+    TableDataFilename: Table1.txt
+TABLE DONE
 Table: Table2
-    Column: Col1 Number 7
-        FileStructure: NONE
-    Column: Col2 Char 3
-        FileStructure: SECONDARY_B_TREE HASH_TABLE
-    IsClustered: false
+    ColumnList: NOT EMPTY
+        Column: Col4 NUMBER 10 NONE
+        COLUMN DONE
+        Column: Col5 CHAR 5 SECONDARY_B_TREE
+        COLUMN DONE
+    COLUMN LIST DONE
+    PrimaryKey: Col4
+    ForeignKeyList: EMPTY
+    FOREIGN KEY LIST DONE
+    IsClusteredWith: none
+    TableDataFilename: Table2.txt
+TABLE DONE
 Table: Table3
-    Column: Col1 Char 4
-        FileStructure: NONE
-    Column: Col2 Char 6
-        FileStructure: NONE
-    IsClustered: true
+    ColumnList: NOT EMPTY
+        Column: Col6 CHAR 5 NONE
+        COLUMN DONE
+        Column: Col7 CHAR 10 NONE
+        COLUMN DONE
+    COLUMN LIST DONE
+    PrimaryKey: none
+    ForeignKeyList: EMPTY
+    FOREIGN KEY LIST DONE
+    IsClusteredWith: Table4
+    TableDataFilename: Table3.txt
+TABLE DONE
 Table: Table4
-    Column: Col1 Char 5
-        FileStructure: NONE
-    Column: Col2 Number 9
-        FileStructure: NONE
-    IsClustered: true
+    ColumnList: NOT EMPTY
+        Column: Col8 CHAR 10 NONE
+        COLUMN DONE
+        Column: Col9 NUMBER 10 NONE
+        COLUMN DONE
+    COLUMN LIST DONE
+    PrimaryKey: none
+    ForeignKeyList: EMPTY
+    FOREIGN KEY LIST DONE
+    IsClusteredWith: Table3
+    TableDataFilename: Table4.txt
+TABLE DONE

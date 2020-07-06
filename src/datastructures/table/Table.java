@@ -2,6 +2,7 @@ package datastructures.table;
 
 import datastructures.table.component.Column;
 import datastructures.table.component.TableData;
+import utilities.enums.DataType;
 
 import java.util.ArrayList;
 
@@ -13,22 +14,38 @@ public class Table {
 
     private String tableName;
     private ArrayList<Column> columns;
-    private Column primaryKey;
-    private ArrayList<Column> foreignKeys;
+    private String primaryKey;
+    private ArrayList<String> foreignKeys;
+    private String clusteredWith;
     private TableData tableData;
 
     /**
-     * Default constructor, mainly used for testing purposes, I hope. Everything except
+     * Default constructor used for un-serializing serialized data.
+     * Should not be used for any other purpose
+     */
+    public Table() {
+
+        this.tableName = "";
+        this.columns = new ArrayList<>();
+        this.primaryKey = "";
+        this.foreignKeys = new ArrayList<>();
+        this.clusteredWith = "";
+        this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
+    }
+
+    /**
+     * Mainly used for testing purposes, I hope. Everything except
      * the table name must be manually set so nothing breaks.
      * @param tableName is the name of the table
      */
     public Table(String tableName) {
 
-        this.tableName   = tableName;
-        this.columns     = new ArrayList<>();
-        this.primaryKey  = new Column("null", "null", false, 0);
+        this.tableName = tableName;
+        this.columns = new ArrayList<>();
+        this.primaryKey = "none";
         this.foreignKeys = new ArrayList<>();
-        this.tableData   = new TableData(new ArrayList<>(), new ArrayList<>());
+        this.clusteredWith = "none";
+        this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
     }
 
     /**
@@ -38,13 +55,14 @@ public class Table {
      * @param primaryKey is the primary key of this table
      * @param foreignKeys are foreign keys of this table
      */
-    public Table(String tableName, ArrayList<Column> columns, Column primaryKey, ArrayList<Column> foreignKeys) {
+    public Table(String tableName, ArrayList<Column> columns, String primaryKey, ArrayList<String> foreignKeys) {
 
         this(tableName);
-        this.columns     = columns;
-        this.primaryKey  = primaryKey;
+        this.columns = columns;
+        this.primaryKey = primaryKey;
         this.foreignKeys = foreignKeys;
-        this.tableData   = new TableData(new ArrayList<>(), new ArrayList<>());
+        this.clusteredWith = "none";
+        this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
     }
 
     // getters, setters ------------------------------------------------------------------------------------------------
@@ -90,7 +108,12 @@ public class Table {
      * @param columnToRemove is the column to remove
      */
     public void removeColumn(Column columnToRemove) {
+
         removeColumn(columnToRemove.getName());
+
+        if(columnToRemove.equals(primaryKey)) {
+
+        }
     }
 
     /**
@@ -110,36 +133,60 @@ public class Table {
     /**
      * @return the primary key of this table
      */
-    public Column getPrimaryKey() { return primaryKey; }
+    public String getPrimaryKey() { return primaryKey; }
 
     /**
      * @param primaryKey is what to set the new primary key to
      */
-    public void setPrimaryKey(Column primaryKey) {
+    public void setPrimaryKey(String primaryKey) {
         this.primaryKey = primaryKey;
+    }
+
+    /**
+     * @return whether this table has a primary key
+     */
+    public boolean hasPrimaryKey() {
+        return ! primaryKey.equals("none");
     }
 
     /**
      * @return the foreign keys of this table
      */
-    public ArrayList<Column> getForeignKeys() { return foreignKeys; }
+    public ArrayList<String> getForeignKeys() { return foreignKeys; }
 
     /**
      * @param foreignKeys are the foreign keys to set
      */
-    public void setForeignKeys(ArrayList<Column> foreignKeys) { this.foreignKeys = foreignKeys; }
+    public void setForeignKeys(ArrayList<String> foreignKeys) { this.foreignKeys = foreignKeys; }
 
     /**
      * @param foreignKey is the foreign key to add
      */
-    public void addForeignKey(Column foreignKey) {
+    public void addForeignKey(String foreignKey) {
         if(! hasColumn(foreignKey)) {
             foreignKeys.add(foreignKey);
         }
     }
 
     /**
-     * @return all the raw data held within a table
+     * @return the table name that this table is clustered with
+     */
+    public String getClusteredWith() { return clusteredWith; }
+
+    /**
+     * @param clusteredWith is the table that this table will be clustered with
+     */
+    public void setClusteredWith(String clusteredWith) {
+        this.clusteredWith = clusteredWith;
+    }
+
+    /**
+     * @return whether this table is clustered with another table
+     */
+    public boolean isClustered() { return ! clusteredWith.equals("none"); }
+
+    /**
+     * @return all the data held within a table
      */
     public TableData getTableData() {
         return tableData;
@@ -178,7 +225,7 @@ public class Table {
         }
 
         // didn't find what was asked, just return empty column
-        return new Column("null", "null", false, 0);
+        return new Column("null", DataType.CHAR, 0);
     }
 
     /**
@@ -275,6 +322,10 @@ public class Table {
             return false;
         }
 
+        if(! otherTable.getClusteredWith().equals(this.getClusteredWith())) {
+            return false;
+        }
+
         return otherTable.getTableData().equals(this.getTableData());
     }
 
@@ -297,7 +348,7 @@ public class Table {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
-        stringBuilder.append("\n").append("Primary Key: " + primaryKey.getName()).append("\n\n");
+        stringBuilder.append("\n").append("Primary Key: ").append(primaryKey).append("\n\n");
 
         // adding table data stuff
         for(Column column : columns) {

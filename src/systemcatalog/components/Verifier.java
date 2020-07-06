@@ -91,14 +91,14 @@ public class Verifier {
         candidateColumns = ruleGraph.getTokensAt(query, 10);
         String candidateColumn = candidateColumns.isEmpty() ? "null" : candidateColumns.get(0);
 
-        for(Table currentTable : tables) {
+        /*for(Table currentTable : tables) {
             for(Column currentColumn : currentTable.getColumns()) {
                 String columnName = currentColumn.getName();
                 if(candidateColumn.equalsIgnoreCase(columnName) && ! currentColumn.isNumeric()) {
                     return false;
                 }
             }
-        }
+        }*/
 
         // TODO not sure if this 100% correct
         // ensure that the columns used to join on in the using clause appear in the corresponding tables
@@ -164,9 +164,10 @@ public class Verifier {
 
                         boolean isNumericConstant = Parser.isNumeric(constant);
 
-                        if(column1.isNumeric() && ! isNumericConstant) {
+                        // TODO
+                        /*if(column1.isNumeric() && ! isNumericConstant) {
                             return false;
-                        }
+                        }*/
                     }
                 }
             }
@@ -269,9 +270,10 @@ public class Verifier {
         // make sure all rows associated with the column to change can actually transition from char to int
         if(type.equalsIgnoreCase("MODIFY")) {
             Column referencedColumn = referencedTable.getColumn(columnName);
-            if(! referencedColumn.canAlterCharToInt()) {
+            // TODO
+            /*if(! referencedColumn.canAlterCharToInt()) {
                 return false;
-            }
+            }*/
         }
 
         // if using add or modify, ensure size is not greater than 99
@@ -318,12 +320,13 @@ public class Verifier {
 
         for(int i = 0; i < columns.size(); i++) {
 
-            boolean isNumericColumn = columns.get(i).isNumeric();
+            // TODO
+            /*boolean isNumericColumn = columns.get(i).isNumeric();
             boolean isNumericValue  = Parser.isNumeric(valuesToInsert.get(i));
 
             if(isNumericColumn && ! isNumericValue) {
                 return false;
-            }
+            }*/
         }
 
         return true;
@@ -358,13 +361,14 @@ public class Verifier {
 
         // make sure the column referenced matches the datatype of the value supplied
         String value = delete[11];
-        boolean isNumericColumn = referencedTable.getColumn(columnName).isNumeric();
+        // TODO
+        /*boolean isNumericColumn = referencedTable.getColumn(columnName).isNumeric();
         boolean isNumericValue  = Parser.isNumeric(value);
 
         if(isNumericColumn && ! isNumericValue) {
             return false;
         }
-
+*/
         return true;
     }
 
@@ -401,14 +405,14 @@ public class Verifier {
             if(! referencedTable.hasColumn(whereColumn)) {
                 return false;
             }
-
+// TODO
             // make sure the column referenced in WHERE clause has the correct data type
-            boolean isNumericColumn = referencedTable.getColumn(whereColumn).isNumeric();
+            /*boolean isNumericColumn = referencedTable.getColumn(whereColumn).isNumeric();
             boolean isNumericValue  = Parser.isNumeric(update[9]);
 
             if(isNumericColumn && !isNumericValue) {
                 return false;
-            }
+            }*/
         }
 
         return true;

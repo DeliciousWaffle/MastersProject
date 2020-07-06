@@ -42,6 +42,7 @@ public class IO {
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return "null";
         }
 
         return data.toString();
@@ -76,6 +77,7 @@ public class IO {
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            return "null";
         }
 
         return data.toString();
