@@ -23,6 +23,13 @@ public class TableData {
     public ArrayList<Integer> getPaddingAmountList() { return paddingAmountList; }
 
     /**
+     * @return the data of this table
+     */
+    public ArrayList<ArrayList<String>> getData() {
+        return tableData;
+    }
+
+    /**
      * @return the number of rows in this table
      */
     public int getNumRows() {

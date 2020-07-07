@@ -470,7 +470,6 @@ class SerializeTest {
         tables.add(suppliersTable);
         tables.add(shippersTable);
 
-        // TODO double check to make sure Serialize class not serializing table data
         String serialized = Serialize.serializeTables(tables);
         IO.write(Filename.TEST_TABLES, serialized);
 

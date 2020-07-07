@@ -1,56 +1,142 @@
-Table: Table1
-    ColumnList: NOT EMPTY
-        Column: Col1 NUMBER 5 SECONDARY_B_TREE
-        COLUMN DONE
-        Column: Col2 CHAR 5 HASH_TABLE
-        COLUMN DONE
-        Column: Col3 CHAR 10 NONE
-        COLUMN DONE
-        Column: Col4 NUMBER 10 NONE
-        COLUMN DONE
-    COLUMN LIST DONE
-    PrimaryKey: Col1
-    ForeignKeyList: Col4
-    FOREIGN KEY LIST DONE
-    IsClusteredWith: none
-    TableDataFilename: Table1.txt
+Table: Customers
+	ColumnList: NOT EMPTY
+		Column: CustomerID NUMBER 5 NONE
+		COLUMN DONE
+		Column: CustomerName CHAR 40 NONE
+		COLUMN DONE
+		Column: ContactName CHAR 30 NONE
+		COLUMN DONE
+		Column: Address CHAR 50 NONE
+		COLUMN DONE
+		Column: City CHAR 20 NONE
+		COLUMN DONE
+		Column: PostalCode CHAR 10 NONE
+		COLUMN DONE
+		Column: Country CHAR 15 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: Customers.txt
 TABLE DONE
-Table: Table2
-    ColumnList: NOT EMPTY
-        Column: Col4 NUMBER 10 NONE
-        COLUMN DONE
-        Column: Col5 CHAR 5 SECONDARY_B_TREE
-        COLUMN DONE
-    COLUMN LIST DONE
-    PrimaryKey: Col4
-    ForeignKeyList: EMPTY
-    FOREIGN KEY LIST DONE
-    IsClusteredWith: none
-    TableDataFilename: Table2.txt
+Table: Categories
+	ColumnList: NOT EMPTY
+		Column: CategoryID NUMBER 5 NONE
+		COLUMN DONE
+		Column: CategoryName CHAR 15 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: Categories.txt
 TABLE DONE
-Table: Table3
-    ColumnList: NOT EMPTY
-        Column: Col6 CHAR 5 NONE
-        COLUMN DONE
-        Column: Col7 CHAR 10 NONE
-        COLUMN DONE
-    COLUMN LIST DONE
-    PrimaryKey: none
-    ForeignKeyList: EMPTY
-    FOREIGN KEY LIST DONE
-    IsClusteredWith: Table4
-    TableDataFilename: Table3.txt
+Table: Employees
+	ColumnList: NOT EMPTY
+		Column: EmployeeID NUMBER 5 NONE
+		COLUMN DONE
+		Column: LastName CHAR 10 NONE
+		COLUMN DONE
+		Column: FirstName CHAR 10 NONE
+		COLUMN DONE
+		Column: BirthDate DATE 10 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: Employees.txt
 TABLE DONE
-Table: Table4
-    ColumnList: NOT EMPTY
-        Column: Col8 CHAR 10 NONE
-        COLUMN DONE
-        Column: Col9 NUMBER 10 NONE
-        COLUMN DONE
-    COLUMN LIST DONE
-    PrimaryKey: none
-    ForeignKeyList: EMPTY
-    FOREIGN KEY LIST DONE
-    IsClusteredWith: Table3
-    TableDataFilename: Table4.txt
+Table: OrderDetails
+	ColumnList: NOT EMPTY
+		Column: OrderDetailID NUMBER 5 NONE
+		COLUMN DONE
+		Column: OrderID NUMBER 5 NONE
+		COLUMN DONE
+		Column: ProductID NUMBER 5 NONE
+		COLUMN DONE
+		Column: Quantity NUMBER 5 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: OrderDetails.txt
+TABLE DONE
+Table: Orders
+	ColumnList: NOT EMPTY
+		Column: OrderID NUMBER 5 NONE
+		COLUMN DONE
+		Column: CustomerID NUMBER 5 NONE
+		COLUMN DONE
+		Column: EmployeeID NUMBER 5 NONE
+		COLUMN DONE
+		Column: OrderDate DATE 10 NONE
+		COLUMN DONE
+		Column: ShipperID NUMBER 5 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: Orders.txt
+TABLE DONE
+Table: Products
+	ColumnList: NOT EMPTY
+		Column: ProductID NUMBER 5 NONE
+		COLUMN DONE
+		Column: ProductName CHAR 35 NONE
+		COLUMN DONE
+		Column: SupplierID NUMBER 5 NONE
+		COLUMN DONE
+		Column: CategoryID NUMBER 5 NONE
+		COLUMN DONE
+		Column: Price NUMBER 10 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: Products.txt
+TABLE DONE
+Table: Suppliers
+	ColumnList: NOT EMPTY
+		Column: SupplierID NUMBER 5 NONE
+		COLUMN DONE
+		Column: SupplierName CHAR 40 NONE
+		COLUMN DONE
+		Column: ContactName CHAR 30 NONE
+		COLUMN DONE
+		Column: Address CHAR 50 NONE
+		COLUMN DONE
+		Column: City CHAR 20 NONE
+		COLUMN DONE
+		Column: Country CHAR 15 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: Suppliers.txt
+TABLE DONE
+Table: Shippers
+	ColumnList: NOT EMPTY
+		Column: ShipperID NUMBER 5 NONE
+		COLUMN DONE
+		Column: ShipperName CHAR 20 NONE
+		COLUMN DONE
+	COLUMN LIST DONE
+	PrimaryKey: none
+	ForeignKeyList: EMPTY
+	FOREIGN KEY LIST DONE
+	IsClusteredWith: none
+	TableDataFilename: Shippers.txt
 TABLE DONE

@@ -36,6 +36,8 @@ public class Column {
 
     public String getName() { return name; }
 
+    public void setName(String name) { this.name = name; }
+
     public void setDataType(DataType dataType) { this.dataType = dataType; }
 
     public DataType getDataType() { return dataType; }

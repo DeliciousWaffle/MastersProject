@@ -12,7 +12,6 @@ import utilities.enums.Filename;
 import utilities.enums.Privilege;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * Responsible for serializing and un-serializing all data so that it can be used in
@@ -515,8 +514,7 @@ public class Serialize {
         for(int rows = 0; rows < numRows - 2; rows++) {
 
             ArrayList<String> columns = new ArrayList<>();
-            // TODO remove
-            //System.out.println(Arrays.toString(splitTableData[rows]));
+
             for(int cols = 0; cols < numCols; cols++) {
                 columns.add(splitTableData[rows][cols].trim());
             }
