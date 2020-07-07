@@ -18,6 +18,24 @@ public class TableData {
     }
 
     /**
+     * Returns a deep copy of this object.
+     */
+    public TableData(TableData toCopy) {
+        this.paddingAmountList = new ArrayList<>();
+        for(Integer paddingAmount : toCopy.paddingAmountList) {
+            this.paddingAmountList.add(paddingAmount);
+        }
+        this.tableData = new ArrayList<>();
+        for(ArrayList<String> rows : toCopy.tableData) {
+            ArrayList<String> rowsToAdd = new ArrayList<>();
+            for(String cols : rows) {
+                rowsToAdd.add(cols);
+            }
+            this.tableData.add(rowsToAdd);
+        }
+    }
+
+    /**
      * @return columnSizes a list of all the column sizes
      */
     public ArrayList<Integer> getPaddingAmountList() { return paddingAmountList; }

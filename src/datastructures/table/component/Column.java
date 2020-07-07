@@ -34,6 +34,16 @@ public class Column {
         this.fileStructure = fileStructure;
     }
 
+    /**
+     * Copy constructor for deep copies of object.
+     * @param toCopy is the column to make a deep copy of
+     */
+    public Column(Column toCopy) {
+        this.name = toCopy.name;
+        this.dataType = toCopy.dataType;
+        this.size = toCopy.size;
+        this.fileStructure = toCopy.fileStructure;
+    }
     public String getName() { return name; }
 
     public void setName(String name) { this.name = name; }

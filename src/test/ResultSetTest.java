@@ -47,19 +47,21 @@ class ResultSetTest {
         toProject.add(customersTable.getColumns().get(0)); // customer id
         toProject.add(customersTable.getColumns().get(6)); // country
         toProject.add(customersTable.getColumns().get(4)); // city
-// TODO fix table problem
+
         customersTable.projection(toProject);
+        System.out.println(customersTable.toString());
+        customersTable = new ResultSet(tables.get(0));
         System.out.println(customersTable.toString());
     }
 
     @Test
     public void testSelection() {
 
-        ResultSet customersTable = new ResultSet(tables.get(0));
+        //ResultSet customersTable = new ResultSet(tables.get(0));
 
-        Column customersID = customersTable.getColumns().get(0);
-        Column customersName = customersTable.getColumns().get(1);
-        Column country = customersTable.getColumns().get(6);
+        //Column customersID = customersTable.getColumns().get(0);
+        //Column customersName = customersTable.getColumns().get(1);
+        //Column country = customersTable.getColumns().get(6);
 
         //ArrayList<Selection> selections = new ArrayList<>();
         //selections.add(new Selection(customersID, Symbol.EQUAL, "1"));

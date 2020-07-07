@@ -24,17 +24,20 @@ public class ResultSet {
 
     /**
      * Default constructor, should only be used for initially setting up the query tree.
-     * @param table
+     * @param table is the table to use
      */
     public ResultSet(Table table) {
 
+        // need to create a deep copy of the table to prevent weirdness
+        Table copyTable = new Table(table);
+
         // used for identifying which column belongs to which table
-        for(Column column: table.getColumns()) {
-            column.setName(table.getTableName() + "." + column.getName());
+        for(Column column: copyTable.getColumns()) {
+            column.setName(copyTable.getTableName() + "." + column.getName());
         }
-System.out.println(table.getColumns());
-        this.columns = table.getColumns();
-        this.data = table.getTableData().getData();
+
+        this.columns = copyTable.getColumns();
+        this.data = copyTable.getTableData().getData();
     }
 
     public ArrayList<Column> getColumns() { return columns; }
@@ -312,7 +315,7 @@ System.out.println(table.getColumns());
         ArrayList<Integer> paddingAmountList = new ArrayList<>();
 
         // figuring out padding amounts and adding to the list of column sizes
-        for(Column column : getColumns()) {
+        for(Column column : columns) {
 
             int columnNameLength = column.getName().length();
             int maxNumSpaces = column.size();

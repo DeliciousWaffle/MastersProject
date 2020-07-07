@@ -65,6 +65,25 @@ public class Table {
         this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
     }
 
+    /**
+     * Returns a deep copy of this table. Need came from result set class tampering with
+     * original table data which is not good.
+     * @param toCopy is the table to copy
+     */
+    public Table(Table toCopy) {
+        this.tableName = toCopy.tableName;
+        this.columns = new ArrayList<>();
+        for(Column column : toCopy.getColumns()) {
+            this.columns.add(new Column(column));
+        }
+        this.primaryKey = toCopy.primaryKey;
+        this.foreignKeys = new ArrayList<>();
+        for(String foreignKey : toCopy.foreignKeys) {
+            this.foreignKeys.add(foreignKey);
+        }
+        this.clusteredWith = toCopy.clusteredWith;
+        this.tableData = new TableData(toCopy.getTableData());
+    }
     // getters, setters ------------------------------------------------------------------------------------------------
 
     /**
@@ -108,12 +127,7 @@ public class Table {
      * @param columnToRemove is the column to remove
      */
     public void removeColumn(Column columnToRemove) {
-
         removeColumn(columnToRemove.getName());
-
-        if(columnToRemove.equals(primaryKey)) {
-
-        }
     }
 
     /**
