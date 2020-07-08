@@ -4,15 +4,15 @@ import datastructures.table.component.Column;
 import utilities.enums.Symbol;
 
 /**
- * A simple class representing the relational algebra selection operator.
+ * A simple class representing a condition.
  */
-public class Selection {
+public class Condition {
 
     private Column column;
     private Symbol symbol;
     private String target;
 
-    public Selection(Column column, Symbol symbol, String target) {
+    public Condition(Column column, Symbol symbol, String target) {
         this.column = column;
         this.symbol = symbol;
         this.target = target;
@@ -23,4 +23,10 @@ public class Selection {
     public Symbol getSymbol() { return symbol; }
 
     public String getTarget() { return target; }
+
+    @Override
+    public String toString() {
+        return new StringBuilder().append(column).append(" ").append(symbol).
+                append(" ").append(target).toString();
+    }
 }

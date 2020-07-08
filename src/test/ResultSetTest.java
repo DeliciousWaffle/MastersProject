@@ -1,6 +1,6 @@
 package test;
 
-import datastructures.Selection;
+import datastructures.Condition;
 import datastructures.table.ResultSet;
 import datastructures.table.Table;
 import datastructures.table.component.Column;
@@ -12,8 +12,6 @@ import utilities.enums.Filename;
 import utilities.enums.Symbol;
 
 import java.util.ArrayList;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Currently using W3school's website for comparisons. Not perfect, will need to change later.
@@ -57,22 +55,38 @@ class ResultSetTest {
     @Test
     public void testSelection() {
 
-        //ResultSet customersTable = new ResultSet(tables.get(0));
+        ResultSet customersTable = new ResultSet(tables.get(0));
 
-        //Column customersID = customersTable.getColumns().get(0);
-        //Column customersName = customersTable.getColumns().get(1);
-        //Column country = customersTable.getColumns().get(6);
+        Column customersID = customersTable.getColumns().get(0);
+        Column customersName = customersTable.getColumns().get(1);
+        Column country = customersTable.getColumns().get(6);
 
-        //ArrayList<Selection> selections = new ArrayList<>();
-        //selections.add(new Selection(customersID, Symbol.EQUAL, "1"));
-        //customersTable.selection(selections);
-        //System.out.println(customersTable.toString());
+        /*customersTable.selection(new Condition(country, Symbol.EQUAL, "Germany"));
+        System.out.println(customersTable.toString());
 
-        /*customersTable = new ResultSet(tables.get(0));
-        selections = new ArrayList<>();
-        selections.add(new Selection(customersName, Symbol.NOT_EQUAL, ""));
-        selections.add(new Selection(country, Symbol.EQUAL, ""));
-        customersTable.selection(selections);
+        ResultSet copy = new ResultSet(tables.get(0));
+        copy.selection(new Condition(customersID, Symbol.EQUAL, "1"));
+        System.out.println(copy.toString());
+
+        customersTable.intersection(copy);
+        System.out.println(customersTable.toString());
+
+        customersTable.selection(new Condition(country, Symbol.EQUAL, "Germany"));
+        System.out.println(customersTable.toString());
+
+        ResultSet copy = new ResultSet(tables.get(0));
+        copy.selection(new Condition(country, Symbol.EQUAL, "Mexico"));
+        System.out.println(copy.toString());
+
+        customersTable.union(copy);
         System.out.println(customersTable.toString());*/
+    }
+
+    @Test
+    public void testCartesianProduct() {
+        ResultSet customersTable = new ResultSet(tables.get(0));
+        ResultSet categoriesTable = new ResultSet(tables.get(1));
+        customersTable.cartesianProduct(categoriesTable);
+        System.out.println(customersTable.toString());
     }
 }

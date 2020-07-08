@@ -1,6 +1,7 @@
 package datastructures.table;
 
-import datastructures.Selection;
+import datastructures.Condition;
+import datastructures.ConditionSet;
 import datastructures.table.component.Column;
 import datastructures.table.component.TableData;
 import utilities.enums.DataType;
@@ -8,9 +9,7 @@ import utilities.enums.Keyword;
 import utilities.enums.Symbol;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Stack;
 
 /**
  * Represents the data returned after execution of a query. Data is set initially, operations are then
@@ -108,50 +107,74 @@ public class ResultSet {
         data = dataToProject;
     }
 
-    /**
-     * Applies a selection of this result set with the column to select, the symbol to
-     * operate on, and a target constant. This is equivalent to performing an SQL
-     * WHERE clause on a relation. Careful not to confuse with the projection method!
-     * @param selections are a list of selections on a particular relation
-     */
-    public void selection(ArrayList<Selection> selections) {
+    public void selection(ConditionSet conditionSet) {
 
-        List<Integer> selectionColumnIndices = new ArrayList<>();
+        Stack<Stack<Condition>> conditions = conditionSet.getConditions();
+        ArrayList<ResultSet> resultSets = new ArrayList<>();
 
-        for(Selection selection : selections) {
-            String selectionColumnName = selection.getColumn().getName();
-            for(int cols = 0; cols < columns.size(); cols++) {
-                String columnName = columns.get(cols).getName();
-                if(selectionColumnName.equalsIgnoreCase(columnName)) {
-                    selectionColumnIndices.add(cols);
+        while(! conditions.isEmpty()) {
+            Stack<Condition> andStack = conditions.pop();
+            if(andStack.size() == 1) {
+
+            } else {
+                while(! andStack.isEmpty()) {
+                    Condition condition = andStack.pop();
+                    selection(condition);
                 }
             }
         }
+    }
 
-        //for(int x : selectionColumnIndices) System.out.println(x);
+    /**
+     * Applies a selection of this result set with the column to select, the symbol to
+     * operate on, and a target constant. The previous can be repeated more than once with
+     * with either an AND or an OR, resulting in a condition list. This is equivalent to
+     * performing an SQL WHERE clause on a relation. Careful not to confuse with the projection method!
+     * @param condition is the condition that must be met
+     */
+    public void selection(Condition condition) {
 
-        /*String selectionColumnName = selectionColumn.getName();
+        /*ArrayList<ArrayList<String>> rowsToKeep = new ArrayList<>();
+        HashMap<String, String> columnRowPairs = new HashMap<>();
+
+        for(ArrayList<String> rows : data) {
+
+            for(int cols = 0; cols < rows.size(); cols++) {
+                columnRowPairs.put(columns.get(cols).getName(), rows.get(cols));
+            }
+
+            boolean isRowToKeep = conditionList.resolve(columnRowPairs);
+
+            if(isRowToKeep) {
+                rowsToKeep.add(rows);
+            }
+        }
+
+        data = rowsToKeep;*/
+
+        // get the location of the column to perform a selection on
+        int selectionColumnIndex = 0;
+        String selectionColumnName = condition.getColumn().getName();
 
         for(int cols = 0; cols < columns.size(); cols++) {
             String columnName = columns.get(cols).getName();
             if(selectionColumnName.equals(columnName)) {
-                colIndex = cols;
+                selectionColumnIndex = cols;
                 break;
             }
         }
 
         ArrayList<ArrayList<String>> rowsToKeep = new ArrayList<>();
 
-        // used for determining whether the current row meets all the criteria to be added
-        boolean meetsAllCriteria = false;
-
         for(int rows = 0; rows < data.size(); rows++) {
 
-            String possibleTarget = data.get(rows).get(colIndex);
+            Symbol symbol = condition.getSymbol();
+            String target = condition.getTarget();
 
-            for (Selection selection : selections) {
+            String possibleTarget = data.get(rows).get(selectionColumnIndex);
+
                 // determines the type of operation to use
-                boolean isNumeric = selectionColumn.getDataType() == DataType.NUMBER;
+                boolean isNumeric = condition.getColumn().getDataType() == DataType.NUMBER;
 
                 if(isNumeric) {
 
@@ -214,12 +237,82 @@ public class ResultSet {
                             System.out.println("Symbol Used: " + symbol.toString());
                             return;
                     }
-                }
+
             }
         }
 
         // overwrite with the rows to keep
-        data = rowsToKeep;*/
+        data = rowsToKeep;
+    }
+
+    /**
+     * Intersects this result set with the one provided. This means that rows in this
+     * result set that are equal to the ones in the provided result set
+     * will appear in the final result set.
+     * @param otherResultSet is the other result set to perform the intersection on
+     */
+    public void intersection(ResultSet otherResultSet) {
+
+        ArrayList<ArrayList<String>> intersectedRows = new ArrayList<>();
+
+        for(int theseRows = 0; theseRows < data.size(); theseRows++) {
+            boolean equalRows = true;
+            for(int otherRows = 0; otherRows < otherResultSet.data.size(); otherRows++) {
+                for(int cols = 0 ; cols < data.get(theseRows).size(); cols++) {
+                    if(! data.get(theseRows).get(cols).equals(otherResultSet.data.get(otherRows).get(cols))) {
+                        equalRows = false;
+                        break;
+                    }
+                }
+                if(equalRows) {
+                    intersectedRows.add(otherResultSet.data.get(otherRows));
+                    break;
+                }
+            }
+        }
+
+        data = intersectedRows;
+    }
+
+    /**
+     * Unions this result set with the one provided. This means that rows from this result
+     * set and the one provided will be added to this result set. Duplicates will not appear.
+     * @param otherResultSet is other result set to perform the union on
+     */
+    public void union(ResultSet otherResultSet) {
+
+        ArrayList<ArrayList<String>> unionAllRows = new ArrayList<>();
+
+        for(ArrayList<String> theseRows : data) {
+            unionAllRows.add(theseRows);
+        }
+
+        for(ArrayList<String> otherRows: otherResultSet.data) {
+            unionAllRows.add(otherRows);
+        }
+
+        // remove duplicates
+        ArrayList<ArrayList<String>> unionRows = new ArrayList<>();
+
+        for(int rows = 0; rows < unionAllRows.size(); rows++) {
+            boolean equalRows = true;
+            for (int dupRows = 0; dupRows < unionAllRows.size(); dupRows++) {
+                for(int cols = 0; cols < unionAllRows.get(rows).size(); cols++) {
+                    if(! unionAllRows.get(rows).get(cols).equals(unionAllRows.get(dupRows).get(cols))) {
+                        equalRows = false;
+                        break;
+                    }
+                }
+                if(! equalRows) {
+                    break;
+                }
+            }
+            if(! equalRows) {
+                unionRows.add(unionAllRows.get(rows));
+            }
+        }
+
+        data = unionAllRows;
     }
 
     /**
@@ -236,19 +329,15 @@ public class ResultSet {
 
         ArrayList<ArrayList<String>> cartesianProduct = new ArrayList<>();
 
-        for(ArrayList<String> rows : data) {
-            ArrayList<String> cartesianRow = new ArrayList<>();
-            for(String col : rows) {
-                cartesianRow.add(col);
-                for(ArrayList<String> otherRows : otherResultSet.getData()) {
-                    for(String otherCol : otherRows) {
-                        cartesianRow.add(otherCol);
-                    }
-                }
+        for(int theseRows = 0; theseRows < data.size(); theseRows++) {
+            ArrayList<String> rowToAdd = new ArrayList<>();
+            for(int theseCols = 0; theseCols < data.get(theseRows).size(); theseCols++) {
+                rowToAdd.add(data.get(theseRows).get(theseCols));
             }
-            cartesianProduct.add(cartesianRow);
+            for(int otherCols = 0; otherCols < otherResultSet.data.get())
         }
 
+        // TODO cartesian product and stupid selection
         // overwrite the data with this cartesian product
         data = cartesianProduct;
     }
@@ -366,7 +455,8 @@ public class ResultSet {
         }
 
         stringBuilder.append("\n");
-
+System.out.println(paddingAmountList.size());
+System.out.println(data.get(0).size());
         // a very bad hack that gets the job done
         stringBuilder.append(new TableData(paddingAmountList, data).toString());
 

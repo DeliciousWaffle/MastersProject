@@ -237,8 +237,9 @@ public class TableData {
         }
 
         // remove "\n"
-        print.deleteCharAt(print.length() - 1);
-
+        if(print.length() != 0) {
+            print.deleteCharAt(print.length() - 1);
+        }
         return print.toString();
     }
 }
