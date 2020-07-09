@@ -1,29 +1,38 @@
 package datastructures.table;
 
 import datastructures.Condition;
-import datastructures.ConditionSet;
+import datastructures.ConditionExpression;
 import datastructures.table.component.Column;
 import datastructures.table.component.TableData;
 import utilities.enums.DataType;
 import utilities.enums.Keyword;
 import utilities.enums.Symbol;
 
-import java.util.ArrayList;
-import java.util.Stack;
+import java.util.*;
 
 /**
- * Represents the data returned after execution of a query. Data is set initially, operations are then
- * then performed on rows and columns to reflect what the query is asking. Result sets can be operated on
- * as well and produce new result sets. The cost of these operations is also stored for query cost analysis.
+ * Represents the data returned after execution of a query. Table data is set initially, then, operations
+ * are performed on the result set to reflect what the query is asking. This class is immutable which means
+ * once the data is set, it's set. This may come back to haunt me because of how costly this is.
+ * Usage: ResultSet resultSet = new ResultSet(TableData tableData);
+ *        resultSet = resultSet.<some operation>(<some argument(s)>);
  */
 public class ResultSet {
 
-    private ArrayList<Column> columns;
-    private ArrayList<ArrayList<String>> data;
+    private final ArrayList<Column> columns;
+    private final ArrayList<ArrayList<String>> data;
 
     /**
-     * Default constructor, should only be used for initially setting up the query tree.
-     * @param table is the table to use
+     * Default constructor that initializes this result set with no data.
+     */
+    public ResultSet() {
+        this.columns = new ArrayList<>();
+        this.data = new ArrayList<>();
+    }
+
+    /**
+     * Initializes this result set with the data from the table provided.
+     * @param table is the table to initialize from
      */
     public ResultSet(Table table) {
 
@@ -37,6 +46,30 @@ public class ResultSet {
 
         this.columns = copyTable.getColumns();
         this.data = copyTable.getTableData().getData();
+    }
+
+    /**
+     * Result set typically used after applying some kind of transformation to a
+     * previous result set.
+     * @param columns are the columns of this result set
+     * @param data is the data of this result set
+     */
+    public ResultSet(ArrayList<Column> columns, ArrayList<ArrayList<String>> data) {
+        this.columns = columns;
+        this.data = data;
+    }
+
+    /**
+     * Creates a deep copy of the result set provided.
+     * @param toCopy is the result set to make a deep copy of
+     */
+    public ResultSet(ResultSet toCopy) {
+        this(); // initializing member variables
+        this.columns.addAll(toCopy.columns);
+        for(ArrayList<String> toCopyRows : toCopy.data) {
+            ArrayList<String> rows = new ArrayList<>(toCopyRows);
+            this.data.add(rows);
+        }
     }
 
     public ArrayList<Column> getColumns() { return columns; }
@@ -55,7 +88,9 @@ public class ResultSet {
         return ! data.isEmpty() ? data.get(0).size() : 0;
     }
 
-    // applying transformations on the raw data to fit the query request using relational algebra ----------------------
+    public boolean isEmpty() { return columns.isEmpty(); }
+
+    // applying transformations on the data to fit the query request using relational algebra --------------------------
 
     /**
      * Applies a projection of this result set with the columns supplied.
@@ -63,7 +98,9 @@ public class ResultSet {
      * Careful not to confuse this method with the selection method!
      * @param columnsToProject are the columns to perform the projection on
      */
-    public void projection(ArrayList<Column> columnsToProject) {
+    public ResultSet projection(ArrayList<Column> columnsToProject) {
+
+        ArrayList<Column> projectedColumns = new ArrayList<>(columnsToProject);
 
         // find the locations of each column to project
         ArrayList<Integer> columnsToProjectIndexes = new ArrayList<>();
@@ -103,26 +140,68 @@ public class ResultSet {
             dataToProject.add(columnsToAdd);
         }
 
-        columns = columnsToProject;
-        data = dataToProject;
+        return new ResultSet(projectedColumns, dataToProject);
     }
 
-    public void selection(ConditionSet conditionSet) {
+    /**
+     * TODO: this method is kind of a hot mess right now, will need to refactor at some point
+     * Performs a selection on the given condition expression. Will evaluate AND expressions first
+     * before moving on to OR conditions. Equivalent to SQL WHERE clause that has many conditions that
+     * need to be satisfied.
+     * @param conditionExpression is an expression of conditions to evaluate
+     * @return the result set from applying this transformation
+     */
+    public ResultSet selection(ConditionExpression conditionExpression) {
 
-        Stack<Stack<Condition>> conditions = conditionSet.getConditions();
-        ArrayList<ResultSet> resultSets = new ArrayList<>();
+        // will need to resolve the ANDs first before resolving the ORs, using a queue for no real reason
+        Queue<Queue<ResultSet>> resolvedAndResultSets = new LinkedList<>();
+        Queue<ResultSet> andResultSets = new LinkedList<>();
 
-        while(! conditions.isEmpty()) {
-            Stack<Condition> andStack = conditions.pop();
-            if(andStack.size() == 1) {
+        List<Condition> conditions = conditionExpression.getConditions();
+        List<ConditionExpression.Type> operators = conditionExpression.getOperators();
 
-            } else {
-                while(! andStack.isEmpty()) {
-                    Condition condition = andStack.pop();
-                    selection(condition);
-                }
+        for(int i = 0; i < conditions.size(); i++) {
+
+            Condition currentCondition = conditions.get(i);
+            ConditionExpression.Type operator = operators.get(i);
+
+            ResultSet workingResultSet = selection(currentCondition);
+
+            switch(operator) {
+                case NONE:
+                case AND:
+                    andResultSets.offer(workingResultSet);
+                    break;
+                case OR:
+                    resolvedAndResultSets.offer(andResultSets);
+                    andResultSets = new LinkedList<>();
+                    andResultSets.offer(workingResultSet);
+                    break;
+
             }
         }
+
+        if(! andResultSets.isEmpty()) {
+            resolvedAndResultSets.offer(andResultSets);
+        }
+
+        ResultSet toReturn = new ResultSet();
+
+        // outer loop = resolve each or condition
+        while(! resolvedAndResultSets.isEmpty()) {
+
+            Queue<ResultSet> temp = resolvedAndResultSets.poll();
+            ResultSet currentAnds = temp.poll();
+
+            // inner loop = resolve each and condition
+            while(! temp.isEmpty()) {
+                currentAnds = currentAnds.intersection(temp.poll());
+            }
+
+            toReturn = toReturn.union(currentAnds);
+        }
+
+        return toReturn;
     }
 
     /**
@@ -132,25 +211,7 @@ public class ResultSet {
      * performing an SQL WHERE clause on a relation. Careful not to confuse with the projection method!
      * @param condition is the condition that must be met
      */
-    public void selection(Condition condition) {
-
-        /*ArrayList<ArrayList<String>> rowsToKeep = new ArrayList<>();
-        HashMap<String, String> columnRowPairs = new HashMap<>();
-
-        for(ArrayList<String> rows : data) {
-
-            for(int cols = 0; cols < rows.size(); cols++) {
-                columnRowPairs.put(columns.get(cols).getName(), rows.get(cols));
-            }
-
-            boolean isRowToKeep = conditionList.resolve(columnRowPairs);
-
-            if(isRowToKeep) {
-                rowsToKeep.add(rows);
-            }
-        }
-
-        data = rowsToKeep;*/
+    public ResultSet selection(Condition condition) {
 
         // get the location of the column to perform a selection on
         int selectionColumnIndex = 0;
@@ -173,105 +234,97 @@ public class ResultSet {
 
             String possibleTarget = data.get(rows).get(selectionColumnIndex);
 
-                // determines the type of operation to use
-                boolean isNumeric = condition.getColumn().getDataType() == DataType.NUMBER;
+            // determines the type of operation to use
+            boolean isNumeric = condition.getColumn().getDataType() == DataType.NUMBER;
 
-                if(isNumeric) {
+            if(isNumeric) {
 
-                    double targetNumber = Double.parseDouble(target);
-                    double possibleTargetNumber = Double.parseDouble(possibleTarget);
+                double targetNumber = Double.parseDouble(target);
+                double possibleTargetNumber = Double.parseDouble(possibleTarget);
 
-                    switch (symbol) {
-                        case EQUAL:
-                            if (targetNumber == possibleTargetNumber) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        case NOT_EQUAL:
-                            if (targetNumber != possibleTargetNumber) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        case GREATER_THAN:
-                            if (targetNumber > possibleTargetNumber) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        case LESS_THAN:
-                            if (targetNumber < possibleTargetNumber) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        case GREATER_THAN_OR_EQUAL:
-                            if (targetNumber >= possibleTargetNumber) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        case LESS_THAN_OR_EQUAL:
-                            if (targetNumber <= possibleTargetNumber) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        default:
-                            System.out.println("In ResultSet.projection()");
-                            System.out.println("Symbol Used: " + symbol.toString());
-                            return;
+                switch (symbol) {
+                    case EQUAL:
+                        if (targetNumber == possibleTargetNumber) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    case NOT_EQUAL:
+                        if (targetNumber != possibleTargetNumber) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    case GREATER_THAN:
+                        if (possibleTargetNumber > targetNumber) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    case LESS_THAN:
+                        if (possibleTargetNumber < targetNumber) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    case GREATER_THAN_OR_EQUAL:
+                        if (possibleTargetNumber >= targetNumber) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    case LESS_THAN_OR_EQUAL:
+                        if (possibleTargetNumber <= targetNumber) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    default: {
+                        System.out.println("In ResultSet.projection()");
+                        System.out.println("Symbol Used: " + symbol.toString());
+                        return new ResultSet();
                     }
+                }
 
-                    // not a numeric value
-                } else {
+                // not a numeric value
+            } else {
 
-                    switch (symbol) {
-                        case EQUAL:
-                            if (target.equalsIgnoreCase(possibleTarget)) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        case NOT_EQUAL:
-                            if (!target.equalsIgnoreCase(possibleTarget)) {
-                                rowsToKeep.add(data.get(rows));
-                            }
-                            break;
-                        default:
-                            System.out.println("In ResultSet.projection()");
-                            System.out.println("Symbol Used: " + symbol.toString());
-                            return;
+                switch (symbol) {
+                    case EQUAL:
+                        if (target.equalsIgnoreCase(possibleTarget)) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    case NOT_EQUAL:
+                        if (!target.equalsIgnoreCase(possibleTarget)) {
+                            rowsToKeep.add(data.get(rows));
+                        }
+                        break;
+                    default: {
+                        System.out.println("In ResultSet.projection()");
+                        System.out.println("Symbol Used: " + symbol.toString());
+                        return new ResultSet();
                     }
-
+                }
             }
         }
 
-        // overwrite with the rows to keep
-        data = rowsToKeep;
+        return new ResultSet(columns, rowsToKeep);
     }
 
     /**
-     * Intersects this result set with the one provided. This means that rows in this
-     * result set that are equal to the ones in the provided result set
-     * will appear in the final result set.
+     * Intersects this result set with the one provided. This means that only rows in
+     * this result set that match with the one provided are returned.
      * @param otherResultSet is the other result set to perform the intersection on
      */
-    public void intersection(ResultSet otherResultSet) {
+    public ResultSet intersection(ResultSet otherResultSet) {
 
         ArrayList<ArrayList<String>> intersectedRows = new ArrayList<>();
 
-        for(int theseRows = 0; theseRows < data.size(); theseRows++) {
-            boolean equalRows = true;
-            for(int otherRows = 0; otherRows < otherResultSet.data.size(); otherRows++) {
-                for(int cols = 0 ; cols < data.get(theseRows).size(); cols++) {
-                    if(! data.get(theseRows).get(cols).equals(otherResultSet.data.get(otherRows).get(cols))) {
-                        equalRows = false;
-                        break;
-                    }
-                }
-                if(equalRows) {
-                    intersectedRows.add(otherResultSet.data.get(otherRows));
+        for(ArrayList<String> theseRows : data) {
+            for(ArrayList<String> otherRows : otherResultSet.data) {
+                if(hasEqualRows(theseRows, otherRows)) {
+                    intersectedRows.add(theseRows);
                     break;
                 }
             }
         }
 
-        data = intersectedRows;
+        return new ResultSet(columns, intersectedRows);
     }
 
     /**
@@ -279,40 +332,46 @@ public class ResultSet {
      * set and the one provided will be added to this result set. Duplicates will not appear.
      * @param otherResultSet is other result set to perform the union on
      */
-    public void union(ResultSet otherResultSet) {
+    public ResultSet union(ResultSet otherResultSet) {
 
-        ArrayList<ArrayList<String>> unionAllRows = new ArrayList<>();
+        ArrayList<Column> unionColumns = new ArrayList<>();
 
-        for(ArrayList<String> theseRows : data) {
-            unionAllRows.add(theseRows);
+        // add each column to be unionized, don't add duplicates!
+        for(Column column : columns) {
+            unionColumns.add(new Column(column));
         }
 
-        for(ArrayList<String> otherRows: otherResultSet.data) {
-            unionAllRows.add(otherRows);
-        }
-
-        // remove duplicates
-        ArrayList<ArrayList<String>> unionRows = new ArrayList<>();
-
-        for(int rows = 0; rows < unionAllRows.size(); rows++) {
-            boolean equalRows = true;
-            for (int dupRows = 0; dupRows < unionAllRows.size(); dupRows++) {
-                for(int cols = 0; cols < unionAllRows.get(rows).size(); cols++) {
-                    if(! unionAllRows.get(rows).get(cols).equals(unionAllRows.get(dupRows).get(cols))) {
-                        equalRows = false;
-                        break;
-                    }
-                }
-                if(! equalRows) {
+        for(Column otherColumn : otherResultSet.columns) {
+            boolean equalColumn = false;
+            for(Column column : unionColumns) {
+                if(otherColumn.equals(column)) {
+                    equalColumn = true;
                     break;
                 }
             }
-            if(! equalRows) {
-                unionRows.add(unionAllRows.get(rows));
+            if(! equalColumn) {
+                unionColumns.add(otherColumn);
             }
         }
 
-        data = unionAllRows;
+        // add all rows from this result set
+        ArrayList<ArrayList<String>> unionRows = new ArrayList<>(data);
+
+        // add all rows from other result set, don't add duplicates!
+        for(ArrayList<String> otherRows : otherResultSet.data) {
+            boolean foundDuplicate = false;
+            for(ArrayList<String> theseRows : data) {
+                if(hasEqualRows(otherRows, theseRows)) {
+                    foundDuplicate = true;
+                    break;
+                }
+            }
+            if(! foundDuplicate) {
+                unionRows.add(otherRows);
+            }
+        }
+
+        return new ResultSet(unionColumns, unionRows);
     }
 
     /**
@@ -320,26 +379,29 @@ public class ResultSet {
      * combining the two. This is equivalent to an SQL FROM clause that lists more than 1 table.
      * @param otherResultSet is the other result set to perform a cartesian product on
      */
-    public void cartesianProduct(ResultSet otherResultSet) {
+    public ResultSet cartesianProduct(ResultSet otherResultSet) {
 
         // add the other result set's columns to this result set's columns
-        for(Column otherColumn : otherResultSet.getColumns()) {
-            columns.add(otherColumn);
-        }
+        ArrayList<Column> cartesianColumns = new ArrayList<>();
+        cartesianColumns.addAll(columns);
+        cartesianColumns.addAll(otherResultSet.getColumns());
 
         ArrayList<ArrayList<String>> cartesianProduct = new ArrayList<>();
 
         for(int theseRows = 0; theseRows < data.size(); theseRows++) {
-            ArrayList<String> rowToAdd = new ArrayList<>();
-            for(int theseCols = 0; theseCols < data.get(theseRows).size(); theseCols++) {
-                rowToAdd.add(data.get(theseRows).get(theseCols));
+            for(int otherRows = 0; otherRows < otherResultSet.data.size(); otherRows++) {
+
+                ArrayList<String> rowToAdd = new ArrayList<>();
+
+                rowToAdd.addAll(data.get(theseRows));
+                rowToAdd.addAll(otherResultSet.data.get(otherRows));
+
+                cartesianProduct.add(rowToAdd);
             }
-            for(int otherCols = 0; otherCols < otherResultSet.data.get())
         }
 
-        // TODO cartesian product and stupid selection
         // overwrite the data with this cartesian product
-        data = cartesianProduct;
+        return new ResultSet(cartesianColumns, cartesianProduct);
     }
 
     /**
@@ -350,8 +412,9 @@ public class ResultSet {
      * @param otherResultSet is the other result set to perform a natural join on
      * @param joinOn is the column to join on
      */
-    public void naturalJoin(ResultSet otherResultSet, Column joinOn) {
+    public ResultSet naturalJoin(ResultSet otherResultSet, Column joinOn) {
 
+        return null;
     }
 
     /**
@@ -362,8 +425,9 @@ public class ResultSet {
      * @param otherColumnToJoinOn
      * @param thisColumnToJoinOn
      */
-    public void innerJoin(ResultSet otherResultSet, Column otherColumnToJoinOn, Column thisColumnToJoinOn) {
+    public ResultSet innerJoin(ResultSet otherResultSet, Column otherColumnToJoinOn, Column thisColumnToJoinOn) {
 
+        return null;
     }
 
     /**
@@ -372,24 +436,36 @@ public class ResultSet {
      * @param aggregateFunction is the aggregate function to perform
      * @param columnToAggregate is the column to aggregate
      */
-    public void aggregate(Keyword aggregateFunction, Column columnToAggregate) {
+    public ResultSet aggregate(Keyword aggregateFunction, Column columnToAggregate) {
 
-        // validation
-
+        return null;
     }
 
     /**
      * TODO: currently not in use. May implement later.
      */
-    public void groupBy(Column columnToGroupBy) {
+    public ResultSet groupBy(Column columnToGroupBy) {
 
+        return null;
     }
 
     /**
      * TODO: currently not in use. May implement later.
      */
-    public void having() {
+    public ResultSet having() {
 
+        return null;
+    }
+
+    public boolean hasEqualRows(ArrayList<String> row1, ArrayList<String> row2) {
+        for(int cols = 0; cols < row1.size(); cols++) {
+            String col1 = row1.get(cols);
+            String col2 = row2.get(cols);
+            if(! col1.equals(col2)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -455,10 +531,16 @@ public class ResultSet {
         }
 
         stringBuilder.append("\n");
-System.out.println(paddingAmountList.size());
-System.out.println(data.get(0).size());
+
         // a very bad hack that gets the job done
         stringBuilder.append(new TableData(paddingAmountList, data).toString());
+
+        if(! isEmpty()) {
+            stringBuilder.append("\n");
+
+        }
+
+        stringBuilder.append("Number of Rows: ").append(getNumRows());
 
         return stringBuilder.toString();
     }

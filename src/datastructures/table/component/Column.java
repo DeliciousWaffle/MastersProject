@@ -82,30 +82,30 @@ public class Column {
         Column otherColumn = (Column) other;
 
         if(! otherColumn.getName().equals(this.getName())) {
-            System.out.println("Columns not equal");
-            System.out.println("Other Column name: " + otherColumn.getName() +
-                    " This Column name: " + this.getName());
+            //System.out.println("Columns not equal");
+            //System.out.println("Other Column name: " + otherColumn.getName() +
+            //        " This Column name: " + this.getName());
             return false;
         }
 
         if(! otherColumn.getDataType().equals(this.getDataType())) {
-            System.out.println("Columns not equal");
-            System.out.println("Other Column data type: " + otherColumn.getDataType() +
-                    " This Column data type: " + this.getDataType());
+            //System.out.println("Columns not equal");
+            //System.out.println("Other Column data type: " + otherColumn.getDataType() +
+            //        " This Column data type: " + this.getDataType());
             return false;
         }
 
         if(otherColumn.size() != this.size()) {
-            System.out.println("Columns not equal");
-            System.out.println("Other Column size: " + otherColumn.size() +
-                    " This Column size: " + this.size());
+            //System.out.println("Columns not equal");
+            //System.out.println("Other Column size: " + otherColumn.size() +
+            //        " This Column size: " + this.size());
             return false;
         }
 
         if(otherColumn.getFileStructure() != this.getFileStructure()) {
-            System.out.println("Columns not equal");
-            System.out.println("Other Column file structure: " + otherColumn.getFileStructure() +
-                    " This Column file structure: " + this.getFileStructure());
+            //System.out.println("Columns not equal");
+            //System.out.println("Other Column file structure: " + otherColumn.getFileStructure() +
+            //        " This Column file structure: " + this.getFileStructure());
             return false;
         }
 

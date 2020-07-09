@@ -133,6 +133,8 @@ Table: Shippers
 		COLUMN DONE
 		Column: ShipperName CHAR 20 NONE
 		COLUMN DONE
+		Column: Phone CHAR 15 NONE
+		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKey: none
 	ForeignKeyList: EMPTY
