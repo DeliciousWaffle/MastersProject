@@ -36,7 +36,7 @@ public class ResultSet {
      */
     public ResultSet(Table table) {
 
-        // need to create a deep copy of the table to prevent weirdness
+        // need to create a deep copy of the table to prevent unwanted changes to table data
         Table copyTable = new Table(table);
 
         // used for identifying which column belongs to which table
@@ -65,7 +65,9 @@ public class ResultSet {
      */
     public ResultSet(ResultSet toCopy) {
         this(); // initializing member variables
-        this.columns.addAll(toCopy.columns);
+        for(Column toCopyColumn : toCopy.columns) {
+            this.columns.add(new Column(toCopyColumn));
+        }
         for(ArrayList<String> toCopyRows : toCopy.data) {
             ArrayList<String> rows = new ArrayList<>(toCopyRows);
             this.data.add(rows);
@@ -90,6 +92,15 @@ public class ResultSet {
 
     public boolean isEmpty() { return columns.isEmpty(); }
 
+    public ArrayList<String> getColumnsAt(int columnIndex) {
+        ArrayList<String> columnData = new ArrayList<>();
+        for(ArrayList<String> rows : data) {
+            String data = rows.get(columnIndex);
+            columnData.add(data);
+        }
+        return columnData;
+    }
+
     // applying transformations on the data to fit the query request using relational algebra --------------------------
 
     /**
@@ -100,15 +111,21 @@ public class ResultSet {
      */
     public ResultSet projection(ArrayList<Column> columnsToProject) {
 
-        ArrayList<Column> projectedColumns = new ArrayList<>(columnsToProject);
+        ArrayList<Column> projectedColumns = new ArrayList<>();
+
+        for(Column columnToProject : columnsToProject) {
+            projectedColumns.add(new Column(columnToProject));
+        }
 
         // find the locations of each column to project
         ArrayList<Integer> columnsToProjectIndexes = new ArrayList<>();
 
         for(int cols = 0; cols < columns.size(); cols++) {
             String columnName = columns.get(cols).getName();
+
             for(Column columnToProject : columnsToProject) {
                 String columnToProjectName = columnToProject.getName();
+
                 if(columnName.equalsIgnoreCase(columnToProjectName)) {
                     columnsToProjectIndexes.add(cols);
                     break;
@@ -116,13 +133,13 @@ public class ResultSet {
             }
         }
 
-        ArrayList<ArrayList<String>> dataToProject = new ArrayList<>();
+        ArrayList<ArrayList<String>> projectedData = new ArrayList<>();
 
         // ignore columns that are not being projected
         for(int rows = 0; rows < data.size(); rows++) {
             ArrayList<String> columnsToAdd = new ArrayList<>();
-            for(int cols = 0; cols < data.get(rows).size(); cols++) {
 
+            for(int cols = 0; cols < data.get(rows).size(); cols++) {
                 boolean projectThisColumn = false;
 
                 for(int columnToProjectIndex : columnsToProjectIndexes) {
@@ -137,14 +154,15 @@ public class ResultSet {
                 }
             }
 
-            dataToProject.add(columnsToAdd);
+            projectedData.add(columnsToAdd);
         }
 
-        return new ResultSet(projectedColumns, dataToProject);
+        return new ResultSet(projectedColumns, projectedData);
     }
 
     /**
      * TODO: this method is kind of a hot mess right now, will need to refactor at some point
+     * TODO: also does not 100% work with more complicated condition expressions
      * Performs a selection on the given condition expression. Will evaluate AND expressions first
      * before moving on to OR conditions. Equivalent to SQL WHERE clause that has many conditions that
      * need to be satisfied.
@@ -195,7 +213,9 @@ public class ResultSet {
 
             // inner loop = resolve each and condition
             while(! temp.isEmpty()) {
-                currentAnds = currentAnds.intersection(temp.poll());
+                if(currentAnds != null) {
+                    currentAnds = currentAnds.intersection(temp.poll());
+                }
             }
 
             toReturn = toReturn.union(currentAnds);
@@ -213,19 +233,25 @@ public class ResultSet {
      */
     public ResultSet selection(Condition condition) {
 
+        ArrayList<Column> selectionColumns = new ArrayList<>();
+
+        for(Column column : columns) {
+            selectionColumns.add(new Column(column));
+        }
+
         // get the location of the column to perform a selection on
         int selectionColumnIndex = 0;
         String selectionColumnName = condition.getColumn().getName();
 
-        for(int cols = 0; cols < columns.size(); cols++) {
-            String columnName = columns.get(cols).getName();
+        for(int cols = 0; cols < selectionColumns.size(); cols++) {
+            String columnName = selectionColumns.get(cols).getName();
             if(selectionColumnName.equals(columnName)) {
                 selectionColumnIndex = cols;
                 break;
             }
         }
 
-        ArrayList<ArrayList<String>> rowsToKeep = new ArrayList<>();
+        ArrayList<ArrayList<String>> selectionData = new ArrayList<>();
 
         for(int rows = 0; rows < data.size(); rows++) {
 
@@ -245,32 +271,32 @@ public class ResultSet {
                 switch (symbol) {
                     case EQUAL:
                         if (targetNumber == possibleTargetNumber) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     case NOT_EQUAL:
                         if (targetNumber != possibleTargetNumber) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     case GREATER_THAN:
                         if (possibleTargetNumber > targetNumber) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     case LESS_THAN:
                         if (possibleTargetNumber < targetNumber) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     case GREATER_THAN_OR_EQUAL:
                         if (possibleTargetNumber >= targetNumber) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     case LESS_THAN_OR_EQUAL:
                         if (possibleTargetNumber <= targetNumber) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     default: {
@@ -286,12 +312,12 @@ public class ResultSet {
                 switch (symbol) {
                     case EQUAL:
                         if (target.equalsIgnoreCase(possibleTarget)) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     case NOT_EQUAL:
                         if (!target.equalsIgnoreCase(possibleTarget)) {
-                            rowsToKeep.add(data.get(rows));
+                            selectionData.add(data.get(rows));
                         }
                         break;
                     default: {
@@ -303,7 +329,7 @@ public class ResultSet {
             }
         }
 
-        return new ResultSet(columns, rowsToKeep);
+        return new ResultSet(selectionColumns, selectionData);
     }
 
     /**
@@ -313,18 +339,24 @@ public class ResultSet {
      */
     public ResultSet intersection(ResultSet otherResultSet) {
 
-        ArrayList<ArrayList<String>> intersectedRows = new ArrayList<>();
+        ArrayList<Column> intersectionColumns = new ArrayList<>();
+
+        for(Column column : columns) {
+            intersectionColumns.add(new Column(column));
+        }
+
+        ArrayList<ArrayList<String>> intersectedData = new ArrayList<>();
 
         for(ArrayList<String> theseRows : data) {
             for(ArrayList<String> otherRows : otherResultSet.data) {
                 if(hasEqualRows(theseRows, otherRows)) {
-                    intersectedRows.add(theseRows);
+                    intersectedData.add(theseRows);
                     break;
                 }
             }
         }
 
-        return new ResultSet(columns, intersectedRows);
+        return new ResultSet(intersectionColumns, intersectedData);
     }
 
     /**
@@ -355,7 +387,7 @@ public class ResultSet {
         }
 
         // add all rows from this result set
-        ArrayList<ArrayList<String>> unionRows = new ArrayList<>(data);
+        ArrayList<ArrayList<String>> unionData = new ArrayList<>(data);
 
         // add all rows from other result set, don't add duplicates!
         for(ArrayList<String> otherRows : otherResultSet.data) {
@@ -367,11 +399,11 @@ public class ResultSet {
                 }
             }
             if(! foundDuplicate) {
-                unionRows.add(otherRows);
+                unionData.add(otherRows);
             }
         }
 
-        return new ResultSet(unionColumns, unionRows);
+        return new ResultSet(unionColumns, unionData);
     }
 
     /**
@@ -382,11 +414,17 @@ public class ResultSet {
     public ResultSet cartesianProduct(ResultSet otherResultSet) {
 
         // add the other result set's columns to this result set's columns
-        ArrayList<Column> cartesianColumns = new ArrayList<>();
-        cartesianColumns.addAll(columns);
-        cartesianColumns.addAll(otherResultSet.getColumns());
+        ArrayList<Column> cartesianProductColumns = new ArrayList<>();
 
-        ArrayList<ArrayList<String>> cartesianProduct = new ArrayList<>();
+        for(Column column : columns) {
+            cartesianProductColumns.add(new Column(column));
+        }
+
+        for(Column column : otherResultSet.columns) {
+            cartesianProductColumns.add(new Column(column));
+        }
+
+        ArrayList<ArrayList<String>> cartesianProductData = new ArrayList<>();
 
         for(int theseRows = 0; theseRows < data.size(); theseRows++) {
             for(int otherRows = 0; otherRows < otherResultSet.data.size(); otherRows++) {
@@ -396,66 +434,357 @@ public class ResultSet {
                 rowToAdd.addAll(data.get(theseRows));
                 rowToAdd.addAll(otherResultSet.data.get(otherRows));
 
-                cartesianProduct.add(rowToAdd);
+                cartesianProductData.add(rowToAdd);
             }
         }
 
         // overwrite the data with this cartesian product
-        return new ResultSet(cartesianColumns, cartesianProduct);
+        return new ResultSet(cartesianProductColumns, cartesianProductData);
     }
 
     /**
-     * Performs a natural join on this result set and another result set,
+     * Performs an equi-join on this result set and another result set,
      * combining the two joined on the column supplied. This means that both result sets
-     * must have a matching column name. This is equivalent to preforming a natural join
+     * must have a matching column name. This is equivalent to preforming a join using
      * in an SQL FROM clause.
      * @param otherResultSet is the other result set to perform a natural join on
-     * @param joinOn is the column to join on
+     * @param joinOn is the column to join on, can come from either table
      */
-    public ResultSet naturalJoin(ResultSet otherResultSet, Column joinOn) {
+    public ResultSet joinUsing(ResultSet otherResultSet, Column joinOn) {
 
-        return null;
+        // if there is a table name associated with the join on column, remove that
+        String columnNameToJoinOn = joinOn.getName();
+
+        if(columnNameToJoinOn.contains(".")) {
+            int removeUpUntilIndex = columnNameToJoinOn.indexOf(".") + 1; // + 1 removes the "."
+            columnNameToJoinOn = columnNameToJoinOn.substring(removeUpUntilIndex);
+        }
+
+        // find the column from each table and use the innerJoin method to perform the operation
+        Column thisColumnToJoinOn = new Column();
+        Column otherColumnToJoinOn = new Column();
+
+        // first table
+        for(Column column : this.columns) {
+            String columnName = column.getName();
+            if(columnName.equalsIgnoreCase(columnNameToJoinOn)) {
+                thisColumnToJoinOn = column;
+                break;
+            }
+        }
+
+        // second table
+        for(Column column : otherResultSet.columns) {
+            String columnName = column.getName();
+            if(columnName.equalsIgnoreCase(columnNameToJoinOn)) {
+                otherColumnToJoinOn = column;
+                break;
+            }
+        }
+
+        return this.innerJoin(otherResultSet, otherColumnToJoinOn, thisColumnToJoinOn);
     }
 
     /**
-     * TODO: Currently is not in use. May be implemented later.
      * Performs an inner join on this result set and another result set, combining the two
-     * joined on the columns supplied.
-     * @param otherResultSet
-     * @param otherColumnToJoinOn
-     * @param thisColumnToJoinOn
+     * joined on the columns supplied. For now, only supporting the equi-join.
+     * @param otherResultSet is the result set to perform an inner join on
+     * @param thisColumnToJoinOn is the column to join on from this result set
+     * @param otherColumnToJoinOn is the column to join on from the other result set
      */
     public ResultSet innerJoin(ResultSet otherResultSet, Column otherColumnToJoinOn, Column thisColumnToJoinOn) {
 
-        return null;
+        // perform a cartesian product
+        ResultSet cartesianProductResultSet = this.cartesianProduct(otherResultSet);
+
+        ArrayList<Column> joinColumns = new ArrayList<>();
+
+        for(Column column : cartesianProductResultSet.columns) {
+            joinColumns.add(new Column(column));
+        }
+
+        // get the index locations of the columns to perform the join on
+        int firstColumnIndex = -1;
+        int secondColumnIndex = -1;
+
+        String thisColumnName = thisColumnToJoinOn.getName();
+        String otherColumnName = otherColumnToJoinOn.getName();
+
+        for(int i = 0; i < joinColumns.size(); i++) {
+            String columnName = joinColumns.get(i).getName();
+            if(columnName.equalsIgnoreCase(thisColumnName)) {
+                firstColumnIndex = i;
+                break;
+            }
+        }
+
+        // skip past the index previously found, should not throw an exception if there exists another column
+        try {
+            for(int i = firstColumnIndex + 1; i < joinColumns.size(); i++) {
+                String columnName = joinColumns.get(i).getName();
+                if(columnName.equalsIgnoreCase(otherColumnName)) {
+                    secondColumnIndex = i;
+                    break;
+                }
+            }
+        } catch(ArrayIndexOutOfBoundsException e) {
+            System.out.println("In ResultSet.naturalJoin()");
+            System.out.println("Could not find the second index to join on");
+            return new ResultSet();
+        }
+
+        if(firstColumnIndex == -1 || secondColumnIndex == -1) {
+            System.out.println("In ResultSet.naturalJoin()");
+            System.out.println("Could not find one or both indices to join on");
+            return new ResultSet();
+        }
+
+        // keep only rows to join on
+        ArrayList<ArrayList<String>> joinRows = new ArrayList<>();
+
+        for(ArrayList<String> rows : cartesianProductResultSet.data) {
+
+            String firstRowData = rows.get(firstColumnIndex);
+            String secondRowData = rows.get(secondColumnIndex);
+
+            if(firstRowData.equals(secondRowData)) {
+                joinRows.add(rows);
+            }
+        }
+
+        return new ResultSet(joinColumns, joinRows);
+    }
+
+    /**
+     * TODO: currently unimplemented, will return an empty result set if called
+     * Performs a natural join on this result set and the on provided. Common columns also
+     * appear only once here.
+     * @param otherResultSet is the other result set to perform the natural join on
+     * @return a result set after performing a natural join
+     */
+    public ResultSet naturalJoin(ResultSet otherResultSet) {
+        return new ResultSet();
     }
 
     /**
      * Performs an aggregate function on the column supplied for this result set. Aggregate
      * functions include min, max, avg, count, and sum.
-     * @param aggregateFunction is the aggregate function to perform
-     * @param columnToAggregate is the column to aggregate
+     * @param columnsToGroupBy are columns to group by
+     * @param columnsToAggregate are the columns to perform aggregate functions on
      */
-    public ResultSet aggregate(Keyword aggregateFunction, Column columnToAggregate) {
+    public ResultSet groupBy(ArrayList<Column> columnsToGroupBy, Map<Keyword, Column> columnsToAggregate) {
 
-        return null;
+        // adding the columns to group by
+        ArrayList<Column> columnsToReturn = new ArrayList<>();
+
+        for(Column column : columnsToGroupBy) {
+            columnsToReturn.add(new Column(column));
+        }
+
+        // adding the columns to aggregate
+        for(Map.Entry<Keyword, Column> entry : columnsToAggregate.entrySet()) {
+
+            Keyword keyword = entry.getKey();
+            Column column = entry.getValue();
+            String columnName = column.getName();
+
+            String groupByColumnName = keyword + "(" + columnName + ")";
+
+            // the size will be set later, 0 is arbitrary
+            Column groupByColumn = new Column(groupByColumnName, DataType.NUMBER, 0);
+            columnsToReturn.add(groupByColumn);
+        }
+
+        // get the index locations of the columns to group by from this result set
+        /*ArrayList<Integer> columnsToGroupByIndices = new ArrayList<>();
+
+        for(int i = 0; i < this.columns.size(); i++) {
+            String columnName = this.columns.get(i).getName();
+            for(Column columnToGroupBy : columnsToGroupBy) {
+                String columnNameToGroupBy = columnToGroupBy.getName();
+                if(columnName.equalsIgnoreCase(columnNameToGroupBy)) {
+                    columnsToGroupByIndices.add(i);
+                    break;
+                }
+            }
+        }*/
+
+        // get the index locations of the columns to aggregate for this result set
+        Map<Keyword, Integer> columnsToAggregateIndices = new HashMap<>();
+
+        // used for eventually updating column sizes, <this.columns.index, groupByColumns.index>
+        Map<Integer, Integer> columnsAndGroupByColumnsIndexMappings = new HashMap<>();
+
+        for(int i = 0; i < this.columns.size(); i++) {
+            String columnName = this.columns.get(i).getName();
+            int j = 0;
+            for(Map.Entry<Keyword, Column> entry : columnsToAggregate.entrySet()) {
+                String columnNameToAggregate = entry.getValue().getName();
+                if(columnName.equalsIgnoreCase(columnNameToAggregate)) {
+                    columnsToAggregateIndices.put(entry.getKey(), i);
+                    columnsAndGroupByColumnsIndexMappings.put(i, j);
+                    break;
+                }
+                j++;
+            }
+        }System.out.println(columnsAndGroupByColumnsIndexMappings);
+        System.out.println(groupByColumns);
+
+        ArrayList<ArrayList<String>> groupByData = new ArrayList<>();
+
+        // if there are no columns to group by, our lives are made easier
+        boolean hasColumnsToGroupBy = ! columnsToGroupBy.isEmpty();
+
+        if(! hasColumnsToGroupBy) {
+
+            // will only need to add a single row
+            ArrayList<String> groupByRow = new ArrayList<>();
+
+            for(Map.Entry<Keyword, Integer> entry : columnsToAggregateIndices.entrySet()) {
+
+                Keyword aggregateFunction = entry.getKey();
+                int columnToAggregateIndex = entry.getValue();
+
+                ArrayList<String> columnData = this.getColumnsAt(columnToAggregateIndex);
+                String valueToAdd = "";
+                int sizeOfValue = 0;
+
+                switch(aggregateFunction) {
+                    case MIN:
+                        valueToAdd = Double.toString(minColumnValue(columnData));
+                        break;
+                    case MAX:
+                        groupByRow.add(Double.toString(maxColumnValue(columnData)));
+                        break;
+                    case AVG:
+                        groupByRow.add(Double.toString(avgColumnValue(columnData)));
+                        break;
+                    case COUNT:
+                        groupByRow.add(Double.toString(countColumnValue(columnData)));
+                        break;
+                    case SUM:
+                        groupByRow.add(Double.toString(sumColumnValue(columnData)));
+                        break;
+                }
+
+                // set the size of the column to the length of the value obtained
+                sizeOfValue = valueToAdd.length();
+
+                int blah = columnsAndGroupByColumnsIndexMappings.get(columnToAggregateIndex);
+                Column columnToGroupBy = groupByColumns.get(blah);
+                columnToGroupBy.setSize(sizeOfValue);
+
+                groupByRow.add(valueToAdd);
+            }
+
+            groupByData.add(groupByRow);
+
+        // lives are made slightly harder if grouping by a column
+        } else {
+
+        }
+
+        return new ResultSet(columnsToReturn, groupByData);
     }
 
-    /**
-     * TODO: currently not in use. May implement later.
-     */
-    public ResultSet groupBy(Column columnToGroupBy) {
+    // may not implement
+    public ResultSet having(Keyword aggregateFunction, Column havingColumn) {
 
-        return null;
+        // making a copy of the columns of this result set
+        ArrayList<Column> havingColumns = new ArrayList<>();
+
+        for(Column column : columns) {
+            havingColumns.add(new Column(column));
+        }
+
+        // get corresponding index of this result set
+        int havingColumnIndex = 0;
+        String havingColumnName = havingColumn.getName();
+
+        for(int i = 0; i < columns.size(); i++) {
+            String columnName = columns.get(i).getName();
+            if(columnName.equalsIgnoreCase(havingColumnName)) {
+                havingColumnIndex = i;
+                break;
+            }
+        }
+
+        // add each row that satisfies the aggregate function
+        ArrayList<ArrayList<String>> havingData = new ArrayList<>();
+
+        for(ArrayList<String> rows : data) {
+            String currentCell = rows.get(havingColumnIndex);
+        }
+
+        return new ResultSet();
     }
 
-    /**
-     * TODO: currently not in use. May implement later.
-     */
-    public ResultSet having() {
+    public ResultSet orderByAsc(Column columnToOrderBy) {
 
-        return null;
+        // copy columns
+        ArrayList<Column> orderedByAscColumns = new ArrayList<>();
+
+        for(Column column : columns) {
+            orderedByAscColumns.add(new Column(column));
+        }
+
+        // get column index for this result set
+        int columnIndex = 0;
+        String columnNameToOrderBy = columnToOrderBy.getName();
+
+        for(int i = 0; i < columns.size(); i++) {
+            String columnName = columns.get(i).getName();
+            if(columnName.equalsIgnoreCase(columnNameToOrderBy)) {
+                columnIndex = i;
+            }
+        }
+
+        // copy data but sorted on column name, this is not done efficiently
+        ArrayList<ArrayList<String>> orderedByData = new ArrayList<>();
+
+        for(int i = 0; i < data.size(); i++) {
+
+            ArrayList<String> rowToAdd = new ArrayList<>();
+
+            int minRowIndex = 0;
+            String minCell = data.get(0).get(columnIndex);
+
+            for(int j = 0; j < data.size(); j++) {
+                String cell = data.get(j).get(columnIndex);
+                if(cell.compareTo(minCell) < 0) {
+                    minCell = cell;
+                    minRowIndex = j;
+                }
+            }
+
+            rowToAdd.addAll(data.get(minRowIndex));
+        }
+
+        return new ResultSet(orderedByAscColumns, orderedByData);
     }
+
+    public ResultSet orderByDesc(Column columnToOrderBy) {
+
+        ResultSet orderedAscResultSet = orderByAsc(columnToOrderBy);
+
+        // copy columns
+        ArrayList<Column> orderedByDescColumns = new ArrayList<>();
+
+        for(Column column : columns) {
+            orderedByDescColumns.add(new Column(column));
+        }
+
+        // copy data, but reversed
+        ArrayList<ArrayList<String>> orderByDescData = new ArrayList<>();
+
+        for(int rows = orderedAscResultSet.data.size() - 1; rows >= 0; rows++) {
+            orderByDescData.add(orderedAscResultSet.data.get(rows));
+        }
+
+        return new ResultSet(orderedByDescColumns, orderByDescData);
+    }
+
+    // helper methods for above transformation methods -----------------------------------------------------------------
 
     public boolean hasEqualRows(ArrayList<String> row1, ArrayList<String> row2) {
         for(int cols = 0; cols < row1.size(); cols++) {
@@ -466,6 +795,58 @@ public class ResultSet {
             }
         }
         return true;
+    }
+
+    public double minColumnValue(ArrayList<String> columnData) {
+
+        double min = Integer.parseInt(columnData.get(0));
+
+        for(String data : columnData) {
+            double dataValue = Double.parseDouble(data);
+            if(dataValue < min) {
+                min = dataValue;
+            }
+        }
+
+        return min;
+    }
+
+    public double maxColumnValue(ArrayList<String> columnData) {
+
+        double max = Integer.parseInt(columnData.get(0));
+
+        for(String data : columnData) {
+            double dataValue = Double.parseDouble(data);
+            if(dataValue > max) {
+                max = dataValue;
+            }
+        }
+
+        return max;
+    }
+
+    public double avgColumnValue(ArrayList<String> columnData) {
+
+        double totalValue = sumColumnValue(columnData);
+        int numRows = countColumnValue(columnData);
+
+        return totalValue / numRows;
+    }
+
+    public int countColumnValue(ArrayList<String> columnData) {
+        return columnData.size();
+    }
+
+    public double sumColumnValue(ArrayList<String> columnData) {
+
+        double sum = 0;
+
+        for(String data : columnData) {
+            double dataValue = Double.parseDouble(data);
+            sum += dataValue;
+        }
+
+        return sum;
     }
 
     /**

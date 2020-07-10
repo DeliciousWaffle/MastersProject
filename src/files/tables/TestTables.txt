@@ -118,6 +118,8 @@ Table: Suppliers
 		COLUMN DONE
 		Column: City CHAR 20 NONE
 		COLUMN DONE
+		Column: PostalCode CHAR 10 NONE
+		COLUMN DONE
 		Column: Country CHAR 15 NONE
 		COLUMN DONE
 	COLUMN LIST DONE

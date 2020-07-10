@@ -1,7 +1,5 @@
 package test;
 
-import datastructures.Condition;
-import datastructures.ConditionExpression;
 import datastructures.table.ResultSet;
 import datastructures.table.Table;
 import datastructures.table.component.Column;
@@ -10,9 +8,11 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import utilities.Serialize;
 import utilities.enums.Filename;
-import utilities.enums.Symbol;
+import utilities.enums.Keyword;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Currently using W3school's website for comparisons. Not perfect, will need to change later.
@@ -29,13 +29,22 @@ class ResultSetTest {
     Suppliers
     Shippers
      */
-    private static ArrayList<Table> tables;
+    private static ResultSet customers, categories, employees, orderDetails, orders, products, suppliers, shippers;
 
     @BeforeAll
     public static void init() {
 
         String serialized = IO.read(Filename.TEST_TABLES);
-        tables = Serialize.unSerializeTables(serialized);
+        ArrayList<Table> tables = Serialize.unSerializeTables(serialized);
+
+        customers = new ResultSet(tables.get(0));
+        categories = new ResultSet(tables.get(1));
+        employees = new ResultSet(tables.get(2));
+        orderDetails = new ResultSet(tables.get(3));
+        orders = new ResultSet(tables.get(4));
+        products = new ResultSet(tables.get(5));
+        suppliers = new ResultSet(tables.get(6));
+        shippers = new ResultSet(tables.get(7));
     }
 
     @Test
@@ -64,12 +73,13 @@ class ResultSetTest {
 
         System.out.println("Test Selection --------------------------------------------------------------------------");
 
-        ResultSet customersTable = new ResultSet(tables.get(0));
+        /*ResultSet customersTable = new ResultSet(tables.get(0));
 
         Column customersID = customersTable.getColumns().get(0);
         Column customersName = customersTable.getColumns().get(1);
         Column contactName = customersTable.getColumns().get(2);
         Column city = customersTable.getColumns().get(4);
+        Column postalCode = customersTable.getColumns().get(5);
         Column country = customersTable.getColumns().get(6);
 
         System.out.println("Single condition, returns customers from Germany");
@@ -151,9 +161,17 @@ class ResultSetTest {
         conditionExpression.and(new Condition(city, Symbol.EQUAL, "Berlin"));
         conditionExpression.or(new Condition(country, Symbol.EQUAL, "France"));
         conditionExpression.and(new Condition(city, Symbol.EQUAL, "Paris"));
-        System.out.println(customersTable.selection(conditionExpression).toString());
+        System.out.println(customersTable.selection(conditionExpression).toString());*/
 
-        // TODO test with crazier stuff
+        /*System.out.println("MIX condition, returns customers whose id numbers are 10 or 12 or " +
+                "come from Mexico and have postal code 05021");
+        conditionExpression = new ConditionExpression(
+                new Condition(customersID, Symbol.EQUAL, "10")
+        );
+        conditionExpression.or(new Condition(customersID, Symbol.EQUAL, "12"));
+        conditionExpression.or(new Condition(city, Symbol.EQUAL, "Mexico"));
+        conditionExpression.and(new Condition(postalCode, Symbol.EQUAL, "05021"));
+        System.out.println(customersTable.selection(conditionExpression).toString());*/
     }
 
     @Test
@@ -161,9 +179,88 @@ class ResultSetTest {
 
         System.out.println("Test Cartesian Product ------------------------------------------------------------------");
 
-        /*ResultSet customersTable = new ResultSet(tables.get(0));
-        ResultSet shippersTable = new ResultSet(tables.get(7));
-        customersTable = customersTable.cartesianProduct(shippersTable);
-        System.out.println(customersTable.toString());*/
+        ResultSet cartesianProduct = customers.cartesianProduct(suppliers);
+        //IO.writeTableData(Filename.TEST_TABLE_DATA, "remove.txt", cartesianProduct.toString());
+        //System.out.println(customers);
+       // System.out.println(suppliers);
+    }
+
+    @Test
+    public void testNaturalJoin() {
+
+        System.out.println("Test Natural Join -----------------------------------------------------------------------");
+
+        /*System.out.println("Suppliers and Customers that come from the same country");
+        Column country = customers.getColumns().get(6);
+        ResultSet naturalJoin = customers.joinUsing(suppliers, country);
+        System.out.println(naturalJoin.toString());*/
+    }
+
+    @Test
+    public void testInnerJoin() {
+
+        System.out.println("Test Inner Join -------------------------------------------------------------------------");
+    }
+
+    @Test
+    public void testGroupBy() {
+
+        System.out.println("Test Group By ---------------------------------------------------------------------------");
+
+        Column quantity = orderDetails.getColumns().get(3);
+        ArrayList<Column> noColumnsToGroupBy = new ArrayList<>();
+        Map<Keyword, Column> min = new HashMap<>();
+        min.put(Keyword.MIN, quantity);
+        Map<Keyword, Column> max = new HashMap<>();
+        max.put(Keyword.MAX, quantity);
+        Map<Keyword, Column> avg = new HashMap<>();
+        avg.put(Keyword.AVG, quantity);
+        Map<Keyword, Column> count = new HashMap<>();
+        count.put(Keyword.COUNT, quantity);
+        Map<Keyword, Column> sum = new HashMap<>();
+        sum.put(Keyword.SUM, quantity);
+
+        System.out.println("Finding min quantity from OrderDetails");
+        System.out.println(orderDetails.groupBy(noColumnsToGroupBy, min));
+
+        System.out.println("Finding max quantity from OrderDetails");
+        System.out.println(orderDetails.groupBy(noColumnsToGroupBy, max));
+
+        System.out.println("Finding avg quantity from OrderDetails");
+        System.out.println(orderDetails.groupBy(noColumnsToGroupBy, avg));
+
+        System.out.println("Finding the count of quantity from OrderDetails");
+        System.out.println(orderDetails.groupBy(noColumnsToGroupBy, count));
+
+        System.out.println("Finding the sum of quantity from OrderDetails");
+        System.out.println(orderDetails.groupBy(noColumnsToGroupBy, sum));
+
+        HashMap<Keyword, Column> all = new HashMap<>();
+        all.putAll(min);
+        all.putAll(max);
+        all.putAll(avg);
+        all.putAll(count);
+        all.putAll(sum);
+
+        System.out.println("Finding everything on the quantity from OrderDetails");
+        System.out.println(orderDetails.groupBy(noColumnsToGroupBy, all));
+    }
+
+    @Test
+    public void testHaving() {
+
+        System.out.println("Test Having -----------------------------------------------------------------------------");
+    }
+
+    @Test
+    public void testOrderBy() {
+
+        System.out.println("Test Order By ---------------------------------------------------------------------------");
+    }
+
+    @Test
+    public void testCombinations() {
+
+        System.out.println("Test Combinations -----------------------------------------------------------------------");
     }
 }
