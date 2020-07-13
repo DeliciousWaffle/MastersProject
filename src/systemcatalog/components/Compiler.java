@@ -1,9 +1,9 @@
 package systemcatalog.components;
 
 import utilities.enums.InputType;
-import datastructures.rulegraph.RuleGraph;
-import datastructures.table.Table;
-import datastructures.user.User;
+import datastructure.rulegraph.RuleGraph;
+import datastructure.relation.table.Table;
+import datastructure.user.User;
 
 import java.util.ArrayList;
 

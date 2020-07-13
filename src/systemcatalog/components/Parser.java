@@ -2,7 +2,7 @@ package systemcatalog.components;
 
 import utilities.enums.InputType;
 import utilities.enums.Keyword;
-import datastructures.rulegraph.RuleGraph;
+import datastructure.rulegraph.RuleGraph;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct.
