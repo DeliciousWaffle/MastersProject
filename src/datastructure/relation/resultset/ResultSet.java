@@ -1,6 +1,6 @@
 package datastructure.relation.resultset;
 
-import datastructure.tree.conditiontree.Condition;
+import datastructure.tree.conditiontree.component.Condition;
 import datastructure.tree.conditiontree.ConditionExpression;
 import datastructure.relation.table.component.Column;
 import datastructure.relation.table.component.TableData;

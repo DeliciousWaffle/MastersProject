@@ -1,5 +1,7 @@
 package datastructure.tree.conditiontree;
 
+import datastructure.tree.conditiontree.component.Condition;
+
 import java.util.ArrayList;
 import java.util.List;
 
