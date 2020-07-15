@@ -7,13 +7,15 @@ import java.util.List;
 
 /**
  * A class representing a simple generic binary tree. Nodes are connected bi-directionally which
- * is a little strange. Adding new nodes is also a bit strange as a series of locations are provided
- * in order to insert at the correct location.
+ * is a little strange. Figured out how to make a class iterable which is cool. Can only do a preorder
+ * traversal, but I think that's all I will need. Adding new nodes is also a bit strange as a series of
+ * locations are provided in order to insert at the correct location. Class will be used by other tree
+ * classes as a sort of a base to get work done.
  * @param <T> is the type that this binary tree is
  */
 public class BinaryTree<T> implements Iterable<T> {
 
-    // locations in which to move the pointer of the tree
+    // locations in which to traverse the tree, basically how you get around
     public enum Traverse {
         LEFT, RIGHT, UP
     }
@@ -21,31 +23,41 @@ public class BinaryTree<T> implements Iterable<T> {
     private BinaryTreeNode<T> root;
     private int size;
 
-    private boolean debugging;
-
+    /**
+     * Creates a new instance of a binary tree. Forcing myself to set a root initially
+     * because yeah.
+     * @param element
+     */
     public BinaryTree(T element) {
         this.root = new BinaryTreeNode<>(element, null);
         this.size = 1;
-        this.debugging = false;
     }
 
+    /**
+     * @param element is the element that the root will hold
+     */
     public void setRoot(T element) {
         this.root = new BinaryTreeNode<>(element, null);
     }
 
+    /**
+     * @return the element stored in the root
+     */
     public T getRoot() { return root.getData(); }
 
     /**
      * Given a series of traversals to perform and an element, adds a new node at the
-     * given location. If adding an element in the location of a child node that exists,
-     * performs an insertion.
+     * given child location. If the child location is occupied (ie. not null) then
+     * this method performs an insert of the new node between the last node in the
+     * traversed list and the node located at child location.
      * @param traversals are a list of traversals to perform
+     * @param childLocation is the location of the child to add
      * @param element is the element to insert
      */
-    public void addChild(List<Traverse> traversals, Traverse location, T element) {
+    public void addChild(List<Traverse> traversals, Traverse childLocation, T element) {
 
         // only want children
-        if(location == Traverse.UP) {
+        if(childLocation == Traverse.UP) {
             System.out.println("In BinaryTree.addChild()");
             System.out.println("UP not supported!");
             return;
@@ -54,23 +66,26 @@ public class BinaryTree<T> implements Iterable<T> {
         BinaryTreeNode<T> pointer = traverse(traversals);
         BinaryTreeNode<T> child = new BinaryTreeNode<>(element, pointer);
 
-        if(pointer.hasLeftChild() && location == Traverse.LEFT) {
+        // left child is occupied, perform a confusing insert
+        if(pointer.hasLeftChild() && childLocation == Traverse.LEFT) {
 
             BinaryTreeNode<T> parentsLeftChild = pointer.getLeftChild();
             parentsLeftChild.setParent(child);
             child.setLeftChild(parentsLeftChild);
             pointer.setLeftChild(child);
 
-        } else if(pointer.hasRightChild() && location == Traverse.RIGHT) {
+        // right child is occupied, perform a confusing insert
+        } else if(pointer.hasRightChild() && childLocation == Traverse.RIGHT) {
 
             BinaryTreeNode<T> parentsRightChild = pointer.getRightChild();
             parentsRightChild.setParent(child);
             child.setRightChild(parentsRightChild);
             pointer.setRightChild(child);
 
+        // we're good to go, just add regularly
         } else {
 
-            switch (location) {
+            switch (childLocation) {
                 case LEFT:
                     pointer.setLeftChild(child);
                     break;
@@ -80,49 +95,61 @@ public class BinaryTree<T> implements Iterable<T> {
             }
         }
 
+        // don't forget to increase size!
         size++;
     }
 
     /**
-     * Given a series of traversals, returns the data contained in the last traversed node.
+     * Given a series of traversals and a child location returns the data contained in the child.
      * @param traversals are a list of traversals to perform
+     * @param childLocation is the location of the child to get the data from
      * @return the data of the last traversed node
      */
-    public T getData(List<Traverse> traversals) {
-        return traverse(traversals).getData();
+    public T getData(List<Traverse> traversals, Traverse childLocation) {
+
+        if(childLocation == Traverse.UP) {
+            return null;
+        }
+
+        BinaryTreeNode<T> parent = traverse(traversals);
+
+        if(childLocation == Traverse.LEFT) {
+            return parent.getLeftChild().getData();
+        } else {
+            return parent.getRightChild().getData();
+        }
     }
 
     /**
-     * Given a series of traversals, removes the last traversed node.
+     * Given a series of traversals, and the location of the child to remove, removes the child.
      * @param traversals are a list of traversals to perform
-     * @return whether the removal was successful
      */
-    public boolean removeLeafNode(List<Traverse> traversals) {
+    public void removeLeafNode(List<Traverse> traversals, Traverse childLocation) {
 
-        BinaryTreeNode<T> toRemove = traverse(traversals);
-
-        // make sure that this node to remove is a leaf node
-        if(! toRemove.isLeafNode()) {
-            return false;
+        // don't support UP operations
+        if(childLocation == Traverse.UP) {
+            return;
         }
 
-        // edge case: removing the root
-        if(toRemove.isRoot()) {
-            root = null;
-            return true;
-        }
+        BinaryTreeNode<T> parent = traverse(traversals);
+        BinaryTreeNode<T> childToRemove;
 
-        // remove the parent's reference to the node to be remove
-        BinaryTreeNode<T> toRemovesParent = toRemove.getParent();
-
-        // figure out the location of the node to remove
-        if(toRemovesParent.getLeftChild() == toRemove) {
-            toRemovesParent.setLeftChild(null);
+        if(childLocation == Traverse.LEFT) {
+            childToRemove = parent.getLeftChild();
+            // make sure that this node to remove is a leaf node
+            if(! childToRemove.isLeafNode()) {
+                return;
+            }
+            parent.setLeftChild(null);
         } else {
-            toRemovesParent.setRightChild(null);
+            childToRemove = parent.getRightChild();
+            if(! childToRemove.isLeafNode()) {
+                return;
+            }
+            parent.setRightChild(null);
         }
 
-        return true;
+        size--;
     }
 
     /**
@@ -151,41 +178,112 @@ public class BinaryTree<T> implements Iterable<T> {
         return pointer;
     }
 
+    /**
+     * @return the size of the tree
+     */
     public int getSize() {
         return size;
     }
 
-    public void setDebugging(boolean debugging) {
-        this.debugging = debugging;
+    /**
+     * Prints the structure of the tree using a preorder traversal.
+     * Used for debugging purposes.
+     */
+    public void printStructure() {
+
+        BinaryTreeNode<T> pointer = root;
+        pointer.setVisited(true);
+        int nodesVisited = 1;
+
+        System.out.println("Root: " + pointer.getData());
+
+        while(nodesVisited != getSize()) {
+
+            if (pointer.getLeftChild() != null && ! pointer.getLeftChild().isVisited()) {
+
+                pointer = pointer.getLeftChild();
+                pointer.setVisited(true);
+                nodesVisited++;
+
+                System.out.println("Left: " + pointer.getData());
+
+            } else if (pointer.getRightChild() != null && ! pointer.getRightChild().isVisited()) {
+
+                pointer = pointer.getRightChild();
+                nodesVisited++;
+                pointer.setVisited(true);
+
+                System.out.println("Right: " + pointer.getData());
+
+            } else {
+
+                pointer = pointer.getParent();
+                System.out.println("Up");
+            }
+        }
+
+        resetVisitStatus();
     }
 
+    /**
+     * Helper method called after performing a traversal of the tree. Resets the visit status
+     * of each node so that calling a traversal method twice on the same binary tree doesn't cause
+     * weird stuff from happening.
+     */
+    private void resetVisitStatus() {
+
+        BinaryTreeNode<T> pointer = root;
+        pointer.setVisited(false);
+        int nodesVisited = 1;
+
+        while(nodesVisited != getSize()) {
+
+            if (pointer.getLeftChild() != null && pointer.getLeftChild().isVisited()) {
+                pointer = pointer.getLeftChild();
+                pointer.setVisited(false);
+                nodesVisited++;
+
+            } else if (pointer.getRightChild() != null && pointer.getRightChild().isVisited()) {
+                pointer = pointer.getRightChild();
+                nodesVisited++;
+                pointer.setVisited(false);
+
+            } else {
+                pointer = pointer.getParent();
+            }
+        }
+    }
+
+    /**
+     * Returns a new iterator for the binary tree. Can now use those spicy foreach loops!
+     * @return an iterator for the binary tree
+     */
     @Override
     public Iterator<T> iterator() {
-        return new PreorderTraversal(this);
+        return new PreorderTraversal();
     }
 
+    /**
+     * Performs a preorder traversal of the binary tree.
+     */
     private class PreorderTraversal implements Iterator<T> {
 
-        BinaryTree<T> binaryTree;
         BinaryTreeNode<T> pointer;
         int nodesVisited;
 
-        public PreorderTraversal(BinaryTree<T> binaryTree) {
-            this.binaryTree = binaryTree;
-            this.pointer = binaryTree.root;
+        public PreorderTraversal() {
+            this.pointer = root;
             this.nodesVisited = 0;
-
-            System.out.print(debugging ? "Root: " + pointer.getData() + "\n" : "");
         }
 
         @Override
         public boolean hasNext() {
 
-            if(nodesVisited == binaryTree.getSize()) {
-                resetVisited();
+            if(nodesVisited == getSize()) {
+                resetVisitStatus();
             }
 
-            return nodesVisited != binaryTree.getSize();
+            return nodesVisited != getSize();
         }
 
         @Override
@@ -195,56 +293,31 @@ public class BinaryTree<T> implements Iterable<T> {
             pointer.setVisited(true);
             nodesVisited++;
 
-            boolean lastNode = nodesVisited == binaryTree.getSize();
+            // set the pointer to the next node to get
+            boolean lastNode = nodesVisited == getSize();
 
             if(! lastNode) {
 
+                // when a leaf node is reach, need to traverse back up the tree and check for unvisited nodes
                 boolean foundNextNode = false;
 
                 while (! foundNextNode) {
 
-                    if (pointer.getLeftChild() != null && !pointer.getLeftChild().isVisited()) {
+                    if(pointer.getLeftChild() != null && !pointer.getLeftChild().isVisited()) {
                         pointer = pointer.getLeftChild();
                         foundNextNode = true;
-                        System.out.print(debugging ? "Left: " + pointer.getData() + "\n" : "");
 
-                    } else if (pointer.getRightChild() != null && !pointer.getRightChild().isVisited()) {
+                    } else if(pointer.getRightChild() != null && !pointer.getRightChild().isVisited()) {
                         pointer = pointer.getRightChild();
                         foundNextNode = true;
-                        System.out.print(debugging ? "Right: " + pointer.getData() + "\n" : "");
 
                     } else {
                         pointer = pointer.getParent();
-                        System.out.print(debugging ? "Up\n" : "");
                     }
                 }
             }
 
             return returnData;
-        }
-
-        public void resetVisited() {
-
-            pointer = binaryTree.root;
-            pointer.setVisited(false);
-            nodesVisited = 1;
-
-            while(nodesVisited != binaryTree.getSize()) {
-
-                if (pointer.getLeftChild() != null && pointer.getLeftChild().isVisited()) {
-                    pointer = pointer.getLeftChild();
-                    pointer.setVisited(false);
-                    nodesVisited++;
-
-                } else if (pointer.getRightChild() != null && pointer.getRightChild().isVisited()) {
-                    pointer = pointer.getRightChild();
-                    nodesVisited++;
-                    pointer.setVisited(false);
-
-                } else {
-                    pointer = pointer.getParent();
-                }
-            }
         }
     }
 }
