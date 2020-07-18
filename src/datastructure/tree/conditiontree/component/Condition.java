@@ -18,6 +18,12 @@ public class Condition {
         this.target = target;
     }
 
+    public Condition(Condition toCopy) {
+        this.column = new Column(toCopy.column);
+        this.symbol = toCopy.symbol;
+        this.target = toCopy.target;
+    }
+
     public Column getColumn() { return column; }
 
     public Symbol getSymbol() { return symbol; }
@@ -26,7 +32,8 @@ public class Condition {
 
     @Override
     public String toString() {
-        return new StringBuilder().append(column).append(" ").append(symbol).
-                append(" ").append(target).toString();
+        StringBuilder print = new StringBuilder();
+        print.append(column.getName()).append(" ").append(symbol).append(" ").append(target);
+        return print.toString();
     }
 }

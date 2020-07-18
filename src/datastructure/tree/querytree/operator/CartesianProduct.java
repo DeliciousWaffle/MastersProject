@@ -1,12 +1,14 @@
 package datastructure.tree.querytree.operator;
 
-import datastructure.tree.querytree.operator.Operator;
-
 public class CartesianProduct extends Operator {
 
     private Type type;
 
     public CartesianProduct() {
+        this.type = Type.CARTESIAN_PRODUCT;
+    }
+
+    public CartesianProduct(CartesianProduct toCopy) {
         this.type = Type.CARTESIAN_PRODUCT;
     }
 
@@ -17,11 +19,13 @@ public class CartesianProduct extends Operator {
 
     @Override
     public Operator copy(Operator operator) {
-        return null;
+        return new CartesianProduct((CartesianProduct) (operator));
     }
 
     @Override
     public String toString() {
-        return new StringBuilder().append("[").append(type).append("]").toString();
+        StringBuilder print = new StringBuilder();
+        print.append("[").append(type).append("]");
+        return print.toString();
     }
 }

@@ -1,8 +1,8 @@
 package datastructure.tree.querytree.operator;
 
 import datastructure.tree.conditiontree.component.Condition;
-import datastructure.tree.querytree.operator.Operator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,6 +20,14 @@ public class Selection extends Operator {
         this.conditions = conditions;
     }
 
+    public Selection(Selection toCopy) {
+        this.type = Type.SELECTION;
+        this.conditions = new ArrayList<>();
+        for(Condition toCopyCondition : toCopy.conditions) {
+            this.conditions.add(new Condition(toCopyCondition));
+        }
+    }
+
     @Override
     public Type getType() {
         return type;
@@ -27,7 +35,7 @@ public class Selection extends Operator {
 
     @Override
     public Operator copy(Operator operator) {
-        return null;
+        return new Selection((Selection) operator);
     }
 
     public List<Condition> getConditions() {

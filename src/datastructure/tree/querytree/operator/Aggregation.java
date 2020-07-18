@@ -8,12 +8,12 @@ import java.util.List;
 public class Aggregation extends Operator {
 
     private Type type;
-    private List<Column> groupByColumns, aggregateColumns;
+    private List<Column> groupByColumns, columnsToAggregate;
 
-    public Aggregation(List<Column> groupByColumns, List<Column> aggregateColumns) {
+    public Aggregation(List<Column> groupByColumns, List<Column> columnsToAggregate) {
         this.type = Type.AGGREGATION;
         this.groupByColumns = groupByColumns;
-        this.aggregateColumns = aggregateColumns;
+        this.columnsToAggregate = columnsToAggregate;
     }
 
     public Aggregation(Aggregation toCopy) {
@@ -22,10 +22,18 @@ public class Aggregation extends Operator {
         for(Column groupByColumn : toCopy.groupByColumns) {
             this.groupByColumns.add(new Column(groupByColumn));
         }
-        this.aggregateColumns = new ArrayList<>();
-        for(Column aggregateColumn : toCopy.aggregateColumns) {
-            this.aggregateColumns.add(new Column(aggregateColumn));
+        this.columnsToAggregate = new ArrayList<>();
+        for(Column aggregateColumn : toCopy.columnsToAggregate) {
+            this.columnsToAggregate.add(new Column(aggregateColumn));
         }
+    }
+
+    public List<Column> getGroupByColumns() {
+        return groupByColumns;
+    }
+
+    public List<Column> getColumnsToAggregate() {
+        return columnsToAggregate;
     }
 
     @Override
@@ -36,14 +44,6 @@ public class Aggregation extends Operator {
     @Override
     public Operator copy(Operator operator) {
         return new Aggregation((Aggregation) operator);
-    }
-
-    public List<Column> getGroupByColumns() {
-        return groupByColumns;
-    }
-
-    public List<Column> getAggregateColumns() {
-        return aggregateColumns;
     }
 
     @Override
@@ -66,10 +66,10 @@ public class Aggregation extends Operator {
 
         print.append(" G ");
 
-        if(aggregateColumns.size() == 1) {
-            print.append(aggregateColumns.get(0).getName());
+        if(columnsToAggregate.size() == 1) {
+            print.append(columnsToAggregate.get(0).getName());
         } else {
-            for(Column aggregateColumn : aggregateColumns) {
+            for(Column aggregateColumn : columnsToAggregate) {
                 print.append(aggregateColumn.getName()).append(", ");
             }
             // remove ", "

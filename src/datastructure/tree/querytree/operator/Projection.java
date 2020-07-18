@@ -1,18 +1,30 @@
 package datastructure.tree.querytree.operator;
 
 import datastructure.relation.table.component.Column;
-import datastructure.tree.querytree.operator.Operator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Projection extends Operator {
 
     private Type type;
-    private List<Column> projectionColumns;
+    private List<Column> columnsToProject;
 
-    public Projection(List<Column> projectionColumns) {
+    public Projection(List<Column> columnsToProject) {
         this.type = Type.PROJECTION;
-        this.projectionColumns = projectionColumns;
+        this.columnsToProject = columnsToProject;
+    }
+
+    public Projection(Projection toCopy) {
+        this.type = Type.PROJECTION;
+        this.columnsToProject = new ArrayList<>();
+        for(Column toCopyProjectionColumn : toCopy.columnsToProject) {
+            this.columnsToProject.add(new Column(toCopyProjectionColumn));
+        }
+    }
+
+    public List<Column> getColumnsToProject() {
+        return columnsToProject;
     }
 
     @Override
@@ -22,11 +34,7 @@ public class Projection extends Operator {
 
     @Override
     public Operator copy(Operator operator) {
-        return null;
-    }
-
-    public List<Column> getProjectionColumns() {
-        return projectionColumns;
+        return new Projection((Projection) operator);
     }
 
     @Override
@@ -36,10 +44,10 @@ public class Projection extends Operator {
 
         print.append(type).append(" [");
 
-        if(projectionColumns.size() == 1) {
-            print.append(projectionColumns.get(0).getName());
+        if(columnsToProject.size() == 1) {
+            print.append(columnsToProject.get(0).getName());
         } else {
-            for(Column projectionColumn : projectionColumns) {
+            for(Column projectionColumn : columnsToProject) {
                 print.append(projectionColumn.getName()).append(", ");
             }
             // remove ", "

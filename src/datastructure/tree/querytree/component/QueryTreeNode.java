@@ -44,7 +44,7 @@ public class QueryTreeNode {
      * @return this node's only child
      */
     public QueryTreeNode getOnlyChild() {
-        return children[0];
+        return hasOnlyChild() ? children[0] : null;
     }
 
     /**
@@ -52,7 +52,7 @@ public class QueryTreeNode {
      * @param leftChild is the left child of this node
      */
     public void setLeftChild(QueryTreeNode leftChild) {
-        if(! hasChildren()) {
+        if(! hasAnyChildren()) {
             children = new QueryTreeNode[2];
         }
         children[0] = leftChild;
@@ -62,7 +62,7 @@ public class QueryTreeNode {
      * @return the left child of this node
      */
     public QueryTreeNode getLeftChild() {
-        return children[0];
+        return hasLeftChild() ? children[0] : null;
     }
 
     /**
@@ -70,7 +70,7 @@ public class QueryTreeNode {
      * @param rightChild is the right child of this node
      */
     public void setRightChild(QueryTreeNode rightChild) {
-        if(! hasChildren()) {
+        if(! hasAnyChildren()) {
             children = new QueryTreeNode[2];
         }
         children[1] = rightChild;
@@ -80,7 +80,7 @@ public class QueryTreeNode {
      * @return the right child of this node
      */
     public QueryTreeNode getRightChild() {
-        return children[1];
+        return hasRightChild() ? children[1] : null;
     }
 
     public void setVisited(boolean visited) {
@@ -95,19 +95,44 @@ public class QueryTreeNode {
         return parent != null;
     }
 
-    public boolean hasChildren() {
+    public boolean hasAnyChildren() {
         return children != null;
     }
 
     public boolean hasOnlyChild() {
-        return hasLeftChild() && children.length == 1;
+        return hasAnyChildren() && children.length == 1 && children[0] != null;
     }
 
     public boolean hasLeftChild() {
-        return hasChildren() && children[0] != null;
+        return hasAnyChildren() && children.length == 2 && children[0] != null;
     }
 
     public boolean hasRightChild() {
-        return hasChildren() && children[1] != null;
+        return hasAnyChildren() && children.length == 2 && children[1] != null;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder print = new StringBuilder();
+        print.append(operator).append("\n");
+        if(! hasAnyChildren()) {
+            print.append("Children: null");
+        } else {
+            if(hasOnlyChild()) {
+                print.append("Only Child: ").append(getOnlyChild().getOperator());
+            } else {
+                if (hasLeftChild()) {
+                    print.append("Left Child:").append(getLeftChild().getOperator()).append("\n");
+                } else {
+                    print.append("Left Child: null\n");
+                }
+                if (hasRightChild()) {
+                    print.append("Right Child: ").append(getRightChild().getOperator());
+                } else {
+                    print.append("Right Child: null");
+                }
+            }
+        }
+        return print.toString();
     }
 }

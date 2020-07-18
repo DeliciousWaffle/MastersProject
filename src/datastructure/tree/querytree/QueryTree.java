@@ -35,12 +35,16 @@ public class QueryTree implements Iterable<Operator> {
 
         // perform an insert if left child is occupied
         if(pointer.hasLeftChild() && target == Traversal.LEFT) {
+            System.out.println("has left: " + pointer.getOperator());
             insertLeft(pointer, nodeToAdd);
         } else if(pointer.hasRightChild() && target == Traversal.RIGHT) {
+            System.out.println("has right: " + pointer.getOperator());
             insertRight(pointer, nodeToAdd);
         } else if(pointer.hasParent() && target == Traversal.UP) {
+            System.out.println("has up: " + pointer.getOperator());
             insertAbove(pointer, nodeToAdd);
         } else if(pointer.hasOnlyChild() && target == Traversal.DOWN) {
+            System.out.println("has down: " + pointer.getOperator());
             insertBelow(pointer, nodeToAdd);
         } else {
             switch(target) {
@@ -50,34 +54,117 @@ public class QueryTree implements Iterable<Operator> {
                 case RIGHT:
                     pointer.setRightChild(nodeToAdd);
                     break;
+                // will only occur if placing above root node
                 case UP:
-                    pointer.setParent(nodeToAdd);
+                    nodeToAdd.setParent(null);
+                    root = nodeToAdd;
+                    root.setOnlyChild(pointer);
+                    pointer.setParent(root);
                     break;
                 case DOWN:
                     pointer.setOnlyChild(nodeToAdd);
                     break;
             }
         }
+
+        size++;
     }
 
-    private void insertLeft(QueryTreeNode parent, QueryTreeNode leftChild) {
-        
+    private void insertLeft(QueryTreeNode parent, QueryTreeNode leftChildToAdd) {
+
+        QueryTreeNode leftChild = parent.getLeftChild();
+        parent.setLeftChild(leftChildToAdd);
+        leftChildToAdd.setOnlyChild(leftChild);
+        leftChild.setParent(leftChildToAdd);
     }
 
-    private void insertRight(QueryTreeNode parent, QueryTreeNode rightChild) {
+    private void insertRight(QueryTreeNode parent, QueryTreeNode rightChildToAdd) {
 
+        QueryTreeNode rightChild = parent.getRightChild();
+        parent.setRightChild(rightChildToAdd);
+        rightChildToAdd.setOnlyChild(rightChild);
+        rightChild.setParent(rightChildToAdd);
     }
 
-    private void insertAbove(QueryTreeNode parent, QueryTreeNode grandParent) {
+    private void insertAbove(QueryTreeNode pointer, QueryTreeNode parentToAdd) {
 
+        QueryTreeNode pointersParent = pointer.getParent();
+        pointer.setParent(null);
+
+        Traversal pointersParentChildLocation = null;
+
+        if(pointersParent.hasOnlyChild() && pointersParent.getOnlyChild() == pointer) {
+            pointersParentChildLocation = Traversal.DOWN;
+        } else if(pointersParent.hasLeftChild() && pointersParent.getLeftChild() == pointer) {
+            pointersParentChildLocation = Traversal.LEFT;
+        } else if(pointersParent.hasRightChild() && pointersParent.getRightChild() == pointer) {
+            pointersParentChildLocation = Traversal.RIGHT;
+        }
+
+
+        pointer.setParent(parentToAdd);
+        parentToAdd.setOnlyChild(pointer);
+        parentToAdd.setParent(pointersParent);
+
+        if(pointersParentChildLocation == null) {
+            System.out.println("In QueryTree.insertAbove()");
+            System.out.println("Unknown location!");
+            return;
+        }
+
+        switch(pointersParentChildLocation) {
+            case DOWN:
+                pointersParent.setOnlyChild(parentToAdd);
+                break;
+            case LEFT:
+                pointersParent.setLeftChild(parentToAdd);
+                break;
+            case RIGHT:
+                pointersParent.setRightChild(parentToAdd);
+                break;
+        }
     }
 
-    private void insertBelow(QueryTreeNode parent, QueryTreeNode onlyChild) {
+    private void insertBelow(QueryTreeNode parent, QueryTreeNode onlyChildToAdd) {
 
+        QueryTreeNode parentsOnlyChild = parent.getOnlyChild();
+        parent.setOnlyChild(onlyChildToAdd);
+        onlyChildToAdd.setOnlyChild(parentsOnlyChild);
+        parentsOnlyChild.setParent(onlyChildToAdd);
     }
 
     public Operator get(List<Traversal> traversals, Traversal target) {
+
         QueryTreeNode pointer = traverse(traversals);
+
+        switch(target) {
+            case LEFT:
+                return pointer.getLeftChild().getOperator();
+            case RIGHT:
+                return pointer.getRightChild().getOperator();
+            case UP:
+                return pointer.getParent().getOperator();
+            case DOWN:
+            default:
+                return pointer.getOnlyChild().getOperator();
+        }
+    }
+
+    public QueryTreeNode getBlah(List<Traversal> traversals, Traversal target) {
+
+        QueryTreeNode pointer = traverse(traversals);
+
+        switch(target) {
+            case LEFT:
+                return pointer.getLeftChild();
+            case RIGHT:
+                return pointer.getRightChild();
+            case UP:
+                return pointer.getParent();
+            case DOWN:
+            default:
+                return pointer.getOnlyChild();
+        }
     }
 
     public void remove(List<Traversal> traversals, Traversal target) {
@@ -97,15 +184,17 @@ public class QueryTree implements Iterable<Operator> {
         int nodesVisited = 1;
 
         structure.append("Root: ").append(pointer.getOperator()).append("\n");
+        //System.out.println("Root: " + pointer.getOperator());
 
         while(nodesVisited != size) {
 
-            if(pointer.getOnlyChild() != null && ! pointer.getOnlyChild().isVisited()) {
+            if(pointer.hasOnlyChild() && pointer.getOnlyChild() != null && ! pointer.getOnlyChild().isVisited()) {
 
                 pointer = pointer.getOnlyChild();
                 pointer.setVisited(true);
                 nodesVisited++;
                 structure.append("Down: ").append(pointer.getOperator()).append("\n");
+                //System.out.println("Down: " + pointer.getOperator());
 
             } else if(pointer.getLeftChild() != null && ! pointer.getLeftChild().isVisited()) {
 
@@ -113,6 +202,7 @@ public class QueryTree implements Iterable<Operator> {
                 pointer.setVisited(true);
                 nodesVisited++;
                 structure.append("Left: ").append(pointer.getOperator()).append("\n");
+                //System.out.println("Left: " + pointer.getOperator());
 
             } else if(pointer.getRightChild() != null && ! pointer.getRightChild().isVisited()) {
 
@@ -120,10 +210,12 @@ public class QueryTree implements Iterable<Operator> {
                 pointer.setVisited(true);
                 nodesVisited++;
                 structure.append("Right: ").append(pointer.getOperator()).append("\n");
+                //System.out.println("Right: " + pointer.getOperator());
 
             } else {
                 pointer = pointer.getParent();
                 structure.append("Up\n");
+                //System.out.println("Up");
             }
         }
 
@@ -163,19 +255,19 @@ public class QueryTree implements Iterable<Operator> {
 
         while (nodesVisited != size) {
 
-            if (pointer.getOnlyChild() != null && pointer.getOnlyChild().isVisited()) {
+            if(pointer.getOnlyChild() != null && pointer.hasOnlyChild() && pointer.getOnlyChild().isVisited()) {
 
                 pointer = pointer.getOnlyChild();
                 pointer.setVisited(false);
                 nodesVisited++;
 
-            } else if (pointer.getLeftChild() != null && pointer.getLeftChild().isVisited()) {
+            } else if(pointer.getLeftChild() != null && pointer.getLeftChild().isVisited()) {
 
                 pointer = pointer.getLeftChild();
                 pointer.setVisited(false);
                 nodesVisited++;
 
-            } else if (pointer.getRightChild() != null && pointer.getRightChild().isVisited()) {
+            } else if(pointer.getRightChild() != null && pointer.getRightChild().isVisited()) {
 
                 pointer = pointer.getRightChild();
                 pointer.setVisited(false);
@@ -225,7 +317,7 @@ public class QueryTree implements Iterable<Operator> {
 
                 while(! foundNextNode) {
 
-                    if(pointer.getOnlyChild() != null && ! pointer.getOnlyChild().isVisited()) {
+                    if(pointer.getOnlyChild() != null && pointer.hasOnlyChild() && ! pointer.getOnlyChild().isVisited()) {
                         pointer = pointer.getOnlyChild();
                         foundNextNode = true;
 
