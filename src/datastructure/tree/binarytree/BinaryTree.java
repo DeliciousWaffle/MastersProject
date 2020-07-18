@@ -24,9 +24,8 @@ public class BinaryTree<T> implements Iterable<T> {
     private int size;
 
     /**
-     * Creates a new instance of a binary tree. Forcing myself to set a root initially
-     * because yeah.
-     * @param element
+     * Creates a new instance of a binary tree.
+     * @param element is the element to store
      */
     public BinaryTree(T element) {
         this.root = new BinaryTreeNode<>(element, null);
@@ -188,14 +187,17 @@ public class BinaryTree<T> implements Iterable<T> {
     /**
      * Prints the structure of the tree using a preorder traversal.
      * Used for debugging purposes.
+     * @return the string representation of this tree
      */
-    public void printStructure() {
+    public String printStructure() {
+
+        StringBuilder printStructure = new StringBuilder();
 
         BinaryTreeNode<T> pointer = root;
         pointer.setVisited(true);
         int nodesVisited = 1;
 
-        System.out.println("Root: " + pointer.getData());
+        printStructure.append("Root: ").append(pointer.getData()).append("\n");
 
         while(nodesVisited != getSize()) {
 
@@ -204,25 +206,24 @@ public class BinaryTree<T> implements Iterable<T> {
                 pointer = pointer.getLeftChild();
                 pointer.setVisited(true);
                 nodesVisited++;
-
-                System.out.println("Left: " + pointer.getData());
+                printStructure.append("Left: ").append(pointer.getData()).append("\n");
 
             } else if (pointer.getRightChild() != null && ! pointer.getRightChild().isVisited()) {
 
                 pointer = pointer.getRightChild();
                 nodesVisited++;
                 pointer.setVisited(true);
-
-                System.out.println("Right: " + pointer.getData());
+                printStructure.append("Right: ").append(pointer.getData()).append("\n");
 
             } else {
 
                 pointer = pointer.getParent();
-                System.out.println("Up");
+                printStructure.append("Up\n");
             }
         }
 
         resetVisitStatus();
+        return printStructure.toString();
     }
 
     /**

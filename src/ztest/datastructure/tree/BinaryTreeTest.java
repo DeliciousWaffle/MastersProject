@@ -1,13 +1,10 @@
 package ztest.datastructure.tree;
 
 import datastructure.tree.binarytree.BinaryTree;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,7 +42,7 @@ public class BinaryTreeTest {
         binaryTree.addChild(traversals, BinaryTree.Traverse.LEFT, 20);
         binaryTree.addChild(traversals, BinaryTree.Traverse.RIGHT, 30);
 
-        binaryTree.printStructure();
+        System.out.println(binaryTree.printStructure());
 
         int i = 0;
         for (int actual : binaryTree) {
@@ -63,7 +60,7 @@ public class BinaryTreeTest {
         List<BinaryTree.Traverse> traversals = new ArrayList<>();
         binaryTree.addChild(traversals, BinaryTree.Traverse.RIGHT, 20);
 
-        binaryTree.printStructure();
+        System.out.println(binaryTree.printStructure());
 
         int i = 0;
         for(int actual : binaryTree) {
@@ -86,7 +83,7 @@ public class BinaryTreeTest {
         binaryTree.addChild(traversals, BinaryTree.Traverse.LEFT, 30);
         binaryTree.addChild(traversals, BinaryTree.Traverse.RIGHT, 40);
 
-        binaryTree.printStructure();
+        System.out.println(binaryTree.printStructure());
 
         int i = 0;
         for(int actual : binaryTree) {
@@ -105,7 +102,7 @@ public class BinaryTreeTest {
         traversals.add(BinaryTree.Traverse.LEFT);
         binaryTree.addChild(traversals, BinaryTree.Traverse.RIGHT, 20);
 
-        binaryTree.printStructure();
+        System.out.println(binaryTree.printStructure());
 
         int i = 0;
         for(int actual : binaryTree) {
@@ -130,7 +127,7 @@ public class BinaryTreeTest {
         traversals.add(BinaryTree.Traverse.RIGHT);
         binaryTree.addChild(traversals, BinaryTree.Traverse.RIGHT, 40);
 
-        binaryTree.printStructure();
+        System.out.println(binaryTree.printStructure());
 
         int i = 0;
         for(int actual : binaryTree) {
@@ -148,7 +145,7 @@ public class BinaryTreeTest {
         List<BinaryTree.Traverse> traversals = new ArrayList<>();
         binaryTree.removeLeafNode(traversals, BinaryTree.Traverse.RIGHT);
 
-        binaryTree.printStructure();
+        System.out.println(binaryTree.printStructure());
 
         int i = 0;
         for (int actual : binaryTree) {
@@ -168,7 +165,7 @@ public class BinaryTreeTest {
         traversals.add(BinaryTree.Traverse.RIGHT);
         binaryTree.removeLeafNode(traversals, BinaryTree.Traverse.LEFT);
 
-        binaryTree.printStructure();
+        System.out.println(binaryTree.printStructure());
 
         int i = 0;
         for (int actual : binaryTree) {

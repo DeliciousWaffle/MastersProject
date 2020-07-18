@@ -419,7 +419,8 @@ public class RuleGraph {
             }
 
             // make sure data type is being enforced
-            if((dataTypeId == pointer.getId() && encounteredComparator) || (dataTypeId == pointer.getId() && ids.length == 0)) {
+            if((dataTypeId == pointer.getId() && encounteredComparator) ||
+                    (dataTypeId == pointer.getId() && ids.length == 0)) {
                 try {
 
                     // will throw an exception if the token can't be converted to a number
