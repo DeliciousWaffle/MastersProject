@@ -1,10 +1,13 @@
 package datastructure.tree.querytree;
 
+import datastructure.tree.querytree.operator.CartesianProduct;
 import datastructure.tree.querytree.operator.Operator;
 import datastructure.tree.querytree.component.QueryTreeNode;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 public class QueryTree implements Iterable<Operator> {
 
@@ -18,6 +21,27 @@ public class QueryTree implements Iterable<Operator> {
     public QueryTree(Operator root) {
         this.root = new QueryTreeNode(root, null);
         this.size = 1;
+    }
+
+    public QueryTree(QueryTree toCopy) {
+
+        String toCopyStructure = toCopy.getStructure();
+
+        String[] tokens = toCopyStructure.split("\n");
+        String[] filtered = new String[tokens.length];
+
+        for(int i = 0; i < tokens.length; i++) {
+            String token = tokens[i];
+            if(token.contains(":")) {
+                int keepUpUntilIndex = token.indexOf(":");
+                tokens[i] = token.substring(0, keepUpUntilIndex);
+                System.out.println(tokens[i]);
+            }
+        }
+
+        Stack<Traversal> traversals = new Stack<>();
+
+        // TODO
     }
 
     public void setRoot(Operator root) {
@@ -35,16 +59,12 @@ public class QueryTree implements Iterable<Operator> {
 
         // perform an insert if left child is occupied
         if(pointer.hasLeftChild() && target == Traversal.LEFT) {
-            System.out.println("has left: " + pointer.getOperator());
             insertLeft(pointer, nodeToAdd);
         } else if(pointer.hasRightChild() && target == Traversal.RIGHT) {
-            System.out.println("has right: " + pointer.getOperator());
             insertRight(pointer, nodeToAdd);
         } else if(pointer.hasParent() && target == Traversal.UP) {
-            System.out.println("has up: " + pointer.getOperator());
             insertAbove(pointer, nodeToAdd);
         } else if(pointer.hasOnlyChild() && target == Traversal.DOWN) {
-            System.out.println("has down: " + pointer.getOperator());
             insertBelow(pointer, nodeToAdd);
         } else {
             switch(target) {
@@ -150,29 +170,109 @@ public class QueryTree implements Iterable<Operator> {
         }
     }
 
-    public QueryTreeNode getBlah(List<Traversal> traversals, Traversal target) {
+    public void set(List<Traversal> traversals, Traversal target, Operator operator) {
 
         QueryTreeNode pointer = traverse(traversals);
 
         switch(target) {
             case LEFT:
-                return pointer.getLeftChild();
+                pointer.getLeftChild().setOperator(operator);
+                break;
             case RIGHT:
-                return pointer.getRightChild();
+                pointer.getRightChild().setOperator(operator);
+                break;
             case UP:
-                return pointer.getParent();
+                pointer.getParent().setOperator(operator);
+                break;
             case DOWN:
-            default:
-                return pointer.getOnlyChild();
+                pointer.getOnlyChild().setOperator(operator);
+                break;
         }
     }
 
     public void remove(List<Traversal> traversals, Traversal target) {
-        QueryTreeNode pointer = traverse(traversals);
-    }
 
-    public void removeSubtree(List<Traversal> traversals, Traversal target) {
         QueryTreeNode pointer = traverse(traversals);
+
+        switch(target) {
+            case LEFT:
+                if (! pointer.getLeftChild().hasAnyChildren()) {
+                    pointer.setLeftChild(null);
+                } else {
+                    QueryTreeNode toRemove = pointer.getLeftChild();
+                    // get the location of the target's child
+                    if(toRemove.hasOnlyChild()) {
+                        QueryTreeNode toRemovesChild = toRemove.getOnlyChild();
+                        toRemovesChild.setParent(pointer);
+                        pointer.setLeftChild(toRemovesChild);
+                    } else {
+                        if(toRemove.hasLeftChild()) {
+                            QueryTreeNode toRemovesChild = toRemove.getLeftChild();
+                            toRemovesChild.setParent(pointer);
+                            pointer.setLeftChild(toRemovesChild);
+                        }
+                        if(toRemove.hasRightChild()) {
+                            QueryTreeNode toRemovesChild = toRemove.getRightChild();
+                            toRemovesChild.setParent(pointer);
+                            pointer.setLeftChild(toRemovesChild);
+                        }
+                    }
+                }
+                break;
+            case RIGHT:
+                if(! pointer.getRightChild().hasAnyChildren()) {
+                    pointer.setRightChild(null);
+                } else {
+                    QueryTreeNode toRemove = pointer.getRightChild();
+                    if(toRemove.hasOnlyChild()) {
+                        QueryTreeNode toRemovesChild = toRemove.getOnlyChild();
+                        toRemovesChild.setParent(pointer);
+                        pointer.setRightChild(toRemovesChild);
+                    } else {
+                        if(toRemove.hasLeftChild()) {
+                            QueryTreeNode toRemovesChild = toRemove.getLeftChild();
+                            toRemovesChild.setParent(pointer);
+                            pointer.setRightChild(toRemovesChild);
+                        }
+                        if(toRemove.hasRightChild()) {
+                            QueryTreeNode toRemovesChild = toRemove.getRightChild();
+                            toRemovesChild.setParent(pointer);
+                            pointer.setRightChild(toRemovesChild);
+                        }
+                    }
+                }
+                break;
+            case UP:
+                if(pointer.getParent().getParent() == null) {
+                    pointer.setParent(null);
+                    root = pointer;
+                } else {
+                    QueryTreeNode toRemove = pointer.getParent();
+                    QueryTreeNode toRemovesParent = toRemove.getParent();
+                    toRemovesParent.setOnlyChild(pointer);
+                    pointer.setParent(toRemovesParent);
+                }
+                break;
+            case DOWN:
+                if(! pointer.getOnlyChild().hasAnyChildren()) {
+                    pointer.setOnlyChild(null);
+                } else {
+                    QueryTreeNode toRemove = pointer.getOnlyChild();
+                    if(toRemove.hasOnlyChild()) {
+                        QueryTreeNode toRemovesChild = toRemove.getOnlyChild();
+                        toRemovesChild.setParent(pointer);
+                        pointer.setOnlyChild(toRemovesChild);
+                    // can't perform the removal without creating 3 children
+                    } else {
+                        System.out.println("In QueryTree.remove()");
+                        System.out.println("Removal violates the property of a having at most 2 child nodes!");
+                        return;
+                    }
+                }
+                break;
+        }
+
+        size--;
     }
 
     public String getStructure() {

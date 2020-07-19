@@ -8,6 +8,7 @@ public class InnerJoin extends Operator {
     private Column joinOnColumn1, joinOnColumn2;
 
     public InnerJoin(Column joinOnColumn1, Column joinOnColumn2) {
+        this.type = Type.INNER_JOIN;
         this.joinOnColumn1 = joinOnColumn1;
         this.joinOnColumn2 = joinOnColumn2;
     }
