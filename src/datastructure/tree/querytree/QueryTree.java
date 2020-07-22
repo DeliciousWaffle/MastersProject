@@ -28,20 +28,56 @@ public class QueryTree implements Iterable<Operator> {
         String toCopyStructure = toCopy.getStructure();
 
         String[] tokens = toCopyStructure.split("\n");
-        String[] filtered = new String[tokens.length];
 
         for(int i = 0; i < tokens.length; i++) {
             String token = tokens[i];
             if(token.contains(":")) {
                 int keepUpUntilIndex = token.indexOf(":");
                 tokens[i] = token.substring(0, keepUpUntilIndex);
-                System.out.println(tokens[i]);
             }
         }
 
         Stack<Traversal> traversals = new Stack<>();
 
-        // TODO
+        int i = 0;
+
+        for(Operator operator : toCopy) {
+
+            String traversalToken = tokens[i];
+
+            if(traversalToken.equals("Root")) {
+                this.setRoot(operator.copy(operator));
+            } else {
+
+                while(traversalToken.equals("Up")) {
+                    traversals.pop();
+                    i++;
+                    traversalToken = tokens[i];
+                }
+
+                Traversal traversal = null;
+
+                switch(traversalToken) {
+                    case "Left":
+                        traversal = Traversal.LEFT;
+                        break;
+                    case "Right":
+                        traversal = Traversal.RIGHT;
+                        break;
+                    case "Down":
+                        traversal = Traversal.DOWN;
+                        break;
+                }
+
+                this.add(traversals, traversal, operator.copy(operator));
+                traversals.push(traversal);
+            }
+
+            i++;
+        }
+
+        // set the size too!
+        this.size = toCopy.size;
     }
 
     public void setRoot(Operator root) {

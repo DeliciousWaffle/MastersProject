@@ -249,8 +249,22 @@ public class QueryTreeTest {
 
     @Test
     public void testCopy() {
+
+        System.out.println("In testCopy");
+
         QueryTree queryTree = getQueryTree();
         QueryTree copy = new QueryTree(queryTree);
+
+        System.out.println(queryTree.getStructure());
+        System.out.println(copy.getStructure());
+
+        List<QueryTree.Traversal> traversals = new ArrayList<>();
+        traversals.add(QueryTree.Traversal.DOWN);
+        queryTree.set(traversals, QueryTree.Traversal.UP, new CartesianProduct());
+
+        System.out.println("After changes");
+        System.out.println(queryTree.getStructure());
+        System.out.println(copy.getStructure());
     }
 
     @Test
