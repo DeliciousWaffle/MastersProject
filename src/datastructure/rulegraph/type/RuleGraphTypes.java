@@ -15,77 +15,121 @@ public class RuleGraphTypes {
 
         RuleGraph queryRuleGraph = new RuleGraph();
 
-        queryRuleGraph.addRule("SELECT",    false, 0);
-        queryRuleGraph.addRule("*",         false, 1);
-        queryRuleGraph.addRule("ColumnName",true,  2);
-        queryRuleGraph.addRule(",",         false, 3);
-        queryRuleGraph.addRule("MIN",       false, 4);
-        queryRuleGraph.addRule("MAX",       false, 5);
-        queryRuleGraph.addRule("AVG",       false, 6);
-        queryRuleGraph.addRule("COUNT",     false, 7);
-        queryRuleGraph.addRule("SUM",       false, 8);
-        queryRuleGraph.addRule("(",         false, 9);
-        queryRuleGraph.addRule("ColumnName",true,  10);
-        queryRuleGraph.addRule(")",         false, 11);
-        queryRuleGraph.addRule("FROM",      false, 12);
-        queryRuleGraph.addRule("TableName", true,  13);
-        queryRuleGraph.addRule(",",         false, 14);
-        queryRuleGraph.addRule("TableName", true,  15);
-        queryRuleGraph.addRule("JOIN",      false, 16);
-        queryRuleGraph.addRule("TableName", true,  17);
-        queryRuleGraph.addRule("USING",     false, 18);
-        queryRuleGraph.addRule("(",         false, 19);
-        queryRuleGraph.addRule("ColumnName",true,  20);
-        queryRuleGraph.addRule(")",         false, 21);
-        queryRuleGraph.addRule(";",         false, 22);
-        queryRuleGraph.addRule("WHERE",     false, 23);
-        queryRuleGraph.addRule("ColumnName",true,  24);
-        queryRuleGraph.addRule("=",         false, 25);
-        queryRuleGraph.addRule("!=",        false, 26);
-        queryRuleGraph.addRule(">",         false, 27);
-        queryRuleGraph.addRule("<",         false, 28);
-        queryRuleGraph.addRule(">=",        false, 29);
-        queryRuleGraph.addRule("<=",        false, 30);
-        queryRuleGraph.addRule("Constant",  true,  31);
-        queryRuleGraph.addRule("AND",       false, 32);
-        queryRuleGraph.addRule("OR",        false, 33);
-        queryRuleGraph.addRule(";",         false, 34);
+        queryRuleGraph.addRule("SELECT",     false, 0);
+        queryRuleGraph.addRule("*",          false, 1);
+        queryRuleGraph.addRule("ColumnName", true,  2);
+        queryRuleGraph.addRule("MIN",        false, 3);
+        queryRuleGraph.addRule("MAX",        false, 4);
+        queryRuleGraph.addRule("AVG",        false, 5);
+        queryRuleGraph.addRule("COUNT",      false, 6);
+        queryRuleGraph.addRule("SUM",        false, 7);
+        queryRuleGraph.addRule("(",          false, 8);
+        queryRuleGraph.addRule("*",          false, 9);
+        queryRuleGraph.addRule("ColumnName", true,  10);
+        queryRuleGraph.addRule(")",          false, 11);
+        queryRuleGraph.addRule(",",          false, 12);
+        queryRuleGraph.addRule("FROM",       false, 13);
+        queryRuleGraph.addRule("TableName",  true,  14);
+        queryRuleGraph.addRule(",",          false, 15);
+        queryRuleGraph.addRule("JOIN",       false, 16);
+        queryRuleGraph.addRule("TableName",  true,  17);
+        queryRuleGraph.addRule("USING",      false, 18);
+        queryRuleGraph.addRule("(",          false, 19);
+        queryRuleGraph.addRule("ColumnName", true,  20);
+        queryRuleGraph.addRule(")",          false, 21);
+        queryRuleGraph.addRule("WHERE",      false, 22);
+        queryRuleGraph.addRule("ColumnName", true,  23);
+        queryRuleGraph.addRule("=",          false, 24);
+        queryRuleGraph.addRule("!=",         false, 25);
+        queryRuleGraph.addRule(">",          false, 26);
+        queryRuleGraph.addRule("<",          false, 27);
+        queryRuleGraph.addRule(">=",         false, 28);
+        queryRuleGraph.addRule("<=",         false, 29);
+        queryRuleGraph.addRule("Value",      true,  30);
+        queryRuleGraph.addRule("AND",        false, 31);
+        queryRuleGraph.addRule("OR",         false, 32);
+        queryRuleGraph.addRule("GROUP",      false, 33);
+        queryRuleGraph.addRule("BY",         false, 34);
+        queryRuleGraph.addRule("ColumnName", true,  35);
+        queryRuleGraph.addRule(",",          false, 36);
+        queryRuleGraph.addRule("HAVING",     false, 37);
+        queryRuleGraph.addRule("MIN",        false, 38);
+        queryRuleGraph.addRule("MAX",        false, 39);
+        queryRuleGraph.addRule("AVG",        false, 40);
+        queryRuleGraph.addRule("COUNT",      false, 41);
+        queryRuleGraph.addRule("SUM",        false, 42);
+        queryRuleGraph.addRule("(",          false, 43);
+        queryRuleGraph.addRule("*",          false, 44);
+        queryRuleGraph.addRule("ColumnName", true,  45);
+        queryRuleGraph.addRule(")",          false, 46);
+        queryRuleGraph.addRule("=",          false, 47);
+        queryRuleGraph.addRule("!=",         false, 48);
+        queryRuleGraph.addRule(">",          false, 49);
+        queryRuleGraph.addRule("<",          false, 50);
+        queryRuleGraph.addRule(">=",         false, 51);
+        queryRuleGraph.addRule("<=",         false, 52);
+        queryRuleGraph.addRule("Value",      true,  53);
+        queryRuleGraph.addRule("AND",        false, 54);
+        queryRuleGraph.addRule("OR",         false, 55);
+        queryRuleGraph.addRule(";",          false, 56);
 
-        queryRuleGraph.setChildren(0,  1, 2, 4, 5, 6, 7, 8);
-        queryRuleGraph.setChildren(1,  12);
-        queryRuleGraph.setChildren(2,  3, 12);
-        queryRuleGraph.setChildren(3,  2);
-        queryRuleGraph.setChildren(4,  9);
-        queryRuleGraph.setChildren(5,  9);
-        queryRuleGraph.setChildren(6,  9);
-        queryRuleGraph.setChildren(7,  9);
-        queryRuleGraph.setChildren(8,  9);
-        queryRuleGraph.setChildren(9,  10);
+        queryRuleGraph.setChildren(0,  1, 2, 3, 4, 5, 6, 7);
+        queryRuleGraph.setChildren(1,  13);
+        queryRuleGraph.setChildren(2,  12, 13);
+        queryRuleGraph.setChildren(3,  8);
+        queryRuleGraph.setChildren(4,  8);
+        queryRuleGraph.setChildren(5,  8);
+        queryRuleGraph.setChildren(6,  8);
+        queryRuleGraph.setChildren(7,  8);
+        queryRuleGraph.setChildren(8,  9, 10);
+        queryRuleGraph.setChildren(9,  11);
         queryRuleGraph.setChildren(10, 11);
-        queryRuleGraph.setChildren(11, 12);
-        queryRuleGraph.setChildren(12, 13);
-        queryRuleGraph.setChildren(13, 14, 16, 22, 23);
-        queryRuleGraph.setChildren(14, 15);
-        queryRuleGraph.setChildren(15, 14, 22, 23);
+        queryRuleGraph.setChildren(11, 12, 13);
+        queryRuleGraph.setChildren(12, 2, 3, 4, 5, 6, 7);
+        queryRuleGraph.setChildren(13, 14);
+        queryRuleGraph.setChildren(14, 15, 16, 22, 56);
+        queryRuleGraph.setChildren(15, 14);
         queryRuleGraph.setChildren(16, 17);
         queryRuleGraph.setChildren(17, 18);
         queryRuleGraph.setChildren(18, 19);
         queryRuleGraph.setChildren(19, 20);
         queryRuleGraph.setChildren(20, 21);
-        queryRuleGraph.setChildren(21, 16, 22, 23);
-        queryRuleGraph.setChildren(22);
-        queryRuleGraph.setChildren(23, 24);
-        queryRuleGraph.setChildren(24, 25, 26, 27, 28, 29, 30);
-        queryRuleGraph.setChildren(25, 31);
-        queryRuleGraph.setChildren(26, 31);
-        queryRuleGraph.setChildren(27, 31);
-        queryRuleGraph.setChildren(28, 31);
-        queryRuleGraph.setChildren(29, 31);
-        queryRuleGraph.setChildren(30, 31);
-        queryRuleGraph.setChildren(31, 32, 33, 34);
-        queryRuleGraph.setChildren(32, 24);
-        queryRuleGraph.setChildren(33, 24);
-        queryRuleGraph.setChildren(34);
+        queryRuleGraph.setChildren(21, 15, 16, 22, 56);
+        queryRuleGraph.setChildren(22, 23);
+        queryRuleGraph.setChildren(23, 24, 25, 26, 27, 28, 29);
+        queryRuleGraph.setChildren(24, 30);
+        queryRuleGraph.setChildren(25, 30);
+        queryRuleGraph.setChildren(26, 30);
+        queryRuleGraph.setChildren(27, 30);
+        queryRuleGraph.setChildren(28, 30);
+        queryRuleGraph.setChildren(29, 30);
+        queryRuleGraph.setChildren(30, 31, 32, 33, 56);
+        queryRuleGraph.setChildren(31, 23);
+        queryRuleGraph.setChildren(32, 23);
+        queryRuleGraph.setChildren(33, 34);
+        queryRuleGraph.setChildren(34, 35);
+        queryRuleGraph.setChildren(35, 36, 37, 56);
+        queryRuleGraph.setChildren(36, 35);
+        queryRuleGraph.setChildren(37, 38, 39, 40, 41, 42);
+        queryRuleGraph.setChildren(38, 43);
+        queryRuleGraph.setChildren(39, 43);
+        queryRuleGraph.setChildren(40, 43);
+        queryRuleGraph.setChildren(41, 43);
+        queryRuleGraph.setChildren(42, 43);
+        queryRuleGraph.setChildren(43, 44, 45);
+        queryRuleGraph.setChildren(44, 46);
+        queryRuleGraph.setChildren(45, 46);
+        queryRuleGraph.setChildren(46, 47, 48, 49, 50, 51, 52);
+        queryRuleGraph.setChildren(47, 53);
+        queryRuleGraph.setChildren(48, 53);
+        queryRuleGraph.setChildren(49, 53);
+        queryRuleGraph.setChildren(50, 53);
+        queryRuleGraph.setChildren(51, 53);
+        queryRuleGraph.setChildren(52, 53);
+        queryRuleGraph.setChildren(53, 54, 55, 56);
+        queryRuleGraph.setChildren(54, 38, 39, 40, 41, 42);
+        queryRuleGraph.setChildren(55, 38, 39, 40, 41, 42);
+        queryRuleGraph.setChildren(56);
 
         return queryRuleGraph;
     }
@@ -125,6 +169,7 @@ public class RuleGraphTypes {
         return createTableRuleGraph;
     }
 
+    // TODO
     public RuleGraph getAlterTableRuleGraph() {
 
         RuleGraph alterTableRuleGraph = new RuleGraph();
@@ -379,7 +424,8 @@ public class RuleGraphTypes {
         return revokeRuleGraph;
     }
 
-    public RuleGraph getSecondaryBTreeRuleGraph() {
+    // TODO
+    public RuleGraph getBuildFileStructureRuleGraph() {
 
         RuleGraph secondaryBTreeRuleGraph = new RuleGraph();
 
@@ -403,75 +449,11 @@ public class RuleGraphTypes {
         return secondaryBTreeRuleGraph;
     }
 
-    public RuleGraph getClusteredBTreeRuleGraph() {
+    public RuleGraph getRemoveFileStructureRuleGraph() {
 
-        RuleGraph clusteredBTreeRuleGraph = new RuleGraph();
+        RuleGraph removeFileStructureRuleGraph = new RuleGraph();
 
-        clusteredBTreeRuleGraph.addRule("BUILD",      false, 0);
-        clusteredBTreeRuleGraph.addRule("CLUSTERED",  false, 1);
-        clusteredBTreeRuleGraph.addRule("B-TREE",     false, 2);
-        clusteredBTreeRuleGraph.addRule("ON",         false, 3);
-        clusteredBTreeRuleGraph.addRule("ColumnName", true,  4);
-        clusteredBTreeRuleGraph.addRule("IN",         false, 5);
-        clusteredBTreeRuleGraph.addRule("TableName",  true,  6);
-        clusteredBTreeRuleGraph.addRule(";",          false, 7);
 
-        clusteredBTreeRuleGraph.setChildren(0, 1);
-        clusteredBTreeRuleGraph.setChildren(1, 2);
-        clusteredBTreeRuleGraph.setChildren(2, 3);
-        clusteredBTreeRuleGraph.setChildren(3, 4);
-        clusteredBTreeRuleGraph.setChildren(4, 5);
-        clusteredBTreeRuleGraph.setChildren(5, 6);
-        clusteredBTreeRuleGraph.setChildren(6, 7);
-
-        return clusteredBTreeRuleGraph;
-    }
-
-    public RuleGraph getHashTableRuleGraph() {
-
-        RuleGraph hashTableRuleGraph = new RuleGraph();
-
-        hashTableRuleGraph.addRule("BUILD",      false, 0);
-        hashTableRuleGraph.addRule("HASH",       false, 1);
-        hashTableRuleGraph.addRule("TABLE",      false, 2);
-        hashTableRuleGraph.addRule("ON",         false, 3);
-        hashTableRuleGraph.addRule("ColumnName", true,  4);
-        hashTableRuleGraph.addRule("IN",         false, 5);
-        hashTableRuleGraph.addRule("TableName",  true,  6);
-        hashTableRuleGraph.addRule(";",          false, 7);
-
-        hashTableRuleGraph.setChildren(0, 1);
-        hashTableRuleGraph.setChildren(1, 2);
-        hashTableRuleGraph.setChildren(2, 3);
-        hashTableRuleGraph.setChildren(3, 4);
-        hashTableRuleGraph.setChildren(4, 5);
-        hashTableRuleGraph.setChildren(5, 6);
-        hashTableRuleGraph.setChildren(6, 7);
-
-        return hashTableRuleGraph;
-    }
-
-    public RuleGraph getClusteredFileRuleGraph() {
-
-        RuleGraph clusteredFileRuleGraph = new RuleGraph();
-
-        clusteredFileRuleGraph.addRule("BUILD",     false, 0);
-        clusteredFileRuleGraph.addRule("CLUSTERED", false, 1);
-        clusteredFileRuleGraph.addRule("FILE",      false, 2);
-        clusteredFileRuleGraph.addRule("ON",        false, 3);
-        clusteredFileRuleGraph.addRule("TableName", true,  4);
-        clusteredFileRuleGraph.addRule("AND",       false, 5);
-        clusteredFileRuleGraph.addRule("TableName", true,  6);
-        clusteredFileRuleGraph.addRule(";",         false, 7);
-
-        clusteredFileRuleGraph.setChildren(0, 1);
-        clusteredFileRuleGraph.setChildren(1, 2);
-        clusteredFileRuleGraph.setChildren(2, 3);
-        clusteredFileRuleGraph.setChildren(3, 4);
-        clusteredFileRuleGraph.setChildren(4, 5);
-        clusteredFileRuleGraph.setChildren(5, 6);
-        clusteredFileRuleGraph.setChildren(6, 7);
-
-        return clusteredFileRuleGraph;
+        return removeFileStructureRuleGraph;
     }
 }
