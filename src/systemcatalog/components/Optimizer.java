@@ -1,72 +1,80 @@
 package systemcatalog.components;
 
 import datastructure.rulegraph.RuleGraph;
-import datastructure.tree.binarytree.BinaryTree;
-import datastructure.tree.querytree.operator.Operator;
+import datastructure.tree.querytree.QueryTree;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Responsible for determining the execution strategy of a query.
+ * Responsible for determining the execution strategy of a query. This involves creating a query tree
+ * and applying rules to it to lessen the cost of overall execution.
  */
 public class Optimizer {
 
     // represents each state of the query tree when applying the optimization heuristic
-    private List<BinaryTree<Operator>> queryTreeStates;
-    private BinaryTree<Operator> workingTree;
-
-    private RuleGraph queryRuleGraph;
-    private String[] query;
+    private List<QueryTree> queryTreeStates;
 
     public Optimizer() {
-        /*queryTreeStates = new ArrayList<>();
-        queryTreeStates.add(initialQueryTree());
-        queryTreeStates.add(pushDownSelections());
-        queryTreeStates.add(pushDownProjections());
-        queryTreeStates.add(formJoins());
-        queryTreeStates.add(rearrangeLeafNodes());*/
-        // identify pipelines?
-        initialQueryTree();
-        pushDownSelections();
-        pushDownProjections();
-        formJoins();
-        rearrangeLeafNodes();
-
+        queryTreeStates = new ArrayList<>();
     }
 
-    public List<BinaryTree<Operator>> getQueryTreeStates() {
+    public List<QueryTree> getQueryTreeStates() {
         return queryTreeStates;
     }
 
-    public BinaryTree<Operator> getFinalQueryTreeState() {
-        return queryTreeStates.get(3);
+    public void optimize(RuleGraph queryRuleGraph, String[] queryTokens) {
+
+        QueryTree workingTree = createQueryTree(queryRuleGraph, queryTokens);
+        queryTreeStates.add(new QueryTree(workingTree));
+
+        workingTree = pushDownSelections(workingTree);
+        queryTreeStates.add(new QueryTree(workingTree));
+
+        workingTree = pushDownProjections(workingTree);
+        queryTreeStates.add(new QueryTree(workingTree));
+
+        workingTree = formJoins(workingTree);
+        queryTreeStates.add(new QueryTree(workingTree));
+
+        workingTree = rearrangeLeafNodes(workingTree);
+        queryTreeStates.add(new QueryTree(workingTree));
+
+        workingTree = findSubtreesToPipeline(workingTree);
+        queryTreeStates.add(new QueryTree(workingTree));
     }
 
-    public void setQuery(RuleGraph queryRuleGraph, String[] query) {
+    private QueryTree createQueryTree(RuleGraph queryRuleGraph, String[] queryTokens) {
 
+        // 1. if there is a having clause, set this selection as the root
+        // 2. set columns in select clause as projection OR set aggregation as the root
+        // 3. if there is a where clause, add it right below the root
+        // 4. iterate through the tables in the from clause until everything is added
+        //     4a. if no joins, cartesian products
+        return null;
     }
 
-    private void initialQueryTree() {
-
+    private QueryTree pushDownSelections(QueryTree queryTree) {
+        return null;
     }
 
-    private void pushDownSelections() {
-
+    private QueryTree pushDownProjections(QueryTree queryTree) {
+        return  null;
     }
 
-    private void pushDownProjections() {
-
+    private QueryTree formJoins(QueryTree queryTree) {
+        return null;
     }
 
-    private void formJoins() {
-
+    private QueryTree rearrangeLeafNodes(QueryTree queryTree) {
+        return null;
     }
 
-    private void rearrangeLeafNodes() {
-
+    private QueryTree copyQueryTree(QueryTree queryTree) {
+        return null;
     }
 
-    private void copyQueryTree() {
-
+    private QueryTree findSubtreesToPipeline(QueryTree queryTree) {
+        return null;
     }
 }

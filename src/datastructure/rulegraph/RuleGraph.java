@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class RuleGraph {
 
-    ArrayList<RuleNode> rules;
+    private ArrayList<RuleNode> rules;
 
     public RuleGraph() {
         rules = new ArrayList<>();
@@ -53,7 +53,7 @@ public class RuleGraph {
     }
 
     /**
-     * Given a query, returns whether it adheres to the rules applied.
+     * Given some form of tokenized input and a graph to abide by, returns whether it is syntactically correct.
      * @param tokens a string of text that has been filtered enough to be properly tokenized
      * @return whether the query adheres to the rules applied
      */
