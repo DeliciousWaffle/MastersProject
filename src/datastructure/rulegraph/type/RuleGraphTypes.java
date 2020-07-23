@@ -169,7 +169,6 @@ public class RuleGraphTypes {
         return createTableRuleGraph;
     }
 
-    // TODO
     public RuleGraph getAlterTableRuleGraph() {
 
         RuleGraph alterTableRuleGraph = new RuleGraph();
@@ -177,8 +176,8 @@ public class RuleGraphTypes {
         alterTableRuleGraph.addRule("ALTER",      false, 0);
         alterTableRuleGraph.addRule("TABLE",      false, 1);
         alterTableRuleGraph.addRule("TableName",  true,  2);
-        alterTableRuleGraph.addRule("ADD",        false, 3);
-        alterTableRuleGraph.addRule("MODIFY",     false, 4);
+        alterTableRuleGraph.addRule("MODIFY",     false, 3);
+        alterTableRuleGraph.addRule("ADD",        false, 4);
         alterTableRuleGraph.addRule("DROP",       false, 5);
         alterTableRuleGraph.addRule("ColumnName", true,  6);
         alterTableRuleGraph.addRule("NUMBER",     false, 7);
@@ -186,8 +185,29 @@ public class RuleGraphTypes {
         alterTableRuleGraph.addRule("(",          false, 9);
         alterTableRuleGraph.addRule("Size",       true,  10);
         alterTableRuleGraph.addRule(")",          false, 11);
-        alterTableRuleGraph.addRule("ColumnName", true,  12);
-        alterTableRuleGraph.addRule(";",          false, 13);
+        alterTableRuleGraph.addRule("FOREIGN",    false, 12);
+        alterTableRuleGraph.addRule("PRIMARY",    false, 13);
+        alterTableRuleGraph.addRule("KEY",        false, 14);
+        alterTableRuleGraph.addRule("ColumnName", true,  15);
+        alterTableRuleGraph.addRule(";",          false, 16);
+
+        alterTableRuleGraph.setChildren(0, 1);
+        alterTableRuleGraph.setChildren(1, 2);
+        alterTableRuleGraph.setChildren(2, 3, 4, 5);
+        alterTableRuleGraph.setChildren(3, 6);
+        alterTableRuleGraph.setChildren(4, 6, 12, 13, 15);
+        alterTableRuleGraph.setChildren(5, 12, 13, 15);
+        alterTableRuleGraph.setChildren(6, 7, 8);
+        alterTableRuleGraph.setChildren(7, 9);
+        alterTableRuleGraph.setChildren(8, 9);
+        alterTableRuleGraph.setChildren(9, 10);
+        alterTableRuleGraph.setChildren(10, 11);
+        alterTableRuleGraph.setChildren(11, 16);
+        alterTableRuleGraph.setChildren(12, 14);
+        alterTableRuleGraph.setChildren(13, 14);
+        alterTableRuleGraph.setChildren(14, 15);
+        alterTableRuleGraph.setChildren(15, 16);
+        alterTableRuleGraph.setChildren(16);
 
         return alterTableRuleGraph;
     }
@@ -430,21 +450,38 @@ public class RuleGraphTypes {
         RuleGraph secondaryBTreeRuleGraph = new RuleGraph();
 
         secondaryBTreeRuleGraph.addRule("BUILD",      false, 0);
-        secondaryBTreeRuleGraph.addRule("SECONDARY",  false, 1);
-        secondaryBTreeRuleGraph.addRule("B-TREE",     false, 2);
-        secondaryBTreeRuleGraph.addRule("ON",         false, 3);
-        secondaryBTreeRuleGraph.addRule("ColumnName", true,  4);
-        secondaryBTreeRuleGraph.addRule("IN",         false, 5);
-        secondaryBTreeRuleGraph.addRule("TableName",  true,  6);
-        secondaryBTreeRuleGraph.addRule(";",          false, 7);
+        secondaryBTreeRuleGraph.addRule("HASH",       false, 1);
+        secondaryBTreeRuleGraph.addRule("SECONDARY",  false, 2);
+        secondaryBTreeRuleGraph.addRule("CLUSTERED",  false, 3);
+        secondaryBTreeRuleGraph.addRule("TABLE",      false, 4);
+        secondaryBTreeRuleGraph.addRule("BTREE",      false, 5);
+        secondaryBTreeRuleGraph.addRule("ON",         false, 6);
+        secondaryBTreeRuleGraph.addRule("ColumnName", true,  7);
+        secondaryBTreeRuleGraph.addRule("IN",         false, 8);
+        secondaryBTreeRuleGraph.addRule("TableName",  true,  9);
+        secondaryBTreeRuleGraph.addRule("FILE",       false, 10);
+        secondaryBTreeRuleGraph.addRule("ON",         false, 11);
+        secondaryBTreeRuleGraph.addRule("TableName",  true,  12);
+        secondaryBTreeRuleGraph.addRule("AND",        false, 13);
+        secondaryBTreeRuleGraph.addRule("TableName",  true,  14);
+        secondaryBTreeRuleGraph.addRule(";",          false, 15);
 
-        secondaryBTreeRuleGraph.setChildren(0, 1);
-        secondaryBTreeRuleGraph.setChildren(1, 2);
-        secondaryBTreeRuleGraph.setChildren(2, 3);
-        secondaryBTreeRuleGraph.setChildren(3, 4);
-        secondaryBTreeRuleGraph.setChildren(4, 5);
+        secondaryBTreeRuleGraph.setChildren(0, 1, 2, 3);
+        secondaryBTreeRuleGraph.setChildren(1, 4);
+        secondaryBTreeRuleGraph.setChildren(2, 5);
+        secondaryBTreeRuleGraph.setChildren(3, 5, 10);
+        secondaryBTreeRuleGraph.setChildren(4, 6);
         secondaryBTreeRuleGraph.setChildren(5, 6);
         secondaryBTreeRuleGraph.setChildren(6, 7);
+        secondaryBTreeRuleGraph.setChildren(7, 8);
+        secondaryBTreeRuleGraph.setChildren(8, 9);
+        secondaryBTreeRuleGraph.setChildren(9, 15);
+        secondaryBTreeRuleGraph.setChildren(10, 11);
+        secondaryBTreeRuleGraph.setChildren(11, 12);
+        secondaryBTreeRuleGraph.setChildren(12, 13);
+        secondaryBTreeRuleGraph.setChildren(13, 14);
+        secondaryBTreeRuleGraph.setChildren(14, 15);
+        secondaryBTreeRuleGraph.setChildren(15);
 
         return secondaryBTreeRuleGraph;
     }
@@ -453,6 +490,23 @@ public class RuleGraphTypes {
 
         RuleGraph removeFileStructureRuleGraph = new RuleGraph();
 
+        removeFileStructureRuleGraph.addRule("REMOVE",     false, 0);
+        removeFileStructureRuleGraph.addRule("FILE",       false, 1);
+        removeFileStructureRuleGraph.addRule("STRUCTURE",  false, 2);
+        removeFileStructureRuleGraph.addRule("ON",         false, 3);
+        removeFileStructureRuleGraph.addRule("ColumnName", true,  4);
+        removeFileStructureRuleGraph.addRule("IN",         false, 5);
+        removeFileStructureRuleGraph.addRule("TableName",  true,  6);
+        removeFileStructureRuleGraph.addRule(";",          false, 7);
+
+        removeFileStructureRuleGraph.setChildren(0, 1);
+        removeFileStructureRuleGraph.setChildren(1, 2);
+        removeFileStructureRuleGraph.setChildren(2, 3);
+        removeFileStructureRuleGraph.setChildren(3, 4, 6);
+        removeFileStructureRuleGraph.setChildren(4, 5);
+        removeFileStructureRuleGraph.setChildren(5, 6);
+        removeFileStructureRuleGraph.setChildren(6, 7);
+        removeFileStructureRuleGraph.setChildren(7);
 
         return removeFileStructureRuleGraph;
     }
