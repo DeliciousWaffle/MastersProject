@@ -1,24 +1,22 @@
 package datastructure.tree.querytree.operator;
 
-import datastructure.relation.table.Table;
-
 public class Relation extends Operator {
 
     private Type type;
-    private Table table;
+    private String tableName;
 
-    public Relation(Table table) {
+    public Relation(String tableName) {
         this.type = Type.RELATION;
-        this.table = table;
+        this.tableName = tableName;
     }
 
     public Relation(Relation toCopy) {
         this.type = Type.RELATION;
-        this.table = new Table(toCopy.table);
+        this.tableName = toCopy.tableName;
     }
 
-    public Table getTable() {
-        return table;
+    public String getTableName() {
+        return tableName;
     }
 
     @Override
@@ -33,8 +31,6 @@ public class Relation extends Operator {
 
     @Override
     public String toString() {
-        StringBuilder print = new StringBuilder();
-        print.append(type).append(" [").append(table.getTableName()).append("]");
-        return print.toString();
+        return tableName;
     }
 }

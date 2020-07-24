@@ -5,13 +5,10 @@ import datastructure.relation.table.component.Column;
 import datastructure.relation.table.component.DataType;
 import datastructure.tree.conditiontree.component.Condition;
 import datastructure.tree.querytree.QueryTree;
-import datastructure.tree.querytree.component.*;
 import datastructure.tree.querytree.operator.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import utilities.enums.Symbol;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,13 +33,13 @@ public class QueryTreeTest {
         List<Condition> conditions1 = new ArrayList<>();
         conditions1.add(new Condition(a, Symbol.EQUAL, "5"));
         conditions1.add(new Condition(c, Symbol.NOT_EQUAL, "Blah"));
-        Operator selection1 = new Selection(conditions1);
+        Operator selection1 = new CompoundSelection(conditions1);
 
         Operator relation1 = new Relation(new Table("Table1"));
 
         List<Condition> conditions2 = new ArrayList<>();
         conditions2.add(new Condition(b, Symbol.GREATER_THAN, "7"));
-        Operator selection2 = new Selection(conditions2);
+        Operator selection2 = new CompoundSelection(conditions2);
 
         Operator relation2 = new Relation(new Table("Table2"));
 

@@ -9,6 +9,7 @@ import datastructure.user.component.Privilege;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Responsible for ensuring that the current user has the correct privileges before
@@ -31,28 +32,27 @@ public class SecurityChecker {
 
         switch(inputType) {
             case QUERY:
-                isValidQuery(input, user, tables);
+                return isValidQuery(input, user, tables);
             case CREATE_TABLE:
-                isValidCreateTable(input, user);
+                return isValidCreateTable(input, user);
             case DROP_TABLE:
-                isValidDropTable(input, user);
+                return isValidDropTable(input, user);
             case ALTER_TABLE:
-                isValidAlterTable(input, user);
+                return isValidAlterTable(input, user);
             case INSERT:
-                isValidInsert(input, user, tables);
+                return isValidInsert(input, user, tables);
             case DELETE:
-                isValidDelete(input, user, tables);
+                return isValidDelete(input, user, tables);
             case UPDATE:
-                isValidUpdate(input, user, tables);
+                return isValidUpdate(input, user, tables);
             case GRANT:
+                isValidGrant(input, user);
             case REVOKE:
-                isValidPrivilegeCommand(input, user);
-            case BUILD_SECONDARY_B_TREE:
-            case BUILD_CLUSTERED_B_TREE:
-            case BUILD_HASH_TABLE:
+                isValidRevoke(input, user);
+            case BUILD_FILE_STRUCTURE:
                 isValidBuildFileStructure(input, user, tables);
-            case BUILD_CLUSTERED_FILE:
-                isValidClusteredFile(input, user, tables);
+            case REMOVE_FILE_STRUCTURE:
+                return isValidRemoveFileStructure(input, user, tables);
             case UNKNOWN:
             default:
                 return false;
@@ -159,5 +159,17 @@ public class SecurityChecker {
         String tableName2 = clusteredFile[6];
         return user.hasTablePrivilege(tableName1, Privilege.INDEX) &&
                 user.hasTablePrivilege(tableName2, Privilege.INDEX);
+    }
+
+    public boolean isValidGrant(String[] grant, User user) {
+        return false;
+    }
+
+    public boolean isValidRevoke(String[] revoke, User user) {
+        return false;
+    }
+
+    public boolean isValidRemoveFileStructure(String[] removeFileStructure, User user, List<Table> tables) {
+        return false;
     }
 }

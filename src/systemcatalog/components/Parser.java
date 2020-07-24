@@ -19,15 +19,6 @@ public class Parser {
     // static utility methods ------------------------------------------------------------------------------------------
 
     /**
-     * Formats raw options file data into something usable.
-     * @param optionsFileData options that are saved when restarting the program
-     */
-    public static void formatOptionsFileData(String optionsFileData) {
-
-        // TODO
-    }
-
-    /**
      * Cleans raw input so that it can be used by other methods without hassle.
      * @param input is unformatted data
      * @return formatted data
@@ -88,17 +79,15 @@ public class Parser {
      * @return whether the given candidate is numeric
      */
     public static boolean isNumeric(String candidate) {
-
         try {
             Double.parseDouble(candidate);
         } catch(NumberFormatException e) {
             return false;
         }
-
         return true;
     }
 
-    // instance methods ------------------------------------------------------------------------------------------------
+    // methods ---------------------------------------------------------------------------------------------------------
 
     public void setRuleGraph(RuleGraph ruleGraph) {
         this.ruleGraph = ruleGraph;
@@ -132,24 +121,12 @@ public class Parser {
                 return InputType.GRANT;
             case "REVOKE":
                 return InputType.REVOKE;
+            case "BUILD":
+                return InputType.BUILD_FILE_STRUCTURE;
+            case "REMOVE":
+                return InputType.REMOVE_FILE_STRUCTURE;
             default: {
-                try {
-                    String fileStructure = command[1] + " " + command[2];
-                    switch(fileStructure) {
-                        case "SECONDARY B-TREE":
-                            return InputType.BUILD_SECONDARY_B_TREE;
-                        case "CLUSTERED B-TREE":
-                            return InputType.BUILD_CLUSTERED_B_TREE;
-                        case "HASH TABLE":
-                            return InputType.BUILD_HASH_TABLE;
-                        case "CLUSTERED FILE":
-                            return InputType.BUILD_CLUSTERED_FILE;
-                        default:
-                            return InputType.UNKNOWN;
-                    }
-                } catch(ArrayIndexOutOfBoundsException e) {
-                    return InputType.UNKNOWN;
-                }
+                return InputType.UNKNOWN;
             }
         }
     }
@@ -162,33 +139,31 @@ public class Parser {
      * @return whether the input is syntactically correct
      */
     public boolean isValid(InputType inputType, String[] input) {
+        // all input types will check for valid syntax and illegal keyword usage
+        boolean isValid = (ruleGraph.isSyntacticallyCorrect(input)) && ! ruleGraph.hasIllegalKeyword(input);
         switch(inputType) {
             case QUERY:
-                return isValidQuery(input);
+                return isValid && isValidQuery(input);
             case CREATE_TABLE:
-                return isValidCreateTable(input);
+                return isValid && isValidCreateTable(input);
             case DROP_TABLE:
-                return isValidDropTable(input);
+                return isValid && isValidDropTable(input);
             case ALTER_TABLE:
-                return isValidAlterTable(input);
+                return isValid && isValidAlterTable(input);
             case INSERT:
-                return isValidInsert(input);
+                return isValid && isValidInsert(input);
             case DELETE:
-                return isValidDelete(input);
+                return isValid && isValidDelete(input);
             case UPDATE:
-                return isValidUpdate(input);
+                return isValid && isValidUpdate(input);
             case GRANT:
-                return isValidGrant(input);
+                return isValid && isValidGrant(input);
             case REVOKE:
-                return isValidRevoke(input);
-            case BUILD_SECONDARY_B_TREE:
-                return isValidBuildSecondaryBTree(input);
-            case BUILD_CLUSTERED_B_TREE:
-                return isValidBuildClusteredBTree(input);
-            case BUILD_HASH_TABLE:
-                return isValidBuildHashTable(input);
-            case BUILD_CLUSTERED_FILE:
-                return isValidBuildClusteredFile(input);
+                return isValid && isValidRevoke(input);
+            case BUILD_FILE_STRUCTURE:
+                return isValid && isValidBuildFileStructure(input);
+            case REMOVE_FILE_STRUCTURE:
+                return isValid && isValidRemoveFileStructure(input);
             case UNKNOWN:
             default:
                 return false;
@@ -196,84 +171,64 @@ public class Parser {
     }
 
     public boolean isValidQuery(String[] query) {
-        return ruleGraph.isSyntacticallyCorrect(query) &&
-                ! ruleGraph.hasIllegalKeyword(query) &&
-                // at SELECT clause's columns
-                ! ruleGraph.hasDuplicatesAt(query, 2) &&
-                // at WHERE clause's table names (cartesian product)
-                ! ruleGraph.hasDuplicatesAt(query, 13, 15) &&
-                // at WHERE clause's table names (join)
-                ! ruleGraph.hasDuplicatesAt(query, 13, 17) &&
-                // (>, <, >=, <= must be associated with a number data type)
-                ! ruleGraph.hasIllegalNumericAt(query,31, 27, 28, 29, 30);
+        return  ! ruleGraph.hasIllegalNumericAt(query, 2, 10, 14, 17, 20, 23, 35, 45) &&
+                // > (26), < (27), >= (28), <= (29) can only be used with a numeric value (30) in WHERE clause
+                ! ruleGraph.hasIllegalValue(query,30, 26, 27, 28, 29) &&
+                // same thing in having clause
+                ! ruleGraph.hasIllegalValue(query, 53, 49, 50, 51, 52);
     }
 
     public boolean isValidCreateTable(String[] createTable) {
-        return ruleGraph.isSyntacticallyCorrect(createTable) &&
-                ! ruleGraph.hasIllegalKeyword(createTable) &&
+        return  ! ruleGraph.hasIllegalNumericAt(createTable, 2, 4) &&
                 // can't have duplicate column names
                 ! ruleGraph.hasDuplicatesAt(createTable, 4) &&
                 // size of the column can only be numeric
-                ! ruleGraph.hasIllegalNumericAt(createTable, 8);
+                ! ruleGraph.hasIllegalValue(createTable, 8);
     }
 
     public boolean isValidDropTable(String[] dropTable) {
-        return ruleGraph.isSyntacticallyCorrect(dropTable) &&
-                ! ruleGraph.hasIllegalKeyword(dropTable);
+        return ! ruleGraph.hasIllegalNumericAt(dropTable, 2);
     }
 
     public boolean isValidAlterTable(String[] alterTable) {
-        return ruleGraph.isSyntacticallyCorrect(alterTable) &&
-                ! ruleGraph.hasIllegalKeyword(alterTable);
+        return  ! ruleGraph.hasIllegalNumericAt(alterTable, 2, 6, 15) &&
+                // size can only be numeric
+                ! ruleGraph.hasIllegalValue(alterTable, 10);
     }
 
     public boolean isValidInsert(String[] insert) {
-        return ruleGraph.isSyntacticallyCorrect(insert) &&
-                ! ruleGraph.hasIllegalKeyword(insert);
+        return ! ruleGraph.hasIllegalNumericAt(insert, 2);
     }
 
     public boolean isValidDelete(String[] delete) {
-        return ruleGraph.isSyntacticallyCorrect(delete) &&
-                ! ruleGraph.hasIllegalKeyword(delete) &&
-                // (>, <, >=, <= must be associated with a number data type)
-                ! ruleGraph.hasIllegalNumericAt(delete, 11, 7, 8, 9, 10);
+        return  ! ruleGraph.hasIllegalNumericAt(delete, 2, 4) &&
+                // > (7), < (8), >= (9), <= (10) can only be used with a numeric value (11)
+                ! ruleGraph.hasIllegalValue(delete, 11, 7, 8, 9, 10);
     }
 
     public boolean isValidUpdate(String[] update) {
-        return ruleGraph.isSyntacticallyCorrect(update) &&
-                ! ruleGraph.hasIllegalKeyword(update);
+        return ! ruleGraph.hasIllegalNumericAt(update, 1, 3, 7);
     }
 
-    // TODO add checking for duplicates
     public boolean isValidGrant(String[] grant) {
-        return ruleGraph.isSyntacticallyCorrect(grant) &&
-                ! ruleGraph.hasIllegalKeyword(grant);
+        return  ! ruleGraph.hasIllegalNumericAt(grant, 12, 16, 20, 22) &&
+                // can't grant the same privilege more than once, update and reference
+                // columns must be unique, and usernames must be unique
+                ! ruleGraph.hasDuplicatesAt(grant, 1, 2, 3, 4, 5, 6, 12, 16, 22);
     }
 
-    // TODO add checking for duplicates
     public boolean isValidRevoke(String[] revoke) {
-        return ruleGraph.isSyntacticallyCorrect(revoke) &&
-                ! ruleGraph.hasIllegalKeyword(revoke);
+        // grant command is similar enough in structure to do this
+        return isValidGrant(revoke);
     }
 
-    public boolean isValidBuildSecondaryBTree(String[] secondaryBTree) {
-        return ruleGraph.isSyntacticallyCorrect(secondaryBTree) &&
-                ! ruleGraph.hasIllegalKeyword(secondaryBTree);
+    public boolean isValidBuildFileStructure(String[] buildFileStructure) {
+        return  ! ruleGraph.hasIllegalNumericAt(buildFileStructure, 7, 9, 12, 14) &&
+                // can't cluster a table with itself
+                ! ruleGraph.hasDuplicatesAt(buildFileStructure,12, 14);
     }
 
-    public boolean isValidBuildClusteredBTree(String[] clusteredBTree) {
-        return ruleGraph.isSyntacticallyCorrect(clusteredBTree) &&
-                ! ruleGraph.hasIllegalKeyword(clusteredBTree);
-    }
-
-    public boolean isValidBuildHashTable(String[] hashTable) {
-        return ruleGraph.isSyntacticallyCorrect(hashTable) &&
-                ! ruleGraph.hasIllegalKeyword(hashTable);
-    }
-
-    public boolean isValidBuildClusteredFile(String[] clusteredFile) {
-        return ruleGraph.isSyntacticallyCorrect(clusteredFile) &&
-                ! ruleGraph.hasIllegalKeyword(clusteredFile) &&
-                ! ruleGraph.hasDuplicatesAt(clusteredFile, 4, 6);
+    public boolean isValidRemoveFileStructure(String[] removeFileStructure) {
+        return ! ruleGraph.hasIllegalNumericAt(removeFileStructure, 4, 6);
     }
 }

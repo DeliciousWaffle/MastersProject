@@ -1,39 +1,40 @@
 package datastructure.tree.querytree.operator;
 
-import datastructure.relation.table.component.Column;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class Aggregation extends Operator {
 
-    private Type type;
-    private List<Column> groupByColumns, columnsToAggregate;
+    private final Type type;
+    private final List<String> groupByColumnNames, aggregationTypes, columnNames;
 
-    public Aggregation(List<Column> groupByColumns, List<Column> columnsToAggregate) {
+    public Aggregation(List<String> groupByColumnNames, List<String> aggregationTypes, List<String> columnNames) {
         this.type = Type.AGGREGATION;
-        this.groupByColumns = groupByColumns;
-        this.columnsToAggregate = columnsToAggregate;
+        this.groupByColumnNames = groupByColumnNames;
+        this.aggregationTypes = aggregationTypes;
+        this.columnNames = columnNames;
     }
 
     public Aggregation(Aggregation toCopy) {
         this.type = Type.AGGREGATION;
-        this.groupByColumns = new ArrayList<>();
-        for(Column groupByColumn : toCopy.groupByColumns) {
-            this.groupByColumns.add(new Column(groupByColumn));
-        }
-        this.columnsToAggregate = new ArrayList<>();
-        for(Column aggregateColumn : toCopy.columnsToAggregate) {
-            this.columnsToAggregate.add(new Column(aggregateColumn));
-        }
+        this.groupByColumnNames = new ArrayList<>();
+        this.groupByColumnNames.addAll(toCopy.groupByColumnNames);
+        this.aggregationTypes = new ArrayList<>();
+        this.aggregationTypes.addAll(toCopy.aggregationTypes);
+        this.columnNames = new ArrayList<>();
+        this.columnNames.addAll(toCopy.columnNames);
     }
 
-    public List<Column> getGroupByColumns() {
-        return groupByColumns;
+    public List<String> getGroupByColumnNames() {
+        return groupByColumnNames;
     }
 
-    public List<Column> getColumnsToAggregate() {
-        return columnsToAggregate;
+    public List<String> getAggregationTypes() {
+        return aggregationTypes;
+    }
+
+    public List<String> getColumnNames() {
+        return columnNames;
     }
 
     @Override
@@ -51,33 +52,33 @@ public class Aggregation extends Operator {
 
         StringBuilder print = new StringBuilder();
 
-        print.append(type).append(" [");
-
-        if(groupByColumns.size() == 1) {
-            print.append(groupByColumns.get(0).getName());
+        if(groupByColumnNames.size() == 1) {
+            print.append(groupByColumnNames.get(0));
         } else {
-            for(Column groupByColumn : groupByColumns) {
-                print.append(groupByColumn.getName()).append(", ");
+            for(String groupByColumnName : groupByColumnNames) {
+                print.append(groupByColumnName).append(", ");
             }
             // remove ", "
             print.deleteCharAt(print.length() - 1);
             print.deleteCharAt(print.length() - 1);
         }
 
-        print.append(" G ");
+        // symbol for that fancy G
+        print.append(" \u1D4D\6 ");
 
-        if(columnsToAggregate.size() == 1) {
-            print.append(columnsToAggregate.get(0).getName());
+        if(columnNames.size() == 1) {
+            print.append(columnNames.get(0));
         } else {
-            for(Column aggregateColumn : columnsToAggregate) {
-                print.append(aggregateColumn.getName()).append(", ");
+            for(int i = 0; i < aggregationTypes.size(); i++) {
+                String aggregationType = aggregationTypes.get(i);
+                String columnName = columnNames.get(i);
+                String formatted = aggregationType + "(" + columnName + ")";
+                print.append(formatted).append(", ");
             }
             // remove ", "
             print.deleteCharAt(print.length() - 1);
             print.deleteCharAt(print.length() - 1);
         }
-
-        print.append("]");
 
         return print.toString();
     }

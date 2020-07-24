@@ -1,13 +1,11 @@
 package datastructure.tree.querytree.operator;
 
-import datastructure.relation.table.component.Column;
-
 public class InnerJoin extends Operator {
 
-    private Type type;
-    private Column joinOnColumn1, joinOnColumn2;
+    private final Type type;
+    private final String joinOnColumn1, joinOnColumn2;
 
-    public InnerJoin(Column joinOnColumn1, Column joinOnColumn2) {
+    public InnerJoin(String joinOnColumn1, String joinOnColumn2) {
         this.type = Type.INNER_JOIN;
         this.joinOnColumn1 = joinOnColumn1;
         this.joinOnColumn2 = joinOnColumn2;
@@ -15,15 +13,15 @@ public class InnerJoin extends Operator {
 
     public InnerJoin(InnerJoin toCopy) {
         this.type = Type.INNER_JOIN;
-        this.joinOnColumn1 = new Column(toCopy.joinOnColumn1);
-        this.joinOnColumn2 = new Column(toCopy.joinOnColumn2);
+        this.joinOnColumn1 = toCopy.joinOnColumn1;
+        this.joinOnColumn2 = toCopy.joinOnColumn2;
     }
 
-    public Column getJoinOnColumn1() {
+    public String getJoinOnColumn1() {
         return joinOnColumn1;
     }
 
-    public Column getJoinOnColumn2() {
+    public String getJoinOnColumn2() {
         return joinOnColumn2;
     }
 
@@ -39,9 +37,6 @@ public class InnerJoin extends Operator {
 
     @Override
     public String toString() {
-        StringBuilder print = new StringBuilder();
-        print.append(type).append(" [").append(joinOnColumn1.getName());
-        print.append(" + ").append(joinOnColumn2.getName()).append("]");
-        return print.toString();
+        return "\u2A1D" + " [" + joinOnColumn1 + " = " + joinOnColumn2 + "]";
     }
 }

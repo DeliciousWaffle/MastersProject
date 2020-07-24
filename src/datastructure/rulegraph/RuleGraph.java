@@ -367,15 +367,14 @@ public class RuleGraph {
 
     /**
      * Makes sure that the correct data type is being used for an associated keyword.
-     * Eg. CREATE TABLE Table(NUMBER(NotANumber), NUMBER(20)) would be invalid.
-     * Note: Does not cover everything, the Verifier will ensure data types are
-     * strictly enforced.
+     * Eg. SELECT col1 FROM tab1 WHERE col1 > "not a number" will return false while
+     * SELECT col1 FROM tab1 WHERE col1 > "17" will return true.
      * @param tokens
      * @param dataTypeId of the rule with the data (this comes after ids)
-     * @param ids of the rules that enforce a particular data type (they come before id)
+     * @param operatorIds of the rules that enforce a particular data type (they come before id)
      * @return whether the data type of id matches that of ids
      */
-    public boolean hasIllegalNumericAt(String[] tokens, int dataTypeId, int... ids) {
+    public boolean hasIllegalValue(String[] tokens, int dataTypeId, int... operatorIds) {
 
         boolean encounteredComparator = false;
 
@@ -411,7 +410,7 @@ public class RuleGraph {
             }
 
             // will be used later
-            for(int id : ids) {
+            for(int id : operatorIds) {
                 if(id == pointer.getId()) {
                     encounteredComparator = true;
                     break;
@@ -420,7 +419,7 @@ public class RuleGraph {
 
             // make sure data type is being enforced
             if((dataTypeId == pointer.getId() && encounteredComparator) ||
-                    (dataTypeId == pointer.getId() && ids.length == 0)) {
+                    (dataTypeId == pointer.getId() && operatorIds.length == 0)) {
                 try {
 
                     // will throw an exception if the token can't be converted to a number
@@ -433,6 +432,74 @@ public class RuleGraph {
                     System.out.println("Expected a number, but found: " + token);
                     return true;
                 }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Makes sure that none of the target ids supplied are 100% numeric.
+     * @param tokens
+     * @param targetIds are the ids to validate
+     * @return whether the input contains illegal numeric values
+     */
+    public boolean hasIllegalNumericAt(String[] tokens, int... targetIds) {
+
+        boolean encounteredTarget = false;
+
+        RuleNode root = new RuleNode("ROOT", false, -1);
+        root.setChildren(rules.get(0));
+        RuleNode pointer = root;
+
+        for(String token : tokens) {
+
+            RuleNode[] pointersChildren = pointer.getChildren();
+            boolean foundChild = false;
+            RuleNode mutableChild = null;
+
+            for(RuleNode child : pointersChildren) {
+
+                String rule = child.getData();
+                boolean isMutable = child.isMutable();
+
+                if (isMutable) {
+                    mutableChild = child;
+                }
+
+                if (rule.equals(token) && !isMutable) {
+
+                    pointer = child;
+                    foundChild = true;
+                    break;
+                }
+            }
+
+            if(!foundChild && mutableChild != null) {
+                pointer = mutableChild;
+            }
+
+            // did we find one of the targets?
+            for(int id : targetIds) {
+                if(id == pointer.getId()) {
+                    encounteredTarget = true;
+                    break;
+                }
+            }
+
+            boolean isNumeric = false;
+
+            if(encounteredTarget) {
+                try {
+                    Double.parseDouble(token);
+                    isNumeric = true;
+                } catch (NumberFormatException e) {
+                    isNumeric = false;
+                }
+            }
+
+            if(isNumeric) {
+                return true;
             }
         }
 

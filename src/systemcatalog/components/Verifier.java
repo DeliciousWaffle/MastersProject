@@ -8,10 +8,11 @@ import utilities.enums.InputType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
- * Responsible for making sure any parts of the input that make references to the overall
- * schema are logically correct. This can take several forms such as checking whether tables
+ * Responsible for making sure any parts of the input that make references to something within
+ * the system are correct. This can take several forms such as checking whether tables
  * and their associated columns exists or that data types match.
  */
 public class Verifier {
@@ -38,17 +39,14 @@ public class Verifier {
                 return isValidDelete(input, tables);
             case UPDATE:
                 return isValidUpdate(input, tables);
-            // note the fall through, GRANT and REVOKE are very similar commands
             case GRANT:
+                return isValidGrant(input, users, tables);
             case REVOKE:
-                return isValidPrivilegeCommand(input, users, tables);
-            // same with a BUILD with secondary b-trees, clustered b-trees, and hash tables
-            case BUILD_SECONDARY_B_TREE:
-            case BUILD_CLUSTERED_B_TREE:
-            case BUILD_HASH_TABLE:
+                return isValidRevoke(input, users, tables);
+            case BUILD_FILE_STRUCTURE:
                 return isValidBuildFileStructure(input, tables);
-            case BUILD_CLUSTERED_FILE:
-                return isValidClusteredFile(input, tables);
+            case REMOVE_FILE_STRUCTURE:
+                return isValidRemoveFileStructure(input, tables);
             case UNKNOWN:
             default:
                 return false;
@@ -58,7 +56,7 @@ public class Verifier {
     public boolean isValidQuery(String[] query, ArrayList<Table> tables) {
 
         // make sure all tables exist
-        ArrayList<String> candidateTables = ruleGraph.getTokensAt(query, 13, 15, 17);
+        ArrayList<String> candidateTables = ruleGraph.getTokensAt(query, 14, 17);
 
         for(Table currentTable : tables) {
 
@@ -77,7 +75,7 @@ public class Verifier {
         }
 
         // make sure all columns exist in the tables supplied
-        ArrayList<String> candidateColumns = ruleGraph.getTokensAt(query, 2, 10, 20, 24);
+        ArrayList<String> candidateColumns = ruleGraph.getTokensAt(query, 2, 10, 20, 23, 35, 45);
 
         for(Table currentTable : tables) {
             for(String candidateColumn : candidateColumns) {
@@ -87,20 +85,9 @@ public class Verifier {
             }
         }
 
-        // only accept numeric columns if using MIN, MAX, AVG, COUNT, SUM
-        candidateColumns = ruleGraph.getTokensAt(query, 10);
-        String candidateColumn = candidateColumns.isEmpty() ? "null" : candidateColumns.get(0);
+        // if joining tables, ensure that the column names exist in the corresponding tables
 
-        /*for(Table currentTable : tables) {
-            for(Column currentColumn : currentTable.getColumns()) {
-                String columnName = currentColumn.getName();
-                if(candidateColumn.equalsIgnoreCase(columnName) && ! currentColumn.isNumeric()) {
-                    return false;
-                }
-            }
-        }*/
 
-        // TODO not sure if this 100% correct
         // ensure that the columns used to join on in the using clause appear in the corresponding tables
         // Eg. if have t1 JOIN t2 USING(col1) JOIN t3 USING(col2)
         // t1 and t2 must have "col1" and t2 and t3 must have "col2" in their tables
@@ -141,6 +128,21 @@ public class Verifier {
                 }
             }
         }
+
+        // only accept numeric columns if using MIN, MAX, AVG, COUNT, SUM
+        candidateColumns = ruleGraph.getTokensAt(query, 10);
+        String candidateColumn = candidateColumns.isEmpty() ? "null" : candidateColumns.get(0);
+
+        /*for(Table currentTable : tables) {
+            for(Column currentColumn : currentTable.getColumns()) {
+                String columnName = currentColumn.getName();
+                if(candidateColumn.equalsIgnoreCase(columnName) && ! currentColumn.isNumeric()) {
+                    return false;
+                }
+            }
+        }*/
+
+
 
         // make sure that column name matches the data type of the constant in where clause
         ArrayList<String> whereColumns = ruleGraph.getTokensAt(query, 24);
@@ -424,7 +426,7 @@ public class Verifier {
      * @param tables - all tables within the system
      * @return whether a GRANT or REVOKE command is valid
      */
-    public boolean isValidPrivilegeCommand(String[] privilege, ArrayList<User> users, ArrayList<Table> tables) {
+    public boolean isValidGrant(String[] privilege, ArrayList<User> users, ArrayList<Table> tables) {
 
         // make sure table exists
         String tableName = ruleGraph.getTokensAt(privilege, 20).get(0);
@@ -474,6 +476,11 @@ public class Verifier {
         return true;
     }
 
+    public boolean isValidRevoke(String[] revoke, List<User> users, List<Table> tables) {
+        return false;
+    }
+
+    // TODO
     public boolean isValidBuildFileStructure(String[] fileStructure, ArrayList<Table> tables) {
 
         // make sure table exists
@@ -501,23 +508,7 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidClusteredFile(String[] clusteredFile, ArrayList<Table> tables) {
-
-        String table1 = clusteredFile[4];
-        String table2 = clusteredFile[6];
-        boolean foundTable1 = false;
-        boolean foundTable2 = false;
-
-        for(Table table : tables) {
-            String tableName = table.getTableName();
-            if(tableName.equalsIgnoreCase(table1)) {
-                foundTable1 = true;
-            }
-            if(tableName.equalsIgnoreCase(table2)) {
-                foundTable2 = true;
-            }
-        }
-
-        return foundTable1 && foundTable2;
+    public boolean isValidRemoveFileStructure(String[] fileStructure, List<Table> tables) {
+        return false;
     }
 }
