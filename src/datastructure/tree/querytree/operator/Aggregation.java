@@ -54,7 +54,7 @@ public class Aggregation extends Operator {
 
         if(groupByColumnNames.size() == 1) {
             print.append(groupByColumnNames.get(0));
-        } else {
+        } else if(groupByColumnNames.size() > 1) {
             for(String groupByColumnName : groupByColumnNames) {
                 print.append(groupByColumnName).append(", ");
             }
@@ -63,8 +63,12 @@ public class Aggregation extends Operator {
             print.deleteCharAt(print.length() - 1);
         }
 
-        // symbol for that fancy G
-        print.append(" \u1D4D\6 ");
+        // add a space if there are columns to group by
+        if(! groupByColumnNames.isEmpty()) {
+            print.append(" ");
+        }
+
+        print.append("G ");
 
         if(columnNames.size() == 1) {
             print.append(columnNames.get(0));

@@ -43,8 +43,8 @@ public class Projection extends Operator {
         if(columnNames.size() == 1) {
             print.append(columnNames.get(0));
         } else {
-            for(String projectionColumn : columnNames) {
-                print.append(projectionColumn).append(", ");
+            for(String columnName : columnNames) {
+                print.append(columnName).append(", ");
             }
             // remove ", "
             print.deleteCharAt(print.length() - 1);

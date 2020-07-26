@@ -4,11 +4,13 @@ import datastructure.tree.querytree.operator.CartesianProduct;
 import datastructure.tree.querytree.operator.Operator;
 import datastructure.tree.querytree.component.QueryTreeNode;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
+/**
+ * TODO: implement a breadth-first search to properly reset all nodes after doing some form of iteration.
+ * WARNING: Can't use break statements while iterating over the tree, the reset visit status
+ * will be incorrect. For now, just make sure you completely iterate over the tree.
+ */
 public class QueryTree implements Iterable<Operator> {
 
     public enum Traversal {
@@ -18,8 +20,8 @@ public class QueryTree implements Iterable<Operator> {
     private QueryTreeNode root;
     private int size;
 
-    public QueryTree(Operator root) {
-        this.root = new QueryTreeNode(root, null);
+    public QueryTree(Operator rootValue) {
+        this.root = new QueryTreeNode(rootValue, null);
         this.size = 1;
     }
 
@@ -383,6 +385,7 @@ public class QueryTree implements Iterable<Operator> {
         return pointer;
     }
 
+    // TODO: use breadth first search instead!
     private void resetVisited() {
 
         QueryTreeNode pointer = root;

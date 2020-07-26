@@ -25,6 +25,12 @@ public class CompoundSelection extends Operator {
         this.values.addAll(toCopy.values);
     }
 
+    public void add(String columnName, String symbol, String value) {
+        columnNames.add(columnName);
+        symbols.add(symbol);
+        values.add(value);
+    }
+
     public List<String> getColumnNames() {
         return columnNames;
     }
@@ -52,7 +58,7 @@ public class CompoundSelection extends Operator {
 
         StringBuilder print = new StringBuilder();
 
-        print.append("\u03A3").append(" [");
+        print.append("\u03C3").append(" [");
 
         for(int i = 0; i < symbols.size(); i++) {
 
@@ -63,10 +69,11 @@ public class CompoundSelection extends Operator {
             print.append(columnName).append(" ").append(symbol).append(" ").append(value);
 
             // logical conjunction unicode value
-            print.append("\u2227").append("\n").append("   ");
+            print.append(" ").append("\u2227").append(" ");
         }
 
-        // remove logical conjunction and newline
+        // remove logical conjunction and spaces
+        print.deleteCharAt(print.length() - 1);
         print.deleteCharAt(print.length() - 1);
         print.deleteCharAt(print.length() - 1);
 

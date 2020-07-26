@@ -43,6 +43,6 @@ public class SimpleSelection extends Operator {
 
     @Override
     public String toString() {
-        return "\u03A3" + " [" + columnName + " " + symbol + " " + value + "]";
+        return "\u03C3" + " [" + columnName + " " + symbol + " " + value + "]";
     }
 }

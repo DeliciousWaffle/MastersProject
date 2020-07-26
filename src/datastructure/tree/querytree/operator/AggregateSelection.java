@@ -29,6 +29,13 @@ public class AggregateSelection extends Operator {
         this.values.addAll(toCopy.values);
     }
 
+    public void add(String aggregateType, String columnName, String symbol, String value) {
+        aggregateTypes.add(aggregateType);
+        columnNames.add(columnName);
+        symbols.add(symbol);
+        values.add(value);
+    }
+
     public List<String> getAggregateTypes() {
         return aggregateTypes;
     }
@@ -60,7 +67,7 @@ public class AggregateSelection extends Operator {
         StringBuilder print = new StringBuilder();
 
         // sigma unicode value
-        print.append("\u03A3 [");
+        print.append("\u03C3 [");
 
         for(int i = 0; i < aggregateTypes.size(); i++) {
 
@@ -73,10 +80,11 @@ public class AggregateSelection extends Operator {
             print.append(" ").append(symbol).append(" ").append(value);
 
             // logical conjunction unicode value
-            print.append("\u2227").append("\n").append("   ");
+            print.append(" ").append("\u2227").append(" ");
         }
 
-        // remove logical conjunction and newline
+        // remove logical conjunction and spaces
+        print.deleteCharAt(print.length() - 1);
         print.deleteCharAt(print.length() - 1);
         print.deleteCharAt(print.length() - 1);
 
