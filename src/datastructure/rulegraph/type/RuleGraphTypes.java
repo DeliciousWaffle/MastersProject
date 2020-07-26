@@ -87,7 +87,7 @@ public class RuleGraphTypes {
         queryRuleGraph.setChildren(11, 12, 13);
         queryRuleGraph.setChildren(12, 2, 3, 4, 5, 6, 7);
         queryRuleGraph.setChildren(13, 14);
-        queryRuleGraph.setChildren(14, 15, 16, 22, 56);
+        queryRuleGraph.setChildren(14, 15, 16, 22, 33, 56);
         queryRuleGraph.setChildren(15, 14);
         queryRuleGraph.setChildren(16, 17);
         queryRuleGraph.setChildren(17, 18);

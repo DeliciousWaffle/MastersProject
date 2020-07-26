@@ -71,7 +71,7 @@ public class Aggregation extends Operator {
         print.append("G ");
 
         if(columnNames.size() == 1) {
-            print.append(columnNames.get(0));
+            print.append(aggregationTypes.get(0)).append("(").append(columnNames.get(0)).append(")");
         } else {
             for(int i = 0; i < aggregationTypes.size(); i++) {
                 String aggregationType = aggregationTypes.get(i);

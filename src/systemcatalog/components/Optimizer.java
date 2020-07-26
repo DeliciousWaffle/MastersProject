@@ -6,6 +6,7 @@ import datastructure.tree.querytree.QueryTree;
 import datastructure.tree.querytree.operator.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -46,7 +47,6 @@ public class Optimizer {
         queryTreeStates.add(new QueryTree(workingTree));
     }
 
-    // notation: if has args at the end of something -> coming from the input
     public QueryTree createQueryTree(RuleGraph queryRuleGraph, String[] queryTokens) {
 
         QueryTree queryTree = new QueryTree((Operator) null);
@@ -82,8 +82,8 @@ public class Optimizer {
         List<String> symbols = queryRuleGraph.getTokensAt(queryTokens, 47, 48, 49, 50, 51, 52);
         List<String> values = queryRuleGraph.getTokensAt(queryTokens , 53);
 
-        boolean hasAggregateSelection = ! aggregationTypes.isEmpty();
-System.out.println("remnove me" + aggregatedColumnNames.toString()); // TODO figure out why no work
+        boolean hasAggregateSelection = ! aggregatedColumnNames.isEmpty();
+
         if(hasAggregateSelection) {
             // creating the aggregate selection and adding it above the root node
             queryTree.add(new ArrayList<>(), QueryTree.Traversal.UP,
@@ -180,7 +180,8 @@ System.out.println("remnove me" + aggregatedColumnNames.toString()); // TODO fig
             traversals.remove(traversals.size() - 1);
             queryTree.set(traversals, QueryTree.Traversal.LEFT, new Relation(tableNames.get(0)));
         }
-
+System.out.println("Before");
+System.out.println(queryTree.getStructure());
         /* 5. if a join using was used, need to set/add the selection node to account for the join criteria */
         // -------------------------------------------------------------------------------------------------------------
 
@@ -231,11 +232,10 @@ System.out.println("remnove me" + aggregatedColumnNames.toString()); // TODO fig
                 break;
             }
         }
-
-        for(int i = 0; i < columnNames.size(); i++) {
-            System.out.println("remove " + columnNames.get(i) + symbols.get(i) + values.get(i));
-        }
-        System.out.println("Before " + queryTree.getStructure());
+//System.out.println("Natural Join");
+//for(int i = 0; i < columnNames.size(); i++) {
+//            System.out.println(columnNames.get(i) + symbols.get(i) + values.get(i));
+//        }
 
         // don't bother with any of this if there is nothing to add
         boolean haveSelectionsToAdd = ! columnNames.isEmpty();
@@ -247,6 +247,8 @@ System.out.println("remnove me" + aggregatedColumnNames.toString()); // TODO fig
 
             // TODO: change back to break statements once query tree is fixed
             boolean skipOverStuff = false;
+
+            traversals = new ArrayList<>();
 
             for (Operator operator : queryTree) {
 
@@ -264,90 +266,123 @@ System.out.println("remnove me" + aggregatedColumnNames.toString()); // TODO fig
                             operator.getType() == Operator.Type.RELATION) {
                         skipOverStuff = true;
                     }
+
+                    if(! skipOverStuff) {
+                        traversals.add(QueryTree.Traversal.DOWN);
+                    }
                 }
             }
 
-            // if we found a selection and have some to add, will set the node as a compound selection
+            // if we found a selection and have something to add, will set the node as a compound selection
             if (foundSelection) {
 
-                traversals = new ArrayList<>();
-                foundSelection = queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.SIMPLE_SELECTION ||
-                        queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.COMPOUND_SELECTION;
-
-                while(! foundSelection) {
-                    foundSelection = queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.SIMPLE_SELECTION ||
-                            queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.COMPOUND_SELECTION;
-                    traversals.add(QueryTree.Traversal.DOWN);
-                }
-
-                boolean foundSimpleSelection = queryTree.get(traversals, QueryTree.Traversal.DOWN)
+                boolean foundSimpleSelection = queryTree.get(traversals, QueryTree.Traversal.NONE)
                         .getType() == Operator.Type.SIMPLE_SELECTION;
+
+                boolean foundCompoundSelection = queryTree.get(traversals, QueryTree.Traversal.NONE)
+                        .getType() == Operator.Type.COMPOUND_SELECTION;
 
                 if (foundSimpleSelection) {
 
                     columnNames.add(((SimpleSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.DOWN)).getColumnName());
-                    symbols.add(((SimpleSelection) queryTree.get(traversals, QueryTree.Traversal.DOWN)).getSymbol());
-                    values.add(((SimpleSelection) queryTree.get(traversals, QueryTree.Traversal.DOWN)).getValue());
+                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getColumnName());
+                    symbols.add(((SimpleSelection)
+                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getSymbol());
+                    values.add(((SimpleSelection)
+                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getValue());
+
+                } else if(foundCompoundSelection) {
+
+                    columnNames.addAll(((CompoundSelection)
+                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getColumnNames());
+                    symbols.addAll(((CompoundSelection)
+                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getSymbols());
+                    values.addAll(((CompoundSelection)
+                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getValues());
 
                 } else {
 
-                    columnNames.addAll(((CompoundSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.DOWN)).getColumnNames());
-                    symbols.addAll(((CompoundSelection) queryTree.get(traversals, QueryTree.Traversal.DOWN)).getSymbols());
-                    values.addAll(((CompoundSelection) queryTree.get(traversals, QueryTree.Traversal.DOWN)).getValues());
-
+                    System.out.println("In Optimizer.createTree()");
+                    System.out.println("Didn't find a simple or compound selection");
+                    return queryTree;
                 }
 
-                // find and set the selection
-                traversals = new ArrayList<>();
-                foundSelection = queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.SIMPLE_SELECTION ||
-                        queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.COMPOUND_SELECTION;
-
-                while(! foundSelection) {
-                    foundSelection = queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.SIMPLE_SELECTION ||
-                            queryTree.get(traversals, QueryTree.Traversal.DOWN).getType() == Operator.Type.COMPOUND_SELECTION;
-                    traversals.add(QueryTree.Traversal.DOWN);
-                }
-
-                queryTree.set(traversals, QueryTree.Traversal.DOWN,
+                // set the selection
+                queryTree.set(traversals, QueryTree.Traversal.NONE,
                         new CompoundSelection(columnNames, symbols, values));
 
             // didn't find a selection, will set the node either as a simple or compound selection
             } else {
 
-                // will just insert the selection above a cartesian product or relation node
-                traversals = new ArrayList<>();
+                System.out.println(queryTree.get(traversals, QueryTree.Traversal.NONE).getType());
 
-                boolean foundCartesianNode = queryTree.get(traversals, QueryTree.Traversal.DOWN)
-                        .getType() == Operator.Type.CARTESIAN_PRODUCT;
-                boolean foundRelationNode = queryTree.get(traversals, QueryTree.Traversal.DOWN)
-                        .getType() == Operator.Type.RELATION;
-                boolean foundCartesianOrRelationNode = foundCartesianNode || foundRelationNode;
-
-                while (!foundCartesianOrRelationNode) {
-                    foundCartesianNode = queryTree.get(traversals, QueryTree.Traversal.DOWN)
-                            .getType() == Operator.Type.CARTESIAN_PRODUCT;
-                    foundRelationNode = queryTree.get(traversals, QueryTree.Traversal.DOWN)
-                            .getType() == Operator.Type.RELATION;
-                    foundCartesianOrRelationNode = foundCartesianNode || foundRelationNode;
-                    traversals.add(QueryTree.Traversal.DOWN);
-                }
-
+                // traversal should be set at the first cartesian product node
                 // determine if the selection to add is simple or compound
                 boolean isSimpleSelection = columnNames.size() == 1;
 
-
                 if (isSimpleSelection) {
-                    queryTree.add(traversals, QueryTree.Traversal.DOWN,
+                    queryTree.add(traversals, QueryTree.Traversal.UP,
                             new SimpleSelection(columnNames.get(0), symbols.get(0), values.get(0)));
                 } else {
-                    queryTree.add(traversals, QueryTree.Traversal.DOWN,
+                    queryTree.add(traversals, QueryTree.Traversal.UP,
                             new CompoundSelection(columnNames, symbols, values));
                 }
             }
         }
-        System.out.println("After " + queryTree.getStructure());
+
+        /* 7. if there are any column names in the having clause that are not already in the
+              aggregation node, then add them as group by columns there */
+
+        List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(queryTokens, 35);
+        boolean hasHavingColumnNames = ! havingClauseColumnNames.isEmpty();
+
+        if(hasHavingColumnNames) {
+
+            traversals = new ArrayList<>();
+            hasAggregateSelection = queryTree.get(traversals, QueryTree.Traversal.NONE)
+                    .getType() == Operator.Type.AGGREGATE_SELECTION;
+
+            Aggregation aggregation = null;
+
+            if(hasAggregateSelection) {
+                aggregation = ((Aggregation) queryTree.get(traversals, QueryTree.Traversal.DOWN));
+            } else {
+                aggregation = ((Aggregation) queryTree.get(traversals, QueryTree.Traversal.NONE));
+            }
+
+            List<String> groupByColumnNames = aggregation.getGroupByColumnNames();
+            boolean doneFindingDuplicates = false;
+
+            while(! doneFindingDuplicates) {
+
+                boolean hasDuplicates = false;
+
+                outerLoop:
+                for(int i = 0; i < havingClauseColumnNames.size(); i++) {
+                    String havingClauseColumnName = havingClauseColumnNames.get(i);
+
+                    for(int j = 0; j < groupByColumnNames.size(); j++) {
+                        String groupByColumnName = groupByColumnNames.get(j);
+
+                        if(havingClauseColumnName.equalsIgnoreCase(groupByColumnName)) {
+                            hasDuplicates = true;
+                            havingClauseColumnNames.remove(i);
+                            break outerLoop;
+                        }
+                    }
+                }
+
+                if(! hasDuplicates) {
+                    doneFindingDuplicates = true;
+                }
+            }
+
+            groupByColumnNames.addAll(havingClauseColumnNames);
+
+            // shouldn't need to set anything because dealing with the reference to groupByColumnNames
+        }
+//System.out.println("After");
+//System.out.println(queryTree.getStructure());
         return queryTree;
     }
 

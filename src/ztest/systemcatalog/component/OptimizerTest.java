@@ -37,17 +37,21 @@ public class OptimizerTest {
             "SELECT COL1 FROM TAB1, TAB2 JOIN TAB3 USING(COL1)",
             "SELECT COL1 FROM TAB1 JOIN TAB2 USING(COL1), TAB3 JOIN TAB4 USING(COL2)",
             "SELECT COL1 FROM TAB1 JOIN TAB2 USING(COL1), TAB3 WHERE COL1 = A",
+            "SELECT COL1 FROM TAB1 JOIN TAB2 USING(COL1), TAB3 WHERE COL1 = A AND COL2 = 7",
             "SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1",
             "SELECT MIN(COL1) FROM TAB1;",
             "SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1 GROUP BY COL1, COL2",
-            "SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1 GROUP BY COL1, COL2 HAVING COUNT(COL1) > 4",
-            /*"SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1, TAB2, TAB3 JOIN TAB4 USING(COL1) WHERE COL1 = A GROUP BY COL1, COL2 HAVING COUNT(COL1) > 5"
-    */})
+            "SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1 HAVING MAX(COL3) > 6",
+            "SELECT COL1, MIN(COL2) FROM TAB1, TAB2 GROUP BY COL1 HAVING MAX(COL2) = 1",
+            "SELECT MIN(COL1) FROM TAB1 GROUP BY COL2",
+            "SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1 GROUP BY COL1, COL2, COL5 HAVING COUNT(COL1) > 4",
+            "SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1, TAB2, TAB3 JOIN TAB4 USING(COL1) WHERE COL1 = A GROUP BY COL1, COL2, COL9 HAVING COUNT(COL1) > 5"
+    })
     public void testCreation(String input) {
         String[] inputTokens = new Parser().formatAndTokenizeInput(input);
         System.out.println(input);
         QueryTree queryTree = optimizer.createQueryTree(queryRuleGraph, inputTokens);
-        //System.out.println(queryTree.getStructure());
+        System.out.println(queryTree.getStructure());
         System.out.println("----------------------------------------");
         assertTrue(true);
     }

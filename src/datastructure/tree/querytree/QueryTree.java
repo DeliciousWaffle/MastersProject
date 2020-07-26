@@ -14,7 +14,7 @@ import java.util.*;
 public class QueryTree implements Iterable<Operator> {
 
     public enum Traversal {
-        LEFT, RIGHT, UP, DOWN
+        LEFT, RIGHT, UP, DOWN, NONE
     }
 
     private QueryTreeNode root;
@@ -203,8 +203,10 @@ public class QueryTree implements Iterable<Operator> {
             case UP:
                 return pointer.getParent().getOperator();
             case DOWN:
-            default:
                 return pointer.getOnlyChild().getOperator();
+            case NONE:
+            default:
+                return pointer.getOperator();
         }
     }
 
@@ -224,6 +226,9 @@ public class QueryTree implements Iterable<Operator> {
                 break;
             case DOWN:
                 pointer.getOnlyChild().setOperator(operator);
+                break;
+            case NONE:
+                pointer.setOperator(operator);
                 break;
         }
     }
