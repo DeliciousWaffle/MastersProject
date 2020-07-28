@@ -3,6 +3,7 @@ package datastructure.tree.querytree;
 import datastructure.tree.querytree.operator.CartesianProduct;
 import datastructure.tree.querytree.operator.Operator;
 import datastructure.tree.querytree.component.QueryTreeNode;
+import datastructure.tree.querytree.operator.Relation;
 
 import java.util.*;
 
@@ -126,6 +127,97 @@ public class QueryTree implements Iterable<Operator> {
         }
 
         size++;
+    }
+
+    /**
+     * Returns a list of traversals needed to get to the target relation name.
+     * @param relationName is the name of the relation to find
+     * @return a list of traversals needed to get to that relation
+     */
+    public List<Traversal> getRelationLocation(String relationName) {
+
+        String structure = getStructure();
+        String[] tokens = structure.split("\n");
+
+        for(int i = 0; i < tokens.length; i++) {
+            String token = tokens[i];
+            if(token.contains(":")) {
+                int keepUpUntilIndex = token.indexOf(":");
+                tokens[i] = token.substring(0, keepUpUntilIndex);
+            }
+        }
+
+        Stack<Traversal> traversals = new Stack<>();
+        int i = 0;
+        boolean doneSearching = false;
+
+        for(Operator operator : this) {
+
+            if(! doneSearching) {
+
+                String traversalToken = tokens[i];
+
+                if (traversalToken.equals("Root")) {
+                    i++;
+                    continue;
+
+                } else {
+
+                    while (traversalToken.equals("Up")) {
+                        traversals.pop();
+                        i++;
+                        traversalToken = tokens[i];
+                    }
+
+                    Traversal traversal = null;
+
+                    switch (traversalToken) {
+                        case "Left":
+                            traversal = Traversal.LEFT;
+                            break;
+                        case "Right":
+                            traversal = Traversal.RIGHT;
+                            break;
+                        case "Down":
+                            traversal = Traversal.DOWN;
+                            break;
+                    }
+
+                    if (operator.getType() == Operator.Type.RELATION) {
+
+                        if (((Relation) operator).getTableName().equalsIgnoreCase(relationName)) {
+                            doneSearching = true;
+                        }
+                    }
+
+                    traversals.push(traversal);
+                }
+
+                i++;
+            }
+        }
+
+        // didn't find the relation for some reason
+        if(! doneSearching) {
+            System.out.println("In QueryTree.getRelationLocation()");
+            System.out.println("Couldn't find relation location");
+            return new ArrayList<>();
+        }
+
+        List<Traversal> traversalsToReturn = new ArrayList<>();
+
+        while(! traversals.isEmpty()) {
+            traversalsToReturn.add(traversals.pop());
+        }
+
+        // will need to swap because previously used a stack
+        for(i = 0; i < traversalsToReturn.size() / 2; i++) {
+            Traversal temp = traversalsToReturn.get(i);
+            traversalsToReturn.set(i, traversalsToReturn.get(traversalsToReturn.size() - i - 1));
+            traversalsToReturn.set(traversalsToReturn.size() - i - 1, temp);
+        }
+
+        return traversalsToReturn;
     }
 
     private void insertLeft(QueryTreeNode parent, QueryTreeNode leftChildToAdd) {
@@ -313,6 +405,57 @@ public class QueryTree implements Iterable<Operator> {
                     }
                 }
                 break;
+            case NONE:
+                if(! pointer.hasAnyChildren()) {
+
+                    QueryTreeNode pointersParent = pointer.getParent();
+
+                    if(pointersParent.hasLeftChild() && pointersParent.getLeftChild() == pointer) {
+                        pointersParent.setLeftChild(null);
+                    } else if(pointersParent.hasRightChild() && pointersParent.getRightChild() == pointer) {
+                        pointersParent.setRightChild(null);
+                    } else if(pointersParent.hasOnlyChild() && pointersParent.getOnlyChild() == pointer) {
+                        pointersParent.setOnlyChild(null);
+                    }
+
+                } else {
+
+                    if(pointer.hasOnlyChild()) {
+
+                        QueryTreeNode pointersParent = pointer.getParent();
+                        QueryTreeNode pointersChild = pointer.getOnlyChild();
+
+                        if(pointersParent.hasLeftChild() && pointersParent.getLeftChild() == pointer) {
+                            pointersParent.setLeftChild(pointersChild);
+                        } else if(pointersParent.hasRightChild() && pointersParent.getRightChild() == pointer) {
+                            pointersParent.setRightChild(pointersChild);
+                        } else if(pointersParent.hasOnlyChild() && pointersParent.getOnlyChild() == pointer) {
+                            pointersParent.setOnlyChild(pointersChild);
+                        }
+
+                        pointersChild.setParent(pointersParent);
+
+                    } else {
+
+                        QueryTreeNode pointersParent = pointer.getParent();
+
+                        // if the parent has more than 1 child too, the removal will
+                        // violate what it means to be a binary tree
+                        if(! pointersParent.hasOnlyChild()) {
+                            System.out.println("In QueryTree.remove()");
+                            System.out.println("Removal will create a non-binary tree");
+
+                        } else {
+                            QueryTreeNode pointersLeftChild = pointer.getLeftChild();
+                            QueryTreeNode pointersRightChild = pointer.getRightChild();
+                            pointersParent.setOnlyChild(null);
+                            pointersParent.setLeftChild(pointersLeftChild);
+                            pointersParent.setRightChild(pointersRightChild);
+                            pointersLeftChild.setParent(pointersParent);
+                            pointersRightChild.setParent(pointersParent);
+                        }
+                    }
+                }
         }
 
         size--;

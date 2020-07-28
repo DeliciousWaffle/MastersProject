@@ -1,13 +1,12 @@
 package systemcatalog.components;
 
+import datastructure.relation.table.Table;
 import datastructure.relation.table.component.Column;
 import datastructure.rulegraph.RuleGraph;
 import datastructure.tree.querytree.QueryTree;
 import datastructure.tree.querytree.operator.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Responsible for determining the execution strategy of a query. This involves creating a query tree
@@ -26,15 +25,18 @@ public class Optimizer {
         return queryTreeStates;
     }
 
-    public void optimize(RuleGraph queryRuleGraph, String[] queryTokens) {
+    public void optimize(RuleGraph queryRuleGraph, String[] queryTokens, ArrayList<Table> tables) {
 
-        QueryTree workingTree = createQueryTree(queryRuleGraph, queryTokens);
+        QueryTree workingTree = createQueryTree(queryRuleGraph, queryTokens, tables);
+        queryTreeStates.add(new QueryTree(workingTree));
+
+        workingTree = cascadeSelections(workingTree);
         queryTreeStates.add(new QueryTree(workingTree));
 
         workingTree = pushDownSelections(workingTree);
         queryTreeStates.add(new QueryTree(workingTree));
 
-        workingTree = pushDownProjections(workingTree);
+        workingTree = cascadeAndPushDownProjections(workingTree);
         queryTreeStates.add(new QueryTree(workingTree));
 
         workingTree = formJoins(workingTree);
@@ -47,7 +49,7 @@ public class Optimizer {
         queryTreeStates.add(new QueryTree(workingTree));
     }
 
-    public QueryTree createQueryTree(RuleGraph queryRuleGraph, String[] queryTokens) {
+    public QueryTree createQueryTree(RuleGraph queryRuleGraph, String[] queryTokens, List<Table> tables) {
 
         QueryTree queryTree = new QueryTree((Operator) null);
 
@@ -59,6 +61,10 @@ public class Optimizer {
         List<String> columnNames = queryRuleGraph.getTokensAt(queryTokens, 1, 2);
         List<String> aggregationTypes = queryRuleGraph.getTokensAt(queryTokens, 3, 4, 5, 6, 7);
         List<String> aggregatedColumnNames = queryRuleGraph.getTokensAt(queryTokens, 9, 10);
+
+        // prefix column names
+        prefixColumnNames(columnNames, tables);
+        prefixColumnNames(aggregatedColumnNames, tables);
 
         // creating either a projection of aggregation based on the columns
         boolean hasAggregation = ! aggregationTypes.isEmpty();
@@ -82,6 +88,9 @@ public class Optimizer {
         List<String> symbols = queryRuleGraph.getTokensAt(queryTokens, 47, 48, 49, 50, 51, 52);
         List<String> values = queryRuleGraph.getTokensAt(queryTokens , 53);
 
+        // prefix column names
+        prefixColumnNames(aggregatedColumnNames, tables);
+
         boolean hasAggregateSelection = ! aggregatedColumnNames.isEmpty();
 
         if(hasAggregateSelection) {
@@ -101,6 +110,9 @@ public class Optimizer {
         symbols = queryRuleGraph.getTokensAt(queryTokens, 24, 25, 26, 27, 28, 29);
         values = new ArrayList<>();
         values = queryRuleGraph.getTokensAt(queryTokens, 30);
+
+        // prefix column names
+        prefixColumnNames(columnNames, tables);
 
         boolean hasSelection = ! columnNames.isEmpty();
 
@@ -180,8 +192,7 @@ public class Optimizer {
             traversals.remove(traversals.size() - 1);
             queryTree.set(traversals, QueryTree.Traversal.LEFT, new Relation(tableNames.get(0)));
         }
-System.out.println("Before");
-System.out.println(queryTree.getStructure());
+
         /* 5. if a join using was used, need to set/add the selection node to account for the join criteria */
         // -------------------------------------------------------------------------------------------------------------
 
@@ -232,10 +243,6 @@ System.out.println(queryTree.getStructure());
                 break;
             }
         }
-//System.out.println("Natural Join");
-//for(int i = 0; i < columnNames.size(); i++) {
-//            System.out.println(columnNames.get(i) + symbols.get(i) + values.get(i));
-//        }
 
         // don't bother with any of this if there is nothing to add
         boolean haveSelectionsToAdd = ! columnNames.isEmpty();
@@ -314,8 +321,6 @@ System.out.println(queryTree.getStructure());
             // didn't find a selection, will set the node either as a simple or compound selection
             } else {
 
-                System.out.println(queryTree.get(traversals, QueryTree.Traversal.NONE).getType());
-
                 // traversal should be set at the first cartesian product node
                 // determine if the selection to add is simple or compound
                 boolean isSimpleSelection = columnNames.size() == 1;
@@ -333,7 +338,12 @@ System.out.println(queryTree.getStructure());
         /* 7. if there are any column names in the having clause that are not already in the
               aggregation node, then add them as group by columns there */
 
+        // getting the input
         List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(queryTokens, 35);
+
+        // prefixing with table names
+        prefixColumnNames(havingClauseColumnNames, tables);
+
         boolean hasHavingColumnNames = ! havingClauseColumnNames.isEmpty();
 
         if(hasHavingColumnNames) {
@@ -381,32 +391,412 @@ System.out.println(queryTree.getStructure());
 
             // shouldn't need to set anything because dealing with the reference to groupByColumnNames
         }
-//System.out.println("After");
-//System.out.println(queryTree.getStructure());
+
         return queryTree;
     }
 
-    private QueryTree pushDownSelections(QueryTree queryTree) {
+    public void prefixColumnNames(List<String> columnNames, List<Table> tables) {
+        for(int i = 0; i < columnNames.size(); i++) {
+            columnNames.set(i, prefixColumnName(columnNames.get(i), tables));
+        }
+    }
+
+    /**
+     * Prefixes a column name to a table name. Involves looking through all the
+     * tables available and determining which one that column belongs to.
+     * @param columnName is the column name to prefix
+     * @param tables are all the tables in the database
+     * @return column name prefixed with the table name
+     */
+    public String prefixColumnName(String columnName, List<Table> tables) {
+
+        // don't need to prefix the table name if it's already there
+        if(hasPrefixedTableName(columnName)) {
+            return columnName;
+        }
+
+        // also don't need to prefix "." with anything
+        if(columnName.equals(".")) {
+            return columnName;
+        }
+
+        // otherwise prefix
+        for(Table table : tables) {
+            if(table.hasColumn(columnName)) {
+                columnName = table.getTableName() + "." + columnName;
+                break;
+            }
+        }
+
+        return columnName;
+    }
+
+    /**
+     * @param columnName is the string to check
+     * @return whether the candidate string is prefixed with a table name
+     */
+    public boolean hasPrefixedTableName(String columnName) {
+        return columnName.contains(".");
+    }
+
+    public QueryTree cascadeSelections(QueryTree queryTree) {
+
+        // check if we even need to cascade
+        boolean hasCompoundSelection = false;
+
+        for(Operator operator : queryTree) {
+            if(operator.getType() == Operator.Type.COMPOUND_SELECTION) {
+                hasCompoundSelection = true;
+            }
+        }
+
+        if(hasCompoundSelection) {
+
+            // get the location of the compound selection
+            List<QueryTree.Traversal> traversals = new ArrayList<>();
+            boolean foundCompoundSelection = false;
+
+            while(! foundCompoundSelection) {
+                foundCompoundSelection = queryTree.get(traversals, QueryTree.Traversal.DOWN)
+                        .getType() == Operator.Type.COMPOUND_SELECTION;
+                traversals.add(QueryTree.Traversal.DOWN);
+            }
+
+            CompoundSelection compoundSelection = (CompoundSelection)
+                    queryTree.get(traversals, QueryTree.Traversal.NONE);
+
+            queryTree.remove(traversals, QueryTree.Traversal.NONE);
+
+            // split the compound selection into simple selections
+            List<String> columnNames = compoundSelection.getColumnNames();
+            List<String> symbols = compoundSelection.getSymbols();
+            List<String> values = compoundSelection.getValues();
+
+            List<SimpleSelection> simpleSelections = new ArrayList<>();
+
+            for(int i = 0; i < columnNames.size(); i++) {
+                simpleSelections.add(
+                        new SimpleSelection(columnNames.get(i), symbols.get(i), values.get(i)));
+            }
+
+            // move the series of projections right above the first cartesian product or relation
+            if(! traversals.isEmpty()) {
+                traversals.remove(traversals.size() - 1);
+            }
+
+            for(int i = 0; i < simpleSelections.size(); i++) {
+                queryTree.add(traversals, QueryTree.Traversal.DOWN, simpleSelections.get(i));
+                traversals.add(QueryTree.Traversal.DOWN);
+            }
+        }
+
+        return new QueryTree(queryTree);
+    }
+
+    public QueryTree pushDownSelections(QueryTree queryTree) {
+
+        // check if we even have any simple selections
+        boolean hasSimpleSelections = false;
+
+        for(Operator operator : queryTree) {
+            if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+                hasSimpleSelections = true;
+            }
+        }
+
+        if(hasSimpleSelections) {
+
+            List<SimpleSelection> selections = new ArrayList<>();
+            List<QueryTree.Traversal> traversals = new ArrayList<>();
+
+            // get the location of the first simple selection node
+            boolean foundFirstSelection = false;
+
+            while (!foundFirstSelection) {
+                traversals.add(QueryTree.Traversal.DOWN);
+                foundFirstSelection = queryTree.get(traversals, QueryTree.Traversal.NONE)
+                        .getType() == Operator.Type.SIMPLE_SELECTION;
+            }
+
+            boolean doneGettingSelections = false;
+
+            while(! doneGettingSelections) {
+
+                Operator operator = queryTree.get(traversals, QueryTree.Traversal.NONE);
+
+                if (operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+                    selections.add((SimpleSelection) operator);
+                    queryTree.remove(traversals, QueryTree.Traversal.NONE);
+                } else {
+                    doneGettingSelections = true;
+                }
+            }
+
+            // these will be dealt with later, as these selections will be placed above cartesian products
+            List<SimpleSelection> joinSelections = new ArrayList<>();
+            boolean doneFindingAllJoinSelections = false;
+
+            while(! doneFindingAllJoinSelections) {
+                boolean foundJoinSelection = false;
+
+                for(int i = 0; i < selections.size(); i++) {
+                    SimpleSelection selection = selections.get(i);
+
+                    if(isJoinCondition(selection)) {
+                        joinSelections.add(selections.remove(i));
+                        foundJoinSelection = true;
+                        break;
+                    }
+                }
+
+                if(! foundJoinSelection) {
+                   doneFindingAllJoinSelections = true;
+                }
+            }
+
+            // deal with the remaining selections and place them above of their respective relations
+            for(SimpleSelection selection : selections) {
+                String relationName = selection.getColumnName().split("\\.")[0];
+                traversals = queryTree.getRelationLocation(relationName);
+                queryTree.add(traversals, QueryTree.Traversal.UP, selection);
+            }
+
+            // deal with the remaining join selections and place them above the right cartesian products
+            for(SimpleSelection joinSelection : joinSelections) {
+
+                String firstRelationName = joinSelection.getColumnName().split("\\.")[0];
+                String secondRelationName = joinSelection.getValue().split("\\.")[0];
+
+                List<QueryTree.Traversal> firstRelationLocation =
+                        queryTree.getRelationLocation(firstRelationName);
+                List<QueryTree.Traversal> secondRelationLocation =
+                        queryTree.getRelationLocation(secondRelationName);
+
+                // the relation with the fewest number of traversals is further up the tree,
+                // which is where we want the join criteria, should be fine if traversal sizes are equal
+                if(firstRelationLocation.size() < secondRelationLocation.size()) {
+
+                    // traverse upwards until we reach a cartesian product and insert above that
+                    boolean isCartesianProduct = false;
+
+                    while(! isCartesianProduct) {
+                        firstRelationLocation.remove(firstRelationLocation.size() - 1);
+                        isCartesianProduct = queryTree.get(firstRelationLocation, QueryTree.Traversal.NONE)
+                                .getType() == Operator.Type.CARTESIAN_PRODUCT;
+                    }
+
+                    queryTree.add(firstRelationLocation, QueryTree.Traversal.UP, joinSelection);
+
+                } else {
+
+                    boolean isCartesianProduct = false;
+
+                    while(! isCartesianProduct) {
+                        secondRelationLocation.remove(secondRelationLocation.size() - 1);
+                        isCartesianProduct = queryTree.get(secondRelationLocation, QueryTree.Traversal.NONE)
+                                .getType() == Operator.Type.CARTESIAN_PRODUCT;
+                    }
+
+                    queryTree.add(secondRelationLocation, QueryTree.Traversal.UP, joinSelection);
+                }
+            }
+        }
+
+        return new QueryTree(queryTree);
+    }
+
+    /**
+     * @return whether the provided simple selection is a join condition.
+     */
+    private boolean isJoinCondition(SimpleSelection simpleSelection) {
+        return simpleSelection.getValue().contains(".");
+    }
+
+    public QueryTree cascadeAndPushDownProjections(QueryTree queryTree) {
+
+        /*for(Operator operator : queryTree) {
+            if(operator.getType() == Operator.Type.AGGREGATION) {
+                System.out.println(((Aggregation) operator).getGroupByColumnNames());
+                System.out.println(((Aggregation) operator).getColumnNames());
+            }
+        }*/
+
+        // don't bother with any of this if you can't cascade any of the projections
+        int numCartesianProducts = 0;
+
+        for(Operator operator : queryTree) {
+            if(operator.getType() == Operator.Type.CARTESIAN_PRODUCT) {
+                numCartesianProducts++;
+            }
+        }
+
+        boolean canCascadeProjections = numCartesianProducts > 1;
+
+        if(! canCascadeProjections) {
+            return new QueryTree(queryTree);
+        }
+
+        // figure out what relations we have
+        List<String> relationNames = new ArrayList<>();
+
+        for(Operator operator : queryTree) {
+            if(operator.getType() == Operator.Type.RELATION) {
+                relationNames.add(((Relation) operator).getTableName());
+            }
+        }
+
+        // for each relation, explore each node along the traversal to reach that relation
+        // adding each column needed that appears with that relation's name to the working projection
+        for(String relationName : relationNames) {
+
+            List<String> projectedColumnNames = new ArrayList<>();
+
+            List<QueryTree.Traversal> relationTraversalLocation = queryTree.getRelationLocation(relationName);
+            Stack<QueryTree.Traversal> traversalStack = new Stack<>();
+            traversalStack.addAll(relationTraversalLocation);
+
+            while(! traversalStack.isEmpty()) {
+
+                Operator operator = queryTree.get(traversalStack, QueryTree.Traversal.NONE);
+
+                if(operator.getType() == Operator.Type.AGGREGATE_SELECTION) {
+
+                    AggregateSelection aggregateSelection = (AggregateSelection) operator;
+
+                    // check aggregate column names, if there is any, remove the aggregation type
+                    for(String aggregateColumnName : aggregateSelection.getColumnNames()) {
+                        String candidateRelation = aggregateColumnName.split("\\.")[0];
+
+                        if(candidateRelation.equalsIgnoreCase(relationName)) {
+                            if(! containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
+                                projectedColumnNames.add(aggregateColumnName);
+                            }
+                        }
+                    }
+                }
+
+                else if(operator.getType() == Operator.Type.AGGREGATION) {
+
+                    Aggregation aggregation = (Aggregation) operator;
+
+                    // check group by column names
+                    for(String groupByColumnName : aggregation.getGroupByColumnNames()) {
+                        String candidateRelation = groupByColumnName.split("\\.")[0];
+                        if(candidateRelation.equalsIgnoreCase(relationName)) {
+                            if(! containsDuplicateColumnNames(groupByColumnName, projectedColumnNames)) {
+                                projectedColumnNames.add(groupByColumnName);
+                            }
+                        }
+                    }
+
+                    // check aggregate column names, if there is any, remove the aggregation type
+                    for(String aggregateColumnName : aggregation.getColumnNames()) {
+                        String candidateRelation = aggregateColumnName.split("\\.")[0];
+
+                        if(candidateRelation.equalsIgnoreCase(relationName)) {
+                            if(! containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
+                                projectedColumnNames.add(aggregateColumnName);
+                            }
+                        }
+                    }
+                }
+
+                else if(operator.getType() == Operator.Type.PROJECTION) {
+
+                    Projection projection = (Projection) operator;
+
+                    for(String projectedColumnName : projection.getColumnNames()) {
+                        String candidateRelation = projectedColumnName.split("\\.")[0];
+                        if(candidateRelation.equalsIgnoreCase(relationName)) {
+                            if(! containsDuplicateColumnNames(projectedColumnName, projectedColumnNames)) {
+                                projectedColumnNames.add(projectedColumnName);
+                            }
+                        }
+                    }
+                }
+
+                else if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+
+                    SimpleSelection simpleSelection = (SimpleSelection) operator;
+
+                    if(isJoinCondition(simpleSelection)) {
+
+                        String candidateFirstRelation = simpleSelection.getColumnName().split("\\.")[0];
+                        String candidateSecondRelation = simpleSelection.getValue().split("\\.")[0];
+
+                        if(candidateFirstRelation.equalsIgnoreCase(relationName)) {
+                            if(! containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
+                                projectedColumnNames.add(simpleSelection.getColumnName());
+                            }
+                        } else if(candidateSecondRelation.equalsIgnoreCase(relationName)) {
+                            if(! containsDuplicateColumnNames(simpleSelection.getValue(), projectedColumnNames)) {
+                                projectedColumnNames.add(simpleSelection.getValue());
+                            }
+                        }
+
+                    } else {
+
+                        String candidateRelation = simpleSelection.getColumnName().split("\\.")[0];
+
+                        if(candidateRelation.equalsIgnoreCase(relationName)) {
+                            if(! containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
+                                projectedColumnNames.add(simpleSelection.getColumnName());
+                            }
+                        }
+                    }
+                }
+
+                traversalStack.pop();
+            }
+
+            // finally add the projection node right below the cartesian product closest to the relation
+            boolean foundCartesian = queryTree.get(relationTraversalLocation, QueryTree.Traversal.UP)
+                    .getType() == Operator.Type.CARTESIAN_PRODUCT;
+
+            while(! foundCartesian) {
+                relationTraversalLocation.remove(relationTraversalLocation.size() - 1);
+                foundCartesian = queryTree.get(relationTraversalLocation, QueryTree.Traversal.UP)
+                        .getType() == Operator.Type.CARTESIAN_PRODUCT;
+            }
+
+            // make sure we're not adding an empty projection node!
+            if(! projectedColumnNames.isEmpty()) {
+                queryTree.add(relationTraversalLocation, QueryTree.Traversal.UP, new Projection(projectedColumnNames));
+            }
+        }
+
+        // add this projection right below the first cartesian product found above the relation
+
+        // end for
+
+        // if we have more than 1 cartesian product, we can put an additional projection right
+        // underneath the cartesian product(s) that don't have any to further decrease query cost
+
+        return new QueryTree(queryTree);
+    }
+
+    private boolean containsDuplicateColumnNames(String candidate, List<String> columnNames) {
+        for(String columnName : columnNames) {
+            if(columnName.equalsIgnoreCase(candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public QueryTree formJoins(QueryTree queryTree) {
         return null;
     }
 
-    private QueryTree pushDownProjections(QueryTree queryTree) {
-        return  null;
-    }
-
-    private QueryTree formJoins(QueryTree queryTree) {
+    public QueryTree rearrangeLeafNodes(QueryTree queryTree) {
         return null;
     }
 
-    private QueryTree rearrangeLeafNodes(QueryTree queryTree) {
+    public QueryTree copyQueryTree(QueryTree queryTree) {
         return null;
     }
 
-    private QueryTree copyQueryTree(QueryTree queryTree) {
-        return null;
-    }
-
-    private QueryTree findSubtreesToPipeline(QueryTree queryTree) {
+    public QueryTree findSubtreesToPipeline(QueryTree queryTree) {
         return null;
     }
 }

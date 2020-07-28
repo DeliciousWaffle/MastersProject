@@ -257,7 +257,7 @@ public class Table {
     public boolean hasColumn(String candidate) {
 
         // the candidate may be prefixed with the table name, remove that
-        if(candidate.contains(".")) {
+        /*if(candidate.contains(".")) {
             // make sure that the table name is the same as this object's!
             String candidateTableName = candidate.split("\\.")[0];
             if(! candidateTableName.equalsIgnoreCase(this.tableName)) {
@@ -265,7 +265,7 @@ public class Table {
             }
             // remove the junk
             candidate = candidate.split("\\.")[1];
-        }
+        }*/
 
         for(Column column : columns) {
             if(column.getName().equalsIgnoreCase(candidate)) {

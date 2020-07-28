@@ -178,6 +178,41 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether a column name that is not prefixed belongs to more than
+     * one table. Not making this check will cause inconsistent output.
+     * Eg. SELECT * FROM tab1, tab2 where col1 > 5 AND col1 = 10;
+     * will return true assuming col1 belongs to both tab1 and tab2.
+     * @param columnName
+     * @param tables
+     * @return
+     */
+    public boolean isAmbiguousColumnName(String columnName, ArrayList<Table> tables) {
+
+        int occurrences = 0;
+        List<String> tableNamesWithSameColumnName = new ArrayList<>();
+
+        for(Table table : tables) {
+            if(table.hasColumn(columnName)) {
+                tableNamesWithSameColumnName.add(table.getTableName());
+                occurrences++;
+            }
+        }
+
+        boolean isAmbiguousColumnName = occurrences > 1;
+
+        if(isAmbiguousColumnName) {
+            System.out.println("In Optimizer.isAmbiguousColumnName()");
+            System.out.println("Column Name: " + columnName + " is present in tables: ");
+            for(String tableName : tableNamesWithSameColumnName) {
+                System.out.print(tableName + " ");
+            }
+            return true;
+        }
+
+        return false;
+    }
+
     public boolean isValidCreateTable(String[] createTable, ArrayList<Table> tables) {
 
         // make sure that the table name is not numeric
@@ -511,4 +546,6 @@ public class Verifier {
     public boolean isValidRemoveFileStructure(String[] fileStructure, List<Table> tables) {
         return false;
     }
+
+
 }
