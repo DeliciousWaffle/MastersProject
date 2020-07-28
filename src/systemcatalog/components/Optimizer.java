@@ -5,6 +5,7 @@ import datastructure.relation.table.component.Column;
 import datastructure.rulegraph.RuleGraph;
 import datastructure.tree.querytree.QueryTree;
 import datastructure.tree.querytree.operator.*;
+import org.omg.CORBA.TRANSACTION_MODE;
 
 import java.util.*;
 
@@ -614,13 +615,6 @@ public class Optimizer {
 
     public QueryTree cascadeAndPushDownProjections(QueryTree queryTree) {
 
-        /*for(Operator operator : queryTree) {
-            if(operator.getType() == Operator.Type.AGGREGATION) {
-                System.out.println(((Aggregation) operator).getGroupByColumnNames());
-                System.out.println(((Aggregation) operator).getColumnNames());
-            }
-        }*/
-
         // don't bother with any of this if you can't cascade any of the projections
         int numCartesianProducts = 0;
 
@@ -765,12 +759,132 @@ public class Optimizer {
             }
         }
 
-        // add this projection right below the first cartesian product found above the relation
 
-        // end for
 
-        // if we have more than 1 cartesian product, we can put an additional projection right
-        // underneath the cartesian product(s) that don't have any to further decrease query cost
+        System.out.println("Before projection bs");
+        System.out.println(queryTree.getStructure());
+
+        // if there are multiple cartesian products, will need to add additional projections below those too
+        // this relation is the deepest part of the tree, so we will start there
+        List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationNames.get(0));
+
+        // move up until reached the second cartesian product, this will be our starting point
+        int numCartesianProductsFound = 0;
+
+        while(numCartesianProductsFound < 2) {
+            traversals.remove(traversals.size() - 1);
+            if(queryTree.get(traversals, QueryTree.Traversal.NONE)
+                    .getType() == Operator.Type.CARTESIAN_PRODUCT) {
+                numCartesianProductsFound++;
+            }
+        }
+
+        System.out.println("Parent: " + queryTree.get(traversals, QueryTree.Traversal.UP));
+        System.out.println("Current: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
+        System.out.println("LeftChild: " + queryTree.get(traversals, QueryTree.Traversal.LEFT));
+        System.out.println("RightChild: " + queryTree.get(traversals, QueryTree.Traversal.RIGHT));
+
+        // keep adding projections below cartesian products until done
+        do {
+
+            // will eventually insert below the current cartesian product, need to move up the tree,
+            // adding columns along the way
+            List<String> projectedColumnNames = new ArrayList<>();
+            List<QueryTree.Traversal> tempTraversal = new ArrayList<>(traversals);
+
+            // use temp traversal to move up until root is reached
+            boolean reachedRoot = false;
+
+            // TODO refactor at some point because code duplication big bad
+            while (!reachedRoot) {
+                // depending on the type of node encountered, add it what's needed to project
+                Operator operator = queryTree.get(tempTraversal, QueryTree.Traversal.NONE);
+
+                if (operator.getType() == Operator.Type.AGGREGATE_SELECTION) {
+                    AggregateSelection aggregateSelection = (AggregateSelection) operator;
+                    for (String aggregateColumnName : aggregateSelection.getColumnNames()) {
+                        if (!containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
+                            projectedColumnNames.add(aggregateColumnName);
+                        }
+                    }
+
+                } else if (operator.getType() == Operator.Type.AGGREGATION) {
+                    Aggregation aggregation = (Aggregation) operator;
+                    // check group by columns
+                    for (String groupByColumnName : aggregation.getGroupByColumnNames()) {
+                        if (!containsDuplicateColumnNames(groupByColumnName, projectedColumnNames)) {
+                            projectedColumnNames.add(groupByColumnName);
+                        }
+                    }
+                    // check aggregate column names
+                    for (String aggregateColumnName : aggregation.getColumnNames()) {
+                        if (!containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
+                            projectedColumnNames.add(aggregateColumnName);
+                        }
+                    }
+
+                } else if (operator.getType() == Operator.Type.PROJECTION) {
+                    Projection projection = (Projection) operator;
+                    for (String projectedColumnName : projection.getColumnNames()) {
+                        if (!containsDuplicateColumnNames(projectedColumnName, projectedColumnNames)) {
+                            projectedColumnNames.add(projectedColumnName);
+                        }
+                    }
+
+                } else if (operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+                    SimpleSelection simpleSelection = (SimpleSelection) operator;
+                    if (isJoinCondition(simpleSelection)) {
+                        if (!containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
+                            projectedColumnNames.add(simpleSelection.getColumnName());
+                        }
+                        if (!containsDuplicateColumnNames(simpleSelection.getValue(), projectedColumnNames)) {
+                            projectedColumnNames.add(simpleSelection.getValue());
+                        }
+                    } else {
+                        if (!containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
+                            projectedColumnNames.add(simpleSelection.getColumnName());
+                        }
+                    }
+                }
+
+                // check to see if we are at the root
+                reachedRoot = tempTraversal.isEmpty();
+
+                if (!reachedRoot) {
+                    tempTraversal.remove(tempTraversal.size() - 1);
+                }
+            }
+
+            // finally add the new projection node right below the cartesian product
+            System.out.println("TO ADD: " + new Projection(projectedColumnNames));
+            queryTree.add(traversals, QueryTree.Traversal.LEFT, new Projection(projectedColumnNames));
+
+            numCartesianProductsFound++;
+
+            // move up until the next cartesian product is reached
+            try {
+                if (queryTree.get(traversals, QueryTree.Traversal.UP).getType() != Operator.Type.CARTESIAN_PRODUCT) {
+                    while (queryTree.get(traversals, QueryTree.Traversal.UP).getType() != Operator.Type.CARTESIAN_PRODUCT) {
+                        traversals.remove(traversals.size() - 1);
+                    }
+                }
+                traversals.remove(traversals.size() - 1);
+            } catch(NullPointerException e) {
+                break;
+            }
+
+        } while(numCartesianProductsFound <= numCartesianProducts);
+            // move up until the next cartesian product
+            /*if(!(numCartesianProductsFound <= numCartesianProducts)) {
+                traversals.remove(traversals.size() - 1);
+                while(queryTree.get(traversals, QueryTree.Traversal.NONE).getType() == Operator.Type.CARTESIAN_PRODUCT) {
+                    traversals.remove(traversals.size() - 1);
+                }
+            }*/
+
+
+        System.out.println("\nAfter projection bs");
+        System.out.println(queryTree.getStructure());
 
         return new QueryTree(queryTree);
     }

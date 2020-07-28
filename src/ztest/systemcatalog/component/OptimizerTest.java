@@ -72,24 +72,24 @@ public class OptimizerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "SELECT Tab1.COL1 FROM TAB1",
+            /*"SELECT Tab1.COL1 FROM TAB1",
             "SELECT COL1 FROM TAB1",
             "SELECT COL1, COL2, JCOL1 FROM TAB1",
             "SELECT COL1 FROM TAB1 WHERE COL1 = A",
             "SELECT COL1 FROM TAB1 WHERE COL1 = A AND COL2 = B",
-            "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1)",
+            "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1)",*/
             "SELECT COL1, COL3, JCOL2 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3",
             "SELECT COL1 FROM TAB1, TAB2 JOIN TAB3 USING(JCOL2)",
             "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 JOIN TAB4 USING(JCOL2)",
             "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 WHERE COL1 = A",
             "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 WHERE COL1 = A AND COL2 = 7 AND COL3 = 3",
-            "SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1",
-            "SELECT MIN(COL1) FROM TAB1;",
-            "SELECT COL1, COL2, MIN(jCOL1), MAX(jCOL1) FROM TAB1 GROUP BY COL1, COL2",
-            "SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1 HAVING MAX(jCOL1) > 6",
-            "SELECT COL1, MIN(COL2) FROM TAB1, TAB2 GROUP BY COL1 HAVING MAX(jCOL2) = 1",
-            "SELECT MIN(COL1) FROM TAB1 GROUP BY COL2",
-            "SELECT COL1, COL2, MIN(COL2), MAX(COL2) FROM TAB1 GROUP BY COL1, COL2, JCOL1 HAVING COUNT(COL1) > 4",
+            //"SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1",
+            //"SELECT MIN(COL1) FROM TAB1;",
+            //"SELECT COL1, COL2, MIN(jCOL1), MAX(jCOL1) FROM TAB1 GROUP BY COL1, COL2",
+            //"SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1 HAVING MAX(jCOL1) > 6",
+            //"SELECT COL1, MIN(COL2) FROM TAB1, TAB2 GROUP BY COL1 HAVING MAX(jCOL2) = 1",
+            //"SELECT MIN(COL1) FROM TAB1 GROUP BY COL2",
+            //"SELECT COL1, COL2, MIN(COL2), MAX(COL2) FROM TAB1 GROUP BY COL1, COL2, JCOL1 HAVING COUNT(COL1) > 4",
             "SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1, TAB2, TAB3 JOIN TAB4 USING(JCOL2) WHERE COL1 = A GROUP BY COL1, COL2, COL5 HAVING COUNT(COL1) > 5"
     })
     public void testCreation(String input) {
@@ -99,14 +99,14 @@ public class OptimizerTest {
         System.out.println();
         QueryTree queryTree = optimizer.createQueryTree(queryRuleGraph, inputTokens, tables);
         queryTree = optimizer.cascadeSelections(queryTree);
-        System.out.println("After Cascading Selections:");
-        System.out.println(queryTree.getStructure());
+        //System.out.println("After Cascading Selections:");
+        //System.out.println(queryTree.getStructure());
         queryTree = optimizer.pushDownSelections(queryTree);
-        System.out.println("After Pushing Down Selections:");
-        System.out.println(queryTree.getStructure());
+        //System.out.println("After Pushing Down Selections:");
+        //System.out.println(queryTree.getStructure());
         queryTree = optimizer.cascadeAndPushDownProjections(queryTree);
-        System.out.println("After Cascading and Pushing Down Projections");
-        System.out.println(queryTree.getStructure());
+        //System.out.println("After Cascading and Pushing Down Projections");
+        //System.out.println(queryTree.getStructure());
 
         System.out.println("----------------------------------------");
         assertTrue(true);
