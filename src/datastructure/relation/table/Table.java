@@ -5,6 +5,7 @@ import datastructure.relation.table.component.TableData;
 import datastructure.relation.table.component.DataType;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A representation of the table stored within the database. This stores stuff
@@ -13,9 +14,9 @@ import java.util.ArrayList;
 public class Table {
 
     private String tableName;
-    private ArrayList<Column> columns;
+    private List<Column> columns;
     private String primaryKey;
-    private ArrayList<String> foreignKeys;
+    private List<String> foreignKeys;
     private String clusteredWith;
     private TableData tableData;
 
@@ -55,7 +56,7 @@ public class Table {
      * @param primaryKey is the primary key of this table
      * @param foreignKeys are foreign keys of this table
      */
-    public Table(String tableName, ArrayList<Column> columns, String primaryKey, ArrayList<String> foreignKeys) {
+    public Table(String tableName, List<Column> columns, String primaryKey, List<String> foreignKeys) {
 
         this(tableName);
         this.columns = columns;
@@ -101,14 +102,14 @@ public class Table {
     /**
      * @return the columns stored within this table
      */
-    public ArrayList<Column> getColumns() {
+    public List<Column> getColumns() {
         return columns;
     }
 
     /**
      * @param columns are the columns to be set for this table
      */
-    public void setColumns(ArrayList<Column> columns) {
+    public void setColumns(List<Column> columns) {
         this.columns = columns;
     }
 
@@ -166,12 +167,12 @@ public class Table {
     /**
      * @return the foreign keys of this table
      */
-    public ArrayList<String> getForeignKeys() { return foreignKeys; }
+    public List<String> getForeignKeys() { return foreignKeys; }
 
     /**
      * @param foreignKeys are the foreign keys to set
      */
-    public void setForeignKeys(ArrayList<String> foreignKeys) { this.foreignKeys = foreignKeys; }
+    public void setForeignKeys(List<String> foreignKeys) { this.foreignKeys = foreignKeys; }
 
     /**
      * @param foreignKey is the foreign key to add
@@ -255,17 +256,6 @@ public class Table {
      * @return whether the candidate column is a member of this table
      */
     public boolean hasColumn(String candidate) {
-
-        // the candidate may be prefixed with the table name, remove that
-        /*if(candidate.contains(".")) {
-            // make sure that the table name is the same as this object's!
-            String candidateTableName = candidate.split("\\.")[0];
-            if(! candidateTableName.equalsIgnoreCase(this.tableName)) {
-                return false;
-            }
-            // remove the junk
-            candidate = candidate.split("\\.")[1];
-        }*/
 
         for(Column column : columns) {
             if(column.getName().equalsIgnoreCase(candidate)) {
