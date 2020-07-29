@@ -195,7 +195,7 @@ public class RuleGraphTypes {
         alterTableRuleGraph.setChildren(1, 2);
         alterTableRuleGraph.setChildren(2, 3, 4, 5);
         alterTableRuleGraph.setChildren(3, 6);
-        alterTableRuleGraph.setChildren(4, 6, 12, 13, 15);
+        alterTableRuleGraph.setChildren(4, 6, 12, 13);
         alterTableRuleGraph.setChildren(5, 12, 13, 15);
         alterTableRuleGraph.setChildren(6, 7, 8);
         alterTableRuleGraph.setChildren(7, 9);

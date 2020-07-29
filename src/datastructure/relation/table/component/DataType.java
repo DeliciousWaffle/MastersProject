@@ -5,6 +5,7 @@ public enum DataType {
     CHAR, NUMBER, DATE, UNKNOWN;
 
     public static DataType convertToDataType(String toConvert) {
+        toConvert = toConvert.toUpperCase();
         switch(toConvert) {
             case "CHAR":
                 return CHAR;

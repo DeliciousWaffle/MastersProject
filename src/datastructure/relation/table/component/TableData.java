@@ -1,6 +1,7 @@
 package datastructure.relation.table.component;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents all the rows and columns stored within a particular table.
@@ -9,10 +10,10 @@ import java.util.ArrayList;
  */
 public class TableData {
 
-    private ArrayList<Integer> paddingAmountList;    // for formatting
-    private ArrayList<ArrayList<String>> tableData;
+    private List<Integer> paddingAmountList;    // for formatting
+    private List<List<String>> tableData;
 
-    public TableData(ArrayList<Integer> paddingAmountList, ArrayList<ArrayList<String>> tableData) {
+    public TableData(List<Integer> paddingAmountList, List<List<String>> tableData) {
         this.paddingAmountList = paddingAmountList;
         this.tableData = tableData;
     }
@@ -26,8 +27,8 @@ public class TableData {
             this.paddingAmountList.add(paddingAmount);
         }
         this.tableData = new ArrayList<>();
-        for(ArrayList<String> rows : toCopy.tableData) {
-            ArrayList<String> rowsToAdd = new ArrayList<>();
+        for(List<String> rows : toCopy.tableData) {
+            List<String> rowsToAdd = new ArrayList<>();
             for(String cols : rows) {
                 rowsToAdd.add(cols);
             }
@@ -38,12 +39,16 @@ public class TableData {
     /**
      * @return columnSizes a list of all the column sizes
      */
-    public ArrayList<Integer> getPaddingAmountList() { return paddingAmountList; }
+    public List<Integer> getPaddingAmountList() { return paddingAmountList; }
+
+    public void setData(List<List<String>> tableData) {
+        this.tableData = tableData;
+    }
 
     /**
      * @return the data of this table
      */
-    public ArrayList<ArrayList<String>> getData() {
+    public List<List<String>> getData() {
         return tableData;
     }
 
@@ -82,17 +87,27 @@ public class TableData {
         paddingAmountList.remove(index);
     }
 
+    public String getCellAt(int row, int col) {
+        return tableData.get(row).get(col);
+    }
+
     /**
      * Alters the data of a cell to something else.
      */
-    public void alterCellAt(int row, int col, String cell) {
+    public void updateCellAt(int row, int col, String cell) {
         tableData.get(row).set(col, cell);
+    }
+
+    public void updateCellAt(int col, String cell) {
+        for(List<String> row : tableData) {
+            row.set(col, cell);
+        }
     }
 
     /**
      * Adds a row to the bottom of the table.
      */
-    public void addRow(ArrayList<String> row) {
+    public void addRow(List<String> row) {
         tableData.add(row);
     }
 
@@ -100,7 +115,7 @@ public class TableData {
      * Adds a row to the table at the supplied index.
      * Use for maintaining an order with respect to the primary key.
      */
-    public void addRowAt(int index, ArrayList<String> row) {
+    public void addRowAt(int index, List<String> row) {
         tableData.add(index, row);
     }
 
@@ -123,7 +138,7 @@ public class TableData {
      * @param colIndex the index of the column
      * @return a list of rows corresponding to the supplied column index
      */
-    public ArrayList<String> getRowsAt(int colIndex) {
+    public List<String> getRowsAt(int colIndex) {
 
         ArrayList<String> columnsRowData = new ArrayList<>();
 

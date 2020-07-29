@@ -26,11 +26,11 @@ public class Table {
      */
     public Table() {
 
-        this.tableName = "";
+        this.tableName = "none";
         this.columns = new ArrayList<>();
-        this.primaryKey = "";
+        this.primaryKey = "none";
         this.foreignKeys = new ArrayList<>();
-        this.clusteredWith = "";
+        this.clusteredWith = "none";
         this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
     }
 
@@ -281,6 +281,10 @@ public class Table {
         }
 
         return totalColSize;
+    }
+
+    public void addRow(List<String> row) {
+        tableData.addRow(row);
     }
 
     /**
