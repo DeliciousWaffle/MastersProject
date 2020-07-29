@@ -8,6 +8,7 @@ public class QueryTreeNode {
     private QueryTreeNode parent;
     private QueryTreeNode[] children;
     private boolean visited;
+    private boolean canPipelineSubtree;
 
     public QueryTreeNode(Operator operator, QueryTreeNode parent) {
         this.operator = operator;
@@ -89,6 +90,14 @@ public class QueryTreeNode {
 
     public boolean isVisited() {
         return visited;
+    }
+
+    public void setCanPipelineSubtree(boolean canPipelineSubtree) {
+        this.canPipelineSubtree = canPipelineSubtree;
+    }
+
+    public boolean canPipelineSubtree() {
+        return canPipelineSubtree;
     }
 
     public boolean hasParent() {

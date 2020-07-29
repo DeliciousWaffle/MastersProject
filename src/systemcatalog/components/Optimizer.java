@@ -29,25 +29,25 @@ public class Optimizer {
     public void optimize(RuleGraph queryRuleGraph, String[] queryTokens, ArrayList<Table> tables) {
 
         QueryTree workingTree = createQueryTree(queryRuleGraph, queryTokens, tables);
-        queryTreeStates.add(new QueryTree(workingTree));
+        queryTreeStates.add(workingTree);
 
         workingTree = cascadeSelections(workingTree);
-        queryTreeStates.add(new QueryTree(workingTree));
+        queryTreeStates.add(workingTree);
 
         workingTree = pushDownSelections(workingTree);
-        queryTreeStates.add(new QueryTree(workingTree));
+        queryTreeStates.add(workingTree);
 
         workingTree = cascadeAndPushDownProjections(workingTree);
-        queryTreeStates.add(new QueryTree(workingTree));
+        queryTreeStates.add(workingTree);
 
         workingTree = formJoins(workingTree);
-        queryTreeStates.add(new QueryTree(workingTree));
+        queryTreeStates.add(workingTree);
 
-        workingTree = rearrangeLeafNodes(workingTree);
-        queryTreeStates.add(new QueryTree(workingTree));
+        //workingTree = rearrangeLeafNodes(workingTree);
+        //queryTreeStates.add(new QueryTree(workingTree));
 
         workingTree = findSubtreesToPipeline(workingTree);
-        queryTreeStates.add(new QueryTree(workingTree));
+        queryTreeStates.add(workingTree);
     }
 
     public QueryTree createQueryTree(RuleGraph queryRuleGraph, String[] queryTokens, List<Table> tables) {
@@ -759,11 +759,6 @@ public class Optimizer {
             }
         }
 
-
-
-        System.out.println("Before projection bs");
-        System.out.println(queryTree.getStructure());
-
         // if there are multiple cartesian products, will need to add additional projections below those too
         // this relation is the deepest part of the tree, so we will start there
         List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationNames.get(0));
@@ -778,11 +773,6 @@ public class Optimizer {
                 numCartesianProductsFound++;
             }
         }
-
-        System.out.println("Parent: " + queryTree.get(traversals, QueryTree.Traversal.UP));
-        System.out.println("Current: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
-        System.out.println("LeftChild: " + queryTree.get(traversals, QueryTree.Traversal.LEFT));
-        System.out.println("RightChild: " + queryTree.get(traversals, QueryTree.Traversal.RIGHT));
 
         // keep adding projections below cartesian products until done
         do {
@@ -856,35 +846,26 @@ public class Optimizer {
             }
 
             // finally add the new projection node right below the cartesian product
-            System.out.println("TO ADD: " + new Projection(projectedColumnNames));
             queryTree.add(traversals, QueryTree.Traversal.LEFT, new Projection(projectedColumnNames));
 
             numCartesianProductsFound++;
 
             // move up until the next cartesian product is reached
             try {
+
                 if (queryTree.get(traversals, QueryTree.Traversal.UP).getType() != Operator.Type.CARTESIAN_PRODUCT) {
                     while (queryTree.get(traversals, QueryTree.Traversal.UP).getType() != Operator.Type.CARTESIAN_PRODUCT) {
                         traversals.remove(traversals.size() - 1);
                     }
                 }
+
                 traversals.remove(traversals.size() - 1);
+
             } catch(NullPointerException e) {
                 break;
             }
 
         } while(numCartesianProductsFound <= numCartesianProducts);
-            // move up until the next cartesian product
-            /*if(!(numCartesianProductsFound <= numCartesianProducts)) {
-                traversals.remove(traversals.size() - 1);
-                while(queryTree.get(traversals, QueryTree.Traversal.NONE).getType() == Operator.Type.CARTESIAN_PRODUCT) {
-                    traversals.remove(traversals.size() - 1);
-                }
-            }*/
-
-
-        System.out.println("\nAfter projection bs");
-        System.out.println(queryTree.getStructure());
 
         return new QueryTree(queryTree);
     }
@@ -899,18 +880,114 @@ public class Optimizer {
     }
 
     public QueryTree formJoins(QueryTree queryTree) {
-        return null;
+
+        // don't bother if there is nothing to join
+        boolean canFormJoins = false;
+
+        for(Operator operator : queryTree) {
+            if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+                if(isJoinCondition((SimpleSelection) operator)) {
+                    canFormJoins = true;
+                }
+            }
+        }
+
+        if(! canFormJoins) {
+            return new QueryTree(queryTree);
+        }
+
+        // locate each selection that contains a join criteria, using the first relation node
+        // as a starting point since it will be the deepest node
+        String relationName = null;
+        boolean foundFirstRelation = false;
+
+        for(Operator operator : queryTree) {
+            if(! foundFirstRelation) {
+                if (operator.getType() == Operator.Type.RELATION) {
+                    relationName = ((Relation) operator).getTableName();
+                    foundFirstRelation = true;
+                }
+            }
+        }
+
+        List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationName);
+
+        boolean atRoot = false;
+
+        while(! atRoot) {
+
+            Operator operator = queryTree.get(traversals, QueryTree.Traversal.NONE);
+
+            if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+                SimpleSelection selection = (SimpleSelection) operator;
+
+                // get the join criteria and set the cartesian product to a join node, also remove the selection
+                if(isJoinCondition(selection)) {
+
+                    String firstJoinCol = selection.getColumnName();
+                    String secondJoinCol = selection.getValue();
+
+                    queryTree.set(traversals, QueryTree.Traversal.DOWN, new InnerJoin(firstJoinCol, secondJoinCol));
+                    queryTree.remove(traversals, QueryTree.Traversal.NONE);
+                }
+            }
+
+            traversals.remove(traversals.size() - 1);
+            atRoot = traversals.isEmpty();
+        }
+
+        return new QueryTree(queryTree);
     }
 
-    public QueryTree rearrangeLeafNodes(QueryTree queryTree) {
-        return null;
-    }
-
-    public QueryTree copyQueryTree(QueryTree queryTree) {
+    // TODO: not sure how to handle yet, rearrangement will put all other nodes out of whack
+    public QueryTree rearrangeLeafNodes(QueryTree queryTree, List<Table> tables) {
         return null;
     }
 
     public QueryTree findSubtreesToPipeline(QueryTree queryTree) {
-        return null;
+
+        // starting at the deepest node of the tree
+        String relationName = null;
+        boolean foundFirstRelation = false;
+
+        for(Operator operator : queryTree) {
+            if(! foundFirstRelation) {
+                if (operator.getType() == Operator.Type.RELATION) {
+                    relationName = ((Relation) operator).getTableName();
+                    foundFirstRelation = true;
+                }
+            }
+        }
+
+        List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationName);
+
+        // identifying trees that can be pipeline (those that appear right under a join or cartesian product)
+        boolean atRoot = false;
+
+        while(! atRoot) {
+
+            Operator operator = queryTree.get(traversals, QueryTree.Traversal.NONE);
+
+            if(operator.getType() == Operator.Type.CARTESIAN_PRODUCT ||
+                    operator.getType() == Operator.Type.INNER_JOIN) {
+                // need to make sure that the candidate nodes have children, if not, can pipeline whole thing
+                queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.LEFT);
+                if(queryTree.canPipelineSubtree(traversals, QueryTree.Traversal.LEFT)) {
+                    System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.LEFT));
+                }
+                queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.RIGHT);
+                if(queryTree.canPipelineSubtree(traversals, QueryTree.Traversal.RIGHT)) {
+                    System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.RIGHT));
+                }
+            }
+
+            traversals.remove(traversals.size() - 1);
+            atRoot = traversals.isEmpty();
+        }
+
+        // finally pipeline the root
+        queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.NONE);
+        System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
+        return new QueryTree(queryTree);
     }
 }

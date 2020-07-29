@@ -91,6 +91,55 @@ public class QueryTree implements Iterable<Operator> {
         return size;
     }
 
+
+    public void tryToPipelineSubtree(List<Traversal> traversals, Traversal location) {
+        QueryTreeNode pointer = traverse(traversals);
+        switch(location) {
+            case NONE:
+                if(pointer.hasAnyChildren()) {
+                    pointer.setCanPipelineSubtree(true);
+                }
+                break;
+            case LEFT:
+                if(pointer.getLeftChild().hasAnyChildren()) {
+                    pointer.getLeftChild().setCanPipelineSubtree(true);
+                }
+                break;
+            case RIGHT:
+                if(pointer.getRightChild().hasAnyChildren()) {
+                    pointer.getRightChild().setCanPipelineSubtree(true);
+                }
+                break;
+            case UP:
+                if(pointer.getParent().hasAnyChildren()) {
+                    pointer.getParent().setCanPipelineSubtree(true);
+                }
+                break;
+            case DOWN:
+                if(pointer.getOnlyChild().hasAnyChildren()) {
+                    pointer.getOnlyChild().setCanPipelineSubtree(true);
+                }
+                break;
+        }
+    }
+
+    public boolean canPipelineSubtree(List<Traversal> traversals, Traversal location) {
+        QueryTreeNode pointer = traverse(traversals);
+        switch(location) {
+            case NONE:
+                return pointer.canPipelineSubtree();
+            case LEFT:
+                return pointer.getLeftChild().canPipelineSubtree();
+            case RIGHT:
+                return pointer.getRightChild().canPipelineSubtree();
+            case UP:
+                return pointer.getParent().canPipelineSubtree();
+            case DOWN:
+            default:
+                return pointer.getOnlyChild().canPipelineSubtree();
+        }
+    }
+
     public void add(List<Traversal> traversals, Traversal target, Operator operator) {
 
         QueryTreeNode pointer = traverse(traversals);
