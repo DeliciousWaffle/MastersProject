@@ -444,7 +444,6 @@ public class RuleGraphTypes {
         return revokeRuleGraph;
     }
 
-    // TODO
     public RuleGraph getBuildFileStructureRuleGraph() {
 
         RuleGraph secondaryBTreeRuleGraph = new RuleGraph();

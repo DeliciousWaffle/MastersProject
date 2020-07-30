@@ -1,11 +1,17 @@
 package datastructure.user.component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum Privilege {
 
-    ALTER, DELETE, INDEX, INSERT, SELECT, UPDATE, REFERENCES, ALL_PRIVILEGES, UNKNOWN;
+    ALL_PRIVILEGES, ALTER, DELETE, INDEX, INSERT, SELECT, UPDATE, REFERENCES, UNKNOWN;
 
     public static Privilege convertToPrivilege(String toConvert) {
+        toConvert = toConvert.toUpperCase();
         switch(toConvert) {
+            case "ALL_PRIVILEGES":
+                return ALL_PRIVILEGES;
             case "ALTER":
                 return ALTER;
             case "DELETE":
@@ -20,10 +26,24 @@ public enum Privilege {
                 return UPDATE;
             case "REFERENCES":
                 return REFERENCES;
-            case "ALL_PRIVILEGES":
-                return ALL_PRIVILEGES;
             default:
                 return UNKNOWN;
         }
+    }
+
+    public static List<Privilege> getAllPrivileges() {
+
+        List<Privilege> privileges = new ArrayList<>();
+
+        privileges.add(Privilege.ALL_PRIVILEGES);
+        privileges.add(Privilege.ALTER);
+        privileges.add(Privilege.DELETE);
+        privileges.add(Privilege.INDEX);
+        privileges.add(Privilege.INSERT);
+        privileges.add(Privilege.SELECT);
+        privileges.add(Privilege.UPDATE);
+        privileges.add(Privilege.REFERENCES);
+
+        return privileges;
     }
 }

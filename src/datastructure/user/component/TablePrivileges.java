@@ -1,30 +1,46 @@
 package datastructure.user.component;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class TablePrivileges {
 
     private String tableName;
-    private boolean hasAllPrivileges;
-    private ArrayList<Privilege> privileges;
-    private ArrayList<String> updateColumns, referenceColumns;
+    private List<Privilege> privileges;
+    private List<String> updateColumns, referenceColumns;
 
     public TablePrivileges() {
 
-        this.tableName   = "";
-        this.hasAllPrivileges = false;
-        this.privileges  = new ArrayList<>();
+        this.tableName        = "";
+        this.privileges       = new ArrayList<>();
         this.updateColumns    = new ArrayList<>();
         this.referenceColumns = new ArrayList<>();
     }
 
-    public TablePrivileges(String tableName, ArrayList<Privilege> privileges) {
+    public TablePrivileges(String tableName, List<Privilege> privileges) {
 
-        this.tableName   = tableName;
-        this.privileges  = privileges;
-        this.hasAllPrivileges = false;
+        this.tableName        = tableName;
+        this.privileges       = privileges;
         this.updateColumns    = new ArrayList<>();
         this.referenceColumns = new ArrayList<>();
+    }
+
+    public TablePrivileges(String tableName, List<Privilege> privileges,
+                           List<String> updateColumns, List<String> referenceColumns) {
+        this(tableName, privileges);
+        this.updateColumns = updateColumns;
+        this.referenceColumns = referenceColumns;
+    }
+
+    public TablePrivileges(TablePrivileges toCopy) {
+
+        this.tableName = toCopy.tableName;
+        this.privileges = new ArrayList<>();
+        this.privileges.addAll(toCopy.privileges);
+        this.updateColumns = new ArrayList<>();
+        this.updateColumns.addAll(toCopy.updateColumns);
+        this.referenceColumns = new ArrayList<>();
+        this.referenceColumns.addAll(toCopy.referenceColumns);
     }
 
     /**
@@ -35,105 +51,65 @@ public class TablePrivileges {
     public void grantPrivilege(Privilege privilege) {
 
         if(privilege == Privilege.ALL_PRIVILEGES) {
-            grantAllPrivileges();
-            return;
-        }
+            privileges = Privilege.getAllPrivileges();
 
-        // don't add duplicate privileges to the list of privileges
-        for(int i = 0; i < privileges.size(); i++) {
-            Privilege current = privileges.get(i);
-            if(current == privilege) {
-                return;
-            }
-        }
-
-        privileges.add(privilege);
-    }
-
-    // TODO remove
-    /**
-     * Adds either an UPDATE or REFERENCES privilege to the list of privileges.
-     * @param privilege
-     * @param columnNames
-     */
-    public void grantPrivilege(Privilege privilege, ArrayList<String> columnNames) {
-
-        // don't be dumb
-        if(! (privilege == Privilege.ALL_PRIVILEGES ||
-                privilege == Privilege.UPDATE || privilege == Privilege.REFERENCES)) {
-            System.out.println("In TablePrivileges.grantPrivilege()");
-            System.out.println("Used wrong method!");
-            return;
-        }
-
-        // don't add duplicate privileges to the list of privileges
-        for(int i = 0; i < privileges.size(); i++) {
-            Privilege current = privileges.get(i);
-            if(current == privilege) {
-                return;
-            }
-        }
-
-        privileges.add(privilege);
-
-        // set update or references columns
-        if(privilege == Privilege.UPDATE) {
-            updateColumns = columnNames;
         } else {
-            referenceColumns = columnNames;
+
+            // don't add duplicate privileges to the list of privileges
+            for(Privilege current : privileges) {
+                if(current == privilege) {
+                    return;
+                }
+            }
+
+            privileges.add(privilege);
         }
-    }
-
-    /**
-     * Grants all privileges to the user on this table.
-     * This clears all privileges, update columns, and references columns.
-     */
-    public void grantAllPrivileges() {
-
-        hasAllPrivileges = true;
-        privileges = new ArrayList<>();
-        updateColumns = new ArrayList<>();
-        referenceColumns = new ArrayList<>();
     }
 
     /**
      * Removes a privilege from the list of all privileges associated with this table.
-     * If the removal is valid, it will remove the item from the list, otherwise, it won't.
      * @param privilegeToRemove the privilege to remove
      */
     public void revokePrivilege(Privilege privilegeToRemove) {
 
         if(privilegeToRemove == Privilege.ALL_PRIVILEGES) {
-            revokeAllPrivileges();
-            return;
+
+            privileges = new ArrayList<>();
+            updateColumns = new ArrayList<>();
+            referenceColumns = new ArrayList<>();
+
+        } else {
+
+            for (int i = 0; i < privileges.size(); i++) {
+                Privilege current = privileges.get(i);
+
+                if (current == privilegeToRemove) {
+
+                    // reset respective lists if update or references encountered
+                    if (current == Privilege.UPDATE) {
+                        updateColumns = new ArrayList<>();
+                    }
+
+                    if (current == Privilege.REFERENCES) {
+                        referenceColumns = new ArrayList<>();
+                    }
+
+                    privileges.remove(i);
+                    break;
+                }
+            }
         }
+    }
 
-        boolean successfullyRevoked = false;
+    public boolean hasAllPrivileges() {
 
-        for(int i = 0; i < privileges.size(); i++) {
-
-            Privilege current = privileges.get(i);
-
-            if(current == privilegeToRemove) {
-
-                // reset the lists
-                if(current == Privilege.UPDATE) {
-                    updateColumns = new ArrayList<>();
-                }
-
-                if(current == Privilege.REFERENCES) {
-                    referenceColumns = new ArrayList<>();
-                }
-
-                privileges.remove(i);
-                successfullyRevoked = true;
+        for(Privilege privilege : privileges) {
+            if(privilege == Privilege.ALL_PRIVILEGES) {
+                return true;
             }
         }
 
-        if(! successfullyRevoked) {
-            System.out.println("In TablePrivileges.revokePrivilege()");
-            System.out.println("Could not remove: " + privilegeToRemove);
-        }
+        return false;
     }
 
     /**
@@ -142,7 +118,6 @@ public class TablePrivileges {
      */
     public void revokeAllPrivileges() {
 
-        hasAllPrivileges = false;
         privileges = new ArrayList<>();
         updateColumns = new ArrayList<>();
         referenceColumns = new ArrayList<>();
@@ -152,15 +127,11 @@ public class TablePrivileges {
 
     public String getTableName() { return tableName; }
 
-    public boolean hasAllPrivileges() {
-        return hasAllPrivileges;
-    }
+    public void setPrivileges(List<Privilege> privileges) { this.privileges = privileges; }
 
-    public void setPrivileges(ArrayList<Privilege> privileges) { this.privileges = privileges; }
+    public List<Privilege> getPrivileges() { return privileges; }
 
-    public ArrayList<Privilege> getPrivileges() { return privileges; }
-
-    public void setUpdateColumns(ArrayList<String> updateColumns) {
+    public void setUpdateColumns(List<String> updateColumns) {
 
         if(hasPrivilege(Privilege.UPDATE)) {
             this.updateColumns = updateColumns;
@@ -170,13 +141,21 @@ public class TablePrivileges {
         }
     }
 
-    public void addUpdateColumn(String updateColumn) {
-        updateColumns.add(updateColumn);
+    public void addUpdateColumn(String updateColumnToAdd) {
+
+        // don't add a duplicate update column
+        for(String updateColumn : updateColumns) {
+            if(updateColumn.equalsIgnoreCase(updateColumnToAdd)) {
+                return;
+            }
+        }
+
+        updateColumns.add(updateColumnToAdd);
     }
 
-    public ArrayList<String> getUpdateColumns() { return updateColumns;}
+    public List<String> getUpdateColumns() { return updateColumns;}
 
-    public void setReferenceColumns(ArrayList<String> referenceColumns) {
+    public void setReferenceColumns(List<String> referenceColumns) {
 
         if(hasPrivilege(Privilege.REFERENCES)) {
             this.referenceColumns = referenceColumns;
@@ -186,11 +165,19 @@ public class TablePrivileges {
         }
     }
 
-    public void addReferenceColumn(String referenceColumn) {
-        referenceColumns.add(referenceColumn);
+    public void addReferenceColumn(String referenceColumnToAdd) {
+
+        // don't add a duplicate reference column
+        for(String referenceColumn : referenceColumns) {
+            if(referenceColumn.equalsIgnoreCase(referenceColumnToAdd)) {
+                return;
+            }
+        }
+
+        referenceColumns.add(referenceColumnToAdd);
     }
 
-    public ArrayList<String> getReferenceColumns() { return referenceColumns; }
+    public List<String> getReferenceColumns() { return referenceColumns; }
 
     public boolean hasPrivilege(Privilege candidate) {
 
@@ -211,7 +198,6 @@ public class TablePrivileges {
 
         StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("\t\t").append("Has All Privileges: ").append(hasAllPrivileges ? "Yes" : "No").append("\n");
         stringBuilder.append("\t\t").append("Privileges: ");
 
         if(! privileges.isEmpty()) {
