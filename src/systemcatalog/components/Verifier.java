@@ -353,7 +353,7 @@ public class Verifier {
 
         // make sure that each new column's value matches the datatype in the corresponding table
         ArrayList<String> valuesToInsert = ruleGraph.getTokensAt(insert, 5);
-        ArrayList<Column> columns = referencedTable.getColumns();
+        List<Column> columns = referencedTable.getColumns();
 
         for(int i = 0; i < columns.size(); i++) {
 

@@ -124,7 +124,7 @@ public class Table {
     }
 
     /**
-     * Removes the column supplied from the table.
+     * Removes the column supplied from the table and all the data there.
      * @param columnToRemove is the column to remove
      */
     public void removeColumn(Column columnToRemove) {
@@ -132,7 +132,7 @@ public class Table {
     }
 
     /**
-     * Removes the column supplied from the table.
+     * Removes the column supplied from the table and all the data there.
      * @param columnToRemove is the name of the column to remove
      */
     public void removeColumn(String columnToRemove) {
@@ -140,6 +140,7 @@ public class Table {
             String columnName = columns.get(i).getName();
             if(columnName.equalsIgnoreCase(columnToRemove)) {
                 columns.remove(i);
+                tableData.deleteColumnAt(i);
                 return;
             }
         }
@@ -367,7 +368,22 @@ public class Table {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
-        stringBuilder.append("\n").append("Primary Key: ").append(primaryKey).append("\n\n");
+        stringBuilder.append("\n").append("Primary Key: ").append(primaryKey).append("\n");
+        stringBuilder.append("Foreign Key(s): ");
+        if(foreignKeys.isEmpty()) {
+            stringBuilder.append("none");
+        } else {
+            for(String foreignKey : foreignKeys) {
+                stringBuilder.append(foreignKey).append(", ");
+            }
+            // remove ", "
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
+        stringBuilder.append("\n");
+
+        stringBuilder.append("Clustered With Table: ").append(clusteredWith).append("\n\n");
 
         // adding table data stuff
         for(Column column : columns) {

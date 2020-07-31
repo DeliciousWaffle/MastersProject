@@ -102,8 +102,7 @@ public class SystemCatalog {
 
         // after making it through all the checks, execute the input
         // TODO: figure out what to do with optimizer
-        compiler.setRuleGraph(ruleGraphs.get(inputType.getCode()));
-        compiler.executeInput(inputType, tokenizedInput, users, tables);
+        compiler.executeInput(inputType, tokenizedInput, ruleGraphs.get(inputType.getCode()), users, tables);
     }
 
     /**

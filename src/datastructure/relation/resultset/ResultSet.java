@@ -21,8 +21,8 @@ import java.util.*;
  */
 public class ResultSet {
 
-    private final ArrayList<Column> columns;
-    private final ArrayList<ArrayList<String>> data;
+    private final List<Column> columns;
+    private final List<List<String>> data;
 
     /**
      * Default constructor that initializes this result set with no data.
@@ -56,7 +56,7 @@ public class ResultSet {
      * @param columns are the columns of this result set
      * @param data is the data of this result set
      */
-    public ResultSet(ArrayList<Column> columns, ArrayList<ArrayList<String>> data) {
+    public ResultSet(List<Column> columns, List<List<String>> data) {
         this.columns = columns;
         this.data = data;
     }
@@ -70,8 +70,8 @@ public class ResultSet {
         for(Column toCopyColumn : toCopy.columns) {
             this.columns.add(new Column(toCopyColumn));
         }
-        for(ArrayList<String> toCopyRows : toCopy.data) {
-            ArrayList<String> rows = new ArrayList<>(toCopyRows);
+        for(List<String> toCopyRows : toCopy.data) {
+            List<String> rows = new ArrayList<>(toCopyRows);
             this.data.add(rows);
         }
     }
@@ -81,12 +81,12 @@ public class ResultSet {
     /**
      * @return the columns of this result set
      */
-    public ArrayList<Column> getColumns() { return columns; }
+    public List<Column> getColumns() { return columns; }
 
     /**
      * @return the data of this result set
      */
-    public ArrayList<ArrayList<String>> getData() {
+    public List<List<String>> getData() {
         return data;
     }
 
@@ -117,16 +117,16 @@ public class ResultSet {
      * Careful not to confuse this method with the selection method!
      * @param columnsToProject are the columns to perform the projection on
      */
-    public ResultSet projection(ArrayList<Column> columnsToProject) {
+    public ResultSet projection(List<Column> columnsToProject) {
 
-        ArrayList<Column> projectedColumns = new ArrayList<>();
+        List<Column> projectedColumns = new ArrayList<>();
 
         for(Column columnToProject : columnsToProject) {
             projectedColumns.add(new Column(columnToProject));
         }
 
         // find the locations of each column to project
-        ArrayList<Integer> columnsToProjectIndexes = new ArrayList<>();
+        List<Integer> columnsToProjectIndexes = new ArrayList<>();
 
         for(int cols = 0; cols < columns.size(); cols++) {
             String columnName = columns.get(cols).getName();
@@ -141,11 +141,11 @@ public class ResultSet {
             }
         }
 
-        ArrayList<ArrayList<String>> projectedData = new ArrayList<>();
+        List<List<String>> projectedData = new ArrayList<>();
 
         // ignore columns that are not being projected
         for(int rows = 0; rows < data.size(); rows++) {
-            ArrayList<String> columnsToAdd = new ArrayList<>();
+            List<String> columnsToAdd = new ArrayList<>();
 
             for(int cols = 0; cols < data.get(rows).size(); cols++) {
                 boolean projectThisColumn = false;
@@ -241,7 +241,7 @@ public class ResultSet {
      */
     public ResultSet selection(Condition condition) {
 
-        ArrayList<Column> selectionColumns = new ArrayList<>();
+        List<Column> selectionColumns = new ArrayList<>();
 
         for(Column column : columns) {
             selectionColumns.add(new Column(column));
@@ -259,7 +259,7 @@ public class ResultSet {
             }
         }
 
-        ArrayList<ArrayList<String>> selectionData = new ArrayList<>();
+        List<List<String>> selectionData = new ArrayList<>();
 
         for(int rows = 0; rows < data.size(); rows++) {
 
@@ -347,16 +347,16 @@ public class ResultSet {
      */
     public ResultSet intersection(ResultSet otherResultSet) {
 
-        ArrayList<Column> intersectionColumns = new ArrayList<>();
+        List<Column> intersectionColumns = new ArrayList<>();
 
         for(Column column : columns) {
             intersectionColumns.add(new Column(column));
         }
 
-        ArrayList<ArrayList<String>> intersectedData = new ArrayList<>();
+        List<List<String>> intersectedData = new ArrayList<>();
 
-        for(ArrayList<String> theseRows : data) {
-            for(ArrayList<String> otherRows : otherResultSet.data) {
+        for(List<String> theseRows : data) {
+            for(List<String> otherRows : otherResultSet.data) {
                 if(hasEqualRows(theseRows, otherRows)) {
                     intersectedData.add(theseRows);
                     break;
@@ -374,7 +374,7 @@ public class ResultSet {
      */
     public ResultSet union(ResultSet otherResultSet) {
 
-        ArrayList<Column> unionColumns = new ArrayList<>();
+        List<Column> unionColumns = new ArrayList<>();
 
         // add each column to be unionized, don't add duplicates!
         for(Column column : columns) {
@@ -395,12 +395,12 @@ public class ResultSet {
         }
 
         // add all rows from this result set
-        ArrayList<ArrayList<String>> unionData = new ArrayList<>(data);
+        List<List<String>> unionData = new ArrayList<>(data);
 
         // add all rows from other result set, don't add duplicates!
-        for(ArrayList<String> otherRows : otherResultSet.data) {
+        for(List<String> otherRows : otherResultSet.data) {
             boolean foundDuplicate = false;
-            for(ArrayList<String> theseRows : data) {
+            for(List<String> theseRows : data) {
                 if(hasEqualRows(otherRows, theseRows)) {
                     foundDuplicate = true;
                     break;
@@ -422,7 +422,7 @@ public class ResultSet {
     public ResultSet cartesianProduct(ResultSet otherResultSet) {
 
         // add the other result set's columns to this result set's columns
-        ArrayList<Column> cartesianProductColumns = new ArrayList<>();
+        List<Column> cartesianProductColumns = new ArrayList<>();
 
         for(Column column : columns) {
             cartesianProductColumns.add(new Column(column));
@@ -432,12 +432,12 @@ public class ResultSet {
             cartesianProductColumns.add(new Column(column));
         }
 
-        ArrayList<ArrayList<String>> cartesianProductData = new ArrayList<>();
+        List<List<String>> cartesianProductData = new ArrayList<>();
 
         for(int theseRows = 0; theseRows < data.size(); theseRows++) {
             for(int otherRows = 0; otherRows < otherResultSet.data.size(); otherRows++) {
 
-                ArrayList<String> rowToAdd = new ArrayList<>();
+                List<String> rowToAdd = new ArrayList<>();
 
                 rowToAdd.addAll(data.get(theseRows));
                 rowToAdd.addAll(otherResultSet.data.get(otherRows));
@@ -505,7 +505,7 @@ public class ResultSet {
         // perform a cartesian product
         ResultSet cartesianProductResultSet = this.cartesianProduct(otherResultSet);
 
-        ArrayList<Column> joinColumns = new ArrayList<>();
+        List<Column> joinColumns = new ArrayList<>();
 
         for(Column column : cartesianProductResultSet.columns) {
             joinColumns.add(new Column(column));
@@ -548,9 +548,9 @@ public class ResultSet {
         }
 
         // keep only rows to join on
-        ArrayList<ArrayList<String>> joinRows = new ArrayList<>();
+        List<List<String>> joinRows = new ArrayList<>();
 
-        for(ArrayList<String> rows : cartesianProductResultSet.data) {
+        for(List<String> rows : cartesianProductResultSet.data) {
 
             String firstRowData = rows.get(firstColumnIndex);
             String secondRowData = rows.get(secondColumnIndex);
@@ -583,7 +583,7 @@ public class ResultSet {
     public ResultSet groupBy(Map<Keyword, Column> columnsToAggregate) {
 
         // first project each of the columns that we wish to aggregate on this result set
-        ArrayList<Column> columnsToProject = new ArrayList<>();
+        List<Column> columnsToProject = new ArrayList<>();
 
         for(Column columnToProject : columnsToAggregate.values()) {
             columnsToProject.add(new Column(columnToProject));
@@ -593,7 +593,7 @@ public class ResultSet {
         ResultSet projectedResultSet = this.projection(columnsToProject);
 
         // adding the columns to group by, transforms "t1.col1" into "<SomeAggregateFunction>(t1.col1)"
-        ArrayList<Column> columnsToReturn = new ArrayList<>();
+        List<Column> columnsToReturn = new ArrayList<>();
 
         for(Map.Entry<Keyword, Column> entry : columnsToAggregate.entrySet()) {
 
@@ -609,15 +609,15 @@ public class ResultSet {
         }
 
         // data to be returned after applying the aggregate function, will only contain a single row
-        ArrayList<ArrayList<String>> groupByData = new ArrayList<>();
-        ArrayList<String> groupByRow = new ArrayList<>();
+        List<List<String>> groupByData = new ArrayList<>();
+        List<String> groupByRow = new ArrayList<>();
 
         for(Map.Entry<Keyword, Column> entry : columnsToAggregate.entrySet()) {
 
             Keyword aggregateFunction = entry.getKey();
             Column columnToAggregate = entry.getValue();
 
-            ArrayList<String> columnData = projectedResultSet.getColumnDataAt(columnToAggregate);
+            List<String> columnData = projectedResultSet.getColumnDataAt(columnToAggregate);
 
             switch(aggregateFunction) {
                 case MIN:
@@ -641,7 +641,7 @@ public class ResultSet {
         groupByData.add(groupByRow);
 
         // set the size of each column to the length of the data stored there
-        ArrayList<String> row = groupByData.get(0);
+        List<String> row = groupByData.get(0);
 
         for(int i = 0; i < columnsToReturn.size(); i++) {
             Column column = columnsToReturn.get(i);
@@ -672,7 +672,7 @@ public class ResultSet {
     public ResultSet orderByAsc(Column columnToOrderBy) {
 
         // copy columns
-        ArrayList<Column> orderedByAscColumns = new ArrayList<>();
+        List<Column> orderedByAscColumns = new ArrayList<>();
 
         for(Column column : columns) {
             orderedByAscColumns.add(new Column(column));
@@ -690,9 +690,9 @@ public class ResultSet {
         }
 
         // copy data but sorted on column name, this is not done efficiently
-        ArrayList<ArrayList<String>> orderedByData = new ArrayList<>();
+        List<List<String>> orderedByData = new ArrayList<>();
 
-        for(ArrayList<String> rows : this.data) {
+        for(List<String> rows : this.data) {
             orderedByData.add(new ArrayList<>(rows));
         }
 
@@ -709,7 +709,7 @@ public class ResultSet {
                     int cell2 = Integer.parseInt(orderedByData.get(j + 1).get(columnIndex));
 
                     if(cell1 > cell2) {
-                        ArrayList<String> temp = orderedByData.get(j);
+                        List<String> temp = orderedByData.get(j);
                         orderedByData.set(j, orderedByData.get(j + 1));
                         orderedByData.set(j + 1, temp);
                     }
@@ -720,7 +720,7 @@ public class ResultSet {
                     String cell2 = orderedByData.get(j + 1).get(columnIndex);
 
                     if(cell1.compareTo(cell2) > 0) {
-                        ArrayList<String> temp = orderedByData.get(j);
+                        List<String> temp = orderedByData.get(j);
                         orderedByData.set(j, orderedByData.get(j + 1));
                         orderedByData.set(j + 1, temp);
                     }
@@ -741,16 +741,14 @@ public class ResultSet {
         ResultSet orderedAscResultSet = orderByAsc(columnToOrderBy);
 
         // copy columns
-        ArrayList<Column> orderedByDescColumns = new ArrayList<>();
+        List<Column> orderedByDescColumns = new ArrayList<>();
 
         for(Column column : columns) {
             orderedByDescColumns.add(new Column(column));
         }
 
         // copy data, but reversed
-        ArrayList<ArrayList<String>> orderByDescData = new ArrayList<>();
-
-
+        List<List<String>> orderByDescData = new ArrayList<>();
 
         for(int rows = orderedAscResultSet.data.size() - 1; rows >= 0; rows--) {
             orderByDescData.add(orderedAscResultSet.data.get(rows));
@@ -768,11 +766,13 @@ public class ResultSet {
      * @param row2 is the second row to compare
      * @return whether these two rows are equal
      */
-    public boolean hasEqualRows(ArrayList<String> row1, ArrayList<String> row2) {
+    public boolean hasEqualRows(List<String> row1, List<String> row2) {
 
         for(int cols = 0; cols < row1.size(); cols++) {
+
             String col1 = row1.get(cols);
             String col2 = row2.get(cols);
+
             if(! col1.equals(col2)) {
                 return false;
             }
@@ -786,11 +786,11 @@ public class ResultSet {
      * @param columnIndex is the index of the column to get the data from
      * @return the rows of this column
      */
-    public ArrayList<String> getColumnDataAt(int columnIndex) {
+    public List<String> getColumnDataAt(int columnIndex) {
 
-        ArrayList<String> columnData = new ArrayList<>();
+        List<String> columnData = new ArrayList<>();
 
-        for(ArrayList<String> rows : data) {
+        for(List<String> rows : data) {
             String data = rows.get(columnIndex);
             columnData.add(data);
         }
@@ -802,7 +802,7 @@ public class ResultSet {
      * @param column is the column to get the data from
      * @return the rows of this column
      */
-    public ArrayList<String> getColumnDataAt(Column column) {
+    public List<String> getColumnDataAt(Column column) {
 
         String columnName = column.getName();
 
@@ -820,7 +820,7 @@ public class ResultSet {
      * @param columnData is the column data to search
      * @return the minimum value from the column data supplied
      */
-    public double minColumnValue(ArrayList<String> columnData) {
+    public double minColumnValue(List<String> columnData) {
 
         double min = Integer.parseInt(columnData.get(0));
 
@@ -838,7 +838,7 @@ public class ResultSet {
      * @param columnData is the column data to search
      * @return the maximum value from the column data supplied
      */
-    public double maxColumnValue(ArrayList<String> columnData) {
+    public double maxColumnValue(List<String> columnData) {
 
         double max = Integer.parseInt(columnData.get(0));
 
@@ -856,7 +856,7 @@ public class ResultSet {
      * @param columnData is the column data to search
      * @return the average value of data within a column
      */
-    public double avgColumnValue(ArrayList<String> columnData) {
+    public double avgColumnValue(List<String> columnData) {
 
         double totalValue = sumColumnValue(columnData);
         int numRows = countColumnValue(columnData);
@@ -868,7 +868,7 @@ public class ResultSet {
      * @param columnData is the column data to search
      * @return the number of rows in a column of data
      */
-    public int countColumnValue(ArrayList<String> columnData) {
+    public int countColumnValue(List<String> columnData) {
         return columnData.size();
     }
 
@@ -876,7 +876,7 @@ public class ResultSet {
      * @param columnData is the column data to search
      * @return the summation of all data for a column
      */
-    public double sumColumnValue(ArrayList<String> columnData) {
+    public double sumColumnValue(List<String> columnData) {
 
         double sum = 0;
 

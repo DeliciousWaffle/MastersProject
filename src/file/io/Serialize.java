@@ -10,6 +10,7 @@ import datastructure.relation.table.component.DataType;
 import datastructure.user.component.Privilege;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Responsible for serializing and un-serializing all data so that it can be used in
@@ -25,7 +26,7 @@ public class Serialize {
      * @param serializedUsers is data about the users in the system
      * @return list of users within the system
      */
-    public static ArrayList<User> unSerializeUsers(String serializedUsers) {
+    public static List<User> unSerializeUsers(String serializedUsers) {
 
         String[] lines = serializedUsers.split("\n");
 
@@ -34,21 +35,21 @@ public class Serialize {
             lines[i] = lines[i].trim();
         }
 
-        ArrayList<User> users = new ArrayList<>();
+        List<User> users = new ArrayList<>();
 
         // "has a" relationship working downward
         // data associated with a single user
         User user = new User();
 
         // acts as a passable table privileges list too
-        ArrayList<TablePrivileges> tablePrivilegesList = new ArrayList<>();
+        List<TablePrivileges> tablePrivilegesList = new ArrayList<>();
 
         // data associated with a single tablePrivilegesList or passableTablePrivilegesList
         TablePrivileges tablePrivileges = new TablePrivileges();
 
         // data associated with a single tablePrivileges
-        ArrayList<String> updateColumns = new ArrayList<>();
-        ArrayList<String> referenceColumns = new ArrayList<>();
+        List<String> updateColumns = new ArrayList<>();
+        List<String> referenceColumns = new ArrayList<>();
 
         for(int i = 0; i < lines.length; i++) {
 
@@ -133,7 +134,7 @@ public class Serialize {
      * @param users the users within the system
      * @return string representation of all the users within the system to write out
      */
-    public static String serializedUsers(ArrayList<User> users) {
+    public static String serializedUsers(List<User> users) {
 
         StringBuilder toSerialize = new StringBuilder();
 
@@ -141,7 +142,7 @@ public class Serialize {
 
             toSerialize.append("User: ").append(user.getUsername()).append("\n");
 
-            ArrayList<TablePrivileges> tablePrivilegesList = user.getTablePrivilegesList();
+            List<TablePrivileges> tablePrivilegesList = user.getTablePrivilegesList();
             toSerialize.append("\t").append("TablePrivilegesList: ");
 
             if(! tablePrivilegesList.isEmpty()) {
@@ -153,7 +154,7 @@ public class Serialize {
                     toSerialize.append("\t\t").append("TablePrivileges: ").
                             append(tablePrivileges.getTableName()).append("\n");
 
-                    ArrayList<Privilege> privileges = tablePrivileges.getPrivileges();
+                    List<Privilege> privileges = tablePrivileges.getPrivileges();
 
                     for(Privilege privilege : privileges) {
 
@@ -161,7 +162,7 @@ public class Serialize {
 
                         if(privilege == Privilege.UPDATE) {
 
-                            ArrayList<String> updateColumns = tablePrivileges.getUpdateColumns();
+                            List<String> updateColumns = tablePrivileges.getUpdateColumns();
                             toSerialize.append("\t\t\t\t").append("UpdateColumns: ");
 
                             for(String updateColumn : updateColumns) {
@@ -177,7 +178,7 @@ public class Serialize {
 
                         if(privilege == Privilege.REFERENCES) {
 
-                            ArrayList<String> referenceColumns = tablePrivileges.getReferenceColumns();
+                            List<String> referenceColumns = tablePrivileges.getReferenceColumns();
                             toSerialize.append("\t\t\t\t").append("ReferencesColumns: ");
 
                             for(String referenceColumn : referenceColumns) {
@@ -202,7 +203,7 @@ public class Serialize {
             toSerialize.append("\t").append("TABLE PRIVILEGES LIST DONE").append("\n");
 
             // huge repeat of a bunch for passable table privileges
-            ArrayList<TablePrivileges> passableTablePrivilegesList = user.getPassableTablePrivilegesList();
+            List<TablePrivileges> passableTablePrivilegesList = user.getPassableTablePrivilegesList();
             toSerialize.append("\t").append("PassableTablePrivilegesList: ");
 
             if(! passableTablePrivilegesList.isEmpty()) {
@@ -214,7 +215,7 @@ public class Serialize {
                     toSerialize.append("\t\t").append("TablePrivileges: ").
                             append(tablePrivileges.getTableName()).append("\n");
 
-                    ArrayList<Privilege> privileges = tablePrivileges.getPrivileges();
+                    List<Privilege> privileges = tablePrivileges.getPrivileges();
 
                     for(Privilege privilege : privileges) {
 
@@ -222,7 +223,7 @@ public class Serialize {
 
                         if(privilege == Privilege.UPDATE) {
 
-                            ArrayList<String> updateColumns = tablePrivileges.getUpdateColumns();
+                            List<String> updateColumns = tablePrivileges.getUpdateColumns();
                             toSerialize.append("\t\t\t\t").append("UpdateColumns: ");
 
                             for(String updateColumn : updateColumns) {
@@ -238,7 +239,7 @@ public class Serialize {
 
                         if(privilege == Privilege.REFERENCES) {
 
-                            ArrayList<String> referenceColumns = tablePrivileges.getReferenceColumns();
+                            List<String> referenceColumns = tablePrivileges.getReferenceColumns();
                             toSerialize.append("\t\t\t\t").append("ReferencesColumns: ");
 
                             for(String referenceColumn : referenceColumns) {
@@ -273,7 +274,7 @@ public class Serialize {
      * @param serializedTables is data about the tables in the system
      * @return list of tables within the system
      */
-    public static ArrayList<Table> unSerializeTables(String serializedTables) {
+    public static List<Table> unSerializeTables(String serializedTables) {
 
         String[] lines = serializedTables.split("\n");
 
@@ -283,13 +284,13 @@ public class Serialize {
         }
 
         // "has a" relationship going downward
-        ArrayList<Table> tables = new ArrayList<>();
+        List<Table> tables = new ArrayList<>();
         Table table = new Table();
 
-        ArrayList<Column> columnList = new ArrayList<>();
+        List<Column> columnList = new ArrayList<>();
         Column column = new Column();
 
-        ArrayList<String> foreignKeyList = new ArrayList<>();
+        List<String> foreignKeyList = new ArrayList<>();
 
         for(int i = 0; i < lines.length; i++) {
 
@@ -370,7 +371,7 @@ public class Serialize {
      * @param tables a list of tables within the system
      * @return string representation of all the tables within the system to write out
      */
-    public static String serializeTables(ArrayList<Table> tables) {
+    public static String serializeTables(List<Table> tables) {
 
         StringBuilder toSerialize = new StringBuilder();
 
@@ -379,7 +380,7 @@ public class Serialize {
             String tableName = table.getTableName();
             toSerialize.append("Table: ").append(tableName).append("\n");
 
-            ArrayList<Column> columns = table.getColumns();
+            List<Column> columns = table.getColumns();
             toSerialize.append("\t").append("ColumnList: ");
 
             if(! columns.isEmpty()) {
@@ -409,7 +410,7 @@ public class Serialize {
 
             toSerialize.append("\t").append("PrimaryKey: ").append(table.getPrimaryKey()).append("\n");
 
-            ArrayList<String> foreignKeyList = table.getForeignKeys();
+            List<String> foreignKeyList = table.getForeignKeys();
             toSerialize.append("\t").append("ForeignKeyList: ");
 
             if(! foreignKeyList.isEmpty()) {
@@ -454,11 +455,11 @@ public class Serialize {
         int numCols = table.getNumCols();
 
         // used for determining where to split each column in a row
-        ArrayList<Integer> columnSizes = new ArrayList<>();
-        ArrayList<Integer> columnNameLengths = new ArrayList<>();
+        List<Integer> columnSizes = new ArrayList<>();
+        List<Integer> columnNameLengths = new ArrayList<>();
 
         // used for formatting purposes
-        ArrayList<Integer> paddingAmountList = new ArrayList<>();
+        List<Integer> paddingAmountList = new ArrayList<>();
 
         // figuring out padding amounts and adding to the list of column sizes
         for(Column column : table.getColumns()) {
@@ -507,11 +508,11 @@ public class Serialize {
         }
 
         // convert 2D array to 2D array list for Table Data
-        ArrayList<ArrayList<String>> tableData = new ArrayList<>();
+        List<List<String>> tableData = new ArrayList<>();
 
         for(int rows = 0; rows < numRows - 2; rows++) {
 
-            ArrayList<String> columns = new ArrayList<>();
+            List<String> columns = new ArrayList<>();
 
             for(int cols = 0; cols < numCols; cols++) {
                 columns.add(splitTableData[rows][cols].trim());

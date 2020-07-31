@@ -12,6 +12,7 @@ import utilities.enums.Keyword;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,7 +36,7 @@ class ResultSetTest {
     public static void init() {
 
         String serialized = IO.read(Filename.TEST_TABLES);
-        ArrayList<Table> tables = Serialize.unSerializeTables(serialized);
+        List<Table> tables = Serialize.unSerializeTables(serialized);
 
         customers = new ResultSet(tables.get(0));
         categories = new ResultSet(tables.get(1));

@@ -21,13 +21,7 @@ import java.util.List;
  */
 public class Compiler {
 
-    private RuleGraph ruleGraph;
-
     public Compiler() {
-    }
-
-    public void setRuleGraph(RuleGraph ruleGraph) {
-        this.ruleGraph = ruleGraph;
     }
 
     public void executeInput(InputType inputType, String[] input, RuleGraph ruleGraph,
@@ -61,7 +55,7 @@ public class Compiler {
                 removeFileStructure(input, ruleGraph, tables);
                 break;
             case GRANT:
-                grant(input, ruleGraph, users);
+                grant(input, ruleGraph, users, tables);
                 break;
             case REVOKE:
                 revoke(input, ruleGraph, users);
@@ -197,7 +191,7 @@ public class Compiler {
 
         } else if (alterType.equalsIgnoreCase("drop")) {
 
-            String columnName = ruleGraph.getTokensAt(alterTable, 6).get(15);
+            String columnName = ruleGraph.getTokensAt(alterTable, 15).get(0);
 
             for (Table table : tables) {
                 if (table.getTableName().equalsIgnoreCase(tableName)) {
@@ -233,7 +227,7 @@ public class Compiler {
         String tableName = ruleGraph.getTokensAt(delete, 2).get(0);
         String columnName = ruleGraph.getTokensAt(delete, 4).get(0);
         String symbolName = ruleGraph.getTokensAt(delete, 5, 6, 7, 8, 9, 10).get(0);
-        Symbol symbol = Symbol.valueOf(symbolName);
+        Symbol symbol = Symbol.convertToSymbol(symbolName);
         String constantName = ruleGraph.getTokensAt(delete, 11).get(0);
 
         for (Table table : tables) {
@@ -450,36 +444,26 @@ public class Compiler {
 
     public void removeFileStructure(String[] removeFileStructure, RuleGraph ruleGraph, List<Table> tables) {
 
-        String tableInput = ruleGraph.getTokensAt(removeFileStructure, 6).get(0);
-        boolean removingClusteredFile = ruleGraph.getTokensAt(removeFileStructure, 4).isEmpty();
+        boolean removingClusteredFile = ! ruleGraph.getTokensAt(removeFileStructure, 7).isEmpty();
 
         if (removingClusteredFile) {
 
-            // will need to find the other table that's clustered with this one and remove the clustering
-            String otherClusteredTableName = "";
+            String firstClusteredTableInput = ruleGraph.getTokensAt(removeFileStructure, 10).get(0);
+            String secondClusteredTableInput = ruleGraph.getTokensAt(removeFileStructure, 6).get(0);
 
-            // removing the clustering on this table
-            for (Table table : tables) {
+            // search though the list of tables, checking if it's what we're looking for
+            for(Table table : tables) {
                 String tableName = table.getTableName();
-                if (tableName.equalsIgnoreCase(tableInput)) {
-                    otherClusteredTableName = table.getClusteredWith();
+                if(tableName.equalsIgnoreCase(firstClusteredTableInput) ||
+                        tableName.equalsIgnoreCase(secondClusteredTableInput)) {
                     table.setClusteredWith("none");
-                    break;
                 }
             }
 
-            // removing the clustering on the other table
-            for (Table table : tables) {
-                String tableName = table.getTableName();
-                if (tableName.equalsIgnoreCase(otherClusteredTableName)) {
-                    table.setClusteredWith("none");
-                    break;
-                }
-            }
-
-            // just remove the file structure
+        // just remove the file structure
         } else {
 
+            String tableInput = ruleGraph.getTokensAt(removeFileStructure, 6).get(0);
             String columnInput = ruleGraph.getTokensAt(removeFileStructure, 4).get(0);
 
             for (Table table : tables) {
@@ -493,7 +477,7 @@ public class Compiler {
         }
     }
 
-    public void grant(String[] grant, RuleGraph ruleGraph, List<User> users) {
+    public void grant(String[] grant, RuleGraph ruleGraph, List<User> users, List<Table> tables) {
 
         // getting what to grant
         List<String> privilegesInput = ruleGraph.getTokensAt(grant, 1, 2, 3, 4, 5, 6, 7, 8);
@@ -508,8 +492,25 @@ public class Compiler {
         // create the privileges from privilege input
         List<Privilege> privileges = new ArrayList<>();
 
-        for(String privilegeInput : privilegesInput) {
-            privileges.add(Privilege.convertToPrivilege(privilegeInput));
+        // if granting all privileges, well, do that
+        if((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
+            privileges = Privilege.getAllPrivileges();
+            // figure out what column names are within the given table in order to set the update and reference columns
+            for(Table table : tables) {
+                String tableName = table.getTableName();
+                if(tableName.equalsIgnoreCase(tableInput)) {
+                    for(Column column : table.getColumns()) {
+                        String columnName = column.getName();
+                        updateColumnsInput.add(columnName);
+                        referenceColumnsInput.add(columnName);
+                    }
+                    break;
+                }
+            }
+        } else {
+            for (String privilegeInput : privilegesInput) {
+                privileges.add(Privilege.convertToPrivilege(privilegeInput));
+            }
         }
 
         // create the table privileges to be granted
@@ -541,27 +542,42 @@ public class Compiler {
         List<String> updateColumnsInput = ruleGraph.getTokensAt(revoke, 6);
         List<String> referenceColumnsInput = ruleGraph.getTokensAt(revoke, 7);
         String tableInput = ruleGraph.getTokensAt(revoke, 20).get(0);
-        List<String> userNamesInput = ruleGraph.getTokensAt(revoke, 22);
+        List<String> usernamesInput = ruleGraph.getTokensAt(revoke, 22);
 
-        // create the privileges from privilege input
-        List<Privilege> privileges = new ArrayList<>();
+        // check if revoking all privileges
+        if((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
+            for(User user : users) {
+                String username = user.getUsername();
+                for(String usernameInput : usernamesInput) {
+                    if(usernameInput.equalsIgnoreCase(username)) {
+                        user.revokeAllTablePrivileges(tableInput);
+                        break;
+                    }
+                }
+            }
 
-        for(String privilegeInput : privilegesInput) {
-            privileges.add(Privilege.convertToPrivilege(privilegeInput));
-        }
+        } else {
 
-        // create the table privileges to revoke
-        TablePrivileges tablePrivilegesToRevoke = new TablePrivileges(tableInput, privileges,
-                updateColumnsInput, referenceColumnsInput);
+            // create the privileges from privilege input
+            List<Privilege> privileges = new ArrayList<>();
 
-        // for each user to be revoked table privileges, revoke the table privileges
-        for(User user : users) {
-            String userName = user.getUsername();
-            for(String userNameInput : userNamesInput) {
-                if(userName.equalsIgnoreCase(userNameInput)) {
-                    // revokes passable table privileges too
-                    user.revokeTablePrivileges(tablePrivilegesToRevoke);
-                    break;
+            for (String privilegeInput : privilegesInput) {
+                privileges.add(Privilege.convertToPrivilege(privilegeInput));
+            }
+
+            // create the table privileges to revoke
+            TablePrivileges tablePrivilegesToRevoke = new TablePrivileges(tableInput, privileges,
+                    updateColumnsInput, referenceColumnsInput);
+
+            // for each user to be revoked table privileges, revoke the table privileges
+            for (User user : users) {
+                String userName = user.getUsername();
+                for (String userNameInput : usernamesInput) {
+                    if (userName.equalsIgnoreCase(userNameInput)) {
+                        // revokes passable table privileges too
+                        user.revokeTablePrivileges(tablePrivilegesToRevoke);
+                        break;
+                    }
                 }
             }
         }

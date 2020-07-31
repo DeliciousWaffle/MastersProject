@@ -496,16 +496,26 @@ public class RuleGraphTypes {
         removeFileStructureRuleGraph.addRule("ColumnName", true,  4);
         removeFileStructureRuleGraph.addRule("IN",         false, 5);
         removeFileStructureRuleGraph.addRule("TableName",  true,  6);
-        removeFileStructureRuleGraph.addRule(";",          false, 7);
+        removeFileStructureRuleGraph.addRule("CLUSTERED",  false, 7);
+        removeFileStructureRuleGraph.addRule("FILE",       false, 8);
+        removeFileStructureRuleGraph.addRule("ON",         false, 9);
+        removeFileStructureRuleGraph.addRule("TableName",  true,  10);
+        removeFileStructureRuleGraph.addRule("AND",        false, 11);
+        removeFileStructureRuleGraph.addRule(";",          false, 12);
 
-        removeFileStructureRuleGraph.setChildren(0, 1);
+        removeFileStructureRuleGraph.setChildren(0, 1, 7);
         removeFileStructureRuleGraph.setChildren(1, 2);
         removeFileStructureRuleGraph.setChildren(2, 3);
-        removeFileStructureRuleGraph.setChildren(3, 4, 6);
+        removeFileStructureRuleGraph.setChildren(3, 4);
         removeFileStructureRuleGraph.setChildren(4, 5);
         removeFileStructureRuleGraph.setChildren(5, 6);
-        removeFileStructureRuleGraph.setChildren(6, 7);
-        removeFileStructureRuleGraph.setChildren(7);
+        removeFileStructureRuleGraph.setChildren(6, 12);
+        removeFileStructureRuleGraph.setChildren(7, 8);
+        removeFileStructureRuleGraph.setChildren(8, 9);
+        removeFileStructureRuleGraph.setChildren(9, 10);
+        removeFileStructureRuleGraph.setChildren(10, 11);
+        removeFileStructureRuleGraph.setChildren(11, 6);
+        removeFileStructureRuleGraph.setChildren(12);
 
         return removeFileStructureRuleGraph;
     }

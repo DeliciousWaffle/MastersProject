@@ -6,13 +6,39 @@ public enum Symbol {
     GREATER_THAN_OR_EQUAL(">="), LESS_THAN_OR_EQUAL("<="), LEFT_PARENTHESES("("),
     RIGHT_PARENTHESES(")"), COMMA(","), SEMICOLON(";");
 
-    private String symbol;
+    private final String symbol;
 
     Symbol(String symbol) {
         this.symbol = symbol;
     }
 
     public String getSymbol() {
-        return symbol;
+        return this.symbol;
+    }
+
+    public static Symbol convertToSymbol(String toConvert) {
+        switch(toConvert) {
+            case "=":
+                return EQUAL;
+            case "!=":
+                return NOT_EQUAL;
+            case ">":
+                return GREATER_THAN;
+            case "<":
+                return LESS_THAN;
+            case ">=":
+                return GREATER_THAN_OR_EQUAL;
+            case "<=":
+                return LESS_THAN_OR_EQUAL;
+            case "(":
+                return LEFT_PARENTHESES;
+            case ")":
+                return RIGHT_PARENTHESES;
+            case ",":
+                return COMMA;
+            case ";":
+            default:
+                return SEMICOLON;
+        }
     }
 }

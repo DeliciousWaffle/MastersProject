@@ -25,11 +25,6 @@ public class SecurityChecker {
 
     public boolean isValid(InputType inputType, String[] input, User user, ArrayList<Table> tables) {
 
-        // don't bother with the rest of the checking if we don't need to
-        if(user.hasAllPrivileges()) {
-            return true;
-        }
-
         switch(inputType) {
             case QUERY:
                 return isValidQuery(input, user, tables);

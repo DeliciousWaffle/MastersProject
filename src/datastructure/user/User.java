@@ -201,6 +201,23 @@ public class User {
         }
     }
 
+    public void revokeAllTablePrivileges(String tableNameToRemove) {
+        for(TablePrivileges tablePrivileges : tablePrivilegesList) {
+            String tableName = tablePrivileges.getTableName();
+            if(tableName.equalsIgnoreCase(tableNameToRemove)) {
+                tablePrivileges.revokeAllPrivileges();
+                break;
+            }
+        }
+        for(TablePrivileges passableTablePrivileges : passableTablePrivilegesList) {
+            String tableName = passableTablePrivileges.getTableName();
+            if(tableName.equalsIgnoreCase(tableNameToRemove)) {
+                passableTablePrivileges.revokeAllPrivileges();
+                break;
+            }
+        }
+    }
+
     public boolean hasTablePrivilege(String candidateTable, Privilege candidatePrivilege) {
 
         for(TablePrivileges tablePrivilege : tablePrivilegesList) {

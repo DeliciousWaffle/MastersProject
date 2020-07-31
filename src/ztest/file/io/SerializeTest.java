@@ -14,6 +14,7 @@ import file.io.Filename;
 import datastructure.user.component.Privilege;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,12 +23,12 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SerializeTest {
 
-    private static ArrayList<User> expectedUsers = new ArrayList<>();
-    private static ArrayList<TablePrivileges> tablePrivilegesList;
-    private static ArrayList<TablePrivileges> passableTablePrivilegesList;
+    private static List<User> expectedUsers = new ArrayList<>();
+    private static List<TablePrivileges> tablePrivilegesList;
+    private static List<TablePrivileges> passableTablePrivilegesList;
     private static TablePrivileges tablePrivileges;
-    private static ArrayList<String> referenceColumns;
-    private static ArrayList<String> updateColumns;
+    private static List<String> referenceColumns;
+    private static List<String> updateColumns;
 
     @BeforeAll
     public static void init() {
@@ -163,7 +164,7 @@ class SerializeTest {
     public void testUnSerializeUser() {
 
         String userData = IO.read(Filename.TEST_USERS);
-        ArrayList<User> actualUsers = Serialize.unSerializeUsers(userData);
+        List<User> actualUsers = Serialize.unSerializeUsers(userData);
 
         assertEquals(expectedUsers.size(), actualUsers.size());
         System.out.println("Expected Users size: " + expectedUsers.size() + "\nActual Users Size: " + actualUsers.size());
@@ -175,8 +176,8 @@ class SerializeTest {
             assertEquals(expectedName, actualName);
             System.out.println("Expected Name: " + expectedName + "\nActual Name: " + actualName);
 
-            ArrayList<TablePrivileges> expectedTablePrivilegesList = expectedUsers.get(i).getTablePrivilegesList();
-            ArrayList<TablePrivileges> actualTablePrivilegesList = actualUsers.get(i).getTablePrivilegesList();
+            List<TablePrivileges> expectedTablePrivilegesList = expectedUsers.get(i).getTablePrivilegesList();
+            List<TablePrivileges> actualTablePrivilegesList = actualUsers.get(i).getTablePrivilegesList();
 
             assertEquals(expectedTablePrivilegesList.size(), actualTablePrivilegesList.size());
             System.out.println("Expected Table Privileges List size: " + expectedTablePrivilegesList.size() +
@@ -189,8 +190,8 @@ class SerializeTest {
                 assertEquals(expectedTableName, actualTableName);
                 System.out.println("Expected Table Name: " + expectedTableName + "\nActual Table Name: " + actualTableName);
 
-                ArrayList<Privilege> expectedPrivileges = expectedTablePrivilegesList.get(j).getPrivileges();
-                ArrayList<Privilege> actualPrivileges = actualTablePrivilegesList.get(j).getPrivileges();
+                List<Privilege> expectedPrivileges = expectedTablePrivilegesList.get(j).getPrivileges();
+                List<Privilege> actualPrivileges = actualTablePrivilegesList.get(j).getPrivileges();
 
                 assertEquals(expectedPrivileges.size(), actualPrivileges.size());
                 System.out.println("Expected Privileges Size: " + expectedPrivileges.size() +
@@ -205,8 +206,8 @@ class SerializeTest {
                             "\nActual Privilege: " + actualPrivilege);
                 }
 
-                ArrayList<String> expectedUpdateColumns = expectedTablePrivilegesList.get(j).getUpdateColumns();
-                ArrayList<String> actualUpdateColumns = actualTablePrivilegesList.get(j).getUpdateColumns();
+                List<String> expectedUpdateColumns = expectedTablePrivilegesList.get(j).getUpdateColumns();
+                List<String> actualUpdateColumns = actualTablePrivilegesList.get(j).getUpdateColumns();
 
                 assertEquals(expectedUpdateColumns.size(), actualUpdateColumns.size());
                 System.out.println("Expected Update Columns Size: " + expectedUpdateColumns.size() +
@@ -221,8 +222,8 @@ class SerializeTest {
                             "\nActual Update Column: " + actualUpdateColumn);
                 }
 
-                ArrayList<String> expectedReferenceColumns = expectedTablePrivilegesList.get(j).getReferenceColumns();
-                ArrayList<String> actualReferenceColumns = actualTablePrivilegesList.get(j).getReferenceColumns();
+                List<String> expectedReferenceColumns = expectedTablePrivilegesList.get(j).getReferenceColumns();
+                List<String> actualReferenceColumns = actualTablePrivilegesList.get(j).getReferenceColumns();
                 System.out.println("Expected Reference Columns Size: " + expectedReferenceColumns.size() +
                         "\nActual Reference Columns Size: " + actualReferenceColumns.size());
                 assertEquals(expectedReferenceColumns.size(), actualReferenceColumns.size());
@@ -237,8 +238,8 @@ class SerializeTest {
                 }
             }
 
-            ArrayList<TablePrivileges> expectedPassableTablePrivilegesList = expectedUsers.get(i).getPassableTablePrivilegesList();
-            ArrayList<TablePrivileges> actualPassableTablePrivilegesList = actualUsers.get(i).getPassableTablePrivilegesList();
+            List<TablePrivileges> expectedPassableTablePrivilegesList = expectedUsers.get(i).getPassableTablePrivilegesList();
+            List<TablePrivileges> actualPassableTablePrivilegesList = actualUsers.get(i).getPassableTablePrivilegesList();
 
             System.out.println("Expected Passable Table Privileges List size: " + expectedPassableTablePrivilegesList.size() +
                     "\nActual Passable Table Privileges List Size: " + actualPassableTablePrivilegesList.size());
@@ -252,8 +253,8 @@ class SerializeTest {
                         "\nActual Passable Table Name: " + actualTableName);
                 assertEquals(expectedTableName, actualTableName);
 
-                ArrayList<Privilege> expectedPrivileges = expectedTablePrivilegesList.get(j).getPrivileges();
-                ArrayList<Privilege> actualPrivileges = actualTablePrivilegesList.get(j).getPrivileges();
+                List<Privilege> expectedPrivileges = expectedTablePrivilegesList.get(j).getPrivileges();
+                List<Privilege> actualPrivileges = actualTablePrivilegesList.get(j).getPrivileges();
                 System.out.println("Expected Passable Privileges Size: " + expectedPrivileges.size() +
                         "\nActual Passable Privileges Size: " + actualPrivileges.size());
                 assertEquals(expectedPrivileges.size(), actualPrivileges.size());
@@ -267,8 +268,8 @@ class SerializeTest {
                     assertEquals(expectedPrivilege, actualPrivilege);
                 }
 
-                ArrayList<String> expectedUpdateColumns = expectedTablePrivilegesList.get(j).getUpdateColumns();
-                ArrayList<String> actualUpdateColumns = actualTablePrivilegesList.get(j).getUpdateColumns();
+                List<String> expectedUpdateColumns = expectedTablePrivilegesList.get(j).getUpdateColumns();
+                List<String> actualUpdateColumns = actualTablePrivilegesList.get(j).getUpdateColumns();
                 System.out.println("Expected Passable Update Columns Size: " + expectedUpdateColumns.size() +
                         "\nActual Passable Update Columns Size: " + actualUpdateColumns.size());
                 assertEquals(expectedUpdateColumns.size(), actualUpdateColumns.size());
@@ -282,8 +283,8 @@ class SerializeTest {
                     assertEquals(expectedUpdateColumn, actualUpdateColumn);
                 }
 
-                ArrayList<String> expectedReferenceColumns = expectedTablePrivilegesList.get(j).getReferenceColumns();
-                ArrayList<String> actualReferenceColumns = actualTablePrivilegesList.get(j).getReferenceColumns();
+                List<String> expectedReferenceColumns = expectedTablePrivilegesList.get(j).getReferenceColumns();
+                List<String> actualReferenceColumns = actualTablePrivilegesList.get(j).getReferenceColumns();
                 System.out.println("Expected Passable Reference Columns Size: " + expectedReferenceColumns.size() +
                         "\nActual Passable Reference Columns Size: " + actualReferenceColumns.size());
                 assertEquals(expectedReferenceColumns.size(), actualReferenceColumns.size());

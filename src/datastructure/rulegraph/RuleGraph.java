@@ -90,7 +90,7 @@ public class RuleGraph {
                 }
 
                 // found a keyword, we're good to go!
-                if(rule.equals(token) && ! isMutable) {
+                if(rule.equalsIgnoreCase(token) && ! isMutable) {
 
                     pointer = child;
                     foundChild = true;
@@ -201,7 +201,7 @@ public class RuleGraph {
                     mutableChild = child;
                 }
 
-                if(rule.equals(token) && ! isMutable) {
+                if(rule.equalsIgnoreCase(token) && ! isMutable) {
 
                     pointer = child;
                     foundChild = true;
@@ -272,7 +272,7 @@ public class RuleGraph {
                     mutableChild = child;
                 }
 
-                if(rule.equals(token) && ! isMutable) {
+                if(rule.equalsIgnoreCase(token) && ! isMutable) {
 
                     pointer = child;
                     foundChild = true;
@@ -339,7 +339,7 @@ public class RuleGraph {
                     mutableChild = child;
                 }
 
-                if (rule.equals(token) && !isMutable) {
+                if (rule.equalsIgnoreCase(token) && !isMutable) {
 
                     pointer = child;
                     foundChild = true;
@@ -397,7 +397,7 @@ public class RuleGraph {
                     mutableChild = child;
                 }
 
-                if(rule.equals(token) && ! isMutable) {
+                if(rule.equalsIgnoreCase(token) && ! isMutable) {
 
                     pointer = child;
                     foundChild = true;
@@ -467,7 +467,7 @@ public class RuleGraph {
                     mutableChild = child;
                 }
 
-                if (rule.equals(token) && !isMutable) {
+                if (rule.equalsIgnoreCase(token) && !isMutable) {
 
                     pointer = child;
                     foundChild = true;
