@@ -1,9 +1,13 @@
 package systemcatalog.components;
 
+import datastructure.relation.resultset.ResultSet;
 import datastructure.relation.table.component.Column;
 import datastructure.relation.table.component.DataType;
 import datastructure.relation.table.component.FileStructure;
 import datastructure.relation.table.component.TableData;
+import datastructure.tree.querytree.QueryTree;
+import datastructure.tree.querytree.operator.Operator;
+import datastructure.tree.querytree.operator.Relation;
 import datastructure.user.component.Privilege;
 import datastructure.user.component.TablePrivileges;
 import utilities.enums.InputType;
@@ -21,14 +25,17 @@ import java.util.List;
  */
 public class Compiler {
 
+    private List<QueryTree> queryTreeStates;
+
     public Compiler() {
+        queryTreeStates = new ArrayList<>();
     }
 
     public void executeInput(InputType inputType, String[] input, RuleGraph ruleGraph,
-                             ArrayList<User> users, ArrayList<Table> tables) {
+                             ArrayList<User> users, ArrayList<Table> tables, QueryTree queryTree) {
         switch (inputType) {
             case QUERY:
-                executeQuery(input, ruleGraph, tables);
+                executeQuery(queryTree, tables);
                 break;
             case CREATE_TABLE:
                 createTable(input, ruleGraph, tables);
@@ -66,8 +73,17 @@ public class Compiler {
         }
     }
 
-    public void executeQuery(String[] query, RuleGraph ruleGraph, List<Table> tables) {
+    public ResultSet executeQuery(QueryTree queryTree, List<Table> tables) {
+        return null;
+    }
 
+    private Table relationToTable(Relation relation, List<Table> tables) {
+        for(Table table : tables) {
+            if(relation.getTableName().equalsIgnoreCase(table.getTableName())) {
+                return table;
+            }
+        }
+        return null;
     }
 
     public void createTable(String[] createTable, RuleGraph ruleGraph, List<Table> tables) {
