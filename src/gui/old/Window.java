@@ -29,39 +29,46 @@ public class Window extends Application {
         window.setWidth(WIDTH);
         window.setHeight(HEIGHT);
 
-        screenManager = new ScreenManager(window);
+        /*screenManager = new ScreenManager(window);
 
         window.setScene(screenManager.getScene());
-        window.show();
-/*
-        button1.setPrefWidth(WIDTH / 2);
+        window.show();*/
 
         button1 = new Button("Go to scene 2");
+        button1.setMinSize(0, 0);
+        button1.setPrefSize((WIDTH / 2), 100);
+        button1.setMaxWidth(Double.MAX_VALUE);
         button1.setOnAction(e -> window.setScene(scene2));
         button2 = new Button("Go to scene 1");
+        button2.setMinSize(0, 0);
+        button2.setPrefSize(WIDTH / 2, 100);
+        button2.setMaxWidth(Double.MAX_VALUE);
         button2.setOnAction(e -> window.setScene(scene1));
 
-        VBox layout1 = new VBox(4);
-        layout1.getChildren().add(button1);
-        layout1.getChildren().add(new Label("This is just some text"));
-        HBox layout2 = new HBox(20);
-        layout2.getChildren().add(button2);
-        layout2.getChildren().add(new Label(""));
+        HBox layout2 = new HBox(0);
+        layout2.getChildren().addAll(button1, button2);
+
+        scene1 = new Scene(layout2);
+
+        window.setScene(scene1);
+        window.show();
 
         window.widthProperty().addListener((observable, oldValue, newValue) -> {
             double width = (double) newValue;
-            button1.setPrefWidth(width / 2);
+            button1.setPrefWidth(width);
+            button2.setPrefWidth(width);
+            //button1.setPrefWidth(width);
+            //button2.setPrefWidth(width);
+            //button1.setMinSize();
         });
 
         window.heightProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(window.getHeight());
             double height = (double) newValue;
-            button1.setPrefHeight(height / 2);
+            double scale = height / 720.0;
+            double setToHeight = 100.0 * scale;
+            button1.setPrefHeight(setToHeight);
+            button2.setPrefHeight(setToHeight);
+            //button1.setPrefHeight(height / 2);
         });
-
-        scene1 = new Scene(layout1, 300, 300);
-        scene2 = new Scene(layout2, 500, 300);
-
-        window.setScene(scene1);*/
     }
 }
