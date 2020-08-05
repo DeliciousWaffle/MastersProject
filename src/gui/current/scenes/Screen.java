@@ -14,23 +14,34 @@ public abstract class Screen {
         TERMINAL_SCREEN, TABLES_SCREEN, USERS_SCREEN, OPTIONS_SCREEN, HELP_SCREEN
     }
 
+    private Button terminalButton, tablesButton, usersButton, optionsButton, helpButton;
+    private double buttonWidth, buttonHeight;
+    private double fontSize;
+
     public abstract Scene getScreen();
+
+    public abstract void scaleWidth(double scaleWidth);
+
+    public abstract void scaleHeight(double scaleHeight);
 
     public HBox getButtonLayout(ScreenController screenController) {
 
         // creating the buttons
-        Button terminalButton = new Button("Terminal");
-        Button tablesButton   = new Button("Schema");
-        Button usersButton    = new Button("Users");
-        Button optionsButton  = new Button("Options");
-        Button helpButton     = new Button("Help");
+        this.terminalButton = new Button("Terminal");
+        this.tablesButton   = new Button("Tables");
+        this.usersButton    = new Button("Users");
+        this.optionsButton  = new Button("Options");
+        this.helpButton     = new Button("Help");
 
         // setting the preferred sizes
-        terminalButton.setPrefSize(defaultWidth / 5.0, 50.0);
-        tablesButton.setPrefSize(defaultWidth / 5.0, 50.0);
-        usersButton.setPrefSize(defaultWidth / 5.0, 50.0);
-        optionsButton.setPrefSize(defaultWidth / 5.0, 50.0);
-        helpButton.setPrefSize(defaultWidth / 5.0, 50.0);
+        buttonWidth = defaultWidth / 5.0;
+        buttonHeight = 50.0;
+
+        terminalButton.setPrefSize(buttonWidth, buttonHeight);
+        tablesButton.setPrefSize(buttonWidth, buttonHeight);
+        usersButton.setPrefSize(buttonWidth, buttonHeight);
+        optionsButton.setPrefSize(buttonWidth, buttonHeight);
+        helpButton.setPrefSize(buttonWidth, buttonHeight);
 
         // setting the minimum sizes
         terminalButton.setMinSize(0, 0);
@@ -40,11 +51,66 @@ public abstract class Screen {
         helpButton.setMinSize(0, 0);
 
         // setting font sizes
-        terminalButton.setFont(new Font(25.0));
-        tablesButton.setFont(new Font(25.0));
-        usersButton.setFont(new Font(25.0));
-        optionsButton.setFont(new Font(25.0));
-        helpButton.setFont(new Font(25.0));
+        fontSize = 25.0;
+
+        terminalButton.setFont(new Font(fontSize));
+        tablesButton.setFont(new Font(fontSize));
+        usersButton.setFont(new Font(fontSize));
+        optionsButton.setFont(new Font(fontSize));
+        helpButton.setFont(new Font(fontSize));
+
+        // setting some styling
+        String buttonStyle = "-fx-background-color: #444444; -fx-text-fill: white; -fx-border-color: black;";
+
+        terminalButton.setStyle(buttonStyle);
+        tablesButton.setStyle(buttonStyle);
+        usersButton.setStyle(buttonStyle);
+        optionsButton.setStyle(buttonStyle);
+        helpButton.setStyle(buttonStyle);
+
+        // more styling
+        String buttonEnteredStyle = "-fx-background-color: #555555; -fx-text-fill: white; -fx-border-color: black;";
+        String buttonExitedStyle = buttonStyle;
+
+        terminalButton.setOnMouseEntered(e -> {
+            terminalButton.setStyle(buttonEnteredStyle);
+        });
+        tablesButton.setOnMouseEntered(e -> {
+            tablesButton.setStyle(buttonEnteredStyle);
+        });
+        usersButton.setOnMouseEntered(e -> {
+            usersButton.setStyle(buttonEnteredStyle);
+        });
+        optionsButton.setOnMouseEntered(e -> {
+            optionsButton.setStyle(buttonEnteredStyle);
+        });
+        helpButton.setOnMouseEntered(e -> {
+            helpButton.setStyle(buttonEnteredStyle);
+        });
+
+        terminalButton.setOnMouseExited(e -> {
+            terminalButton.setStyle(buttonExitedStyle);
+        });
+        tablesButton.setOnMouseExited(e -> {
+            tablesButton.setStyle(buttonExitedStyle);
+        });
+        usersButton.setOnMouseExited(e -> {
+            usersButton.setStyle(buttonExitedStyle);
+        });
+        optionsButton.setOnMouseExited(e -> {
+            optionsButton.setStyle(buttonExitedStyle);
+        });
+        helpButton.setOnMouseExited(e -> {
+            helpButton.setStyle(buttonExitedStyle);
+        });
+
+
+        // removing the outline that appears when a button was clicked
+        terminalButton.setFocusTraversable(false);
+        tablesButton.setFocusTraversable(false);
+        usersButton.setFocusTraversable(false);
+        optionsButton.setFocusTraversable(false);
+        helpButton.setFocusTraversable(false);
 
         // setting what screen to go on press
         terminalButton.setOnAction(e -> {
@@ -69,5 +135,28 @@ public abstract class Screen {
                 optionsButton, helpButton);
 
         return buttonLayout;
+    }
+
+    public void scaleButtonWidth(double scaleWidth) {
+        terminalButton.setPrefWidth(buttonWidth * scaleWidth);
+        tablesButton.setPrefWidth(buttonWidth * scaleWidth);
+        usersButton.setPrefWidth(buttonWidth * scaleWidth);
+        optionsButton.setPrefWidth(buttonWidth * scaleWidth);
+        helpButton.setPrefWidth(buttonWidth * scaleWidth);
+    }
+
+    public void scaleButtonHeight(double scaleHeight) {
+
+        terminalButton.setPrefHeight(buttonHeight * scaleHeight);
+        tablesButton.setPrefHeight(buttonHeight * scaleHeight);
+        usersButton.setPrefHeight(buttonHeight * scaleHeight);
+        optionsButton.setPrefHeight(buttonHeight * scaleHeight);
+        helpButton.setPrefHeight(buttonHeight * scaleHeight);
+
+        terminalButton.setFont(new Font(fontSize * scaleHeight));
+        tablesButton.setFont(new Font(fontSize * scaleHeight));
+        usersButton.setFont(new Font(fontSize * scaleHeight));
+        optionsButton.setFont(new Font(fontSize * scaleHeight));
+        helpButton.setFont(new Font(fontSize * scaleHeight));
     }
 }

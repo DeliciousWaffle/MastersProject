@@ -17,10 +17,15 @@ import javafx.stage.Stage;
 // diagrams will just extend this to to avoid repeating code
 public class Diagram extends Stage {
 
-    public Diagram(String diagramType, String diagramFilename, double windowWidth, double windowHeight) {
+    public enum Type {
+        SCHEMA, QUERY, CREATE_TABLE, ALTER_TABLE, DROP_TABLE, INSERT, UPDATE, DELETE, GRANT, REVOKE,
+        BUILD_FILE_STRUCTURE, REMOVE_FILE_STRUCTURE
+    }
+
+    public Diagram(String diagramTitle, String diagramFilename, double windowWidth, double windowHeight) {
 
         // setting the title
-        Text text = new Text(diagramType);
+        Text text = new Text(diagramTitle);
         text.setFont(new Font("Ariel", 50.0));
         text.setFontSmoothingType(FontSmoothingType.LCD);
 
@@ -59,7 +64,7 @@ public class Diagram extends Stage {
             containsEverything.setScaleY(scale);
         });*/
 
-        this.setTitle(diagramType);
+        this.setTitle(diagramTitle);
         this.setScene(scene);
         this.setResizable(false);
         this.show();

@@ -17,6 +17,10 @@ public class ScreenController {
 
         this.primaryStage = primaryStage;
 
+        // starting width and height of the screen is 1080 x 720
+        primaryStage.setWidth(Screen.defaultWidth);
+        primaryStage.setHeight(Screen.defaultHeight);
+
         terminalScreen = new TerminalScreen(this);
         tablesScreen   = new TablesScreen(this);
         usersScreen    = new UsersScreen(this);
@@ -24,6 +28,19 @@ public class ScreenController {
         helpScreen     = new HelpScreen(this);
 
         setScreen(Screen.Type.TERMINAL_SCREEN);
+
+        // when the window size changes, scale all the objects within the window
+        primaryStage.widthProperty().addListener((observable, oldValue, newValue) -> {
+            double newWidth = (double) newValue;
+            double scaleWidth = newWidth / Screen.defaultWidth;
+            scaleWidth(scaleWidth);
+        });
+
+        primaryStage.heightProperty().addListener((observable, oldValue, newValue) -> {
+            double newHeight = (double) newValue;
+            double scaleHeight = newHeight / Screen.defaultHeight;
+            scaleHeight(scaleHeight);
+        });
     }
 
     public void setScreen(Screen.Type screen) {
@@ -52,10 +69,18 @@ public class ScreenController {
     }
 
     public void scaleWidth(double scaleWidth) {
-        terminalScreen.scaleWidth();
+        terminalScreen.scaleWidth(scaleWidth);
+        tablesScreen.scaleWidth(scaleWidth);
+        usersScreen.scaleWidth(scaleWidth);
+        optionsScreen.scaleWidth(scaleWidth);
+        helpScreen.scaleWidth(scaleWidth);
     }
 
     public void scaleHeight(double scaleHeight) {
-
+        terminalScreen.scaleHeight(scaleHeight);
+        tablesScreen.scaleHeight(scaleHeight);
+        usersScreen.scaleHeight(scaleHeight);
+        optionsScreen.scaleHeight(scaleHeight);
+        helpScreen.scaleHeight(scaleHeight);
     }
 }

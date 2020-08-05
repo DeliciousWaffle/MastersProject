@@ -19,4 +19,14 @@ public class TerminalScreen extends Screen {
     public Scene getScreen() {
         return terminalScreen;
     }
+
+    @Override
+    public void scaleWidth(double scaleWidth) {
+        super.scaleButtonWidth(scaleWidth);
+    }
+
+    @Override
+    public void scaleHeight(double scaleHeight) {
+        super.scaleButtonHeight(scaleHeight);
+    }
 }
