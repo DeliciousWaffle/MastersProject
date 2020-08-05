@@ -1,9 +1,13 @@
 package gui.current.scenes;
 
 import gui.current.ScreenController;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.HBox;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
 public abstract class Screen {
@@ -60,7 +64,14 @@ public abstract class Screen {
         helpButton.setFont(new Font(fontSize));
 
         // setting some styling
-        String buttonStyle = "-fx-background-color: #444444; -fx-text-fill: white; -fx-border-color: black;";
+        String buttonStyle = " -fx-background-color: #666666; -fx-text-fill: white; -fx-padding: 0;";
+
+        // adds a sick drop shadow effect to the buttons
+        terminalButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        tablesButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        usersButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        optionsButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        helpButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         terminalButton.setStyle(buttonStyle);
         tablesButton.setStyle(buttonStyle);
@@ -69,7 +80,7 @@ public abstract class Screen {
         helpButton.setStyle(buttonStyle);
 
         // more styling
-        String buttonEnteredStyle = "-fx-background-color: #555555; -fx-text-fill: white; -fx-border-color: black;";
+        String buttonEnteredStyle = "-fx-background-color: #999999; -fx-text-fill: white; -fx-border-color: transparent;";
         String buttonExitedStyle = buttonStyle;
 
         terminalButton.setOnMouseEntered(e -> {
@@ -131,8 +142,10 @@ public abstract class Screen {
 
         // adding each to a horizontal layout
         HBox buttonLayout = new HBox();
+        buttonLayout.setSpacing(10.0);
         buttonLayout.getChildren().addAll(terminalButton, tablesButton, usersButton,
                 optionsButton, helpButton);
+        BorderPane.setMargin(buttonLayout, new Insets(10, 10, 10, 10));
 
         return buttonLayout;
     }

@@ -3,21 +3,14 @@ package gui.current.scenes.help;
 import gui.current.ScreenController;
 import gui.current.scenes.Screen;
 import gui.current.scenes.help.popupwindows.*;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.input.ScrollEvent;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
-
-import java.util.List;
 
 
 public class HelpScreen extends Screen {
@@ -32,7 +25,6 @@ public class HelpScreen extends Screen {
         // following is for the content of the help screen
         VBox helpPanes = new VBox();
         helpPanes.setMinSize(0, 0);
-        helpPanes.setMaxWidth(Screen.defaultWidth - 200.0);
         helpPanes.setSpacing(30);
         helpPanes.setBackground(new Background(new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
 
@@ -59,24 +51,22 @@ public class HelpScreen extends Screen {
         centeredHelpPanes.setMaxWidth(Screen.defaultWidth);
         centeredHelpPanes.setCenter(helpPanes);
         BorderPane.setAlignment(helpPanes, Pos.CENTER);
-        centeredHelpPanes.setBackground(new Background(new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
+        centeredHelpPanes.setStyle("-fx-background-color: rgb(30, 30, 30); -fx-background-insets: 0; -fx-border-color: transparent; -fx-padding: 0;  -fx-border-insets: 30;");
 
         // add the centered help panels to the scroll pane
         ScrollPane scrollHelpPanes = new ScrollPane(centeredHelpPanes);
-
-        // -90 is to allow the vertical scroll bar to appear on screen
-        scrollHelpPanes.setMinSize(0, 0);
-        scrollHelpPanes.setPrefSize(Screen.defaultWidth, Screen.defaultHeight - 90.0);
-        scrollHelpPanes.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         scrollHelpPanes.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scrollHelpPanes.setStyle("-fx-font-size: 15px; -fx-background-color: green; -fx-border-color: black; -fx-focus-color: transparent; -fx-faint-focus-color: rgb(30, 30, 30);");
-        scrollHelpPanes.fitToWidthProperty().set(true);
+        scrollHelpPanes.setFitToWidth(true);
+        scrollHelpPanes.getStylesheets().add("gui/current/scenes/help/scrollpane.css");
 
         // add the button layout and content layout to overall screen
         BorderPane helpScreenLayout = new BorderPane();
         helpScreenLayout.setTop(buttonLayout);
         helpScreenLayout.setBottom(scrollHelpPanes);
-        helpScreenLayout.setStyle("-fx-background-color: red; -fx-focus-color: transparent; -fx-faint-focus-color: rgb(30, 30, 30);");
+        helpScreenLayout.setMinSize(0, 0);
+        helpScreenLayout.setPrefSize(defaultWidth, defaultHeight);
+        helpScreenLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
+
         helpScreen = new Scene(helpScreenLayout);
     }
 

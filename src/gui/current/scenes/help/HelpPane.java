@@ -6,6 +6,8 @@ import gui.current.scenes.help.popupwindows.diagrams.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
@@ -42,8 +44,9 @@ public class HelpPane {
         button.setFont(new Font(fontSize));
 
         // spicing up button
-        String buttonStyle = "-fx-background-color: #888888; -fx-text-fill: white; ";
+        String buttonStyle = "-fx-background-color: #666666; -fx-text-fill: white;";
         button.setStyle(buttonStyle);
+        button.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         String buttonEnteredStyle = "-fx-background-color: #999999; -fx-text-fill: white;";
         String buttonExitedStyle = buttonStyle;
@@ -106,6 +109,8 @@ public class HelpPane {
         BorderPane.setMargin(text, new Insets(15));
         BorderPane.setMargin(button, new Insets(15));
         helpPane.setBackground(new Background(new BackgroundFill(Color.rgb(60, 60, 60), CornerRadii.EMPTY, Insets.EMPTY)));
+        helpPane.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
     }
 
     public BorderPane getHelpPane() {

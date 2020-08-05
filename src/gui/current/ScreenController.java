@@ -3,7 +3,7 @@ package gui.current;
 import gui.current.scenes.OptionsScreen;
 import gui.current.scenes.Screen;
 import gui.current.scenes.help.HelpScreen;
-import gui.current.scenes.TablesScreen;
+import gui.current.scenes.tables.TablesScreen;
 import gui.current.scenes.TerminalScreen;
 import gui.current.scenes.UsersScreen;
 import javafx.stage.Stage;

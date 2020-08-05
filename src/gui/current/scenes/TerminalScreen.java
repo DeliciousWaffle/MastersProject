@@ -2,6 +2,7 @@ package gui.current.scenes;
 
 import gui.current.ScreenController;
 import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 
 public class TerminalScreen extends Screen {
@@ -12,7 +13,12 @@ public class TerminalScreen extends Screen {
 
         HBox buttonLayout = super.getButtonLayout(screenController);
 
-        terminalScreen = new Scene(buttonLayout);
+        BorderPane terminalScreenLayout = new BorderPane();
+        terminalScreenLayout.setTop(buttonLayout);
+        terminalScreenLayout.setPrefSize(Screen.defaultWidth, Screen.defaultHeight);
+        terminalScreenLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
+
+        terminalScreen = new Scene(terminalScreenLayout);
     }
 
     @Override
