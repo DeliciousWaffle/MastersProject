@@ -163,7 +163,7 @@ class SerializeTest {
     @Test
     public void testUnSerializeUser() {
 
-        String userData = IO.read(Filename.TEST_USERS);
+        String userData = IO.read(Filename.CURRENT_USERS);
         List<User> actualUsers = Serialize.unSerializeUsers(userData);
 
         assertEquals(expectedUsers.size(), actualUsers.size());
@@ -309,7 +309,7 @@ class SerializeTest {
         String expectedSerialized = Serialize.serializedUsers(expectedUsers);
         System.out.println(expectedSerialized);
 
-        String actualSerialized = IO.read(Filename.TEST_USERS);
+        String actualSerialized = IO.read(Filename.CURRENT_USERS);
 
         // whitespaces may differ ever so slightly, so trimming
         String[] expected = expectedSerialized.split("\n");
@@ -349,7 +349,7 @@ class SerializeTest {
     public void testSerializedTable() {
         assertTrue(true);
     }
-
+/*
     @Test
     public void testUnSerializeTableData() {
 
@@ -476,7 +476,7 @@ class SerializeTest {
 
         assertTrue(true);
     }
-
+*/
     @Test
     public void testSerializeTableData() {
 

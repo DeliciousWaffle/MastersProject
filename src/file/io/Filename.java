@@ -5,14 +5,14 @@ import java.nio.file.Paths;
 
 public enum Filename {
 
-    OPTIONS         (Paths.get("src", "file", "options", "Options.txt")),
-    USERS           (Paths.get("src", "file", "users", "Users.txt")),
-    TABLES          (Paths.get("src", "file", "tables", "Tables.txt")),
-    TABLE_DATA      (Paths.get("src", "file", "tables", "data")),
-    TEST_OPTIONS    (Paths.get("src", "file", "options", "TestOptions.txt")),
-    TEST_USERS      (Paths.get("src", "file", "users", "Users.txt")),
-    TEST_TABLES     (Paths.get("src", "file", "tables", "Tables.txt")),
-    TEST_TABLE_DATA (Paths.get("src", "file", "tables", "data"));
+    ORIGINAL_OPTIONS    (Paths.get("src", "file", "original", "options", "Options.txt")),
+    ORIGINAL_USERS      (Paths.get("src", "file", "original", "user",    "Users.txt")),
+    ORIGINAL_TABLES     (Paths.get("src", "file", "original", "table",   "Tables.txt")),
+    ORIGINAL_TABLE_DATA (Paths.get("src", "file", "original", "table",   "tabledata")),
+    CURRENT_OPTIONS     (Paths.get("src", "file", "current",  "option",  "TestOptions.txt")),
+    CURRENT_USERS       (Paths.get("src", "file", "current",  "user",    "Users.txt")),
+    CURRENT_TABLES      (Paths.get("src", "file", "current",  "table",   "Tables.txt")),
+    CURRENT_TABLE_DATA  (Paths.get("src", "file", "current",  "table",   "tabledata"));
 
     private Path path;
 

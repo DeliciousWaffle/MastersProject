@@ -1,21 +1,20 @@
 package gui.old;
 
 import javafx.application.Application;
-import javafx.scene.Scene;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 
 import gui.old.ScreenManager;
 
 import javafx.application.Application;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -28,116 +27,47 @@ import javafx.scene.control.Control;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 
-public class Window extends Application
-{
+public class Window extends Application {
 
     @Override
-    public void start(Stage primaryStage)
-    {
+    public void start(Stage stage) throws Exception {
+        final int initWidth = 720;      //initial width
+        final int initHeight = 1080;    //initial height
+        final Pane root = new Pane();   //necessary evil
 
-        StackPane root = new StackPane();
-        root.setAlignment(Pos.CENTER);
-        root.setStyle("-fx-background-color: green;");
-        root.getChildren().add(playerHand());
+        Pane controller = new Pane();   //initial view
+        controller.setPrefWidth(initWidth);     //if not initialized
+        controller.setPrefHeight(initHeight);   //if not initialized
+        root.getChildren().add(controller);     //necessary evil
 
-        Scene scene = new Scene(root, 500, 450);
+        Scale scale = new Scale(1, 1, 0, 0);
+        scale.xProperty().bind(root.widthProperty().divide(initWidth));     //must match with the one in the controller
+        scale.yProperty().bind(root.heightProperty().divide(initHeight));   //must match with the one in the controller
+        root.getTransforms().add(scale);
 
-        primaryStage.setTitle("Hello World!");
-        primaryStage.setScene(scene);
-        primaryStage.show();
-    }
+        ScreenManager screenManager = new ScreenManager(stage);
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args)
-    {
-        launch(args);
-    }
+        Scene scene = screenManager.getScene();
+        stage.setScene(scene);
+        stage.setResizable(true);
+        stage.show();
 
-    HBox playerHand()
-    {
-        Image image = new Image(getClass().getResourceAsStream("a.png"));
-        ImageView imageView1 = new ImageView(image);
-        imageView1.setFitHeight(75);
-        imageView1.setFitWidth(50);
-        HBox.setMargin(imageView1, new Insets(0, -20, 0, 0));
-        imageView1.setOnMouseEntered((event) -> {
-            HBox.setMargin(imageView1, new Insets(0, 20, 0, 0));
+        //add listener for the use of scene.setRoot()
+        scene.rootProperty().addListener(new ChangeListener<Parent>() {
+            @Override
+            public void changed(ObservableValue<? extends Parent> arg0, Parent oldValue, Parent newValue) {
+                scene.rootProperty().removeListener(this);
+                scene.setRoot(root);
+                ((Region) newValue).setPrefWidth(initWidth);     //make sure is a Region!
+                ((Region) newValue).setPrefHeight(initHeight);   //make sure is a Region!
+                root.getChildren().clear();
+                root.getChildren().add(newValue);
+                scene.rootProperty().addListener(this);
+            }
         });
-        imageView1.setOnMouseExited((event) -> {
-            HBox.setMargin(imageView1, new Insets(0, -20, 0, 0));
-        });
-        imageView1.setOnMouseClicked((event) -> {
-            System.out.println("Play card!");
-        });
-
-        ImageView imageView2 = new ImageView(image);
-        imageView2.setFitHeight(75);
-        imageView2.setFitWidth(50);
-        HBox.setMargin(imageView2, new Insets(0, -20, 0, 0));
-        imageView2.setOnMouseEntered((event) -> {
-            HBox.setMargin(imageView2, new Insets(30, -20, 0, 0));
-        });
-        imageView2.setOnMouseExited((event) -> {
-            HBox.setMargin(imageView2, new Insets(0, -20, 0, 0));
-        });
-        imageView2.setOnMouseClicked((event) -> {
-            System.out.println("Play card!");
-        });
-
-        ImageView imageView3 = new ImageView(image);
-        imageView3.setFitHeight(75);
-        imageView3.setFitWidth(50);
-        HBox.setMargin(imageView3, new Insets(0, -20, 0, 0));
-        imageView3.setOnMouseEntered((event) -> {
-            HBox.setMargin(imageView3, new Insets(0, 20, 0, 20));
-        });
-        imageView3.setOnMouseExited((event) -> {
-            HBox.setMargin(imageView3, new Insets(0, -20, 0, 0));
-        });
-        imageView3.setOnMouseClicked((event) -> {
-            System.out.println("Play card!");
-        });
-
-        ImageView imageView4 = new ImageView(image);
-        imageView4.setFitHeight(75);
-        imageView4.setFitWidth(50);
-        HBox.setMargin(imageView4, new Insets(0, -20, 0, 0));
-        imageView4.setOnMouseEntered((event) -> {
-            HBox.setMargin(imageView4, new Insets(0, 20, 0, 20));
-        });
-        imageView4.setOnMouseExited((event) -> {
-            HBox.setMargin(imageView4, new Insets(0, -20, 0, 0));
-        });
-        imageView4.setOnMouseClicked((event) -> {
-            System.out.println("Play card!");
-        });
-
-        ImageView imageView5 = new ImageView(image);
-        imageView5.setFitHeight(75);
-        imageView5.setFitWidth(50);
-        HBox.setMargin(imageView5, new Insets(0, -20, 0, 0));
-        imageView5.setOnMouseEntered((event) -> {
-            HBox.setMargin(imageView5, new Insets(30, -20, 0, 0));
-        });
-        imageView5.setOnMouseExited((event) -> {
-            HBox.setMargin(imageView5, new Insets(0, -20, 0, 0));
-        });
-        imageView5.setOnMouseClicked((event) -> {
-            System.out.println("Play card!");
-        });
-
-        HBox hBox = new HBox(imageView1, imageView2, imageView3, imageView4, imageView5);
-        hBox.setMinSize(Control.USE_COMPUTED_SIZE, Control.USE_COMPUTED_SIZE);
-        hBox.setPrefSize(Control.USE_COMPUTED_SIZE, Control.USE_COMPUTED_SIZE);
-        hBox.setMaxSize(Control.USE_PREF_SIZE, Control.USE_PREF_SIZE);
-        //hBox.setStyle("-fx-background-color: red;");
-        return hBox;
     }
 }
 /*

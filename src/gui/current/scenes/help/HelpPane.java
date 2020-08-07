@@ -34,10 +34,9 @@ public class HelpPane {
         text.setFont(new Font(fontSize));
         text.setTextAlignment(TextAlignment.CENTER);
         text.setWrappingWidth(textWrappingSize);
-
-        // spicing up text
         text.setFill(Color.WHITE);
 
+        // creating the button
         Button button = new Button(buttonText);
         button.setMinSize(0, 0);
         button.setPrefSize(buttonWidth, buttonHeight);
@@ -100,7 +99,7 @@ public class HelpPane {
         }
 
         // creating the help pane
-        this.helpPane = new BorderPane();
+        helpPane = new BorderPane();
         helpPane.setMinSize(0, 0);
         BorderPane.setAlignment(text, Pos.CENTER);
         BorderPane.setAlignment(button, Pos.CENTER);
@@ -108,9 +107,10 @@ public class HelpPane {
         helpPane.setBottom(button);
         BorderPane.setMargin(text, new Insets(15));
         BorderPane.setMargin(button, new Insets(15));
-        helpPane.setBackground(new Background(new BackgroundFill(Color.rgb(60, 60, 60), CornerRadii.EMPTY, Insets.EMPTY)));
-        helpPane.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-
+        helpPane.setBackground(new Background(
+                new BackgroundFill(Color.rgb(60, 60, 60), CornerRadii.EMPTY, Insets.EMPTY)));
+        helpPane.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
     }
 
     public BorderPane getHelpPane() {

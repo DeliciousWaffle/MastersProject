@@ -26,20 +26,31 @@ public class HelpScreen extends Screen {
         VBox helpPanes = new VBox();
         helpPanes.setMinSize(0, 0);
         helpPanes.setSpacing(30);
-        helpPanes.setBackground(new Background(new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
+        helpPanes.setBackground(new Background(
+                new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
 
         helpPanes.getChildren().addAll(
                 //getAboutPane(),
-                new HelpPane(getSchemaText(), "View Schema Diagram", Diagram.Type.SCHEMA).getHelpPane(),
-                new HelpPane(getQueryText(), "View Query Diagram", Diagram.Type.QUERY).getHelpPane(),
-                new HelpPane(getCreateTableText(), "View Create Table Diagram", Diagram.Type.CREATE_TABLE).getHelpPane(),
-                new HelpPane(getAlterTableText(), "View Alter Table Diagram", Diagram.Type.ALTER_TABLE).getHelpPane(),
-                new HelpPane(getDropTableText(), "View Drop Table Diagram", Diagram.Type.DROP_TABLE).getHelpPane(),
-                new HelpPane(getInsertText(), "View Insert Diagram", Diagram.Type.INSERT).getHelpPane(),
-                new HelpPane(getUpdateText(), "View Update Diagram", Diagram.Type.UPDATE).getHelpPane(),
-                new HelpPane(getDeleteText(), "View Delete Diagram", Diagram.Type.DELETE).getHelpPane(),
-                new HelpPane(getGrantText(), "View Grant Diagram", Diagram.Type.GRANT).getHelpPane(),
-                new HelpPane(getRevokeText(), "View Revoke Diagram", Diagram.Type.REVOKE).getHelpPane(),
+                new HelpPane(getSchemaText(), "View Schema Diagram",
+                        Diagram.Type.SCHEMA).getHelpPane(),
+                new HelpPane(getQueryText(), "View Query Diagram",
+                        Diagram.Type.QUERY).getHelpPane(),
+                new HelpPane(getCreateTableText(), "View Create Table Diagram",
+                        Diagram.Type.CREATE_TABLE).getHelpPane(),
+                new HelpPane(getAlterTableText(), "View Alter Table Diagram",
+                        Diagram.Type.ALTER_TABLE).getHelpPane(),
+                new HelpPane(getDropTableText(), "View Drop Table Diagram",
+                        Diagram.Type.DROP_TABLE).getHelpPane(),
+                new HelpPane(getInsertText(), "View Insert Diagram",
+                        Diagram.Type.INSERT).getHelpPane(),
+                new HelpPane(getUpdateText(), "View Update Diagram",
+                        Diagram.Type.UPDATE).getHelpPane(),
+                new HelpPane(getDeleteText(), "View Delete Diagram",
+                        Diagram.Type.DELETE).getHelpPane(),
+                new HelpPane(getGrantText(), "View Grant Diagram",
+                        Diagram.Type.GRANT).getHelpPane(),
+                new HelpPane(getRevokeText(), "View Revoke Diagram",
+                        Diagram.Type.REVOKE).getHelpPane(),
                 new HelpPane(getBuildFileStructureText(), "View Build File Structure Diagram",
                         Diagram.Type.BUILD_FILE_STRUCTURE).getHelpPane(),
                 new HelpPane(getRemoveFileStructureText(), "View Remove Rile Structure Diagram",
@@ -51,7 +62,8 @@ public class HelpScreen extends Screen {
         centeredHelpPanes.setMaxWidth(Screen.defaultWidth);
         centeredHelpPanes.setCenter(helpPanes);
         BorderPane.setAlignment(helpPanes, Pos.CENTER);
-        centeredHelpPanes.setStyle("-fx-background-color: rgb(30, 30, 30); -fx-background-insets: 0; -fx-border-color: transparent; -fx-padding: 0;  -fx-border-insets: 30;");
+        centeredHelpPanes.setStyle("-fx-background-color: rgb(30, 30, 30); -fx-background-insets: 0;" +
+                "-fx-border-color: transparent; -fx-padding: 0;  -fx-border-insets: 30;");
 
         // add the centered help panels to the scroll pane
         ScrollPane scrollHelpPanes = new ScrollPane(centeredHelpPanes);

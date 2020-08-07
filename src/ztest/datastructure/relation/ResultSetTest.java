@@ -35,7 +35,7 @@ class ResultSetTest {
     @BeforeAll
     public static void init() {
 
-        String serialized = IO.read(Filename.TEST_TABLES);
+        String serialized = IO.read(Filename.ORIGINAL_TABLE_DATA);
         List<Table> tables = Serialize.unSerializeTables(serialized);
 
         customers = new ResultSet(tables.get(0));

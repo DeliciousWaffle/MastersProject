@@ -20,8 +20,8 @@ public class IO {
      */
     public static String read(Filename filename) {
 
-        // prevent myself from being dumb
-        if(filename == Filename.TABLE_DATA || filename == Filename.TEST_TABLE_DATA) {
+        // don't use this method for reading table data
+        if(filename == Filename.ORIGINAL_TABLE_DATA || filename == Filename.CURRENT_TABLE_DATA) {
             System.out.println("In IO.read()");
             System.out.println("Used wrong method!");
             return "null";
@@ -55,7 +55,7 @@ public class IO {
     public static String readTableData(Filename filename, String tableDataName) {
 
         // prevent myself from being dumb
-        if(! (filename == Filename.TABLE_DATA || filename == Filename.TEST_TABLE_DATA)) {
+        if(! (filename == Filename.ORIGINAL_TABLE_DATA || filename == Filename.CURRENT_TABLE_DATA)) {
             System.out.println("In IO.readTableData()");
             System.out.println("Used wrong method!");
             return "null";
@@ -88,8 +88,7 @@ public class IO {
      */
     public static void write(Filename filename, String data) {
 
-        // prevent myself from being dumb
-        if(filename == Filename.TABLE_DATA || filename == Filename.TEST_TABLE_DATA) {
+        if(filename == Filename.ORIGINAL_TABLE_DATA || filename == Filename.CURRENT_TABLE_DATA) {
             System.out.println("In IO.write()");
             System.out.println("Used wrong method!");
             return;
@@ -118,7 +117,7 @@ public class IO {
     public static void writeTableData(Filename filename, String tableDataName, String data) {
 
         // prevent myself from being dumb
-        if(! (filename == Filename.TABLE_DATA || filename == Filename.TEST_TABLE_DATA)) {
+        if(! (filename == Filename.ORIGINAL_TABLE_DATA || filename == Filename.CURRENT_TABLE_DATA)) {
             System.out.println("In IO.writeTableData()");
             System.out.println("Used wrong method!");
             return;

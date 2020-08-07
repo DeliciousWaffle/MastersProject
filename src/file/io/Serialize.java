@@ -347,7 +347,7 @@ public class Serialize {
                             table.setClusteredWith(data);
                             break;
                         case "TableDataFilename":
-                            String serializedTableData = IO.readTableData(Filename.TABLE_DATA, data);
+                            String serializedTableData = IO.readTableData(Filename.CURRENT_TABLE_DATA, data);
                             TableData tableData = unSerializeTableData(serializedTableData, table);
                             table.setTableData(tableData);
                             break;
