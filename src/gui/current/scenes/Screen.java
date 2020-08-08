@@ -24,10 +24,6 @@ public abstract class Screen {
 
     public abstract Scene getScreen();
 
-    public abstract void scaleWidth(double scaleWidth);
-
-    public abstract void scaleHeight(double scaleHeight);
-
     public HBox getButtonLayout(ScreenController screenController) {
 
         // creating the buttons
@@ -148,28 +144,5 @@ public abstract class Screen {
         BorderPane.setMargin(buttonLayout, new Insets(10, 10, 10, 10));
 
         return buttonLayout;
-    }
-
-    public void scaleButtonWidth(double scaleWidth) {
-        terminalButton.setPrefWidth(buttonWidth * scaleWidth);
-        tablesButton.setPrefWidth(buttonWidth * scaleWidth);
-        usersButton.setPrefWidth(buttonWidth * scaleWidth);
-        optionsButton.setPrefWidth(buttonWidth * scaleWidth);
-        helpButton.setPrefWidth(buttonWidth * scaleWidth);
-    }
-
-    public void scaleButtonHeight(double scaleHeight) {
-
-        terminalButton.setPrefHeight(buttonHeight * scaleHeight);
-        tablesButton.setPrefHeight(buttonHeight * scaleHeight);
-        usersButton.setPrefHeight(buttonHeight * scaleHeight);
-        optionsButton.setPrefHeight(buttonHeight * scaleHeight);
-        helpButton.setPrefHeight(buttonHeight * scaleHeight);
-
-        terminalButton.setFont(new Font(fontSize * scaleHeight));
-        tablesButton.setFont(new Font(fontSize * scaleHeight));
-        usersButton.setFont(new Font(fontSize * scaleHeight));
-        optionsButton.setFont(new Font(fontSize * scaleHeight));
-        helpButton.setFont(new Font(fontSize * scaleHeight));
     }
 }

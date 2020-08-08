@@ -36,31 +36,31 @@ public class TablesScreen extends Screen {
         List<BorderPane> tablePanes = new ArrayList<>();
 
         for(Table table : tables) {
-            //System.out.println(table);
-            tablePanes.add(new TablePane(table).getTablePane());
+
+            List<String> otherTableNames = new ArrayList<>();
+
+            for(Table otherTable : tables) {
+                if(! table.getTableName().equalsIgnoreCase(otherTable.getTableName())) {
+                    otherTableNames.add("Clustered With: " + otherTable.getTableName());
+                }
+            }
+
+            otherTableNames.add(0, "Clustered With No Table");
+            tablePanes.add(new TablePane(table, otherTableNames).getTablePane());
         }
 
         // add the table panes to a vertical layout
         HBox tablePanesLayout = new HBox();
         tablePanesLayout.setMinSize(0, 0);
-        tablePanesLayout.setSpacing(30);
+        tablePanesLayout.setSpacing(20);
         tablePanesLayout.setBackground(new Background(
                 new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
         tablePanesLayout.getChildren().addAll(tablePanes);
 
-        // centering the table panes layout and setting the style
-        /*BorderPane centeredLayout = new BorderPane();
-        centeredLayout.setMaxWidth(Screen.defaultWidth);
-        centeredLayout.setCenter(tablePanesLayout);
-        BorderPane.setAlignment(tablePanesLayout, Pos.CENTER);
-        centeredLayout.setStyle("-fx-background-color: rgb(30, 30, 30); -fx-background-insets: 0;" +
-                "-fx-border-color: transparent; -fx-padding: 0;  -fx-border-insets: 30;");
-*/
         // adding the centered layout to a scroll pane because the data may go off screen
         ScrollPane tablePanesScrollLayout = new ScrollPane(tablePanesLayout);
-        //tablePanesScrollLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        //tablePanesScrollLayout.setFitToWidth(true);
         tablePanesScrollLayout.getStylesheets().add("gui/current/scenes/help/scrollpane.css");
+        tablePanesLayout.setPadding(new Insets(10, 20, 20, 20));
 
         // increase scroll speed
         // credit: https://stackoverflow.com/questions/32739269/how-do-i-change-the-amount-by-which-scrollpane-scrolls
@@ -82,7 +82,6 @@ public class TablesScreen extends Screen {
         tablesScreen = new Scene(overallLayout);
 
         tablesScreen.widthProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println(newValue);
             double newWidth = (double) newValue;
             tablePanesScrollLayout.setPrefWidth(newWidth);
         });
@@ -96,15 +95,5 @@ public class TablesScreen extends Screen {
     @Override
     public Scene getScreen() {
         return tablesScreen;
-    }
-
-    @Override
-    public void scaleWidth(double scaleWidth) {
-        super.scaleButtonWidth(scaleWidth);
-    }
-
-    @Override
-    public void scaleHeight(double scaleHeight) {
-        super.scaleButtonHeight(scaleHeight);
     }
 }

@@ -8,6 +8,7 @@ import gui.current.scenes.help.popupwindows.diagrams.SchemaDiagram;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.*;
@@ -23,38 +24,47 @@ public class TablePane {
 
     private BorderPane tablePane;
 
-    public TablePane(Table table) {
+    public TablePane(Table table, List<String> otherTableNames) {
 
-        // properties that this pane will have
-        //double buttonWidth = Screen.defaultWidth - 100.0;
-        //double buttonHeight = 50.0;
         double fontSize = 50.0;
-        double textWrappingSize = Screen.defaultWidth - 250.0;
 
         // setting the name
         String tableName = table.getTableName();
-        //Text text = new Text(buttonWidth, buttonHeight, tableName);
         Text text = new Text(tableName);
         text.setFont(new Font(fontSize));
         text.setTextAlignment(TextAlignment.CENTER);
-        //text.setWrappingWidth(textWrappingSize);
         text.setFill(Color.WHITE);
 
         // setting the columns
         List<BorderPane> columnPanes = new ArrayList<>();
 
         for(Column column : table.getColumns()) {
-            columnPanes.add(new ColumnPane(column).getColumnPane());
+            columnPanes.add(new ColumnPane(column, "None").getColumnPane());
         }
 
         VBox columnPanesLayout = new VBox();
         columnPanesLayout.getChildren().addAll(columnPanes);
-        columnPanesLayout.setSpacing(10);
+        columnPanesLayout.setSpacing(20);
+
+        // adding a choice box for choosing a table to build a clustered file with
+        ChoiceBox<String> clusteredFileTableOptions = new ChoiceBox<>();
+        clusteredFileTableOptions.getItems().addAll(otherTableNames);
+
+        if(table.getClusteredWith().equalsIgnoreCase("none")) {
+            clusteredFileTableOptions.setValue("Clustered With No Table");
+        } else {
+            clusteredFileTableOptions.setValue(table.getClusteredWith());
+        }
+
+        clusteredFileTableOptions.getStylesheets().add("gui/current/scenes/tables/ChoiceBox.css");
+        clusteredFileTableOptions.setStyle("-fx-font-size: 25; -fx-pref-width: 360;");
+        clusteredFileTableOptions.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // adding a button that allows the user to view the table data
         Button button = new Button("View Table Data");
         button.setMinSize(0, 0);
-        //button.setPrefSize(buttonWidth, buttonHeight);
+        button.setPrefWidth(360);
         button.setFont(new Font(25));
 
         // spicing up the button
@@ -86,17 +96,28 @@ public class TablePane {
         });
 
         // adding everything to the main pane
+        BorderPane topContainer = new BorderPane();
+        topContainer.setTop(text);
+        topContainer.setBottom(columnPanesLayout);
+
+        BorderPane bottomContainer = new BorderPane();
+        bottomContainer.setTop(clusteredFileTableOptions);
+        bottomContainer.setBottom(button);
+
         tablePane = new BorderPane();
-        tablePane.setMinSize(0, 0);
+        tablePane.setTop(topContainer);
+        tablePane.setBottom(bottomContainer);
+
         BorderPane.setAlignment(text, Pos.CENTER);
         BorderPane.setAlignment(columnPanesLayout, Pos.CENTER);
+        BorderPane.setAlignment(clusteredFileTableOptions, Pos.CENTER);
         BorderPane.setAlignment(button, Pos.CENTER);
-        tablePane.setTop(text);
-        tablePane.setCenter(columnPanesLayout);
-        tablePane.setBottom(button);
-        BorderPane.setMargin(text, new Insets(15));
-        BorderPane.setMargin(columnPanesLayout, new Insets(15));
-        BorderPane.setMargin(button, new Insets(15));
+
+        BorderPane.setMargin(text, new Insets(20, 20, 10, 20));
+        BorderPane.setMargin(columnPanesLayout, new Insets(10, 20, 10, 20));
+        BorderPane.setMargin(clusteredFileTableOptions, new Insets(10 + 20, 20, 10 + 20, 20));
+        BorderPane.setMargin(button, new Insets(10, 20, 20, 20));
+
         tablePane.setBackground(new Background(
                 new BackgroundFill(Color.rgb(60, 60, 60), CornerRadii.EMPTY, Insets.EMPTY)));
         tablePane.setEffect(

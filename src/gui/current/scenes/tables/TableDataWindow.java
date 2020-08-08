@@ -42,6 +42,7 @@ public class TableDataWindow extends Stage {
         // set up this way so formatting doesn't get weird
         HBox columnDataLayout = new HBox();
         columnDataLayout.setMinSize(0, 0);
+        columnDataLayout.setStyle(columnNameStyle);
 
         int numCols = tableData.getData().isEmpty() ? 0 : tableData.getData().get(0).size();
 
@@ -124,7 +125,26 @@ public class TableDataWindow extends Stage {
         scrollPane.getStylesheets().add("gui/current/scenes/help/scrollpane.css");
         scrollPane.setStyle("-fx-background-color: rgb(30, 30, 30);");
 
+        // increase scroll speed
+        columnDataLayout.setOnScroll(e -> {
+            double deltaY = e.getDeltaY() * 1.1;
+            double width = scrollPane.getContent().getBoundsInLocal().getWidth();
+            double vValue = scrollPane.getVvalue();
+            scrollPane.setVvalue(vValue + -(deltaY / width));
+        });
+
         Scene scene = new Scene(scrollPane);
+
+        // just used to fill in any whitespace to be dark
+        this.widthProperty().addListener((observable, oldValue, newValue) -> {
+            double newWidth = (double) newValue;
+            scrollPane.setPrefWidth(newWidth);
+        });
+
+        this.heightProperty().addListener((observable, oldValue, newValue) -> {
+            double newHeight = (double) newValue;
+            scrollPane.setPrefHeight(newHeight);
+        });
 
         this.setTitle(tableName);
         this.setScene(scene);

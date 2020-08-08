@@ -71,10 +71,23 @@ public class HelpScreen extends Screen {
         scrollHelpPanes.setFitToWidth(true);
         scrollHelpPanes.getStylesheets().add("gui/current/scenes/help/scrollpane.css");
 
+        // increase scroll speed
+        // credit: https://stackoverflow.com/questions/32739269/how-do-i-change-the-amount-by-which-scrollpane-scrolls
+        centeredHelpPanes.setOnScroll(e -> {
+            double deltaY = e.getDeltaY() * 1.05;
+            double width = scrollHelpPanes.getContent().getBoundsInLocal().getWidth();
+            double vValue = scrollHelpPanes.getVvalue();
+            scrollHelpPanes.setVvalue(vValue + -(deltaY / width));
+        });
+
         // add the button layout and content layout to overall screen
         BorderPane helpScreenLayout = new BorderPane();
         helpScreenLayout.setTop(buttonLayout);
         helpScreenLayout.setBottom(scrollHelpPanes);
+
+        BorderPane.setAlignment(buttonLayout, Pos.CENTER);
+        BorderPane.setAlignment(scrollHelpPanes, Pos.CENTER);
+
         helpScreenLayout.setMinSize(0, 0);
         helpScreenLayout.setPrefSize(defaultWidth, defaultHeight);
         helpScreenLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
@@ -85,16 +98,6 @@ public class HelpScreen extends Screen {
     @Override
     public Scene getScreen() {
         return helpScreen;
-    }
-
-    @Override
-    public void scaleWidth(double scaleWidth) {
-        super.scaleButtonWidth(scaleWidth);
-    }
-
-    @Override
-    public void scaleHeight(double scaleHeight) {
-        super.scaleButtonHeight(scaleHeight);
     }
 
     private BorderPane getAboutHelpPane() {

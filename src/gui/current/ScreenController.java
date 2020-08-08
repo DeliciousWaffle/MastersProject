@@ -5,7 +5,7 @@ import gui.current.scenes.Screen;
 import gui.current.scenes.help.HelpScreen;
 import gui.current.scenes.tables.TablesScreen;
 import gui.current.scenes.TerminalScreen;
-import gui.current.scenes.UsersScreen;
+import gui.current.scenes.users.UsersScreen;
 import javafx.stage.Stage;
 
 public class ScreenController {
@@ -28,19 +28,6 @@ public class ScreenController {
         helpScreen     = new HelpScreen(this);
 
         setScreen(Screen.Type.TERMINAL_SCREEN);
-
-        // when the window size changes, scale all the objects within the window
-        primaryStage.widthProperty().addListener((observable, oldValue, newValue) -> {
-            double newWidth = (double) newValue;
-            double scaleWidth = newWidth / Screen.defaultWidth;
-            scaleWidth(scaleWidth);
-        });
-
-        primaryStage.heightProperty().addListener((observable, oldValue, newValue) -> {
-            double newHeight = (double) newValue;
-            double scaleHeight = newHeight / Screen.defaultHeight;
-            scaleHeight(scaleHeight);
-        });
     }
 
     public void setScreen(Screen.Type screen) {
@@ -66,21 +53,5 @@ public class ScreenController {
                 primaryStage.show();
                 break;
         }
-    }
-
-    public void scaleWidth(double scaleWidth) {
-        terminalScreen.scaleWidth(scaleWidth);
-        tablesScreen.scaleWidth(scaleWidth);
-        usersScreen.scaleWidth(scaleWidth);
-        optionsScreen.scaleWidth(scaleWidth);
-        helpScreen.scaleWidth(scaleWidth);
-    }
-
-    public void scaleHeight(double scaleHeight) {
-        terminalScreen.scaleHeight(scaleHeight);
-        tablesScreen.scaleHeight(scaleHeight);
-        usersScreen.scaleHeight(scaleHeight);
-        optionsScreen.scaleHeight(scaleHeight);
-        helpScreen.scaleHeight(scaleHeight);
     }
 }

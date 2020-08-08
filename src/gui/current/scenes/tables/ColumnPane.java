@@ -3,26 +3,32 @@ package gui.current.scenes.tables;
 import datastructure.relation.table.component.Column;
 import datastructure.relation.table.component.DataType;
 import datastructure.relation.table.component.FileStructure;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.CornerRadii;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.effect.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.List;
 
 public class ColumnPane {
 
     private BorderPane columnPane;
 
-    public ColumnPane(Column column) {
+    public ColumnPane(Column column, String keyType) {
 
         // get data
         String columnName = column.getName();
@@ -30,42 +36,134 @@ public class ColumnPane {
         int size = column.size();
         FileStructure fileStructure = column.getFileStructure();
 
-        // formatting
-        StringBuilder sb = new StringBuilder();
-        sb.append(columnName).append(" ");
-        sb.append(dataType).append("(").append(size).append(")");
+        // convert column name to text
+        Text columnNameText = new Text(columnName);
+        columnNameText.setFont(new Font(25.0));
+        columnNameText.fillProperty().set(Color.WHITE);
 
-        // convert to text
-        Text columnDataText = new Text(sb.toString());
-        columnDataText.setFont(new Font(25.0));
-        columnDataText.fillProperty().set(Color.WHITE);
+        // convert data type and size to text
+        String dataTypeString = "";
 
-        // used to contain file structure info
-        BorderPane fileStructurePane = new BorderPane();
+        switch(dataType) {
+            case NUMBER:
+                dataTypeString = "Number";
+                break;
+            case CHAR:
+                dataTypeString = "Character";
+                break;
+            case DATE:
+                dataTypeString = "Date";
+                break;
+        }
 
-        Text fileStructureText = new Text(fileStructure.toString());
-        fileStructureText.setFont(new Font(25.0));
-        fileStructureText.setFill(Color.WHITE);
+        Text dataTypeAndSizeText = new Text(dataTypeString + " (" + size + ")");
+        dataTypeAndSizeText.setFont(new Font(25.0));
+        dataTypeAndSizeText.fillProperty().set(Color.WHITE);
 
-        ChoiceBox<FileStructure> fileStructureChoiceBox = new ChoiceBox<>();
+        // store the column name and data into a border pane for formatting
+        BorderPane formatColumnData = new BorderPane();
+        formatColumnData.setLeft(columnNameText);
+        formatColumnData.setRight(dataTypeAndSizeText);
+
+        BorderPane.setMargin(columnNameText, new Insets(0, 5, 0, 0));
+        BorderPane.setMargin(dataTypeAndSizeText, new Insets(0, 0, 0, 5));
+        formatColumnData.setPadding(new Insets(0, 0, 10, 0));
+
+        // creating a choice box for the data structure to build on
+        ChoiceBox<String> fileStructureChoiceBox = new ChoiceBox<>();
         fileStructureChoiceBox.getItems().addAll(
-                FileStructure.SECONDARY_B_TREE,
-                FileStructure.CLUSTERED_B_TREE,
-                FileStructure.HASH_TABLE,
-                FileStructure.NONE
+                "Secondary B-Tree",
+                "Clustered B-Tree",
+                "Hash Table",
+                "No File Structure"
         );
 
-        fileStructureChoiceBox.setValue(fileStructure);
+        fileStructureChoiceBox.getStylesheets().add("gui/current/scenes/tables/ChoiceBox.css");
 
-        fileStructurePane.setLeft(fileStructureText);
-        fileStructurePane.setRight(fileStructureChoiceBox);
+        fileStructureChoiceBox.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
+        String fileStructureString = "";
+
+        switch(fileStructure) {
+            case SECONDARY_B_TREE:
+                fileStructureString = "Secondary B-Tree";
+                break;
+            case CLUSTERED_B_TREE:
+                fileStructureString = "Clustered B-Tree";
+                break;
+            case HASH_TABLE:
+                fileStructureString = "Hash Table";
+                break;
+            case NONE:
+                fileStructureString = "No File Structure";
+                break;
+        }
+
+        fileStructureChoiceBox.setValue(fileStructureString);
+
+        // creating a label and a tooltip telling the user what kind of key this is and other info
+        Image image = null;
+
+        Tooltip tooltip = new Tooltip();
+        tooltip.setFont(new Font(15));
+
+        switch(keyType) {
+            case "Primary":
+                image = new Image("gui/current/scenes/tables/PrimaryKey.png",
+                        75, 45, false, true);
+                tooltip.setText("Primary Key");
+                break;
+            case "Foreign":
+                image = new Image("gui/current/scenes/tables/ForeignKey.png",
+                        75, 45, false, true);
+                tooltip.setText("Foreign Key");
+                break;
+            case "None":
+                image = new Image("gui/current/scenes/tables/NoKey.png",
+                        75, 45, false, true);
+                tooltip.setText("No Key");
+                break;
+            default:
+                image = new Image("gui/current/scenes/tables/NoKey.png",
+                        75, 45, false, true);
+                break;
+        }
+
+        ImageView imageView = new ImageView(image);
+        Label keyLabel = new Label("", imageView);
+        keyLabel.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
+        // show the tooltip fast
+        keyLabel.setOnMouseMoved(event -> {
+            tooltip.show(imageView, event.getScreenX(), event.getScreenY() + 15);
+        });
+        keyLabel.setOnMouseExited(event -> {
+            tooltip.hide();
+        });
+
+        // combining the key label and tooltip
+        keyLabel.setTooltip(tooltip);
+
+        BorderPane fileStructureAndKeyLayout = new BorderPane();
+        fileStructureAndKeyLayout.setLeft(fileStructureChoiceBox);
+        fileStructureAndKeyLayout.setRight(keyLabel);
+
+        BorderPane.setMargin(fileStructureChoiceBox, new Insets(0, 5, 0, 0));
+        BorderPane.setMargin(keyLabel, new Insets(0, 0, 0, 5));
 
         // add text and choice box to the pane
         columnPane = new BorderPane();
-        columnPane.setTop(columnDataText);
-        columnPane.setBottom(fileStructureChoiceBox);
+        columnPane.setTop(formatColumnData);
+        columnPane.setBottom(fileStructureAndKeyLayout);
+
+        BorderPane.setAlignment(formatColumnData, Pos.CENTER);
+        BorderPane.setAlignment(fileStructureAndKeyLayout, Pos.CENTER);
+
+        columnPane.setPadding(new Insets(10));
         columnPane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), CornerRadii.EMPTY, Insets.EMPTY)
+                new BackgroundFill(Color.rgb(70, 70, 70), CornerRadii.EMPTY, Insets.EMPTY)
         ));
         columnPane.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
