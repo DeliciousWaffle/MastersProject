@@ -1,17 +1,12 @@
 package ztest.file.io;
 
-import datastructure.relation.table.Table;
-import datastructure.relation.table.component.Column;
-import datastructure.relation.table.component.TableData;
-import datastructure.user.component.TablePrivileges;
-import datastructure.user.User;
+import datastructures.user.component.TablePrivileges;
+import datastructures.user.User;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import file.io.IO;
-import file.io.Serialize;
-import datastructure.relation.table.component.DataType;
-import file.io.Filename;
-import datastructure.user.component.Privilege;
+import files.io.IO;
+import files.io.Serialize;
+import datastructures.user.component.Privilege;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SerializeTest {
 
-    private static List<User> expectedUsers = new ArrayList<>();
+    /*private static List<User> expectedUsers = new ArrayList<>();
     private static List<TablePrivileges> tablePrivilegesList;
     private static List<TablePrivileges> passableTablePrivilegesList;
     private static TablePrivileges tablePrivileges;
@@ -323,7 +318,7 @@ class SerializeTest {
     @Test
     public void testUnSerializeTable() {
 
-        /*System.out.println("-------------------------------------------");
+        System.out.println("-------------------------------------------");
         String serializedTables = IO.read(Filename.TEST_TABLES);
         ArrayList<Table> tables = Serialize.unSerializeTables(serializedTables);
         for(Table table : tables) {
@@ -341,7 +336,7 @@ class SerializeTest {
             assertEquals(expected[i].trim(), actual[i].trim());
         }
 
-        System.out.println("-------------------------------------------");*/
+        System.out.println("-------------------------------------------");
         assertTrue(true);
     }
 
@@ -349,7 +344,7 @@ class SerializeTest {
     public void testSerializedTable() {
         assertTrue(true);
     }
-/*
+
     @Test
     public void testUnSerializeTableData() {
 
@@ -476,11 +471,11 @@ class SerializeTest {
 
         assertTrue(true);
     }
-*/
+
     @Test
     public void testSerializeTableData() {
 
-        /*Table customersTable = new Table("Customers");
+        Table customersTable = new Table("Customers");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("CustomerID", "", true, 5));
         columns.add(new Column("CustomerName", "", false, 40));
@@ -496,9 +491,9 @@ class SerializeTest {
         customersTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(customersTable);
-        System.out.println(serialized);*/
+        System.out.println(serialized);
 
-        /*Table categoriesTable = new Table("Categories");
+        Table categoriesTable = new Table("Categories");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("CategoryID", "", true, 5));
         columns.add(new Column("CategoryName", "", false, 15));
@@ -509,9 +504,9 @@ class SerializeTest {
         categoriesTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(categoriesTable);
-        System.out.println(serialized);*/
+        System.out.println(serialized);
 
-        /*Table employeesTable = new Table("Employees");
+        Table employeesTable = new Table("Employees");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("EmployeeID", "", true, 5));
         columns.add(new Column("LastName", "", false, 10));
@@ -524,9 +519,10 @@ class SerializeTest {
         employeesTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(employeesTable);
-        System.out.println(serialized);*/
-
-        /*Table orderDetailsTable = new Table("OrderDetails");
+        System.out.println(serialized);
+*/
+    /*
+        Table orderDetailsTable = new Table("OrderDetails");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("OrderDetailID", "", true, 5));
         columns.add(new Column("OrderID", "", true, 5));
@@ -539,9 +535,9 @@ class SerializeTest {
         orderDetailsTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(orderDetailsTable);
-        System.out.println(serialized);*/
+        System.out.println(serialized);
 
-        /*Table ordersTable = new Table("Orders");
+        Table ordersTable = new Table("Orders");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("OrderID", "", true, 5));
         columns.add(new Column("CustomerID", "", true, 5));
@@ -555,9 +551,9 @@ class SerializeTest {
         ordersTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(ordersTable);
-        System.out.println(serialized);*/
+        System.out.println(serialized);
 
-        /*Table productsTable = new Table("Products");
+        Table productsTable = new Table("Products");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("ProductID", "", true, 5));
         columns.add(new Column("ProductName", "", false, 35));
@@ -571,9 +567,9 @@ class SerializeTest {
         productsTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(productsTable);
-        System.out.println(serialized);*/
+        System.out.println(serialized);
 
-        /*Table suppliersTable = new Table("Suppliers");
+        Table suppliersTable = new Table("Suppliers");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("SupplierID", "", true, 5));
         columns.add(new Column("SupplierName", "", false, 40));
@@ -588,9 +584,9 @@ class SerializeTest {
         suppliersTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(suppliersTable);
-        System.out.println(serialized);*/
+        System.out.println(serialized);
 
-        /*Table shippersTable = new Table("Shippers");
+        Table shippersTable = new Table("Shippers");
         ArrayList<Column> columns = new ArrayList<>();
         columns.add(new Column("ShipperID", "", true, 5));
         columns.add(new Column("ShipperName", "", false, 20));
@@ -601,11 +597,11 @@ class SerializeTest {
         shippersTable.setTableData(tableData);
 
         String serialized = Serialize.serializeTableData(shippersTable);
-        System.out.println(serialized);*/
+        System.out.println(serialized);
 
         //System.out.println("\n\n\n");
         //customersTable.setTableData(Serialize.unSerializeTableData(serialized, customersTable));
         //System.out.println(customersTable.getTableData().toString());
         assertTrue(true);
-    }
+    }*/
 }

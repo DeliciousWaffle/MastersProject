@@ -1,19 +1,18 @@
 package systemcatalog.components;
 
-import datastructure.relation.resultset.ResultSet;
-import datastructure.relation.table.component.Column;
-import datastructure.relation.table.component.DataType;
-import datastructure.relation.table.component.FileStructure;
-import datastructure.relation.table.component.TableData;
-import datastructure.tree.querytree.QueryTree;
-import datastructure.tree.querytree.operator.Operator;
-import datastructure.tree.querytree.operator.Relation;
-import datastructure.user.component.Privilege;
-import datastructure.user.component.TablePrivileges;
+import datastructures.relation.resultset.ResultSet;
+import datastructures.relation.table.component.Column;
+import datastructures.relation.table.component.DataType;
+import datastructures.relation.table.component.FileStructure;
+import datastructures.relation.table.component.TableData;
+import datastructures.trees.querytree.QueryTree;
+import datastructures.trees.querytree.operator.types.Relation;
+import datastructures.user.component.Privilege;
+import datastructures.user.component.TablePrivileges;
 import utilities.enums.InputType;
-import datastructure.rulegraph.RuleGraph;
-import datastructure.relation.table.Table;
-import datastructure.user.User;
+import datastructures.rulegraph.RuleGraph;
+import datastructures.relation.table.Table;
+import datastructures.user.User;
 import utilities.enums.Symbol;
 
 import java.util.ArrayList;

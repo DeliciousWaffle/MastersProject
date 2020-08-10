@@ -1,13 +1,13 @@
 package systemcatalog;
 
-import datastructure.relation.resultset.ResultSet;
-import datastructure.rulegraph.RuleGraph;
-import datastructure.rulegraph.type.RuleGraphTypes;
+import datastructures.relation.resultset.ResultSet;
+import datastructures.rulegraph.RuleGraph;
+import datastructures.rulegraph.types.RuleGraphTypes;
 import systemcatalog.components.Parser;
-import datastructure.user.User;
+import datastructures.user.User;
 import utilities.enums.InputType;
 import systemcatalog.components.Verifier;
-import datastructure.relation.table.Table;
+import datastructures.relation.table.Table;
 import systemcatalog.components.SecurityChecker;
 import systemcatalog.components.Optimizer;
 import systemcatalog.components.Compiler;

@@ -1,11 +1,11 @@
 package systemcatalog.components;
 
-import datastructure.rulegraph.RuleGraph;
-import datastructure.relation.table.Table;
-import datastructure.relation.table.component.Column;
-import datastructure.user.User;
+import datastructures.rulegraph.RuleGraph;
+import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
+import datastructures.user.User;
 import utilities.enums.InputType;
-import datastructure.user.component.Privilege;
+import datastructures.user.component.Privilege;
 
 import java.util.ArrayList;
 import java.util.HashMap;

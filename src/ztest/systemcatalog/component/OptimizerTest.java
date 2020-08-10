@@ -1,22 +1,19 @@
 package ztest.systemcatalog.component;
 
-import datastructure.relation.table.Table;
-import datastructure.relation.table.component.Column;
-import datastructure.relation.table.component.DataType;
-import datastructure.rulegraph.RuleGraph;
-import datastructure.rulegraph.type.RuleGraphTypes;
-import datastructure.tree.querytree.QueryTree;
+import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
+import datastructures.relation.table.component.DataType;
+import datastructures.rulegraph.RuleGraph;
+import datastructures.rulegraph.types.RuleGraphTypes;
+import datastructures.trees.querytree.QueryTree;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Optimizer;
 import systemcatalog.components.Parser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Stack;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

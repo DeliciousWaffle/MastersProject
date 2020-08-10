@@ -2,12 +2,12 @@ package systemcatalog.components;
 
 import utilities.enums.InputType;
 import utilities.enums.Keyword;
-import datastructure.rulegraph.RuleGraph;
+import datastructures.rulegraph.RuleGraph;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct.
  * Also handles miscellaneous functions that involve parsing input.
- * Please refer to the diagrams in "datastructures.rulegraph.diagrams" for information about
+ * Please refer to the diagrams in "files.assets.helpscene.diagrams" for information about
  * the syntax accepted.
  */
 public class Parser {

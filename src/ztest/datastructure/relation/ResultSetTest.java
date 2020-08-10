@@ -1,16 +1,14 @@
 package ztest.datastructure.relation;
 
-import datastructure.relation.resultset.ResultSet;
-import datastructure.relation.table.Table;
-import datastructure.relation.table.component.Column;
-import file.io.IO;
+import datastructures.relation.resultset.ResultSet;
+import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
+import files.io.IO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import file.io.Serialize;
-import file.io.Filename;
+import files.io.Serialize;
 import utilities.enums.Keyword;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +28,7 @@ class ResultSetTest {
     Suppliers
     Shippers
      */
-    private static ResultSet customers, categories, employees, orderDetails, orders, products, suppliers, shippers;
+    /*private static ResultSet customers, categories, employees, orderDetails, orders, products, suppliers, shippers;
 
     @BeforeAll
     public static void init() {
@@ -53,7 +51,7 @@ class ResultSetTest {
 
         System.out.println("Test Projection -------------------------------------------------------------------------");
 
-        /*ResultSet customersTable = new ResultSet(tables.get(0));
+        ResultSet customersTable = new ResultSet(tables.get(0));
         ArrayList<Column> toProject = new ArrayList<>();
         toProject.add(customersTable.getColumns().get(0)); // customer id
         toProject.add(customersTable.getColumns().get(6)); // country
@@ -66,7 +64,7 @@ class ResultSetTest {
         toProject.add(customersTable.getColumns().get(0));
         toProject.add(customersTable.getColumns().get(1)); // customer name
         customersTable = customersTable.projection(toProject);
-        System.out.println(customersTable.toString());*/
+        System.out.println(customersTable.toString());
     }
 
     @Test
@@ -74,7 +72,7 @@ class ResultSetTest {
 
         System.out.println("Test Selection --------------------------------------------------------------------------");
 
-        /*ResultSet customersTable = new ResultSet(tables.get(0));
+        ResultSet customersTable = new ResultSet(tables.get(0));
 
         Column customersID = customersTable.getColumns().get(0);
         Column customersName = customersTable.getColumns().get(1);
@@ -172,7 +170,7 @@ class ResultSetTest {
         conditionExpression.or(new Condition(customersID, Symbol.EQUAL, "12"));
         conditionExpression.or(new Condition(city, Symbol.EQUAL, "Mexico"));
         conditionExpression.and(new Condition(postalCode, Symbol.EQUAL, "05021"));
-        System.out.println(customersTable.selection(conditionExpression).toString());*/
+        System.out.println(customersTable.selection(conditionExpression).toString());
     }
 
     @Test
@@ -191,10 +189,10 @@ class ResultSetTest {
 
         System.out.println("Test Natural Join -----------------------------------------------------------------------");
 
-        /*System.out.println("Suppliers and Customers that come from the same country");
+        System.out.println("Suppliers and Customers that come from the same country");
         Column country = customers.getColumns().get(6);
         ResultSet naturalJoin = customers.joinUsing(suppliers, country);
-        System.out.println(naturalJoin.toString());*/
+        System.out.println(naturalJoin.toString());
     }
 
     @Test
@@ -255,7 +253,7 @@ class ResultSetTest {
     @Test
     public void testOrderBy() {
 
-        /*System.out.println("Test Order By ---------------------------------------------------------------------------");
+        System.out.println("Test Order By ---------------------------------------------------------------------------");
 
         System.out.println("Ordering customers in ascending order by customer name");
         System.out.println(customers.orderByAsc(customers.getColumns().get(1)));
@@ -264,12 +262,12 @@ class ResultSetTest {
         System.out.println(orderDetails.orderByAsc(orderDetails.getColumns().get(3)));
 
         System.out.println("Ordering customers in descending order by country");
-        System.out.println(customers.orderByDesc(customers.getColumns().get(6)));*/
+        System.out.println(customers.orderByDesc(customers.getColumns().get(6)));
     }
 
     @Test
     public void testCombinations() {
 
         System.out.println("Test Combinations -----------------------------------------------------------------------");
-    }
+    }*/
 }

@@ -1,6 +1,6 @@
 package ztest.datastructure.other;
 
-import datastructure.other.Histogram;
+import datastructures.misc.Histogram;
 
 import java.util.ArrayList;
 import java.util.Collections;

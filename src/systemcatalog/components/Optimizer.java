@@ -1,11 +1,10 @@
 package systemcatalog.components;
 
-import datastructure.relation.table.Table;
-import datastructure.relation.table.component.Column;
-import datastructure.rulegraph.RuleGraph;
-import datastructure.tree.querytree.QueryTree;
-import datastructure.tree.querytree.operator.*;
-import org.omg.CORBA.TRANSACTION_MODE;
+import datastructures.relation.table.Table;
+import datastructures.rulegraph.RuleGraph;
+import datastructures.trees.querytree.QueryTree;
+import datastructures.trees.querytree.operator.*;
+import datastructures.trees.querytree.operator.types.*;
 
 import java.util.*;
 

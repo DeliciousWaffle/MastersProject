@@ -1,16 +1,6 @@
 package ztest.datastructure.tree;
 
-import datastructure.relation.table.Table;
-import datastructure.relation.table.component.Column;
-import datastructure.relation.table.component.DataType;
-import datastructure.tree.conditiontree.component.Condition;
-import datastructure.tree.querytree.QueryTree;
-import datastructure.tree.querytree.operator.*;
 import org.junit.jupiter.api.Test;
-import utilities.enums.Symbol;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,6 +1,6 @@
 package ztest.datastructure.tree;
 
-import datastructure.tree.binarytree.BinaryTree;
+import datastructures.trees.binarytree.BinaryTree;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
