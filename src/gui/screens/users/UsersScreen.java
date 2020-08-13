@@ -1,6 +1,5 @@
 package gui.screens.users;
 
-import datastructures.datacontroller.DataController;
 import datastructures.user.User;
 import files.io.FileType;
 import files.io.IO;
@@ -14,6 +13,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
+import systemcatalog.SystemCatalog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +22,7 @@ public class UsersScreen extends Screen {
 
     private Scene usersScreen;
 
-    public UsersScreen(ScreenController screenController, DataController dataController) {
+    public UsersScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
         List<User> users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
 

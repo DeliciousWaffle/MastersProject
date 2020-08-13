@@ -1,6 +1,5 @@
 package gui.screens.tables;
 
-import datastructures.datacontroller.DataController;
 import datastructures.relation.table.Table;
 import files.io.FileType;
 import files.io.IO;
@@ -13,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import systemcatalog.SystemCatalog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +21,7 @@ public class TablesScreen extends Screen {
 
     private Scene tablesScreen;
 
-    public TablesScreen(ScreenController screenController, DataController dataController) {
+    public TablesScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
         // button layout for top part of screen
         HBox buttonLayout = super.getButtonLayout(screenController);

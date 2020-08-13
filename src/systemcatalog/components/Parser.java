@@ -148,7 +148,7 @@ public class Parser {
      * @return whether the given input is syntactically correct with respect to
      * the tokenized input and rule graph that have been set
      */
-    public boolean validate() {
+    public boolean isValid() {
 
         // check if the input is syntactically correct and contains no illegal keywords
         boolean isValid = (ruleGraphToUse.isSyntacticallyCorrect(tokenizedInput)) &&

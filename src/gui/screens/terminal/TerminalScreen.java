@@ -1,17 +1,17 @@
 package gui.screens.terminal;
 
-import datastructures.datacontroller.DataController;
 import gui.ScreenController;
 import gui.screens.Screen;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import systemcatalog.SystemCatalog;
 
 public class TerminalScreen extends Screen {
 
     private Scene terminalScreen;
 
-    public TerminalScreen(ScreenController screenController, DataController dataController) {
+    public TerminalScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
         HBox buttonLayout = super.getButtonLayout(screenController);
 

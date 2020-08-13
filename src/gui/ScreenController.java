@@ -1,6 +1,5 @@
 package gui;
 
-import datastructures.datacontroller.DataController;
 import gui.screens.options.OptionsScreen;
 import gui.screens.Screen;
 import gui.screens.help.HelpScreen;
@@ -8,13 +7,14 @@ import gui.screens.tables.TablesScreen;
 import gui.screens.terminal.TerminalScreen;
 import gui.screens.users.UsersScreen;
 import javafx.stage.Stage;
+import systemcatalog.SystemCatalog;
 
 public class ScreenController {
 
     private final Stage primaryStage;
     private final Screen terminalScreen, tablesScreen, usersScreen, optionsScreen, helpScreen;
 
-    public ScreenController(Stage primaryStage, DataController dataController) {
+    public ScreenController(Stage primaryStage, SystemCatalog systemCatalog) {
 
         this.primaryStage = primaryStage;
 
@@ -22,11 +22,11 @@ public class ScreenController {
         primaryStage.setWidth(Screen.defaultWidth);
         primaryStage.setHeight(Screen.defaultHeight);
 
-        terminalScreen = new TerminalScreen(this, dataController);
-        tablesScreen   = new TablesScreen(this, dataController);
-        usersScreen    = new UsersScreen(this, dataController);
-        optionsScreen  = new OptionsScreen(this, dataController);
-        helpScreen     = new HelpScreen(this, dataController);
+        terminalScreen = new TerminalScreen(this, systemCatalog);
+        tablesScreen   = new TablesScreen(this, systemCatalog);
+        usersScreen    = new UsersScreen(this, systemCatalog);
+        optionsScreen  = new OptionsScreen(this, systemCatalog);
+        helpScreen     = new HelpScreen(this, systemCatalog);
 
         setScreen(Screen.Type.TERMINAL_SCREEN);
     }

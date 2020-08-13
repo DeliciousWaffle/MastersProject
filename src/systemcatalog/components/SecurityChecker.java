@@ -22,8 +22,12 @@ public class SecurityChecker {
     private String[] tokenizedInput;
     private User currentUser;
     private List<Table> tables;
+    private boolean toggle;
 
-    public SecurityChecker() {}
+    public SecurityChecker() {
+        // by default, toggle the Security Checker on
+        this.toggle = true;
+    }
 
     // setters ---------------------------------------------------------------------------------------------------------
 
@@ -47,9 +51,19 @@ public class SecurityChecker {
         this.tables = tables;
     }
 
+    public void setToggle(boolean toggle) {
+        this.toggle = toggle;
+    }
+
     // validation ------------------------------------------------------------------------------------------------------
 
-    public boolean validate() {
+    public boolean isValid() {
+
+        // return true if the Security Checker is toggled off
+        if(! toggle) {
+            return true;
+        }
+
         switch(ruleGraphType) {
             case QUERY:
                 return isValidQuery();

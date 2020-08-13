@@ -1,17 +1,17 @@
 package gui.screens.options;
 
-import datastructures.datacontroller.DataController;
 import gui.ScreenController;
 import gui.screens.Screen;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import systemcatalog.SystemCatalog;
 
 public class OptionsScreen extends Screen {
 
     private Scene optionsScreen;
 
-    public OptionsScreen(ScreenController screenController, DataController dataController) {
+    public OptionsScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
         HBox buttonLayout = super.getButtonLayout(screenController);
 

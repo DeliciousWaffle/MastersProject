@@ -6,9 +6,11 @@ import datastructures.relation.resultset.ResultSet;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
+import files.io.FileType;
+import files.io.IO;
+import files.io.Serialize;
 import systemcatalog.components.Parser;
 import datastructures.user.User;
-import utilities.enums.InputType;
 import systemcatalog.components.Verifier;
 import datastructures.relation.table.Table;
 import systemcatalog.components.SecurityChecker;
@@ -19,22 +21,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class that holds all of the components of the system catalog.
+ * Responsible for controlling all the data that will be used in the system. Starts
+ * off by loading all the tables, users, and other data this application will need.
+ * Data contained in this class will be passed to other classes which will make changes
+ * to the data. Once the user closes the application, their changes get written so that
+ * when they re-launch the application, their changes will still be there.
  */
 public class SystemCatalog {
 
-    // used for logging messages
-    private Logger logger;
-
     // system catalog components that work together to make this application work
-    private Parser          parser;
-    private Verifier        verifier;
-    private SecurityChecker securityChecker;
-    private Optimizer       optimizer;
-    private Compiler        compiler;
+    private final Parser parser;
+    private final Verifier verifier;
+    private final SecurityChecker securityChecker;
+    private final Optimizer optimizer;
+    private final Compiler compiler;
+
+    // system data
+    private final List<Table> tables;
+    private final List<User> users;
+    private User currentUser;
+
+    // used for logging messages
+    private final Logger logger;
 
     // a list of rule graph types that each component will use to extract data from user input
-    private List<RuleGraph> ruleGraphTypes;
+    private final List<RuleGraph> ruleGraphTypes;
 
     // following will only be used if the input is a query and it's successfully executed
     private ResultSet resultSet;
@@ -43,14 +54,17 @@ public class SystemCatalog {
 
     public SystemCatalog() {
 
+        // create the system catalog components
+        this.parser = new Parser();
+        this.verifier = new Verifier();
+        this.securityChecker = new SecurityChecker();
+        this.optimizer = new Optimizer();
+        this.compiler = new Compiler();
+
+        // create the logger
         this.logger = new Logger();
 
-        this.parser          = new Parser();
-        this.verifier        = new Verifier();
-        this.securityChecker = new SecurityChecker();
-        this.optimizer       = new Optimizer();
-        this.compiler        = new Compiler();
-
+        // create and add the rule graph types to use
         this.ruleGraphTypes  = new ArrayList<>();
 
         ruleGraphTypes.add(RuleGraphTypes.getQueryRuleGraph());
@@ -65,75 +79,119 @@ public class SystemCatalog {
         ruleGraphTypes.add(RuleGraphTypes.getBuildFileStructureRuleGraph());
         ruleGraphTypes.add(RuleGraphTypes.getRemoveFileStructureRuleGraph());
 
+        // loading table and user data
+        this.tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
+        this.users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
+
+        // set the current user as the DBA who has all privileges on every table
+        setCurrentUser(User.DatabaseAdministrator(tables));
+
+        // creating query-specific data, initially empty
         this.resultSet = new ResultSet();
         this.queryTreeStates = new ArrayList<>();
         this.recommendedFileStructures = new ArrayList<>();
     }
 
-    public void executeInput(String input, List<Table> tables, List<User> users, User currentUser, Logger logger) {
+    // execution related -----------------------------------------------------------------------------------------------
 
-        // filtering the input, splitting the input into tokens, and determining the rule graph type to use
-        String[] tokenizedInput = Parser.formatAndTokenizeInput(input);
-        RuleGraph.Type ruleGraphType = Parser.determineRuleGraphType(tokenizedInput);
+    /**
+     * Given a raw string of input, executes it. Well there is more involved than that. Raw input is
+     * filtered, formatted, and tokenized. It gets passed to the Parser to ensure that it is
+     * syntactically correct. Then it's passed to a Verifier to make sure that it makes sense
+     * with respect to the data stored on the system. Afterwards, the Security Checker ensures that
+     * the current user has the correct privileges before execution. The Optimizer creates an
+     * execution strategy for the input. Finally, the Compiler executes the input.
+     * @param input is the input to execute
+     */
+    public void executeInput(String input) {
 
-        // couldn't determine a type, don't execute
-        if(ruleGraphType == RuleGraph.Type.UNKNOWN) {
-            logger.log(new Log(Log.Type.SIMPLE, "Error! Couldn't determine input type!"));
-            return;
+        // there may be some unknown bugs that I haven't taken care of yet, prevent the app from crashing
+        try {
+
+            // filtering the input, splitting the input into tokens, and determining the rule graph type to use
+            String[] tokenizedInput = Parser.formatAndTokenizeInput(input);
+            RuleGraph.Type ruleGraphType = Parser.determineRuleGraphType(tokenizedInput);
+
+            // couldn't determine a type, don't execute
+            if (ruleGraphType == RuleGraph.Type.UNKNOWN) {
+                logger.log(new Log(Log.Type.SIMPLE, "Error! Couldn't determine input type!"));
+                return;
+            }
+
+            // get the rule graph to use
+            RuleGraph ruleGraphToUse = ruleGraphTypes.get(ruleGraphType.index());
+
+            // parser stuff
+            parser.setRuleGraphType(ruleGraphType);
+            parser.setRuleGraphToUse(ruleGraphToUse);
+            parser.setTokenizedInput(tokenizedInput);
+            if (! parser.isValid()) {
+                return;
+            }
+
+            // verifier stuff
+            verifier.setRuleGraphType(ruleGraphType);
+            verifier.setRuleGraphToUse(ruleGraphToUse);
+            verifier.setTokenizedInput(tokenizedInput);
+            verifier.setTables(tables);
+            verifier.setUsers(users);
+            if (! verifier.isValid()) {
+                return;
+            }
+
+            // security checker stuff
+            securityChecker.setRuleGraphType(ruleGraphType);
+            securityChecker.setRuleGraphToUse(ruleGraphToUse);
+            securityChecker.setTokenizedInput(tokenizedInput);
+            securityChecker.setCurrentUser(currentUser);
+            securityChecker.setTables(tables);
+            if (! securityChecker.isValid()) {
+                return;
+            }
+
+            // optimizer stuff, if the input is a query, get the query tree states, otherwise skip
+            if (ruleGraphType == RuleGraph.Type.QUERY) {
+                optimizer.setRuleGraphToUse(ruleGraphToUse);
+                optimizer.setTokenizedInput(tokenizedInput);
+                optimizer.setTables(tables);
+                optimizer.optimize();
+                this.queryTreeStates = optimizer.getQueryTreeStates();
+                this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
+            } else {
+                this.queryTreeStates = new ArrayList<>();
+                this.recommendedFileStructures = new ArrayList<>();
+            }
+
+            // compiler stuff, if the input is a query, get the result set, otherwise make the changes to the system
+            compiler.setRuleGraphType(ruleGraphType);
+            compiler.setRuleGraphToUse(ruleGraphToUse);
+            compiler.setTokenizedInput(tokenizedInput);
+            compiler.setTables(tables);
+            compiler.setUsers(users);
+            if (ruleGraphType == RuleGraph.Type.QUERY) {
+                compiler.setQueryTreeStates(queryTreeStates);
+                this.resultSet = compiler.executeQuery();
+            } else {
+                compiler.executeDML();
+            }
+
+        } catch(Exception e) {
+            System.out.println("Some unknown error occurred in SystemCatalog.execute()");
+            e.printStackTrace();
         }
-
-        // get the rule graph to use
-        RuleGraph ruleGraphToUse = ruleGraphTypes.get(ruleGraphType.index());
-
-        // parser stuff
-        parser.setRuleGraphType(ruleGraphType);
-        parser.setRuleGraphToUse(ruleGraphToUse);
-        parser.setTokenizedInput(tokenizedInput);
-        if(! parser.validate()) {
-            return;
-        }
-
-        // verifier stuff
-        verifier.setRuleGraphType(ruleGraphType);
-        verifier.setRuleGraphToUse(ruleGraphToUse);
-        verifier.setTokenizedInput(tokenizedInput);
-        verifier.setTables(tables);
-        verifier.setUsers(users);
-        if(! verifier.validate()) {
-            return;
-        }
-
-        // security checker stuff
-        securityChecker.setRuleGraphType(ruleGraphType);
-        securityChecker.setRuleGraphToUse(ruleGraphToUse);
-        securityChecker.setTokenizedInput(tokenizedInput);
-        securityChecker.setCurrentUser(currentUser);
-        securityChecker.setTables(tables);
-        if(! securityChecker.validate()) {
-            return;
-        }
-
-        // optimizer stuff, if the input is a query, get the query tree states, otherwise skip
-        if(ruleGraphType == RuleGraph.Type.QUERY) {
-            optimizer.setRuleGraphToUse(ruleGraphToUse);
-            optimizer.setTokenizedInput(tokenizedInput);
-            optimizer.setTables(tables);
-            optimizer.optimize();
-            this.queryTreeStates = optimizer.getQueryTreeStates();
-            this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
-        } else {
-            this.queryTreeStates = new ArrayList<>();
-            this.recommendedFileStructures = new ArrayList<>();
-        }
-
-        // compiler stuff, if the input is a query, get the result set, otherwise make the changes to the system
-        compiler.setRuleGraphToUse(ruleGraphToUse);
-        compiler.setTokenizedInput(tokenizedInput);
-        compiler.setTables(tables);
-        compiler.setUsers(users);
-        compiler.setQueryTreeToExecute(queryTreeToExecute);
-        this.resultSet = compiler.executeInput();
     }
+
+    // user related ----------------------------------------------------------------------------------------------------
+
+    /**
+     * Sets the current user to the one supplied
+     * @param currentUser is the current user to set
+     */
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    // query related ---------------------------------------------------------------------------------------------------
 
     /**
      * If a query was performed and successfully executed, returns the result set of that execution.
@@ -141,7 +199,7 @@ public class SystemCatalog {
      * @return result set of a successful execution or an empty result set
      */
     public ResultSet getResultSet() {
-        return resultSet;
+        return resultSet == null ? new ResultSet() : resultSet;
     }
 
     /**
@@ -151,7 +209,7 @@ public class SystemCatalog {
      * or an empty list
      */
     public List<QueryTree> getQueryTreeStates() {
-        return queryTreeStates;
+        return queryTreeStates == null ? new ArrayList<>() : queryTreeStates;
     }
 
     /**
@@ -160,6 +218,42 @@ public class SystemCatalog {
      * @return a list of recommended file structures for a query or an empty list
      */
     public List<String> getRecommendedFileStructures() {
-        return recommendedFileStructures;
+        return recommendedFileStructures == null ? new ArrayList<>() : recommendedFileStructures;
+    }
+
+    // Options related -------------------------------------------------------------------------------------------------
+
+    /**
+     * Determines whether the system catalog should use the Verifier component to make referential
+     * checks with the data located on the system.
+     * @param toggle set to true to use the Verifier, false to not use the Verifier
+     */
+    public void toggleVerifier(boolean toggle) {
+        verifier.setToggle(toggle);
+    }
+
+    /**
+     * Determines whether the system catalog should use the Security Checker component to check
+     * that the current user has the correct privileges to execute input.
+     * @param toggle set to true to use the Security Checker, false to not use the Security Checker
+     */
+    public void toggleSecurityChecker(boolean toggle) {
+        securityChecker.setToggle(toggle);
+    }
+
+    // IO related ------------------------------------------------------------------------------------------------------
+
+    /**
+     * Stores the tables and their states in files. Called when the system closes.
+     */
+    public void writeOutTables() {
+        IO.writeCurrentData(Serialize.serializeTables(tables), FileType.CurrentData.CURRENT_TABLES);
+    }
+
+    /**
+     * Stores the users and their states in files. Called when the system closes.
+     */
+    public void writeOutUsers() {
+        IO.writeCurrentData(Serialize.serializedUsers(users), FileType.CurrentData.CURRENT_USERS);
     }
 }

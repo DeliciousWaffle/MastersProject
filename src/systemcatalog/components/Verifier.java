@@ -22,8 +22,12 @@ public class Verifier {
     private String[] tokenizedInput;
     private List<Table> tables;
     private List<User> users;
+    private boolean toggle;
 
-    public Verifier() {}
+    public Verifier() {
+        // by default, toggle the Verifier on
+        this.toggle = true;
+    }
 
     // setters ---------------------------------------------------------------------------------------------------------
 
@@ -47,9 +51,19 @@ public class Verifier {
         this.users = users;
     }
 
+    public void setToggle(boolean toggle) {
+        this.toggle = toggle;
+    }
+
     // validation ------------------------------------------------------------------------------------------------------
 
-    public boolean validate() {
+    public boolean isValid() {
+
+        // return true if toggled off
+        if(! toggle) {
+            return true;
+        }
+
         switch(ruleGraphType) {
             case QUERY:
                 return isValidQuery();

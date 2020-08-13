@@ -1,9 +1,9 @@
 package main;
 
-import datastructures.datacontroller.DataController;
 import gui.ScreenController;
 import javafx.application.Application;
 import javafx.stage.Stage;
+import systemcatalog.SystemCatalog;
 
 /**
  * My Master's Project (CS 599) for Western Illinois University.
@@ -15,10 +15,9 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
 
         // handles all the data used by the system
-        DataController dataController = new DataController();
-
+        SystemCatalog systemCatalog = new SystemCatalog();
         // handles what screen to show the user
-        ScreenController screenController = new ScreenController(primaryStage, dataController);
+        ScreenController screenController = new ScreenController(primaryStage, systemCatalog);
     }
 
     public static void main(String[] args) {
