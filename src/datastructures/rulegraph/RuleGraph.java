@@ -8,6 +8,23 @@ import java.util.ArrayList;
 
 public class RuleGraph {
 
+    public enum Type {
+
+        QUERY(0), CREATE_TABLE(1), ALTER_TABLE(2), DROP_TABLE(3), INSERT(4), DELETE(5),
+        UPDATE(6), GRANT(7), REVOKE(8), BUILD_FILE_STRUCTURE(9), REMOVE_FILE_STRUCTURE(10),
+        UNKNOWN(-1);
+
+        private final int code;
+
+        Type(int code) {
+            this.code = code;
+        }
+
+        public int index() {
+            return code;
+        }
+    }
+
     private ArrayList<RuleNode> rules;
 
     public RuleGraph() {

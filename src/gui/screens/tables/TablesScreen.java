@@ -1,5 +1,6 @@
 package gui.screens.tables;
 
+import datastructures.datacontroller.DataController;
 import datastructures.relation.table.Table;
 import files.io.FileType;
 import files.io.IO;
@@ -20,7 +21,7 @@ public class TablesScreen extends Screen {
 
     private Scene tablesScreen;
 
-    public TablesScreen(ScreenController screenController) {
+    public TablesScreen(ScreenController screenController, DataController dataController) {
 
         // button layout for top part of screen
         HBox buttonLayout = super.getButtonLayout(screenController);

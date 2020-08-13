@@ -17,52 +17,77 @@ import java.util.List;
  */
 public class SecurityChecker {
 
-    private RuleGraph ruleGraph;
+    private RuleGraph.Type ruleGraphType;
+    private RuleGraph ruleGraphToUse;
+    private String[] tokenizedInput;
+    private User currentUser;
+    private List<Table> tables;
 
     public SecurityChecker() {}
 
-    public void setRuleGraph(RuleGraph ruleGraph) { this.ruleGraph = ruleGraph; }
+    // setters ---------------------------------------------------------------------------------------------------------
 
-    public boolean isValid(InputType inputType, String[] input, User user, ArrayList<Table> tables) {
+    public void setRuleGraphType(RuleGraph.Type ruleGraphType) {
+        this.ruleGraphType = ruleGraphType;
+    }
 
-        switch(inputType) {
+    public void setRuleGraphToUse(RuleGraph ruleGraphToUse) {
+        this.ruleGraphToUse = ruleGraphToUse;
+    }
+
+    public void setTokenizedInput(String[] tokenizedInput) {
+        this.tokenizedInput = tokenizedInput;
+    }
+
+    public void setCurrentUser(User currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    public void setTables(List<Table> tables) {
+        this.tables = tables;
+    }
+
+    // validation ------------------------------------------------------------------------------------------------------
+
+    public boolean validate() {
+        switch(ruleGraphType) {
             case QUERY:
-                return isValidQuery(input, user, tables);
+                return isValidQuery();
             case CREATE_TABLE:
-                return isValidCreateTable(input, user);
+                return isValidCreateTable();
             case DROP_TABLE:
-                return isValidDropTable(input, user);
+                return isValidDropTable();
             case ALTER_TABLE:
-                return isValidAlterTable(input, user);
+                return isValidAlterTable();
             case INSERT:
-                return isValidInsert(input, user, tables);
+                return isValidInsert();
             case DELETE:
-                return isValidDelete(input, user, tables);
+                return isValidDelete();
             case UPDATE:
-                return isValidUpdate(input, user, tables);
+                return isValidUpdate();
             case GRANT:
-                isValidGrant(input, user);
+                isValidGrant();
             case REVOKE:
-                isValidRevoke(input, user);
+                isValidRevoke();
             case BUILD_FILE_STRUCTURE:
-                isValidBuildFileStructure(input, user, tables);
+                isValidBuildFileStructure();
             case REMOVE_FILE_STRUCTURE:
-                return isValidRemoveFileStructure(input, user, tables);
+                return isValidRemoveFileStructure();
             case UNKNOWN:
             default:
                 return false;
         }
     }
 
-    public boolean isValidQuery(String[] query, User user, ArrayList<Table> tables) {
+    public boolean isValidQuery() {
 
-        ArrayList<String> referencedTableNames = ruleGraph.getTokensAt(query, 13, 15, 17);
+        ArrayList<String> referencedTableNames = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 15, 17);
         //ArrayList<String> referencedColumnNames = ruleGraph.getTokensAt(input, );
         HashMap<String, ArrayList<String>> tableColumnPairs = new HashMap<>();
         return true;
     }
 
-    public boolean isValidCreateTable(String[] create, User user) {
+    public boolean isValidCreateTable() {
 
         //String primaryKey = ruleGraph.getTokensAt(create, -1).get(0);
         //ArrayList<String> foreignKeys = ruleGraph.getTokensAt(create, -1);
@@ -72,34 +97,29 @@ public class SecurityChecker {
         return true;
     }
 
-    /**
-     * @param dropTable the table to drop
-     * @param user the current user
-     * @return whether the user can drop the table supplied
-     */
-    public boolean isValidDropTable(String[] dropTable, User user) {
-        String tableName = dropTable[2];
-        return user.hasTablePrivilege(tableName, Privilege.ALTER);
+    public boolean isValidDropTable() {
+        String tableName = tokenizedInput[2];
+        return currentUser.hasTablePrivilege(tableName, Privilege.ALTER);
     }
 
-    public boolean isValidAlterTable(String[] alterTable, User user) {
-        String tableName = alterTable[2];
-        return user.hasTablePrivilege(tableName, Privilege.ALTER);
+    public boolean isValidAlterTable() {
+        String tableName = tokenizedInput[2];
+        return currentUser.hasTablePrivilege(tableName, Privilege.ALTER);
     }
 
-    public boolean isValidInsert(String[] insert, User user, ArrayList<Table> tables) {
-        String tableName = insert[2];
-        return user.hasTablePrivilege(tableName, Privilege.INSERT);
+    public boolean isValidInsert() {
+        String tableName = tokenizedInput[2];
+        return currentUser.hasTablePrivilege(tableName, Privilege.INSERT);
     }
 
-    public boolean isValidDelete(String[] delete, User user, ArrayList<Table> tables) {
-        String tableName = delete[2];
-        return user.hasTablePrivilege(tableName, Privilege.DELETE);
+    public boolean isValidDelete() {
+        String tableName = tokenizedInput[2];
+        return currentUser.hasTablePrivilege(tableName, Privilege.DELETE);
     }
 
-    public boolean isValidUpdate(String[] update, User user, ArrayList<Table> tables) {
+    public boolean isValidUpdate() {
 
-        String tableName = update[2];
+        String tableName = tokenizedInput[2];
         ArrayList<String> columnNames = new ArrayList<>();
 
         for(Table table : tables) {
@@ -111,60 +131,60 @@ public class SecurityChecker {
             }
         }
 
-        return user.hasTablePrivilege(tableName, Privilege.UPDATE, columnNames);
+        return currentUser.hasTablePrivilege(tableName, Privilege.UPDATE, columnNames);
     }
 
-    public boolean isValidPrivilegeCommand(String[] privilegeCommand, User user) {
+    public boolean isValidPrivilegeCommand() {
 
-        String tableName = ruleGraph.getTokensAt(privilegeCommand, 20).get(0);
+        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 20).get(0);
 
         // if WITH GRANT OPTION is used, make sure the user is allowed to pass on privileges to others
-        ArrayList<String> withToken = ruleGraph.getTokensAt(privilegeCommand, 24);
+        ArrayList<String> withToken = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
         boolean grantOptionUsed = ! withToken.isEmpty();
 
         if(grantOptionUsed) {
 
-            ArrayList<String> updateToken = ruleGraph.getTokensAt(privilegeCommand, 6);
-            ArrayList<String> referencesToken = ruleGraph.getTokensAt(privilegeCommand, 6);
+            ArrayList<String> updateToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
+            ArrayList<String> referencesToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
 
             boolean isPassingUpdatePrivilege = ! updateToken.isEmpty();
             boolean isPassingReferencesPrivilege = ! referencesToken.isEmpty();
 
             if(isPassingUpdatePrivilege) {
-                ArrayList<String> passedUpdateColumns = ruleGraph.getTokensAt(privilegeCommand, 12);
-                return user.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedUpdateColumns);
+                ArrayList<String> passedUpdateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 12);
+                return currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedUpdateColumns);
             }
 
             if(isPassingReferencesPrivilege) {
-                ArrayList<String> passedReferencesColumns = ruleGraph.getTokensAt(privilegeCommand, 16);
-                return user.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedReferencesColumns);
+                ArrayList<String> passedReferencesColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 16);
+                return currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedReferencesColumns);
             }
         }
 
         return true;
     }
 
-    public boolean isValidBuildFileStructure(String[] buildFileStructure, User user, ArrayList<Table> tables) {
-        String tableName = buildFileStructure[6];
-        return user.hasTablePrivilege(tableName, Privilege.INDEX);
+    public boolean isValidBuildFileStructure() {
+        String tableName = tokenizedInput[6];
+        return currentUser.hasTablePrivilege(tableName, Privilege.INDEX);
     }
 
-    public boolean isValidClusteredFile(String[] clusteredFile, User user, ArrayList<Table> tables) {
-        String tableName1 = clusteredFile[4];
-        String tableName2 = clusteredFile[6];
-        return user.hasTablePrivilege(tableName1, Privilege.INDEX) &&
-                user.hasTablePrivilege(tableName2, Privilege.INDEX);
+    public boolean isValidClusteredFile() {
+        String tableName1 = tokenizedInput[4];
+        String tableName2 = tokenizedInput[6];
+        return currentUser.hasTablePrivilege(tableName1, Privilege.INDEX) &&
+                currentUser.hasTablePrivilege(tableName2, Privilege.INDEX);
     }
 
-    public boolean isValidGrant(String[] grant, User user) {
+    public boolean isValidGrant() {
         return false;
     }
 
-    public boolean isValidRevoke(String[] revoke, User user) {
+    public boolean isValidRevoke() {
         return false;
     }
 
-    public boolean isValidRemoveFileStructure(String[] removeFileStructure, User user, List<Table> tables) {
+    public boolean isValidRemoveFileStructure() {
         return false;
     }
 }

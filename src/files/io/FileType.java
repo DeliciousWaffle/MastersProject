@@ -94,10 +94,11 @@ public final class FileType {
         UPDATE_DIAGRAM("helpscreen/UpdateDiagram.png"),
 
         // options screen assets
-        SUN_IMAGE("optionsscreen/Sun.png"),
+        MINUS_IMAGE("optionsscreen/Minus.png"),
         MOON_IMAGE("optionsscreen/Moon.png"),
         PLUS_IMAGE("optionsscreen/Plus.png"),
-        MINUS_IMAGE("optionsscreen/Minus.png"),
+        REFRESH_IMAGE("optionsscreen/Refresh.png"),
+        SUN_IMAGE("optionsscreen/Sun.png"),
 
         // tables screen assets
         FOREIGN_KEY_IMAGE("tablesscreen/ForeignKey.png"),

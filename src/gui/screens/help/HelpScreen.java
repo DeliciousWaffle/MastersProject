@@ -1,5 +1,6 @@
 package gui.screens.help;
 
+import datastructures.datacontroller.DataController;
 import gui.ScreenController;
 import gui.screens.Screen;
 import gui.screens.help.components.Diagram;
@@ -16,7 +17,7 @@ public class HelpScreen extends Screen {
 
     private Scene helpScreen;
 
-    public HelpScreen(ScreenController screenController) {
+    public HelpScreen(ScreenController screenController, DataController dataController) {
 
         // button layout for top part of screen
         HBox buttonLayout = super.getButtonLayout(screenController);

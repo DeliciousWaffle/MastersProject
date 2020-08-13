@@ -27,7 +27,7 @@ public class QueryTree implements Iterable<Operator> {
 
     public QueryTree(QueryTree toCopy) {
 
-        String toCopyStructure = toCopy.getStructure();
+        String toCopyStructure = toCopy.getTreeStructure();
 
         String[] tokens = toCopyStructure.split("\n");
 
@@ -90,6 +90,82 @@ public class QueryTree implements Iterable<Operator> {
         return size;
     }
 
+    public List<List<Traversal>> getEveryNodesLocation() {
+
+        List<List<Traversal>> everyNodesLocation = new ArrayList<>();
+        String treeStructure = getTreeStructure();
+        String[] traversalTokens = treeStructure.split("\n");
+
+        for(int i = 0; i < traversalTokens.length; i++) {
+            String token = traversalTokens[i];
+            if(token.contains(":")) {
+                int keepUpUntilIndex = token.indexOf(":");
+                traversalTokens[i] = token.substring(0, keepUpUntilIndex);
+            }
+        }
+
+        Stack<Traversal> workingTraversals = new Stack<>();
+
+        for(String traversalToken : traversalTokens) {
+
+            // converting the traversal token which is a string to an enum
+            Traversal traversal = null;
+
+            switch(traversalToken) {
+                case "Left":
+                    traversal = Traversal.LEFT;
+                    break;
+                case "Right":
+                    traversal = Traversal.RIGHT;
+                    break;
+                case "Up":
+                    traversal = Traversal.UP;
+                    break;
+                case "Down":
+                    traversal = Traversal.DOWN;
+                    break;
+                case "Root":
+                default:
+                    traversal = Traversal.NONE;
+            }
+
+            workingTraversals.push(traversal);
+
+            // create a new stack containing the working traversals needed to get to a node
+            // if this is not done, working traversals will contain the same traversals as
+            // the last in its list because references be wack, yo
+            Stack<Traversal> traversals = new Stack<>();
+
+            for(Traversal workingTraversal : workingTraversals) {
+
+                Traversal traversalToAdd = null;
+
+                switch(workingTraversal) {
+                    case LEFT:
+                        traversalToAdd = Traversal.LEFT;
+                        break;
+                    case RIGHT:
+                        traversalToAdd = Traversal.RIGHT;
+                        break;
+                    case UP:
+                        traversalToAdd = Traversal.UP;
+                        break;
+                    case DOWN:
+                        traversalToAdd = Traversal.DOWN;
+                        break;
+                    case NONE:
+                    default:
+                        traversalToAdd = Traversal.NONE;
+                }
+
+                traversals.add(traversalToAdd);
+            }
+
+            everyNodesLocation.add(traversals);
+        }
+
+        return everyNodesLocation;
+    }
 
     public void tryToPipelineSubtree(List<Traversal> traversals, Traversal location) {
         QueryTreeNode pointer = traverse(traversals);
@@ -184,7 +260,7 @@ public class QueryTree implements Iterable<Operator> {
      */
     public List<Traversal> getRelationLocation(String relationName) {
 
-        String structure = getStructure();
+        String structure = getTreeStructure();
         String[] tokens = structure.split("\n");
 
         for(int i = 0; i < tokens.length; i++) {
@@ -248,7 +324,7 @@ public class QueryTree implements Iterable<Operator> {
         // didn't find the relation for some reason
         if(! doneSearching) {
             System.out.println("In QueryTree.getRelationLocation()");
-            System.out.println("Couldn't find relation location");
+            System.out.println("Couldn't find relation location. Searching for: " + relationName);
             return new ArrayList<>();
         }
 
@@ -509,7 +585,7 @@ public class QueryTree implements Iterable<Operator> {
         size--;
     }
 
-    public String getStructure() {
+    public String getTreeStructure() {
 
         StringBuilder structure = new StringBuilder();
 

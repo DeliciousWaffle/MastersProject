@@ -1,6 +1,6 @@
 package systemcatalog.components;
 
-import utilities.enums.InputType;
+import datastructures.misc.Logger;
 import utilities.enums.Keyword;
 import datastructures.rulegraph.RuleGraph;
 
@@ -12,7 +12,9 @@ import datastructures.rulegraph.RuleGraph;
  */
 public class Parser {
 
-    private RuleGraph ruleGraph;
+    private RuleGraph.Type ruleGraphType;
+    private RuleGraph ruleGraphToUse;
+    private String[] tokenizedInput;
 
     public Parser() {}
 
@@ -23,7 +25,7 @@ public class Parser {
      * @param input is unformatted data
      * @return formatted data
      */
-    public String[] formatAndTokenizeInput(String input) {
+    public static String[] formatAndTokenizeInput(String input) {
 
         input = input.toLowerCase();
 
@@ -75,160 +77,175 @@ public class Parser {
     }
 
     /**
+     * Given a tokenized command, returns the type that it is or UNKNOWN.
+     * @param tokenizedInput tokenized command
+     * @return the input type
+     */
+    public static RuleGraph.Type determineRuleGraphType(String[] tokenizedInput) {
+
+        String firstToken = tokenizedInput[0];
+
+        switch(firstToken) {
+            case "SELECT":
+                return RuleGraph.Type.QUERY;
+            case "CREATE":
+                return RuleGraph.Type.CREATE_TABLE;
+            case "DROP":
+                return RuleGraph.Type.DROP_TABLE;
+            case "ALTER":
+                return RuleGraph.Type.ALTER_TABLE;
+            case "INSERT":
+                return RuleGraph.Type.INSERT;
+            case "DELETE":
+                return RuleGraph.Type.DELETE;
+            case "UPDATE":
+                return RuleGraph.Type.UPDATE;
+            case "GRANT":
+                return RuleGraph.Type.GRANT;
+            case "REVOKE":
+                return RuleGraph.Type.REVOKE;
+            case "BUILD":
+                return RuleGraph.Type.BUILD_FILE_STRUCTURE;
+            case "REMOVE":
+                return RuleGraph.Type.REMOVE_FILE_STRUCTURE;
+            default:
+                return RuleGraph.Type.UNKNOWN;
+        }
+    }
+
+    /**
      * @param candidate the string to test
      * @return whether the given candidate is numeric
      */
     public static boolean isNumeric(String candidate) {
+
         try {
             Double.parseDouble(candidate);
         } catch(NumberFormatException e) {
             return false;
         }
+
         return true;
     }
 
-    // methods ---------------------------------------------------------------------------------------------------------
+    // setters ---------------------------------------------------------------------------------------------------------
 
-    public void setRuleGraph(RuleGraph ruleGraph) {
-        this.ruleGraph = ruleGraph;
+    public void setRuleGraphType(RuleGraph.Type ruleGraphType) {
+        this.ruleGraphType = ruleGraphType;
     }
 
+    public void setRuleGraphToUse(RuleGraph ruleGraphToUse) {
+        this.ruleGraphToUse = ruleGraphToUse;
+    }
+
+    public void setTokenizedInput(String[] tokenizedInput) {
+        this.tokenizedInput = tokenizedInput;
+    }
+
+    // validation ------------------------------------------------------------------------------------------------------
+
     /**
-     * Given a tokenized command, returns the type that it is or UNKNOWN.
-     * @param command tokenized command
-     * @return the input type
+     * @return whether the given input is syntactically correct with respect to
+     * the tokenized input and rule graph that have been set
      */
-    public InputType determineInputType(String[] command) {
+    public boolean validate() {
 
-        String firstToken = command[0];
+        // check if the input is syntactically correct and contains no illegal keywords
+        boolean isValid = (ruleGraphToUse.isSyntacticallyCorrect(tokenizedInput)) &&
+                ! ruleGraphToUse.hasIllegalKeyword(tokenizedInput);
 
-        switch(firstToken) {
-            case "SELECT":
-                return InputType.QUERY;
-            case "CREATE":
-                return InputType.CREATE_TABLE;
-            case "DROP":
-                return InputType.DROP_TABLE;
-            case "ALTER":
-                return InputType.ALTER_TABLE;
-            case "INSERT":
-                return InputType.INSERT;
-            case "DELETE":
-                return InputType.DELETE;
-            case "UPDATE":
-                return InputType.UPDATE;
-            case "GRANT":
-                return InputType.GRANT;
-            case "REVOKE":
-                return InputType.REVOKE;
-            case "BUILD":
-                return InputType.BUILD_FILE_STRUCTURE;
-            case "REMOVE":
-                return InputType.REMOVE_FILE_STRUCTURE;
-            default: {
-                return InputType.UNKNOWN;
-            }
+        if(! isValid) {
+            return false;
         }
-    }
 
-    /**
-     * This returns whether the input is syntactically correct depending on the rule graph set
-     * and the input type.
-     * @param inputType the type of input
-     * @param input - input from the user
-     * @return whether the input is syntactically correct
-     */
-    public boolean isValid(InputType inputType, String[] input) {
-        // all input types will check for valid syntax and illegal keyword usage
-        boolean isValid = (ruleGraph.isSyntacticallyCorrect(input)) && ! ruleGraph.hasIllegalKeyword(input);
-        switch(inputType) {
+        switch(ruleGraphType) {
             case QUERY:
-                return isValid && isValidQuery(input);
+                return isValidQuery();
             case CREATE_TABLE:
-                return isValid && isValidCreateTable(input);
+                return isValidCreateTable();
             case DROP_TABLE:
-                return isValid && isValidDropTable(input);
+                return isValidDropTable();
             case ALTER_TABLE:
-                return isValid && isValidAlterTable(input);
+                return isValidAlterTable();
             case INSERT:
-                return isValid && isValidInsert(input);
+                return isValidInsert();
             case DELETE:
-                return isValid && isValidDelete(input);
+                return isValidDelete();
             case UPDATE:
-                return isValid && isValidUpdate(input);
+                return isValidUpdate();
             case GRANT:
-                return isValid && isValidGrant(input);
+                return isValidGrant();
             case REVOKE:
-                return isValid && isValidRevoke(input);
+                return isValidRevoke();
             case BUILD_FILE_STRUCTURE:
-                return isValid && isValidBuildFileStructure(input);
+                return isValidBuildFileStructure();
             case REMOVE_FILE_STRUCTURE:
-                return isValid && isValidRemoveFileStructure(input);
+                return isValidRemoveFileStructure();
             case UNKNOWN:
             default:
                 return false;
         }
     }
 
-    public boolean isValidQuery(String[] query) {
-        return  ! ruleGraph.hasIllegalNumericAt(query, 2, 10, 14, 17, 20, 23, 35, 45) &&
+    public boolean isValidQuery() {
+        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 10, 14, 17, 20, 23, 35, 45) &&
                 // > (26), < (27), >= (28), <= (29) can only be used with a numeric value (30) in WHERE clause
-                ! ruleGraph.hasIllegalValue(query,30, 26, 27, 28, 29) &&
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput,30, 26, 27, 28, 29) &&
                 // same thing in having clause
-                ! ruleGraph.hasIllegalValue(query, 53, 49, 50, 51, 52);
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 53, 49, 50, 51, 52);
     }
 
-    public boolean isValidCreateTable(String[] createTable) {
-        return  ! ruleGraph.hasIllegalNumericAt(createTable, 2, 4) &&
+    public boolean isValidCreateTable() {
+        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 4) &&
                 // can't have duplicate column names
-                ! ruleGraph.hasDuplicatesAt(createTable, 4) &&
+                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 4) &&
                 // size of the column can only be numeric
-                ! ruleGraph.hasIllegalValue(createTable, 8);
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 8);
     }
 
-    public boolean isValidDropTable(String[] dropTable) {
-        return ! ruleGraph.hasIllegalNumericAt(dropTable, 2);
+    public boolean isValidDropTable() {
+        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2);
     }
 
-    public boolean isValidAlterTable(String[] alterTable) {
-        return  ! ruleGraph.hasIllegalNumericAt(alterTable, 2, 6, 15) &&
+    public boolean isValidAlterTable() {
+        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 6, 15) &&
                 // size can only be numeric
-                ! ruleGraph.hasIllegalValue(alterTable, 10);
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 10);
     }
 
-    public boolean isValidInsert(String[] insert) {
-        return ! ruleGraph.hasIllegalNumericAt(insert, 2);
+    public boolean isValidInsert() {
+        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2);
     }
 
-    public boolean isValidDelete(String[] delete) {
-        return  ! ruleGraph.hasIllegalNumericAt(delete, 2, 4) &&
+    public boolean isValidDelete() {
+        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 4) &&
                 // > (7), < (8), >= (9), <= (10) can only be used with a numeric value (11)
-                ! ruleGraph.hasIllegalValue(delete, 11, 7, 8, 9, 10);
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 11, 7, 8, 9, 10);
     }
 
-    public boolean isValidUpdate(String[] update) {
-        return ! ruleGraph.hasIllegalNumericAt(update, 1, 3, 7);
+    public boolean isValidUpdate() {
+        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 1, 3, 7);
     }
 
-    public boolean isValidGrant(String[] grant) {
-        return  ! ruleGraph.hasIllegalNumericAt(grant, 12, 16, 20, 22) &&
+    public boolean isValidGrant() {
+        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 12, 16, 20, 22) &&
                 // can't grant the same privilege more than once, update and reference
                 // columns must be unique, and usernames must be unique
-                ! ruleGraph.hasDuplicatesAt(grant, 1, 2, 3, 4, 5, 6, 12, 16, 22);
+                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 1, 2, 3, 4, 5, 6, 12, 16, 22);
     }
 
-    public boolean isValidRevoke(String[] revoke) {
+    public boolean isValidRevoke() {
         // grant command is similar enough in structure to do this
-        return isValidGrant(revoke);
+        return isValidGrant();
     }
 
-    public boolean isValidBuildFileStructure(String[] buildFileStructure) {
-        return  ! ruleGraph.hasIllegalNumericAt(buildFileStructure, 7, 9, 12, 14) &&
+    public boolean isValidBuildFileStructure() {
+        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 7, 9, 12, 14) &&
                 // can't cluster a table with itself
-                ! ruleGraph.hasDuplicatesAt(buildFileStructure,12, 14);
+                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput,12, 14);
     }
 
-    public boolean isValidRemoveFileStructure(String[] removeFileStructure) {
-        return ! ruleGraph.hasIllegalNumericAt(removeFileStructure, 4, 6);
+    public boolean isValidRemoveFileStructure() {
+        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 4, 6);
     }
 }

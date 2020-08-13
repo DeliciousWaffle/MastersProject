@@ -105,7 +105,7 @@ public class OptimizerTest {
         //System.out.println("After Cascading and Pushing Down Projections");
         //System.out.println(queryTree.getStructure());
         queryTree = optimizer.formJoins(queryTree);
-        System.out.println(queryTree.getStructure());
+        System.out.println(queryTree.getTreeStructure());
         queryTree = optimizer.findSubtreesToPipeline(queryTree);
 
         System.out.println("----------------------------------------");

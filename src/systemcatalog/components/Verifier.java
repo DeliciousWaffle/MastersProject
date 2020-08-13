@@ -17,46 +17,72 @@ import java.util.List;
  */
 public class Verifier {
 
-    private RuleGraph ruleGraph;
+    private RuleGraph.Type ruleGraphType;
+    private RuleGraph ruleGraphToUse;
+    private String[] tokenizedInput;
+    private List<Table> tables;
+    private List<User> users;
 
     public Verifier() {}
 
-    public void setRuleGraph(RuleGraph ruleGraph) { this.ruleGraph = ruleGraph; }
+    // setters ---------------------------------------------------------------------------------------------------------
 
-    public boolean isValid(InputType inputType, String[] input, ArrayList<User> users, ArrayList<Table> tables) {
-        switch(inputType) {
+    public void setRuleGraphType(RuleGraph.Type ruleGraphType) {
+        this.ruleGraphType = ruleGraphType;
+    }
+
+    public void setRuleGraphToUse(RuleGraph ruleGraphToUse) {
+        this.ruleGraphToUse = ruleGraphToUse;
+    }
+
+    public void setTokenizedInput(String[] tokenizedInput) {
+        this.tokenizedInput = tokenizedInput;
+    }
+
+    public void setTables(List<Table> tables) {
+        this.tables = tables;
+    }
+
+    public void setUsers(List<User> users) {
+        this.users = users;
+    }
+
+    // validation ------------------------------------------------------------------------------------------------------
+
+    public boolean validate() {
+        switch(ruleGraphType) {
             case QUERY:
-                return isValidQuery(input, tables);
+                return isValidQuery();
             case CREATE_TABLE:
-                return isValidCreateTable(input, tables);
+                return isValidCreateTable();
             case DROP_TABLE:
-                return isValidDropTable(input, tables);
+                return isValidDropTable();
             case ALTER_TABLE:
-                return isValidAlterTable(input, tables);
+                return isValidAlterTable();
             case INSERT:
-                return isValidInsert(input, tables);
+                return isValidInsert();
             case DELETE:
-                return isValidDelete(input, tables);
+                return isValidDelete();
             case UPDATE:
-                return isValidUpdate(input, tables);
+                return isValidUpdate();
             case GRANT:
-                return isValidGrant(input, users, tables);
+                return isValidGrant();
             case REVOKE:
-                return isValidRevoke(input, users, tables);
+                return isValidRevoke();
             case BUILD_FILE_STRUCTURE:
-                return isValidBuildFileStructure(input, tables);
+                return isValidBuildFileStructure();
             case REMOVE_FILE_STRUCTURE:
-                return isValidRemoveFileStructure(input, tables);
+                return isValidRemoveFileStructure();
             case UNKNOWN:
             default:
                 return false;
         }
     }
 
-    public boolean isValidQuery(String[] query, ArrayList<Table> tables) {
+    public boolean isValidQuery() {
 
         // make sure all tables exist
-        ArrayList<String> candidateTables = ruleGraph.getTokensAt(query, 14, 17);
+        ArrayList<String> candidateTables = ruleGraphToUse.getTokensAt(tokenizedInput, 14, 17);
 
         for(Table currentTable : tables) {
 
@@ -75,7 +101,7 @@ public class Verifier {
         }
 
         // make sure all columns exist in the tables supplied
-        ArrayList<String> candidateColumns = ruleGraph.getTokensAt(query, 2, 10, 20, 23, 35, 45);
+        ArrayList<String> candidateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 2, 10, 20, 23, 35, 45);
 
         for(Table currentTable : tables) {
             for(String candidateColumn : candidateColumns) {
@@ -91,8 +117,8 @@ public class Verifier {
         // ensure that the columns used to join on in the using clause appear in the corresponding tables
         // Eg. if have t1 JOIN t2 USING(col1) JOIN t3 USING(col2)
         // t1 and t2 must have "col1" and t2 and t3 must have "col2" in their tables
-        ArrayList<String> tablesJoined  = ruleGraph.getTokensAt(query, 13, 17);
-        ArrayList<String> columnsJoined = ruleGraph.getTokensAt(query, 20);
+        ArrayList<String> tablesJoined  = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 17);
+        ArrayList<String> columnsJoined = ruleGraphToUse.getTokensAt(tokenizedInput, 20);
         HashMap<String, ArrayList<String>> columnTablePairs = new HashMap<>();
 
         for(int i = 0; i < columnsJoined.size(); i++) {
@@ -130,7 +156,7 @@ public class Verifier {
         }
 
         // only accept numeric columns if using MIN, MAX, AVG, COUNT, SUM
-        candidateColumns = ruleGraph.getTokensAt(query, 10);
+        candidateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 10);
         String candidateColumn = candidateColumns.isEmpty() ? "null" : candidateColumns.get(0);
 
         /*for(Table currentTable : tables) {
@@ -145,8 +171,8 @@ public class Verifier {
 
 
         // make sure that column name matches the data type of the constant in where clause
-        ArrayList<String> whereColumns = ruleGraph.getTokensAt(query, 24);
-        ArrayList<String> constants = ruleGraph.getTokensAt(query, 31);
+        ArrayList<String> whereColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
+        ArrayList<String> constants = ruleGraphToUse.getTokensAt(tokenizedInput, 31);
         int pairSize = whereColumns.size();
 
         for(int i = 0; i < pairSize; i++) {
@@ -183,11 +209,8 @@ public class Verifier {
      * one table. Not making this check will cause inconsistent output.
      * Eg. SELECT * FROM tab1, tab2 where col1 > 5 AND col1 = 10;
      * will return true assuming col1 belongs to both tab1 and tab2.
-     * @param columnName
-     * @param tables
-     * @return
      */
-    public boolean isAmbiguousColumnName(String columnName, ArrayList<Table> tables) {
+    /*public boolean isAmbiguousColumnName() {
 
         int occurrences = 0;
         List<String> tableNamesWithSameColumnName = new ArrayList<>();
@@ -211,12 +234,12 @@ public class Verifier {
         }
 
         return false;
-    }
+    }*/
 
-    public boolean isValidCreateTable(String[] createTable, ArrayList<Table> tables) {
+    public boolean isValidCreateTable() {
 
         // make sure that the table name is not numeric
-        String tableName  = createTable[2];
+        String tableName  = tokenizedInput[2];
         boolean isNumeric = Parser.isNumeric(tableName);
 
         if(isNumeric) {
@@ -224,7 +247,7 @@ public class Verifier {
         }
 
         // make sure that none of the column names are numeric
-        ArrayList<String> columns = ruleGraph.getTokensAt(createTable, 4);
+        ArrayList<String> columns = ruleGraphToUse.getTokensAt(tokenizedInput, 4);
 
         for(String column : columns) {
             isNumeric = Parser.isNumeric(column);
@@ -248,7 +271,7 @@ public class Verifier {
         }
 
         // make sure none of the columns' sizes are greater than 99
-        ArrayList<String> columnSizes = ruleGraph.getTokensAt(createTable, 8);
+        ArrayList<String> columnSizes = ruleGraphToUse.getTokensAt(tokenizedInput, 8);
 
         for(String columnSize : columnSizes) {
             int size = Integer.parseInt(columnSize);
@@ -260,10 +283,10 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidDropTable(String[] dropTable, ArrayList<Table> tables) {
+    public boolean isValidDropTable() {
 
         // make sure table name exists
-        String tableName = dropTable[2];
+        String tableName = tokenizedInput[2];
         boolean foundTable = false;
 
         for(Table table : tables) {
@@ -276,10 +299,10 @@ public class Verifier {
         return foundTable;
     }
 
-    public boolean isValidAlterTable(String[] alterTable, ArrayList<Table> tables) {
+    public boolean isValidAlterTable() {
 
         // make sure table name exists
-        String tableName = alterTable[2];
+        String tableName = tokenizedInput[2];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -294,8 +317,8 @@ public class Verifier {
             return false;
         }
 
-        String type = alterTable[3];
-        String columnName = alterTable[6];
+        String type = tokenizedInput[3];
+        String columnName = tokenizedInput[6];
 
         // if using drop or modify, ensure columns exist with associated table
         if(type.equalsIgnoreCase("DROP") || type.equalsIgnoreCase("MODIFY")) {
@@ -315,7 +338,7 @@ public class Verifier {
 
         // if using add or modify, ensure size is not greater than 99
         if(type.equalsIgnoreCase("ADD") || type.equalsIgnoreCase("MODIFY")) {
-            int size = Integer.parseInt(alterTable[7]);
+            int size = Integer.parseInt(tokenizedInput[7]);
             if(size > 99) {
                 return false;
             }
@@ -324,10 +347,10 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidInsert(String[] insert, ArrayList<Table> tables) {
+    public boolean isValidInsert() {
 
         // make sure table name exists
-        String tableName = insert[2];
+        String tableName = tokenizedInput[2];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -345,14 +368,14 @@ public class Verifier {
 
         // make sure that the number of values being inserted is not greater than the number of columns in the table
         int numColsInTable  = referencedTable.getNumCols();
-        int numColsToInsert = ruleGraph.getTokensAt(insert, 5).size();
+        int numColsToInsert = ruleGraphToUse.getTokensAt(tokenizedInput, 5).size();
 
         if(numColsToInsert > numColsInTable) {
             return false;
         }
 
         // make sure that each new column's value matches the datatype in the corresponding table
-        ArrayList<String> valuesToInsert = ruleGraph.getTokensAt(insert, 5);
+        ArrayList<String> valuesToInsert = ruleGraphToUse.getTokensAt(tokenizedInput, 5);
         List<Column> columns = referencedTable.getColumns();
 
         for(int i = 0; i < columns.size(); i++) {
@@ -369,10 +392,10 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidDelete(String[] delete, ArrayList<Table> tables) {
+    public boolean isValidDelete() {
 
         // make sure table name exists
-        String tableName = delete[2];
+        String tableName = tokenizedInput[2];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -389,7 +412,7 @@ public class Verifier {
         }
 
         // make sure column exists for given table name
-        String columnName   = delete[4];
+        String columnName   = tokenizedInput[4];
         boolean foundColumn = referencedTable.hasColumn(columnName);
 
         if(! foundColumn) {
@@ -397,7 +420,7 @@ public class Verifier {
         }
 
         // make sure the column referenced matches the datatype of the value supplied
-        String value = delete[11];
+        String value = tokenizedInput[11];
         // TODO
         /*boolean isNumericColumn = referencedTable.getColumn(columnName).isNumeric();
         boolean isNumericValue  = Parser.isNumeric(value);
@@ -409,10 +432,10 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidUpdate(String[] update, ArrayList<Table> tables) {
+    public boolean isValidUpdate() {
 
         // make sure table name exists
-        String tableName = update[1];
+        String tableName = tokenizedInput[1];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -429,15 +452,15 @@ public class Verifier {
         }
 
         // make sure columns referenced actually belong to the table supplied
-        String setColumn   = update[3];
+        String setColumn   = tokenizedInput[3];
         if(! referencedTable.hasColumn(setColumn)) {
             return false;
         }
 
         // an UPDATE using the WHERE clause
-        if(update.length > 6) {
+        if(tokenizedInput.length > 6) {
 
-            String whereColumn = update[7];
+            String whereColumn = tokenizedInput[7];
 
             if(! referencedTable.hasColumn(whereColumn)) {
                 return false;
@@ -455,16 +478,10 @@ public class Verifier {
         return true;
     }
 
-    /**
-     * @param privilege - a tokenized privilege statement
-     * @param users - all users of the system
-     * @param tables - all tables within the system
-     * @return whether a GRANT or REVOKE command is valid
-     */
-    public boolean isValidGrant(String[] privilege, ArrayList<User> users, ArrayList<Table> tables) {
+    public boolean isValidGrant() {
 
         // make sure table exists
-        String tableName = ruleGraph.getTokensAt(privilege, 20).get(0);
+        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 20).get(0);
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -480,7 +497,7 @@ public class Verifier {
         }
 
         // make sure that columns exist for corresponding table if using UPDATE or REFERENCES
-        ArrayList<String> updateAndReferencesCols = ruleGraph.getTokensAt(privilege, 12, 16);
+        ArrayList<String> updateAndReferencesCols = ruleGraphToUse.getTokensAt(tokenizedInput, 12, 16);
 
         for(String candidate : updateAndReferencesCols) {
             boolean hasCandidate = referencedTable.hasColumn(candidate);
@@ -490,7 +507,7 @@ public class Verifier {
         }
 
         // make sure user(s) exists
-        ArrayList<String> usersReferenced = ruleGraph.getTokensAt(privilege, 22);
+        ArrayList<String> usersReferenced = ruleGraphToUse.getTokensAt(tokenizedInput, 22);
 
         for(String candidate : usersReferenced) {
 
@@ -511,15 +528,15 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidRevoke(String[] revoke, List<User> users, List<Table> tables) {
+    public boolean isValidRevoke() {
+
         return false;
     }
 
-    // TODO
-    public boolean isValidBuildFileStructure(String[] fileStructure, ArrayList<Table> tables) {
+    public boolean isValidBuildFileStructure() {
 
         // make sure table exists
-        String tableName = fileStructure[6];
+        String tableName = tokenizedInput[6];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -534,7 +551,7 @@ public class Verifier {
             return false;
         }
 
-        String column = fileStructure[4];
+        String column = tokenizedInput[4];
 
         if(! referencedTable.hasColumn(column)) {
             return false;
@@ -543,9 +560,8 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidRemoveFileStructure(String[] fileStructure, List<Table> tables) {
+    public boolean isValidRemoveFileStructure() {
+
         return false;
     }
-
-
 }

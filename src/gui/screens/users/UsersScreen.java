@@ -1,5 +1,6 @@
 package gui.screens.users;
 
+import datastructures.datacontroller.DataController;
 import datastructures.user.User;
 import files.io.FileType;
 import files.io.IO;
@@ -21,7 +22,7 @@ public class UsersScreen extends Screen {
 
     private Scene usersScreen;
 
-    public UsersScreen(ScreenController screenController) {
+    public UsersScreen(ScreenController screenController, DataController dataController) {
 
         List<User> users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
 

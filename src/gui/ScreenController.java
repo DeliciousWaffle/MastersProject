@@ -1,5 +1,6 @@
 package gui;
 
+import datastructures.datacontroller.DataController;
 import gui.screens.options.OptionsScreen;
 import gui.screens.Screen;
 import gui.screens.help.HelpScreen;
@@ -10,10 +11,10 @@ import javafx.stage.Stage;
 
 public class ScreenController {
 
-    private Stage primaryStage;
-    private Screen terminalScreen, tablesScreen, usersScreen, optionsScreen, helpScreen;
+    private final Stage primaryStage;
+    private final Screen terminalScreen, tablesScreen, usersScreen, optionsScreen, helpScreen;
 
-    public ScreenController(Stage primaryStage) {
+    public ScreenController(Stage primaryStage, DataController dataController) {
 
         this.primaryStage = primaryStage;
 
@@ -21,15 +22,20 @@ public class ScreenController {
         primaryStage.setWidth(Screen.defaultWidth);
         primaryStage.setHeight(Screen.defaultHeight);
 
-        terminalScreen = new TerminalScreen(this);
-        tablesScreen   = new TablesScreen(this);
-        usersScreen    = new UsersScreen(this);
-        optionsScreen  = new OptionsScreen(this);
-        helpScreen     = new HelpScreen(this);
+        terminalScreen = new TerminalScreen(this, dataController);
+        tablesScreen   = new TablesScreen(this, dataController);
+        usersScreen    = new UsersScreen(this, dataController);
+        optionsScreen  = new OptionsScreen(this, dataController);
+        helpScreen     = new HelpScreen(this, dataController);
 
         setScreen(Screen.Type.TERMINAL_SCREEN);
     }
 
+    /**
+     * Called from either from the terminal, tables, users, options, or help screens.
+     * Simply changes the screen to the one provided.
+     * @param screen is the screen to display
+     */
     public void setScreen(Screen.Type screen) {
         switch(screen) {
             case TERMINAL_SCREEN:

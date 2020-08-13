@@ -15,19 +15,43 @@ import java.util.*;
 public class Optimizer {
 
     // represents each state of the query tree when applying the optimization heuristic
+    private RuleGraph queryRuleGraph;
+    private String[] tokenizedInput;
+    private List<Table> tables;
     private List<QueryTree> queryTreeStates;
+    private List<String> recommendedFileStructures;
 
-    public Optimizer() {
-        queryTreeStates = new ArrayList<>();
+    public Optimizer() {}
+
+    // setters ---------------------------------------------------------------------------------------------------------
+
+    public void setRuleGraphToUse(RuleGraph queryRuleGraph) {
+        this.queryRuleGraph = queryRuleGraph;
     }
+
+    public void setTokenizedInput(String[] tokenizedInput) {
+        this.tokenizedInput = tokenizedInput;
+    }
+
+    public void setTables(List<Table> tables) {
+        this.tables = tables;
+    }
+
+    // getters ---------------------------------------------------------------------------------------------------------
 
     public List<QueryTree> getQueryTreeStates() {
         return queryTreeStates;
     }
 
-    public void optimize(RuleGraph queryRuleGraph, String[] queryTokens, ArrayList<Table> tables) {
+    public List<String> getRecommendedFileStructures() {
+        return recommendedFileStructures;
+    }
 
-        QueryTree workingTree = createQueryTree(queryRuleGraph, queryTokens, tables);
+    // query tree creation and optimization ----------------------------------------------------------------------------
+
+    public void optimize() {
+
+        QueryTree workingTree = createQueryTree();
         queryTreeStates.add(workingTree);
 
         workingTree = cascadeSelections(workingTree);
@@ -49,7 +73,7 @@ public class Optimizer {
         queryTreeStates.add(workingTree);
     }
 
-    public QueryTree createQueryTree(RuleGraph queryRuleGraph, String[] queryTokens, List<Table> tables) {
+    public QueryTree createQueryTree() {
 
         QueryTree queryTree = new QueryTree((Operator) null);
 
@@ -58,9 +82,9 @@ public class Optimizer {
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the input
-        List<String> columnNames = queryRuleGraph.getTokensAt(queryTokens, 1, 2);
-        List<String> aggregationTypes = queryRuleGraph.getTokensAt(queryTokens, 3, 4, 5, 6, 7);
-        List<String> aggregatedColumnNames = queryRuleGraph.getTokensAt(queryTokens, 9, 10);
+        List<String> columnNames = queryRuleGraph.getTokensAt(tokenizedInput, 1, 2);
+        List<String> aggregationTypes = queryRuleGraph.getTokensAt(tokenizedInput, 3, 4, 5, 6, 7);
+        List<String> aggregatedColumnNames = queryRuleGraph.getTokensAt(tokenizedInput, 9, 10);
 
         // prefix column names
         prefixColumnNames(columnNames, tables);
@@ -82,11 +106,11 @@ public class Optimizer {
 
         // getting the input
         aggregationTypes = new ArrayList<>(); // can't use .clear() because it will null out the values in the tree
-        aggregationTypes = queryRuleGraph.getTokensAt(queryTokens, 38, 39, 40, 41, 42);
+        aggregationTypes = queryRuleGraph.getTokensAt(tokenizedInput, 38, 39, 40, 41, 42);
         aggregatedColumnNames = new ArrayList<>();
-        aggregatedColumnNames = queryRuleGraph.getTokensAt(queryTokens, 44, 45);
-        List<String> symbols = queryRuleGraph.getTokensAt(queryTokens, 47, 48, 49, 50, 51, 52);
-        List<String> values = queryRuleGraph.getTokensAt(queryTokens , 53);
+        aggregatedColumnNames = queryRuleGraph.getTokensAt(tokenizedInput, 44, 45);
+        List<String> symbols = queryRuleGraph.getTokensAt(tokenizedInput, 47, 48, 49, 50, 51, 52);
+        List<String> values = queryRuleGraph.getTokensAt(tokenizedInput , 53);
 
         // prefix column names
         prefixColumnNames(aggregatedColumnNames, tables);
@@ -105,11 +129,11 @@ public class Optimizer {
 
         // getting the input
         columnNames = new ArrayList<>();
-        columnNames = queryRuleGraph.getTokensAt(queryTokens, 23);
+        columnNames = queryRuleGraph.getTokensAt(tokenizedInput, 23);
         symbols = new ArrayList<>();
-        symbols = queryRuleGraph.getTokensAt(queryTokens, 24, 25, 26, 27, 28, 29);
+        symbols = queryRuleGraph.getTokensAt(tokenizedInput, 24, 25, 26, 27, 28, 29);
         values = new ArrayList<>();
-        values = queryRuleGraph.getTokensAt(queryTokens, 30);
+        values = queryRuleGraph.getTokensAt(tokenizedInput, 30);
 
         // prefix column names
         prefixColumnNames(columnNames, tables);
@@ -147,7 +171,7 @@ public class Optimizer {
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the tables and the number of cartesian products needed
-        List<String> tableNames = queryRuleGraph.getTokensAt(queryTokens, 14, 17);
+        List<String> tableNames = queryRuleGraph.getTokensAt(tokenizedInput, 14, 17);
         int numCartesianProducts = tableNames.size() - 1;
 
         // get to the location that we want
@@ -204,18 +228,18 @@ public class Optimizer {
         // will need to make sure the mapping is correct which makes things complicated
         boolean canStartMapping = false;
 
-        for(int i = 0; i < queryTokens.length; i++) {
+        for(int i = 0; i < tokenizedInput.length; i++) {
 
-            String queryToken = queryTokens[i];
+            String queryToken = tokenizedInput[i];
 
             if(canStartMapping) {
 
                 // if an exception is thrown, then we're done mapping
                 try {
 
-                    String firstJoinTableName = queryTokens[i - 1];
-                    String secondJoinTableName = queryTokens[i + 1];
-                    String joinOnColumnName = queryTokens[i + 4];
+                    String firstJoinTableName = tokenizedInput[i - 1];
+                    String secondJoinTableName = tokenizedInput[i + 1];
+                    String joinOnColumnName = tokenizedInput[i + 4];
 
                     if(queryToken.equalsIgnoreCase("JOIN")) {
 
@@ -339,7 +363,7 @@ public class Optimizer {
               aggregation node, then add them as group by columns there */
 
         // getting the input
-        List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(queryTokens, 35);
+        List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(tokenizedInput, 35);
 
         // prefixing with table names
         prefixColumnNames(havingClauseColumnNames, tables);
@@ -580,6 +604,7 @@ public class Optimizer {
                     boolean isCartesianProduct = false;
 
                     while(! isCartesianProduct) {
+
                         firstRelationLocation.remove(firstRelationLocation.size() - 1);
                         isCartesianProduct = queryTree.get(firstRelationLocation, QueryTree.Traversal.NONE)
                                 .getType() == Operator.Type.CARTESIAN_PRODUCT;
@@ -989,4 +1014,9 @@ public class Optimizer {
         System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
         return new QueryTree(queryTree);
     }
+
+    // utility methods for tree creation/optimization ------------------------------------------------------------------
+
+    // file structure recommendation -----------------------------------------------------------------------------------
+
 }

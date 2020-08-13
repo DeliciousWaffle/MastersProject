@@ -1,5 +1,6 @@
 package gui.screens.options;
 
+import datastructures.datacontroller.DataController;
 import gui.ScreenController;
 import gui.screens.Screen;
 import javafx.scene.Scene;
@@ -10,7 +11,7 @@ public class OptionsScreen extends Screen {
 
     private Scene optionsScreen;
 
-    public OptionsScreen(ScreenController screenController) {
+    public OptionsScreen(ScreenController screenController, DataController dataController) {
 
         HBox buttonLayout = super.getButtonLayout(screenController);
 

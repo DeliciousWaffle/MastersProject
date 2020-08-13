@@ -1,5 +1,6 @@
 package files.io;
 
+import datastructures.options.Options;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.FileStructure;

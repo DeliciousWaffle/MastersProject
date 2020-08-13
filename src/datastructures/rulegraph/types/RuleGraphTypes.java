@@ -9,9 +9,10 @@ import datastructures.rulegraph.RuleGraph;
  */
 public class RuleGraphTypes {
 
-    public RuleGraphTypes() {}
+    // can't instantiate me!
+    private RuleGraphTypes() {}
 
-    public RuleGraph getQueryRuleGraph() {
+    public static RuleGraph getQueryRuleGraph() {
 
         RuleGraph queryRuleGraph = new RuleGraph();
 
@@ -134,7 +135,7 @@ public class RuleGraphTypes {
         return queryRuleGraph;
     }
 
-    public RuleGraph getCreateTableRuleGraph() {
+    public static RuleGraph getCreateTableRuleGraph() {
 
         RuleGraph createTableRuleGraph = new RuleGraph();
 
@@ -169,7 +170,7 @@ public class RuleGraphTypes {
         return createTableRuleGraph;
     }
 
-    public RuleGraph getAlterTableRuleGraph() {
+    public static RuleGraph getAlterTableRuleGraph() {
 
         RuleGraph alterTableRuleGraph = new RuleGraph();
 
@@ -212,7 +213,7 @@ public class RuleGraphTypes {
         return alterTableRuleGraph;
     }
 
-    public RuleGraph getDropTableRuleGraph() {
+    public static RuleGraph getDropTableRuleGraph() {
 
         RuleGraph dropTableRuleGraph = new RuleGraph();
 
@@ -229,7 +230,7 @@ public class RuleGraphTypes {
         return dropTableRuleGraph;
     }
 
-    public RuleGraph getInsertRuleGraph() {
+    public static RuleGraph getInsertRuleGraph() {
 
         RuleGraph insertRuleGraph = new RuleGraph();
 
@@ -256,7 +257,7 @@ public class RuleGraphTypes {
         return insertRuleGraph;
     }
 
-    public RuleGraph getDeleteRuleGraph() {
+    public static RuleGraph getDeleteRuleGraph() {
 
         RuleGraph deleteRuleGraph = new RuleGraph();
 
@@ -291,7 +292,7 @@ public class RuleGraphTypes {
         return deleteRuleGraph;
     }
 
-    public RuleGraph getUpdateRuleGraph() {
+    public static RuleGraph getUpdateRuleGraph() {
 
         RuleGraph updateRuleGraph = new RuleGraph();
 
@@ -322,7 +323,7 @@ public class RuleGraphTypes {
         return updateRuleGraph;
     }
 
-    public RuleGraph getGrantRuleGraph() {
+    public static RuleGraph getGrantRuleGraph() {
 
         RuleGraph grantRuleGraph = new RuleGraph();
 
@@ -386,7 +387,7 @@ public class RuleGraphTypes {
         return grantRuleGraph;
     }
 
-    public RuleGraph getRevokeRuleGraph() {
+    public static RuleGraph getRevokeRuleGraph() {
 
         RuleGraph revokeRuleGraph = new RuleGraph();
 
@@ -444,7 +445,7 @@ public class RuleGraphTypes {
         return revokeRuleGraph;
     }
 
-    public RuleGraph getBuildFileStructureRuleGraph() {
+    public static RuleGraph getBuildFileStructureRuleGraph() {
 
         RuleGraph secondaryBTreeRuleGraph = new RuleGraph();
 
@@ -485,7 +486,7 @@ public class RuleGraphTypes {
         return secondaryBTreeRuleGraph;
     }
 
-    public RuleGraph getRemoveFileStructureRuleGraph() {
+    public static RuleGraph getRemoveFileStructureRuleGraph() {
 
         RuleGraph removeFileStructureRuleGraph = new RuleGraph();
 
