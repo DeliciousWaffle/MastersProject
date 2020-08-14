@@ -93,75 +93,82 @@ public class QueryTree implements Iterable<Operator> {
     public List<List<Traversal>> getEveryNodesLocation() {
 
         List<List<Traversal>> everyNodesLocation = new ArrayList<>();
+
+        // get the structure of the tree and remove stuff that we don't need
         String treeStructure = getTreeStructure();
         String[] traversalTokens = treeStructure.split("\n");
 
-        for(int i = 0; i < traversalTokens.length; i++) {
+        for (int i = 0; i < traversalTokens.length; i++) {
             String token = traversalTokens[i];
-            if(token.contains(":")) {
+            if (token.contains(":")) {
                 int keepUpUntilIndex = token.indexOf(":");
                 traversalTokens[i] = token.substring(0, keepUpUntilIndex);
             }
         }
 
+        int i = 0;
+
         Stack<Traversal> workingTraversals = new Stack<>();
 
-        for(String traversalToken : traversalTokens) {
+        for (Operator operator : this) {
 
-            // converting the traversal token which is a string to an enum
+            String traversalToken = traversalTokens[i];
+
+            while (traversalToken.equals("Up")) {
+                workingTraversals.pop();
+                i++;
+                traversalToken = traversalTokens[i];
+            }
+
             Traversal traversal = null;
 
-            switch(traversalToken) {
+            switch (traversalToken) {
+                case "Root":
+                    traversal = Traversal.NONE;
+                    break;
                 case "Left":
                     traversal = Traversal.LEFT;
                     break;
                 case "Right":
                     traversal = Traversal.RIGHT;
                     break;
-                case "Up":
-                    traversal = Traversal.UP;
-                    break;
                 case "Down":
                     traversal = Traversal.DOWN;
                     break;
-                case "Root":
-                default:
-                    traversal = Traversal.NONE;
             }
 
             workingTraversals.push(traversal);
 
-            // create a new stack containing the working traversals needed to get to a node
-            // if this is not done, working traversals will contain the same traversals as
-            // the last in its list because references be wack, yo
-            Stack<Traversal> traversals = new Stack<>();
+            /*
+            this is very weird, but not doing this causes everyNodesLocation's to contain the same list of
+            traversals for all its data which is not what we want
+             */
+            Stack<Traversal> copyWorkingTraversals = new Stack<>();
 
             for(Traversal workingTraversal : workingTraversals) {
 
-                Traversal traversalToAdd = null;
+                traversal = null;
 
-                switch(workingTraversal) {
+                switch (workingTraversal) {
+                    case NONE:
+                        traversal = Traversal.NONE;
+                        break;
                     case LEFT:
-                        traversalToAdd = Traversal.LEFT;
+                        traversal = Traversal.LEFT;
                         break;
                     case RIGHT:
-                        traversalToAdd = Traversal.RIGHT;
-                        break;
-                    case UP:
-                        traversalToAdd = Traversal.UP;
+                        traversal = Traversal.RIGHT;
                         break;
                     case DOWN:
-                        traversalToAdd = Traversal.DOWN;
+                        traversal = Traversal.DOWN;
                         break;
-                    case NONE:
-                    default:
-                        traversalToAdd = Traversal.NONE;
                 }
 
-                traversals.add(traversalToAdd);
+                copyWorkingTraversals.push(traversal);
             }
 
-            everyNodesLocation.add(traversals);
+            everyNodesLocation.add(copyWorkingTraversals);
+            i++;
         }
 
         return everyNodesLocation;

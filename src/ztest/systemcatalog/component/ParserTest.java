@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ParserTest {
 
-    private static Parser parser;
+    /*private static Parser parser;
 
     @BeforeAll
     public static void init() {
@@ -416,4 +416,6 @@ class ParserTest {
     // TODO add testing for ALTER and BUILD commands
     // alter command ---------------------------------------------------------------------------------------------------
     // build command ---------------------------------------------------------------------------------------------------
+
+     */
 }

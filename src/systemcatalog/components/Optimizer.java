@@ -21,7 +21,10 @@ public class Optimizer {
     private List<QueryTree> queryTreeStates;
     private List<String> recommendedFileStructures;
 
-    public Optimizer() {}
+    public Optimizer() {
+        this.queryTreeStates = new ArrayList<>();
+        this.recommendedFileStructures = new ArrayList<>();
+    }
 
     // setters ---------------------------------------------------------------------------------------------------------
 
@@ -997,11 +1000,11 @@ public class Optimizer {
                 // need to make sure that the candidate nodes have children, if not, can pipeline whole thing
                 queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.LEFT);
                 if(queryTree.canPipelineSubtree(traversals, QueryTree.Traversal.LEFT)) {
-                    System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.LEFT));
+                    //System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.LEFT));
                 }
                 queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.RIGHT);
                 if(queryTree.canPipelineSubtree(traversals, QueryTree.Traversal.RIGHT)) {
-                    System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.RIGHT));
+                    //System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.RIGHT));
                 }
             }
 
@@ -1011,7 +1014,7 @@ public class Optimizer {
 
         // finally pipeline the root
         queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.NONE);
-        System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
+        //System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
         return new QueryTree(queryTree);
     }
 

@@ -22,7 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CompilerTest {
-
+/*
     private static Compiler compiler;
 
     @BeforeAll
@@ -369,7 +369,7 @@ public class CompilerTest {
 
         assertTrue(true);
     }
-*/
+*//*
     @Test
     public void testRevoke() {
         System.out.println("testRevoke() ----------------------------------------------------------------------------");
@@ -392,5 +392,5 @@ public class CompilerTest {
         System.out.println(users.get(0));
 
         assertTrue(true);
-    }
+    }*/
 }

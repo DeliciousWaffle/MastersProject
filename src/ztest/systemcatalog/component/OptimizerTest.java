@@ -18,7 +18,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OptimizerTest {
-
+/*
     private static Optimizer optimizer;
     private static RuleGraph queryRuleGraph;
     private static List<Table> tables;
@@ -110,5 +110,5 @@ public class OptimizerTest {
 
         System.out.println("----------------------------------------");
         assertTrue(true);
-    }
+    }*/
 }
