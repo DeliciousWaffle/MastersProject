@@ -39,6 +39,6 @@ public class InnerJoin extends Operator {
 
     @Override
     public String toString() {
-        return "\u2A1D" + " [" + joinOnColumn1 + " = " + joinOnColumn2 + "]";
+        return "\u2A1D" + " (" + joinOnColumn1 + " = " + joinOnColumn2 + ")";
     }
 }

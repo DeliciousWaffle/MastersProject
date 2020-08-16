@@ -60,7 +60,7 @@ public class CompoundSelection extends Operator {
 
         StringBuilder print = new StringBuilder();
 
-        print.append("\u03C3").append(" [");
+        print.append("\u03C3").append(" (");
 
         for(int i = 0; i < symbols.size(); i++) {
 
@@ -79,7 +79,7 @@ public class CompoundSelection extends Operator {
         print.deleteCharAt(print.length() - 1);
         print.deleteCharAt(print.length() - 1);
 
-        print.append("]");
+        print.append(")");
 
         return print.toString();
     }

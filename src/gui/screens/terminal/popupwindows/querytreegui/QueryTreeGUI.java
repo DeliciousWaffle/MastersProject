@@ -1,31 +1,28 @@
 package gui.screens.terminal.popupwindows.querytreegui;
 
 import datastructures.trees.querytree.QueryTree;
-import gui.screens.Screen;
-import gui.screens.terminal.popupwindows.querytreegui.components.QueryNodeGUI;
-import javafx.geometry.HPos;
-import javafx.geometry.Point2D;
+import files.io.FileType;
+import files.io.IO;
+import gui.screens.terminal.popupwindows.querytreegui.components.NodeGUI;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.VPos;
-import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
-import javafx.scene.text.Font;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class QueryTreeGUI {
 
-    private ScrollPane container;
+    private final ScrollPane container;
+    private final BorderPane centerScrollPane;
 
     public QueryTreeGUI(QueryTree queryTree) {
 
@@ -35,17 +32,19 @@ public class QueryTreeGUI {
 
         // canvas screen width and height, increases if nodes x and y positions go offscreen, buffer prevents clipping
         double canvasWidth = prefContainerWidth;
-        double canvasHeight = prefContainerHeight;
-        double canvasBuffer = 50;
+        double canvasHeight = prefContainerHeight - 100;
+        double canvasBuffer = 100;
 
-        // starting points for where to draw the first node of the query tree
+        // starting points for where to draw the first node of the query tree, startX will be tweaked later
         double startX = canvasWidth / 2;
         double startY = 100;
 
         // contains the canvas, allows to scroll horizontally or vertically, which is nifty
         this.container = new ScrollPane();
-        container.setPrefWidth(prefContainerWidth);
-        container.setPrefHeight(prefContainerHeight);
+        container.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        container.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        container.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        container.setStyle("-fx-background-color: rgb(30, 30, 30);");
 
         // where we are drawing to, width and height can change
         Canvas canvas = new Canvas();
@@ -56,18 +55,30 @@ public class QueryTreeGUI {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         // getting an estimate of the positions of the nodes that will be drawn to screen
-        List<QueryNodeGUI> queryNodeGUIs = new ArrayList<>();
+        List<NodeGUI> nodeGUIS = new ArrayList<>();
 
         // spacing between nodes
         double nodeOffset = 100;
 
+        // adding the nodes, their locations will be tweaked later
         for(List<QueryTree.Traversal> currentNodesLocation : queryTree.getEveryNodesLocation()) {
+            // creating the node
+            String text = queryTree.get(currentNodesLocation, QueryTree.Traversal.NONE).toString();
+            NodeGUI nodeGUI = new NodeGUI(text, 0, 0);
+            nodeGUIS.add(nodeGUI);
+        }
+
+        for(int i = 0; i < nodeGUIS.size(); i++) {
+
+            NodeGUI currentNodeGUI = nodeGUIS.get(i);
+            List<QueryTree.Traversal> currentNodesLocation = queryTree.getEveryNodesLocation().get(i);
 
             double x = 0;
             double y = 0;
-
+            // TODO figure out how to reposition nodes
             for(QueryTree.Traversal traversal : currentNodesLocation) {
-                switch(traversal) {
+
+                switch (traversal) {
                     case NONE:
                         x = startX;
                         y = startY;
@@ -89,19 +100,70 @@ public class QueryTreeGUI {
                 }
             }
 
-            // creating the node
-            String text = queryTree.get(currentNodesLocation, QueryTree.Traversal.NONE).toString();
-            QueryNodeGUI queryNodeGUI = new QueryNodeGUI(text, x, y);
-            queryNodeGUIs.add(queryNodeGUI);
+            // updating the x and y positions
+            currentNodeGUI.setX(x);
+            currentNodeGUI.setY(y);
         }
+
+        // will need to resize the canvas if any nodes go offscreen, prevents them from being clipped
+        for(NodeGUI nodeGUI : nodeGUIS) {
+
+            double x = nodeGUI.getX();
+            double y = nodeGUI.getY();
+
+            double width = nodeGUI.getWidth();
+            double height = nodeGUI.getHeight();
+
+            // rare situation in which node goes offscreen in the right direction, increase canvas width
+            if(x + width/2 >= canvasWidth) {
+                canvasWidth+= canvasBuffer;
+            }
+
+            // increase canvas width if a node moves left offscreen
+            if(x - width/2 <= 0) {
+
+                // will need to translate all nodes to the right too
+                for(NodeGUI toTranslate : nodeGUIS) {
+                    toTranslate.setX(toTranslate.getX() + canvasBuffer);
+                }
+
+                canvasWidth+= canvasBuffer;
+            }
+
+            // increase canvas height if the current node's y position goes offscreen
+            if(((y + height) + canvasBuffer) >= canvasHeight) {
+                canvasHeight += canvasBuffer;
+            }
+        }
+
+        canvas.setWidth(canvasWidth);
+        canvas.setHeight(canvasHeight);
 
         // after getting the locations of all nodes, now getting the line positions
         List<Line> lines = new ArrayList<>();
 
-        for(int i = 1; i < queryNodeGUIs.size(); i++) {
+        int offset = 0;
 
-            QueryNodeGUI prevQueryNodeGUI = queryNodeGUIs.get(i - 1);
-            QueryNodeGUI currQueryNodeGUI = queryNodeGUIs.get(i);
+        for(int i = 1; i < nodeGUIS.size(); i++) {
+
+            NodeGUI prevQueryNodeGUI = nodeGUIS.get(i - 1);
+            NodeGUI currQueryNodeGUI = nodeGUIS.get(i);
+
+            int prevTraversalSize = queryTree.getEveryNodesLocation().get(i-1).size();
+            int currTraversalSize = queryTree.getEveryNodesLocation().get(i).size();
+
+            if(currTraversalSize <= prevTraversalSize) {
+
+                int temp = (currTraversalSize - prevTraversalSize);
+                temp--;
+                offset += temp;
+
+                try {
+                    prevQueryNodeGUI = nodeGUIS.get(offset + (i - 1));
+                } catch (Exception e) {
+                    System.out.println("Problem with getting lines to connect!");
+                }
+            }
 
             double prevX = prevQueryNodeGUI.getX();
             double prevY = prevQueryNodeGUI.getY();
@@ -113,194 +175,54 @@ public class QueryTreeGUI {
             lines.add(line);
         }
 
-        gc.setFill(Color.BLUE);
-        gc.fillOval(startX, startY, 15,15);
-
-        // will need to resize the canvas if any nodes go offscreen, prevents them from being clipped
-        for(QueryNodeGUI queryNodeGUI : queryNodeGUIs) {
-
-            double x = queryNodeGUI.getX();
-            double y = queryNodeGUI.getY();
-
-            // increase canvas width if the current node's x position goes offscreen
-            if(x <= 0) {
-                canvasWidth += canvasBuffer;
-                queryNodeGUI.setX(x - canvasBuffer);
-                System.out.println("yee widht");
-            }
-
-            // increase canvas height if the current node's y position goes offscreen
-            if(y >= canvasWidth) {
-                canvasHeight += canvasBuffer;
-                System.out.println("yes height");
-            }
-        }
-
-        canvas.setWidth(canvasWidth);
-        canvas.setHeight(canvasHeight);
-
         // finally drawing to the canvas, drawing lines first, so they appear behind the nodes
-        for(QueryNodeGUI queryNodeGUI : queryNodeGUIs) {
-            queryNodeGUI.render(gc);
+        for(Line line : lines) {
+
+            // border for the line
+            gc.setStroke(Color.BLACK);
+            gc.setLineWidth(8);
+            gc.strokeLine(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());
+
+            gc.setStroke(Color.WHITE);
+            gc.setLineWidth(4);
+            gc.strokeLine(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());
         }
 
+        for(NodeGUI nodeGUI : nodeGUIS) {
+            nodeGUI.render(gc);
+        }
 
+        // will add the canvas to a border pane which will recenter the whole tree when window is resized
+        centerScrollPane = new BorderPane();
+        centerScrollPane.setPrefSize(prefContainerWidth, prefContainerHeight);
+        centerScrollPane.setBackground(new Background(
+                new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
+        centerScrollPane.setCenter(canvas);
+        BorderPane.setAlignment(canvas, Pos.CENTER);
 
-        // drawing nodes now
-        /*for(Line line : lines) {
-            gc.setFill(Color.BLACK);
-            gc.setLineWidth(5);
-            gc.strokeLine(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());
-        }*/
+        // speeding up the scroll speed
+        canvas.setOnScroll(e -> {
+            double deltaY = e.getDeltaY() * 1.2;
+            double width = container.getContent().getBoundsInLocal().getWidth();
+            double vValue = container.getVvalue();
+            container.setVvalue(vValue + -(deltaY / width));
+        });
 
-        // finally add the canvas to the container
-        container.setContent(canvas);
+        // finally add everything to the container
+        container.setContent(centerScrollPane);
+        container.setPrefSize(prefContainerWidth, prefContainerHeight);
+        container.setMinSize(0, 0);
     }
 
     public ScrollPane getContainer() {
         return container;
     }
 
-    /*
-    private GridPane gridPane;
-
-    public QueryTreeGUI(QueryTree queryTree) {
-
-        List<List<QueryTree.Traversal>> everyNodesLocation = queryTree.getEveryNodesLocation();
-
-        // Will be using a grid pane to position nodes
-        gridPane = new GridPane();
-        gridPane.setPrefSize(Screen.defaultWidth, Screen.defaultHeight);
-        gridPane.setHgap(20);
-        gridPane.setVgap(20);
-        gridPane.setAlignment(Pos.CENTER);
-        gridPane.gridLinesVisibleProperty().set(true);
-
-        // will need to know the tree height and its width to properly position nodes
-        int treeHeight = 0;
-
-        List<QueryTree.Traversal> lastNodesLocation = everyNodesLocation.get(everyNodesLocation.size() - 1);
-
-        for(QueryTree.Traversal traversal : lastNodesLocation) {
-            if(traversal == QueryTree.Traversal.UP) {
-                break;
-            }
-            treeHeight++;
-        }
-
-        /getting the width of the tree, width of below is 4 {{d, f}, {b}, {a, e, g}, {c}}
-                                   a
-                                 /   \
-                                b     c
-                              /   \
-                             d     e
-                             |     |
-                             f     g
-
-
-        // will be used for calculating width
-        int numLeftTraversals = 0, numRightTraversals = 0;
-
-        // edge case: tree with a width of 1
-        boolean encounteredOnlyChildren = true;
-
-        for(QueryTree.Traversal traversal : lastNodesLocation) {
-            if(traversal == QueryTree.Traversal.LEFT) {
-                encounteredOnlyChildren = false;
-                numLeftTraversals++;
-            }
-            if(traversal == QueryTree.Traversal.RIGHT) {
-                encounteredOnlyChildren = false;
-                numRightTraversals++;
-            }
-        }
-
-        // the 1 comes from having at least a width of one for the tree
-        int treeWidth = 1 + numLeftTraversals + ((numRightTraversals - numLeftTraversals) + 1);
-
-        if(encounteredOnlyChildren) {
-            treeWidth = 1;
-        }
-
-        treeWidth--;
-
-        for(List<QueryTree.Traversal> currentNodesLocation : queryTree.getEveryNodesLocation()) {
-            System.out.println(currentNodesLocation);
-            System.out.println(queryTree.get(currentNodesLocation, QueryTree.Traversal.NONE).toString());
-        }
-
-        List<Integer> cols = new ArrayList<>();
-        List<Integer> rows = new ArrayList<>();
-
-        for(List<QueryTree.Traversal> currentNodesLocation : queryTree.getEveryNodesLocation()) {
-
-            // used for determining where to place the label
-            int colLocation = treeWidth;
-            int rowLocation = 0;
-
-            // iterate through the traversals for this node to get where it should be placed
-            for(QueryTree.Traversal traversal : currentNodesLocation) {
-                switch(traversal) {
-                    case NONE:
-                        colLocation--;
-                        break;
-                    case LEFT:
-                        colLocation--; rowLocation++;
-                        break;
-                    case RIGHT:
-                        colLocation+=2; rowLocation++;
-                        break;
-                    case UP:
-                        rowLocation--;
-                        break;
-                    case DOWN:
-                        rowLocation++;
-                        break;
-                }
-            }
-
-            cols.add(colLocation);
-            rows.add(rowLocation);
-
-            Label label = new Label(queryTree.get(currentNodesLocation, QueryTree.Traversal.NONE).toString());
-            label.setFont(new Font(20));
-            GridPane.setHalignment(label, HPos.CENTER);
-            gridPane.add(label, colLocation, rowLocation);
-            //gridPane.add(new Line(0, 0, 100, 100), colLocation, colLocation + 1, rowLocation, rowLocation + 1);
-
-        }
-
-        for(int i = 1; i < cols.size(); i++) {
-            System.out.println(cols.get(i) + " " + rows.get(i));
-            int prevCol = cols.get(i - 1);
-            int prevRow = rows.get(i - 1);
-            int currCol = cols.get(i);
-            int currRow = rows.get(i);
-
-            System.out.println("prevCol: " + prevCol + " prevRow: " + prevRow + " currCol: " + currCol + " currRow: " + currRow);
-            // vertical line
-            if(currCol == prevCol) {
-                Line l = new Line(0, 0, 0, 0);
-                l.setStroke(Color.RED);
-                GridPane.setHalignment(l, HPos.CENTER);
-                GridPane.setValignment(l, VPos.BOTTOM);
-                Label label = (Label)gridPane.getChildren().get(1);
-                l.endYProperty().bind(gridPane.heightProperty().divide(10));
-                gridPane.add(l,  prevCol, prevRow, currCol, ++currRow);
-            }
-            // / line
-            if(currCol < prevCol) {
-
-            }
-            // \ line
-            if(currCol > prevCol) {
-
-            }
-            break;
-        }
+    public void adjustWidth(double width) {
+        centerScrollPane.setPrefWidth(width);
     }
 
-    public GridPane getGridPane() {
-        return gridPane;
-    }*/
+    public void adjustHeight(double height) {
+        centerScrollPane.setPrefHeight(height);
+    }
 }

@@ -40,7 +40,7 @@ public class Projection extends Operator {
 
         StringBuilder print = new StringBuilder();
 
-        print.append("\u03C0").append(" [");
+        print.append("\u03C0").append(" (");
 
         if(columnNames.size() == 1) {
             print.append(columnNames.get(0));
@@ -53,7 +53,7 @@ public class Projection extends Operator {
             print.deleteCharAt(print.length() - 1);
         }
 
-        print.append("]");
+        print.append(")");
 
         return print.toString();
     }

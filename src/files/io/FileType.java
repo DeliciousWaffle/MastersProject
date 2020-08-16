@@ -109,7 +109,11 @@ public final class FileType {
         X_IMAGE("terminalscreen/X.png"),
         TREE_IMAGE("terminalscreen/Tree.png"),
         DOLLAR_SIGN_IMAGE("terminalscreen/DollarSign.png"),
-        FOLDER_IMAGE("terminalscreen/Folder.png");
+        FOLDER_IMAGE("terminalscreen/Folder.png"),
+
+        // for query tree, a part of terminal screen
+        RIGHT_ARROW("terminalscreen/querytreewindow/RightArrow.png"),
+        LEFT_ARROW("terminalscreen/querytreewindow/LeftArrow.png");
 
         private final String path;
 
