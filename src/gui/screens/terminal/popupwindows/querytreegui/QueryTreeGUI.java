@@ -75,8 +75,13 @@ public class QueryTreeGUI {
 
             double x = 0;
             double y = 0;
-            // TODO figure out how to reposition nodes
-            for(QueryTree.Traversal traversal : currentNodesLocation) {
+
+            for(int j = 0; j < currentNodesLocation.size(); j++) {
+
+                QueryTree.Traversal traversal = currentNodesLocation.get(j);
+
+                // some nodes will need to be spaced further apart, to take into consideration their widths, prevents overlapping
+                double widthOffset = 0;
 
                 switch (traversal) {
                     case NONE:
@@ -84,11 +89,13 @@ public class QueryTreeGUI {
                         y = startY;
                         break;
                     case LEFT:
-                        x -= nodeOffset;
+                        widthOffset = nodeGUIS.get(j).getWidth() / 4;
+                        x -= (nodeOffset + widthOffset);
                         y += nodeOffset;
                         break;
                     case RIGHT:
-                        x += nodeOffset;
+                        widthOffset = nodeGUIS.get(j).getWidth() / 4;
+                        x += (nodeOffset + widthOffset);
                         y += nodeOffset;
                         break;
                     case UP:
