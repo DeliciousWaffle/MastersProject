@@ -69,8 +69,8 @@ public class Optimizer {
         workingTree = formJoins(workingTree);
         queryTreeStates.add(workingTree);
 
-        //workingTree = rearrangeLeafNodes(workingTree);
-        //queryTreeStates.add(new QueryTree(workingTree));
+        workingTree = rearrangeLeafNodes(workingTree, tables);
+        queryTreeStates.add(new QueryTree(workingTree));
 
         workingTree = findSubtreesToPipeline(workingTree);
         queryTreeStates.add(workingTree);
@@ -968,7 +968,7 @@ public class Optimizer {
 
     // TODO: not sure how to handle yet, rearrangement will put all other nodes out of whack
     public QueryTree rearrangeLeafNodes(QueryTree queryTree, List<Table> tables) {
-        return null;
+        return new QueryTree(queryTree);
     }
 
     public QueryTree findSubtreesToPipeline(QueryTree queryTree) {

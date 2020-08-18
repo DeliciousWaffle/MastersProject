@@ -185,20 +185,41 @@ public class QueryTreeWindow extends Application {
             new QueryTreeOptimizationHeuristicWindows.InitialState();
         });
 
+        // cascaded selections
+        Button cascadedSelections = new Button("Cascaded Selections");
+        cascadedSelections.setOnAction(e -> {
+            new QueryTreeOptimizationHeuristicWindows.CascadedSelections();
+        });
+
         // moving each select as far down the query tree as possible
         Button movedDownSelections = new Button("Moved Down Selections");
+        movedDownSelections.setOnAction(e -> {
+            new QueryTreeOptimizationHeuristicWindows.MovedDownSelections();
+        });
 
         // combining cartesian products and selections to form joins
         Button formedJoins = new Button("Formed Joins");
+        formedJoins.setOnAction(e -> {
+            new QueryTreeOptimizationHeuristicWindows.FormedJoins();
+        });
 
-        // rearrangement of leaf nodes to reduce query tree cost
-        Button rearrangedLeafNodes = new Button("Rearranged Leaf Nodes");
+        // rearrangement of joins to reduce query tree cost
+        Button rearrangedJoins = new Button("Rearranged Joins");
+        rearrangedJoins.setOnAction(e -> {
+            new QueryTreeOptimizationHeuristicWindows.RearrangedJoins();
+        });
 
         // moving projections as far down the query tree as possible
         Button movedDownProjections = new Button("Moved Down Projections");
+        movedDownProjections.setOnAction(e -> {
+            new QueryTreeOptimizationHeuristicWindows.MovedDownProjections();
+        });
 
         // identifying subtrees that can be pipelined
         Button pipeliningSubtrees = new Button("Pipelining Subtrees");
+        pipeliningSubtrees.setOnAction(e -> {
+            new QueryTreeOptimizationHeuristicWindows.PipeliningSubtrees();
+        });
 
         // making the list and adding all the labels
         this.optimizationInfoButtons = new ArrayList<>();
@@ -206,7 +227,7 @@ public class QueryTreeWindow extends Application {
         optimizationInfoButtons.add(initialState);
         optimizationInfoButtons.add(movedDownSelections);
         optimizationInfoButtons.add(formedJoins);
-        optimizationInfoButtons.add(rearrangedLeafNodes);
+        optimizationInfoButtons.add(rearrangedJoins);
         optimizationInfoButtons.add(movedDownProjections);
         optimizationInfoButtons.add(pipeliningSubtrees);
 
@@ -232,10 +253,6 @@ public class QueryTreeWindow extends Application {
                 button.setStyle(buttonExitedStyle);
             });
 
-            /*button.setBackground(new Background(
-                    new BackgroundFill(Color.rgb(100, 100, 100),
-                            new CornerRadii(3), new Insets(-10))
-            ));*/
             button.setEffect(
                     new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
         }

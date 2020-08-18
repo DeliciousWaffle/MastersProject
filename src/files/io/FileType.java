@@ -106,7 +106,7 @@ public final class FileType {
         PRIMARY_KEY_IMAGE("tablesscreen/PrimaryKey.png"),
 
         // terminal screen assets
-        X_IMAGE("terminalscreen/X.png"),
+        PLAY_IMAGE("terminalscreen/Play.png"),
         TREE_IMAGE("terminalscreen/Tree.png"),
         DOLLAR_SIGN_IMAGE("terminalscreen/DollarSign.png"),
         FOLDER_IMAGE("terminalscreen/Folder.png"),
