@@ -60,7 +60,7 @@ public abstract class Screen {
         helpButton.setFont(new Font(fontSize));
 
         // setting some styling
-        String buttonStyle = " -fx-background-color: #666666; -fx-text-fill: white; -fx-padding: 0;";
+        String buttonStyle = " -fx-background-color: rgb(100, 100, 100); -fx-text-fill: white; -fx-padding: 0;";
 
         // adds a sick drop shadow effect to the buttons
         terminalButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
@@ -76,7 +76,7 @@ public abstract class Screen {
         helpButton.setStyle(buttonStyle);
 
         // more styling
-        String buttonEnteredStyle = "-fx-background-color: #999999; -fx-text-fill: white; -fx-border-color: transparent;";
+        String buttonEnteredStyle = "-fx-background-color: rgb(150, 150, 150); -fx-text-fill: white; -fx-border-color: transparent;";
         String buttonExitedStyle = buttonStyle;
 
         terminalButton.setOnMouseEntered(e -> {

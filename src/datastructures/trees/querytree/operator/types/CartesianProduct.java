@@ -22,6 +22,6 @@ public class CartesianProduct extends Operator {
 
     @Override
     public String toString() {
-        return "X";
+        return "\u2715";
     }
 }

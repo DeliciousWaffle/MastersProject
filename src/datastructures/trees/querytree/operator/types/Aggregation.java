@@ -70,7 +70,7 @@ public class Aggregation extends Operator {
             print.append(" ");
         }
 
-        print.append("G ");
+        print.append("\uD835\uDCA2 ");
 
         if(columnNames.size() == 1) {
             print.append(aggregationTypes.get(0)).append("(").append(columnNames.get(0)).append(")");
