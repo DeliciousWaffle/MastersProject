@@ -130,7 +130,7 @@ public class ColumnPane {
         // show the tooltip fast
         keyLabel.setOnMouseMoved(event -> {
             tooltip.show(imageView, event.getScreenX(), event.getScreenY() + 15);
-        }); // TODO make sure not broken
+        });
         keyLabel.setOnMouseExited(event -> {
             tooltip.hide();
         });

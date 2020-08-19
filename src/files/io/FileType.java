@@ -107,6 +107,7 @@ public final class FileType {
 
         // terminal screen assets
         PLAY_IMAGE("terminalscreen/Play.png"),
+        X_IMAGE("terminalscreen/X.png"),
         TREE_IMAGE("terminalscreen/Tree.png"),
         DOLLAR_SIGN_IMAGE("terminalscreen/DollarSign.png"),
         FOLDER_IMAGE("terminalscreen/Folder.png"),
