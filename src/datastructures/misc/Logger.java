@@ -5,9 +5,11 @@ import java.util.Stack;
 public class Logger {
 
     private Stack<Log> logger;
+    private boolean successfullyExecuted;
 
     public Logger() {
         this.logger = new Stack<>();
+        this.successfullyExecuted = false;
     }
 
     public void log(Log log) {
@@ -58,5 +60,18 @@ public class Logger {
         }
 
         return allContent.toString();
+    }
+
+    public void setSuccessfullyExecuted(boolean successfullyExecuted) {
+        this.successfullyExecuted = successfullyExecuted;
+    }
+
+    public boolean wasSuccessfullyExecuted() {
+        return successfullyExecuted;
+    }
+
+    public void clear() {
+        logger = new Stack<>();
+        successfullyExecuted = false;
     }
 }

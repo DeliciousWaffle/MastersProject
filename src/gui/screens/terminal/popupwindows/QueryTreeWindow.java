@@ -1,13 +1,8 @@
 package gui.screens.terminal.popupwindows;
 
-import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
-import datastructures.relation.table.component.DataType;
-import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
 import gui.screens.terminal.popupwindows.querytreegui.QueryTreeGUI;
 import gui.screens.terminal.popupwindows.querytreegui.popupwindows.QueryTreeOptimizationHeuristicWindows;
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -21,24 +16,21 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import systemcatalog.components.Optimizer;
-import systemcatalog.components.Parser;
+
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class QueryTreeWindow extends Application {
+public class QueryTreeWindow extends Stage {
 
     private List<QueryTreeGUI> queryTreeGUIStates;
     private List<Button> optimizationInfoButtons;
     private int stateIndex;
     private Button rightButton, leftButton;
 
-    @Override
-    public void start(Stage primaryStage) {
+    public QueryTreeWindow(List<QueryTree> queryTreeStates) {
 
-        String query = "select col1, col2, col3 from tab1, tab2, tab3 where tab1.col1 = tab2.col1 and tab2.col1 = tab3.col1 and col3 = 7 and tab1.col1 = 3";
+        /*String query = "select col1, col2, col3 from tab1, tab2, tab3 where tab1.col1 = tab2.col1 and tab2.col1 = tab3.col1 and col3 = 7 and tab1.col1 = 3";
         String[] tokens = Parser.formatAndTokenizeInput(query);
         Optimizer optimizer = new Optimizer();
         optimizer.setRuleGraphToUse(RuleGraphTypes.getQueryRuleGraph());
@@ -59,7 +51,7 @@ public class QueryTreeWindow extends Application {
                 )
         );
         optimizer.optimize();
-        List<QueryTree> queryTreeStates = optimizer.getQueryTreeStates();
+        List<QueryTree> queryTreeStates = optimizer.getQueryTreeStates();*/
 
 
 
@@ -153,14 +145,14 @@ public class QueryTreeWindow extends Application {
         });
 
         // adjusting the area in which the query tree is displayed upon window resize
-        primaryStage.widthProperty().addListener((observable, oldValue, newValue) -> {
+        this.widthProperty().addListener((observable, oldValue, newValue) -> {
             double width = (Double) newValue;
             for(QueryTreeGUI queryTreeGUI : queryTreeGUIStates) {
                 queryTreeGUI.adjustWidth(width);
             }
         });
 
-        primaryStage.heightProperty().addListener((observable, oldValue, newValue) -> {
+        this.heightProperty().addListener((observable, oldValue, newValue) -> {
 
             double height = (Double) newValue;
 
@@ -171,9 +163,9 @@ public class QueryTreeWindow extends Application {
             }
         });
 
-        primaryStage.setTitle("Query Tree States");
-        primaryStage.setScene(new Scene(root));
-        primaryStage.show();
+        this.setTitle("Query Tree States");
+        this.setScene(new Scene(root));
+        this.show();
     }
 
     // helper method for keeping the constructor somewhat clean
@@ -280,9 +272,5 @@ public class QueryTreeWindow extends Application {
             stateIndex = queryTreeGUIStates.size() - 1;
             rightButton.setVisible(false);
         }
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 }

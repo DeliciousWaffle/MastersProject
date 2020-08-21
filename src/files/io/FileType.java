@@ -133,7 +133,8 @@ public final class FileType {
         CHOICE_BOX_STYLE("ChoiceBoxStyle.css"),
         DARK_MODE("DarkMode.css"),
         LIGHT_MODE("LightMode.css"),
-        SCROLL_PANE_STYLE("ScrollPaneStyle.css");
+        SCROLL_PANE_STYLE("ScrollPaneStyle.css"),
+        TEXT_AREA_STYLE("TextArea.css");
 
         private final String path;
 

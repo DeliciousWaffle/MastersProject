@@ -47,6 +47,9 @@ public class SystemCatalog {
     // a list of rule graph types that each component will use to extract data from user input
     private final List<RuleGraph> ruleGraphTypes;
 
+    // type of input that was last executed
+    RuleGraph.Type inputType;
+
     // following will only be used if the input is a query and it's successfully executed
     private ResultSet resultSet;
     private List<QueryTree> queryTreeStates;
@@ -84,7 +87,12 @@ public class SystemCatalog {
         this.users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
 
         // set the current user as the DBA who has all privileges on every table
-        setCurrentUser(User.DatabaseAdministrator(tables));
+        User DBA = User.DatabaseAdministrator(tables);
+        setCurrentUser(DBA);
+        users.add(DBA);
+
+        // setting the input type as unknown for now
+        this.inputType = RuleGraph.Type.UNKNOWN;
 
         // creating query-specific data, initially empty
         this.resultSet = new ResultSet();
@@ -105,24 +113,29 @@ public class SystemCatalog {
      */
     public void executeInput(String input) {
 
+        System.out.println("Execute Input");
+
+        // used for logging what happened during the execution and whether it was successful
+        logger.clear();
+
         // there may be some unknown bugs that I haven't taken care of yet, prevent the app from crashing
         try {
 
             // filtering the input, splitting the input into tokens, and determining the rule graph type to use
             String[] tokenizedInput = Parser.formatAndTokenizeInput(input);
-            RuleGraph.Type ruleGraphType = Parser.determineRuleGraphType(tokenizedInput);
+            this.inputType = Parser.determineRuleGraphType(tokenizedInput);
 
             // couldn't determine a type, don't execute
-            if (ruleGraphType == RuleGraph.Type.UNKNOWN) {
+            if (inputType == RuleGraph.Type.UNKNOWN) {
                 logger.log(new Log(Log.Type.SIMPLE, "Error! Couldn't determine input type!"));
                 return;
             }
 
             // get the rule graph to use
-            RuleGraph ruleGraphToUse = ruleGraphTypes.get(ruleGraphType.index());
+            RuleGraph ruleGraphToUse = ruleGraphTypes.get(inputType.index());
 
             // parser stuff
-            parser.setRuleGraphType(ruleGraphType);
+            parser.setRuleGraphType(inputType);
             parser.setRuleGraphToUse(ruleGraphToUse);
             parser.setTokenizedInput(tokenizedInput);
             if (! parser.isValid()) {
@@ -130,7 +143,7 @@ public class SystemCatalog {
             }
 
             // verifier stuff
-            verifier.setRuleGraphType(ruleGraphType);
+            verifier.setRuleGraphType(inputType);
             verifier.setRuleGraphToUse(ruleGraphToUse);
             verifier.setTokenizedInput(tokenizedInput);
             verifier.setTables(tables);
@@ -140,7 +153,7 @@ public class SystemCatalog {
             }
 
             // security checker stuff
-            securityChecker.setRuleGraphType(ruleGraphType);
+            securityChecker.setRuleGraphType(inputType);
             securityChecker.setRuleGraphToUse(ruleGraphToUse);
             securityChecker.setTokenizedInput(tokenizedInput);
             securityChecker.setCurrentUser(currentUser);
@@ -150,7 +163,7 @@ public class SystemCatalog {
             }
 
             // optimizer stuff, if the input is a query, get the query tree states, otherwise skip
-            if (ruleGraphType == RuleGraph.Type.QUERY) {
+            if (inputType == RuleGraph.Type.QUERY) {
                 optimizer.setRuleGraphToUse(ruleGraphToUse);
                 optimizer.setTokenizedInput(tokenizedInput);
                 optimizer.setTables(tables);
@@ -163,22 +176,41 @@ public class SystemCatalog {
             }
 
             // compiler stuff, if the input is a query, get the result set, otherwise make the changes to the system
-            compiler.setRuleGraphType(ruleGraphType);
+            compiler.setRuleGraphType(inputType);
             compiler.setRuleGraphToUse(ruleGraphToUse);
             compiler.setTokenizedInput(tokenizedInput);
             compiler.setTables(tables);
             compiler.setUsers(users);
-            if (ruleGraphType == RuleGraph.Type.QUERY) {
+            if (inputType == RuleGraph.Type.QUERY) {
                 compiler.setQueryTreeStates(queryTreeStates);
                 this.resultSet = compiler.executeQuery();
             } else {
                 compiler.executeDML();
             }
 
+            // made it through everything, successful execution
+            logger.setSuccessfullyExecuted(true);
+
         } catch(Exception e) {
             System.out.println("Some unknown error occurred in SystemCatalog.execute()");
             e.printStackTrace();
         }
+    }
+
+    // input related ---------------------------------------------------------------------------------------------------
+
+    /**
+     * @return the logger which gives information about what happened during execution
+     */
+    public Logger getLogger() {
+        return logger;
+    }
+
+    /**
+     * @return the type of input that was last executed.
+     */
+    public RuleGraph.Type getInputType() {
+        return inputType;
     }
 
     // user related ----------------------------------------------------------------------------------------------------
@@ -189,6 +221,22 @@ public class SystemCatalog {
      */
     public void setCurrentUser(User currentUser) {
         this.currentUser = currentUser;
+    }
+
+    /**
+     * @return a list of users of the system
+     */
+    public List<User> getUsers() {
+        return users;
+    }
+
+    // table related ---------------------------------------------------------------------------------------------------
+
+    /**
+     * @return a list of tables of system
+     */
+    public List<Table> getTables() {
+        return tables;
     }
 
     // query related ---------------------------------------------------------------------------------------------------

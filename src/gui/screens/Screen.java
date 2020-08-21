@@ -138,11 +138,22 @@ public abstract class Screen {
 
         // adding each to a horizontal layout
         HBox buttonLayout = new HBox();
-        buttonLayout.setSpacing(10.0);
         buttonLayout.getChildren().addAll(terminalButton, tablesButton, usersButton,
                 optionsButton, helpButton);
-        BorderPane.setMargin(buttonLayout, new Insets(10, 10, 10, 10));
+        HBox.setMargin(terminalButton, new Insets(10, 5, 10, 10));
+        HBox.setMargin(tablesButton, new Insets(10, 5, 10, 5));
+        HBox.setMargin(usersButton, new Insets(10, 5, 10, 5));
+        HBox.setMargin(optionsButton, new Insets(10, 5, 10, 5));
+        HBox.setMargin(helpButton, new Insets(10, 10, 10, 5));
 
         return buttonLayout;
+    }
+
+    public void adjustButtonWidth(double newScreenWidth) {
+        terminalButton.setPrefWidth(newScreenWidth / 5.0);
+        tablesButton.setPrefWidth(newScreenWidth / 5.0);
+        usersButton.setPrefWidth(newScreenWidth / 5.0);
+        optionsButton.setPrefWidth(newScreenWidth / 5.0);
+        helpButton.setPrefWidth(newScreenWidth / 5.0);
     }
 }

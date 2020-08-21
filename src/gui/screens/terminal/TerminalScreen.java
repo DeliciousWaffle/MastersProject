@@ -1,10 +1,13 @@
 package gui.screens.terminal;
 
+import datastructures.rulegraph.RuleGraph;
 import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
 import gui.screens.Screen;
+import gui.screens.terminal.popupwindows.QueryTreeWindow;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
@@ -30,29 +33,49 @@ public class TerminalScreen extends Screen {
         // terminal area -----------------------------------------------------------------------------------------------
         BorderPane terminalAreaLayout = new BorderPane();
 
-        Text inputAreaText = new Text("Input Area");
-        inputAreaText.setFont(new Font(25));
+        Text inputAreaText = new Text("Input Area:");
+        inputAreaText.setFont(new Font(40));
         inputAreaText.setFill(Color.WHITE);
 
         TextArea terminal = new TextArea();
-        terminal.setPrefSize(Screen.defaultWidth - 207, 300);
+        //terminal.setPrefSize(Screen.defaultWidth - 210, Screen.defaultHeight - 420);
         terminal.setFont(new Font(40));
+        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
+        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        terminal.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         terminalAreaLayout.setTop(inputAreaText);
         terminalAreaLayout.setBottom(terminal);
 
+        BorderPane.setAlignment(inputAreaText, Pos.CENTER);
+        BorderPane.setMargin(inputAreaText, new Insets(0, 0, 10, 0));
+
         // output area -------------------------------------------------------------------------------------------------
+        BorderPane outputAreaLayout = new BorderPane();
+
+        Text outputAreaText = new Text("Output Area:");
+        outputAreaText.setFont(new Font(40));
+        outputAreaText.setFill(Color.WHITE);
+
         TextArea output = new TextArea();
-        output.setPrefSize(Screen.defaultWidth - 207, 200);
+        //output.setPrefSize(Screen.defaultWidth - 205, Screen.defaultHeight - 550);
+        output.setMinHeight(0);
         output.setFont(new Font(40));
         output.setEditable(false);
+        output.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
+        output.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        output.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
-// TODO: finish up areas
+        outputAreaLayout.setTop(outputAreaText);
+        outputAreaLayout.setBottom(output);
+
+        BorderPane.setAlignment(outputAreaText, Pos.CENTER);
+        BorderPane.setMargin(outputAreaText, new Insets(0, 0, 10, 0));
 
         // contains both the terminal and output areas -----------------------------------------------------------------
         BorderPane ioAreaLayout = new BorderPane();
-        ioAreaLayout.setTop(terminal);
-        ioAreaLayout.setBottom(output);
+        ioAreaLayout.setTop(terminalAreaLayout);
+        ioAreaLayout.setBottom(outputAreaLayout);
 
         // right column of buttons for executing the input, if the input is a query, shows the
         // relational algebra, query tree states, query cost, and recommended file structures
@@ -81,6 +104,21 @@ public class TerminalScreen extends Screen {
         // tell the system catalog to execute the input
         executeButton.setOnAction(e -> {
 
+            // clear what's in the output area first
+            output.clear();
+
+            // get the content on the text area up until the first semicolon is reached
+            String input = terminal.getText();
+
+            // pass to the system catalog to execute
+            if(input.contains(";")) {
+
+                input = input.split(";")[0];
+                systemCatalog.executeInput(input);
+
+            } else {
+                output.setText("Error! Input must end with a semicolon!");
+            }
         });
 
         executeButton.setOnMouseEntered(e -> executeButton.setStyle(buttonEnteredStyle));
@@ -105,7 +143,8 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the relational algebra
         relationalAlgebraButton.setOnAction(e -> {
-
+            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+            }
         });
 
         relationalAlgebraButton.setOnMouseEntered(e -> relationalAlgebraButton.setStyle(buttonEnteredStyle));
@@ -129,7 +168,9 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the query tree states
         queryTreeStatesButton.setOnAction(e -> {
-
+            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+                new QueryTreeWindow(systemCatalog.getQueryTreeStates());
+            }
         });
 
         queryTreeStatesButton.setOnMouseEntered(e -> queryTreeStatesButton.setStyle(buttonEnteredStyle));
@@ -153,7 +194,8 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the query cost
         queryCostButton.setOnAction(e -> {
-
+            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+            }
         });
 
         queryCostButton.setOnMouseEntered(e -> queryCostButton.setStyle(buttonEnteredStyle));
@@ -177,7 +219,8 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the recommended file structures
         recommendedFileStructuresButton.setOnAction(e -> {
-
+            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+            }
         });
 
         recommendedFileStructuresButton.setOnMouseEntered(e -> recommendedFileStructuresButton.setStyle(buttonEnteredStyle));
@@ -210,42 +253,22 @@ public class TerminalScreen extends Screen {
         terminalScreenLayout.setBackground(new Background(new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
 
         this.terminalScreen = new Scene(terminalScreenLayout);
-    }
 
-    // returns the terminal area
-    public TextArea getTerminal() {
-        return new TextArea();
-    }
+        // adjust components when the screen is resized ----------------------------------------------------------------
+        terminalScreen.widthProperty().addListener((observable, oldValue, newValue) -> {
+            double newWidth = (double) newValue;
+            topRowButtonLayout.setMaxWidth(newWidth);
+            super.adjustButtonWidth(newWidth);
+            terminal.setPrefWidth(newWidth - 190);
+            output.setPrefWidth(newWidth - 190);
 
-    // returns the output area
-    public TextArea getOutput() {
-        return new TextArea();
-    }
+        });
 
-    // returns a layout for the terminal and output areas
-    public BorderPane getIOAreaLayout(TextArea terminal, TextArea output) {
-        return null;
-    }
-
-    // returns a layout containing the the buttons on the right side of the screen for executing the input,
-    // viewing relational algebra, query tree states, query cost, and recommended file structures
-    private VBox getRightColumnButtonLayout() {
-        return null;
-    }
-
-    // contains all components for the terminal screen
-    public BorderPane getTerminalScreenLayout(HBox topRowButtonLayout, BorderPane terminalAndOutputAreaLayout, VBox rightColumnButtonLayout) {
-
-        BorderPane terminalScreenLayout = new BorderPane();
-
-        terminalScreenLayout.setTop(topRowButtonLayout);
-        terminalScreenLayout.setBottom(terminalAndOutputAreaLayout);
-        terminalScreenLayout.setRight(rightColumnButtonLayout);
-
-        terminalScreenLayout.setPrefSize(Screen.defaultWidth, Screen.defaultHeight);
-        terminalScreenLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
-
-        return terminalScreenLayout;
+        terminalScreen.heightProperty().addListener((observable, oldValue, newValue) -> {
+            double newHeight = (double) newValue;
+            terminal.setMaxHeight(newHeight - 400);
+            output.setMaxHeight(newHeight - 500);
+        });
     }
 
     @Override
