@@ -2,6 +2,8 @@ package gui.screens.users;
 
 import datastructures.user.User;
 import datastructures.user.component.TablePrivileges;
+import files.io.FileType;
+import files.io.IO;
 import gui.ScreenController;
 import gui.screens.Screen;
 import gui.screens.users.components.TablePrivilegePane;
@@ -31,123 +33,141 @@ public class UsersScreen extends Screen {
 
         List<User> users = systemCatalog.getUsers();
 
-        // top row button for transitioning between screens
-        HBox topRowButtonLayout = super.getButtonLayout(screenController);
+        VBox userContentContainerLayout = new VBox();
+        List<VBox> tablePrivilegePaneListLayoutList = new ArrayList<>();
 
-        // storing user's table privileges on right side of the screen -------------------------------------------------
-        BorderPane completeUserPrivilegesLayout = new BorderPane(); // contains everything on the right side of the screen
+        ScrollPane tablePrivilegeListLayoutScrollPane = new ScrollPane();
 
-        Text userPrivilegesText = new Text("User's Privileges");
-        userPrivilegesText.setFont(new Font(50));
+        // button styles
+        String buttonStyle = " -fx-background-color: rgb(100, 100, 100); -fx-text-fill: white;";
+        String buttonEnteredStyle = "-fx-background-color: rgb(150, 150, 150); -fx-text-fill: white;";
 
-        ScrollPane tablePrivilegeListScrollPane = new ScrollPane();
-        VBox tablePrivilegesList = new VBox();
-
-        tablePrivilegeListScrollPane.setPrefWidth(Screen.defaultWidth / 2); // remove
-
-        List<List<BorderPane>> userTablePrivilegePanesList = new ArrayList<>();
-
+        // adding all the content for the users screen in the most god awful way imaginable
         for(User user : users) {
-            List<TablePrivilegePane> userTablePrivilegePanes = new ArrayList<>();
+
+            // right side of the screen ================================================================================
+
+            // current user's table privileges -------------------------------------------------------------------------
+            List<BorderPane> tablePrivilegePaneList = new ArrayList<>();
             for (TablePrivileges tablePrivilege : user.getTablePrivilegesList()) {
-                BorderPane tablePrivilegePane = new TablePrivilegePane(tablePrivilege.getPrivileges(), tablePrivilege.getUpdateColumns(), tablePrivilege.getReferenceColumns()).getTablePrivilegePane();
-                //userTablePrivilegePanes.add(tablePrivilegePane);
-                // TODO this
+                BorderPane tablePrivilegePane = new TablePrivilegePane(tablePrivilege.getTableName(),
+                        tablePrivilege.getPrivileges(), tablePrivilege.getUpdateColumns(),
+                        tablePrivilege.getReferenceColumns()).getRoot();
+                tablePrivilegePaneList.add(tablePrivilegePane);
             }
+
+            // current user's passable table privileges ----------------------------------------------------------------
+            Text passableTablePrivilegesText = new Text("Passable Table Privileges:");
+            passableTablePrivilegesText.setFont(new Font(50));
+            passableTablePrivilegesText.setFill(Color.WHITE);
+            BorderPane.setAlignment(passableTablePrivilegesText, Pos.CENTER);
+
+            List<BorderPane> passableTablePrivilegePaneList = new ArrayList<>();
+            for(TablePrivileges passableTablePrivilege : user.getPassableTablePrivilegesList()) {
+                BorderPane passableTablePrivilegePane = new TablePrivilegePane(passableTablePrivilege.getTableName(),
+                        passableTablePrivilege.getPrivileges(), passableTablePrivilege.getUpdateColumns(),
+                        passableTablePrivilege.getReferenceColumns()).getRoot();
+                passableTablePrivilegePaneList.add(passableTablePrivilegePane);
+                VBox.setMargin(passableTablePrivilegePane, new Insets(10, 20, 10, 20));
+            }
+
+            // adding the aforementioned content in a vertical layout --------------------------------------------------
+            VBox tablePrivilegePaneListLayout = new VBox();
+            tablePrivilegePaneListLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
+            tablePrivilegePaneListLayout.setSpacing(10);
+           // VBox.setMargin(tablePrivilegePaneListLayout, new Insets(10));
+            tablePrivilegePaneListLayout.getChildren().addAll(tablePrivilegePaneList);
+            tablePrivilegePaneListLayout.getChildren().add(passableTablePrivilegesText);
+            tablePrivilegePaneListLayout.getChildren().addAll(passableTablePrivilegePaneList);
+
+            tablePrivilegePaneListLayoutList.add(tablePrivilegePaneListLayout);
+
+            // left side of the screen =================================================================================
+
+            // user button ---------------------------------------------------------------------------------------------
+            String username = user.getUsername();
+            Button userButton = new Button(username + "'s Privileges");
+            userButton.setFont(new Font(30));
+            userButton.setTextFill(Color.WHITE);
+            userButton.setStyle(buttonStyle);
+            userButton.setPrefWidth(Screen.defaultWidth / 2 - 40 - 120);
+            BorderPane.setMargin(userButton, new Insets(10, 5, 10, 10));
+            userButton.setEffect(
+                    new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+            userButton.setOnMouseEntered(e -> userButton.setStyle(buttonEnteredStyle));
+            userButton.setOnMouseExited(e -> userButton.setStyle(buttonStyle));
+
+            // on click, display this user's table privileges and passable table privileges
+            userButton.setOnAction(e -> {
+                tablePrivilegeListLayoutScrollPane.setContent(tablePrivilegePaneListLayout);
+            });
+
+            // play as button ------------------------------------------------------------------------------------------
+            Button playAsButton = new Button("Play");
+            playAsButton.setFont(new Font(30));
+            playAsButton.setTextFill(Color.WHITE);
+            playAsButton.setStyle(buttonStyle);
+            playAsButton.setPrefWidth(Screen.defaultWidth / 2 - 40 - 400);
+            BorderPane.setMargin(playAsButton, new Insets(10, 10, 10, 5));
+            playAsButton.setEffect(
+                    new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+            playAsButton.setOnMouseEntered(e -> playAsButton.setStyle(buttonEnteredStyle));
+            playAsButton.setOnMouseExited(e -> playAsButton.setStyle(buttonStyle));
+            playAsButton.setOnAction(e -> {
+                systemCatalog.setCurrentUser(user);
+
+            });
+
+            // container for user and play as buttons ------------------------------------------------------------------
+            BorderPane userContentContainer = new BorderPane();
+            userContentContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
+            userContentContainer.setLeft(userButton);
+            userContentContainer.setRight(playAsButton);
+
+            // adding everything to the containers ---------------------------------------------------------------------
+            userContentContainerLayout.getChildren().add(userContentContainer);
         }
 
-        //tablePrivilegesList.getChildren().add(
-        tablePrivilegeListScrollPane.setContent(tablePrivilegesList);
-
-        completeUserPrivilegesLayout.setTop(userPrivilegesText);
-        completeUserPrivilegesLayout.setBottom(tablePrivilegeListScrollPane);
-
-        // passable table privileges
-        /*Text passableTablePrivilegesText = new Text("Passable Table Privileges Text");
-        passableTablePrivilegesText.setFont(new Font(50));
-        passableTablePrivilegesText.setFill(Color.WHITE);
-        BorderPane.setAlignment(passableTablePrivilegesText, Pos.CENTER);
-
-        tablePrivilegesList.getChildren().add(passableTablePrivilegesText);
-
-        for(User user : users) {
-            tablePrivilegesList.getChildren().add(new TablePrivilegePane(user.getPassableTablePrivilegesList()).getTablePrivilegePane());
-        }*/
-
-        Text tablePrivilegesText = new Text("Table Privileges:");
-        tablePrivilegesText.setFont(new Font(50));
-        tablePrivilegesText.setFill(Color.WHITE);
-        BorderPane.setAlignment(tablePrivilegesText, Pos.CENTER);
-
-        completeUserPrivilegesLayout.setTop(tablePrivilegesText);
-        completeUserPrivilegesLayout.setBottom(tablePrivilegeListScrollPane);
-
-        // storing user data on left side of screen --------------------------------------------------------------------
-        BorderPane completeUserLayout = new BorderPane();
-        ScrollPane userContentContainerScrollPane = new ScrollPane();
-
-        VBox userContentContainer = new VBox();
-        userContentContainer.setSpacing(20);
-
+        // container for everything on left side of screen -------------------------------------------------------------
         Text usersText = new Text("Users:");
         usersText.setFont(new Font(50));
         usersText.setFill(Color.WHITE);
         BorderPane.setAlignment(usersText, Pos.CENTER);
 
-        String buttonStyle = " -fx-background-color: rgb(100, 100, 100); -fx-text-fill: white;";
-        String buttonEnteredStyle = "-fx-background-color: rgb(150, 150, 150); -fx-text-fill: white;";
+        ScrollPane userContentScrollPane = new ScrollPane();
+        userContentScrollPane.setContent(userContentContainerLayout);
+        userContentScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        userContentScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
 
-        // creating user and play as buttons for each user in the system
-        for(User user : users) {
+        BorderPane leftSideContainer = new BorderPane();
+        leftSideContainer.setStyle("-fx-background-color: blue;");
+        leftSideContainer.setTop(usersText);
+        leftSideContainer.setBottom(userContentScrollPane);
 
-            // contains the user and play as buttons
-            BorderPane userContentLayout = new BorderPane();
+        // container for everything on right side of screen ------------------------------------------------------------
+        Text tablePrivilegesText = new Text("Table Privileges:");
+        tablePrivilegesText.setFont(new Font(50));
+        tablePrivilegesText.setFill(Color.WHITE);
+        BorderPane.setAlignment(tablePrivilegesText, Pos.CENTER);
 
-            String username = user.getUsername();
+        // DBA's table privileges shown first
+        tablePrivilegeListLayoutScrollPane.setContent(tablePrivilegePaneListLayoutList.get(0));
+        tablePrivilegeListLayoutScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        tablePrivilegeListLayoutScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
 
-            Button userButton = new Button(username + "'s Privileges");
-            userButton.setFont(new Font(30));
-            userButton.setTextFill(Color.WHITE);
-            userButton.setStyle(buttonStyle);
-            userButton.setPrefWidth(Screen.defaultWidth / 2 - 40 - 100); // 40 to account for insets, 400 is actual width
-            BorderPane.setMargin(userButton, new Insets(0, 10, 0, 20));
-            userButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        BorderPane rightSideContainer = new BorderPane();
+        rightSideContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
+        rightSideContainer.setTop(tablePrivilegesText);
+        rightSideContainer.setBottom(tablePrivilegeListLayoutScrollPane);
 
-            userButton.setOnMouseEntered(e -> userButton.setStyle(buttonEnteredStyle));
-            userButton.setOnMouseExited(e -> userButton.setStyle(buttonStyle));
-
-            Button playAsButton = new Button("Play");
-            playAsButton.setFont(new Font(30));
-            playAsButton.setTextFill(Color.WHITE);
-            playAsButton.setStyle(buttonStyle);
-            playAsButton.setPrefWidth(Screen.defaultWidth / 2 - 40 - 400); // 40 to account for insets, 100 is actual width
-            BorderPane.setMargin(playAsButton, new Insets(0, 20, 0, 10));
-
-            playAsButton.setOnMouseEntered(e -> playAsButton.setStyle(buttonEnteredStyle));
-            playAsButton.setOnMouseExited(e -> playAsButton.setStyle(buttonStyle));
-            playAsButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-
-            playAsButton.setOnAction(e -> {
-                systemCatalog.setCurrentUser(user);
-                System.out.println("User set " + user);
-            });
-
-            userContentLayout.setLeft(userButton);
-            userContentLayout.setRight(playAsButton);
-
-            userContentContainer.getChildren().add(userContentLayout);
-        }
-
-        userContentContainerScrollPane.setContent(userContentContainer);
-
-        completeUserLayout.setTop(usersText);
-        completeUserLayout.setCenter(userContentContainerScrollPane);
+        // top row button for transitioning between screens ------------------------------------------------------------
+        HBox topRowButtonLayout = super.getButtonLayout(screenController);
 
         // overall layout for the user screen --------------------------------------------------------------------------
         BorderPane usersScreenLayout = new BorderPane();
         usersScreenLayout.setTop(topRowButtonLayout);
-        usersScreenLayout.setLeft(completeUserLayout);
-        usersScreenLayout.setRight(completeUserPrivilegesLayout);
+        usersScreenLayout.setLeft(leftSideContainer);
+        usersScreenLayout.setRight(rightSideContainer);
         usersScreenLayout.setPrefSize(Screen.defaultWidth, Screen.defaultHeight);
         usersScreenLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
 
@@ -158,12 +178,19 @@ public class UsersScreen extends Screen {
             double newWidth = (double) newValue;
             topRowButtonLayout.setMaxWidth(newWidth);
             super.adjustButtonWidth(newWidth);
-
+            userContentScrollPane.setPrefWidth(newWidth / 2);
+            tablePrivilegeListLayoutScrollPane.setPrefWidth(newWidth / 2);
+            /*for(List<BorderPane> tablePrivilegePaneList : tablePrivilegePaneListLayoutList) {
+                for(BorderPane currentPrivilegePane : tablePrivilegePaneList) {
+                    currentPrivilegePane.setPrefWidth(newWidth / 2);
+                }
+            }*/
         });
 
         usersScreen.heightProperty().addListener((observable, oldValue, newValue) -> {
             double newHeight = (double) newValue;
-
+            userContentScrollPane.setPrefHeight(newHeight - 135);
+            tablePrivilegeListLayoutScrollPane.setPrefHeight(newHeight - 135);
         });
     }
 

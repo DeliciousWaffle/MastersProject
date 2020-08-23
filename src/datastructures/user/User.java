@@ -81,7 +81,7 @@ public class User {
             passableTablePrivilegesList.add(tablePrivileges);
         }
 
-        return new User("DatabaseAdministrator", Type.DATABASE_ADMINISTRATOR,
+        return new User("DBA", Type.DATABASE_ADMINISTRATOR,
                 tablePrivilegesList, passableTablePrivilegesList);
     }
 

@@ -89,7 +89,7 @@ public class SystemCatalog {
         // set the current user as the DBA who has all privileges on every table
         User DBA = User.DatabaseAdministrator(tables);
         setCurrentUser(DBA);
-        users.add(DBA);
+        users.add(0, DBA);
 
         // setting the input type as unknown for now
         this.inputType = RuleGraph.Type.UNKNOWN;

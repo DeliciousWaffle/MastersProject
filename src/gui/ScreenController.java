@@ -1,5 +1,7 @@
 package gui;
 
+import files.io.FileType;
+import files.io.IO;
 import gui.screens.options.OptionsScreen;
 import gui.screens.Screen;
 import gui.screens.help.HelpScreen;
@@ -29,6 +31,9 @@ public class ScreenController {
         helpScreen     = new HelpScreen(this, systemCatalog);
 
         setScreen(Screen.Type.TERMINAL_SCREEN);
+
+        // icon on the taskbar
+        primaryStage.getIcons().add(IO.readAsset(FileType.Asset.X_IMAGE));
     }
 
     /**
