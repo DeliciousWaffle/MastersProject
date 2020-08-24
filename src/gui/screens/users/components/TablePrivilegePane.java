@@ -12,6 +12,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,7 +26,6 @@ public class TablePrivilegePane {
 
         // will contain everything
         this.root = new BorderPane();
-        root.setStyle("-fx-background-color: rgb(50, 50, 50);");
 
         Text tableNameText = new Text("Privileges on " + tableName + ":");
         tableNameText.setFont(new Font(35));
@@ -109,6 +109,10 @@ public class TablePrivilegePane {
 
         root.setTop(tableNameText);
         root.setBottom(privilegeContainerList);
+        root.setBackground(new Background(
+                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
+        root.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         BorderPane.setAlignment(tableNameText, Pos.CENTER);
         BorderPane.setMargin(tableNameText, new Insets(10, 0, 10, 0));

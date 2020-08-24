@@ -274,19 +274,13 @@ public class SystemCatalog {
     /**
      * Determines whether the system catalog should use the Verifier component to make referential
      * checks with the data located on the system.
-     * @param toggle set to true to use the Verifier, false to not use the Verifier
      */
-    public void toggleVerifier(boolean toggle) {
-        verifier.setToggle(toggle);
+    public void toggleVerifier() {
+        verifier.toggle();
     }
 
-    /**
-     * Determines whether the system catalog should use the Security Checker component to check
-     * that the current user has the correct privileges to execute input.
-     * @param toggle set to true to use the Security Checker, false to not use the Security Checker
-     */
-    public void toggleSecurityChecker(boolean toggle) {
-        securityChecker.setToggle(toggle);
+    public void toggleJoinOptimization() {
+        optimizer.toggleJoinOptimization();
     }
 
     // IO related ------------------------------------------------------------------------------------------------------

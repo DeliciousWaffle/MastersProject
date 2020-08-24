@@ -97,6 +97,7 @@ public final class FileType {
         MINUS_IMAGE("optionsscreen/Minus.png"),
         MOON_IMAGE("optionsscreen/Moon.png"),
         PLUS_IMAGE("optionsscreen/Plus.png"),
+        QUESTION_MARK("optionsscreen/QuestionMark.png"),
         REFRESH_IMAGE("optionsscreen/Refresh.png"),
         SUN_IMAGE("optionsscreen/Sun.png"),
 

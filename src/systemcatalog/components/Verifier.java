@@ -51,8 +51,8 @@ public class Verifier {
         this.users = users;
     }
 
-    public void setToggle(boolean toggle) {
-        this.toggle = toggle;
+    public void toggle() {
+        this.toggle = ! toggle;
     }
 
     // validation ------------------------------------------------------------------------------------------------------

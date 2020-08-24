@@ -65,4 +65,14 @@ public class ScreenController {
                 break;
         }
     }
+
+    // sets all UI elements to light mode
+    public void setToLightMode() {
+
+    }
+
+    // sets all UI elements to dark mode
+    public void setToDarkMode() {
+
+    }
 }

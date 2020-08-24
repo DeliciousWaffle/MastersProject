@@ -20,10 +20,12 @@ public class Optimizer {
     private List<Table> tables;
     private List<QueryTree> queryTreeStates;
     private List<String> recommendedFileStructures;
+    private boolean toggleJoinOptimization;
 
     public Optimizer() {
         this.queryTreeStates = new ArrayList<>();
         this.recommendedFileStructures = new ArrayList<>();
+        this.toggleJoinOptimization = true;
     }
 
     // setters ---------------------------------------------------------------------------------------------------------
@@ -38,6 +40,10 @@ public class Optimizer {
 
     public void setTables(List<Table> tables) {
         this.tables = tables;
+    }
+
+    public void toggleJoinOptimization() {
+        this.toggleJoinOptimization = ! toggleJoinOptimization;
     }
 
     // getters ---------------------------------------------------------------------------------------------------------

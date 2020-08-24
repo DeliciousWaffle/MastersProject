@@ -1,0 +1,8 @@
+.button {
+    -fx-background-color: rgb(100, 100, 100);
+    -fx-effect: dropshadow(one-pass-box, black, 8, 0, 2, 0);
+}
+
+.button: hover {
+    -fx-background-color: rgb(150, 150, 150);
+}
