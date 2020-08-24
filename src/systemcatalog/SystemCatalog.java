@@ -30,15 +30,15 @@ import java.util.List;
 public class SystemCatalog {
 
     // system catalog components that work together to make this application work
-    private final Parser parser;
-    private final Verifier verifier;
-    private final SecurityChecker securityChecker;
-    private final Optimizer optimizer;
-    private final Compiler compiler;
+    private Parser parser;
+    private Verifier verifier;
+    private SecurityChecker securityChecker;
+    private Optimizer optimizer;
+    private Compiler compiler;
 
     // system data
-    private final List<Table> tables;
-    private final List<User> users;
+    private List<Table> tables;
+    private List<User> users;
     private User currentUser;
 
     // used for logging messages
@@ -272,15 +272,51 @@ public class SystemCatalog {
     // Options related -------------------------------------------------------------------------------------------------
 
     /**
-     * Determines whether the system catalog should use the Verifier component to make referential
+     * Toggles whether the system catalog should use the Verifier component to make referential
      * checks with the data located on the system.
      */
     public void toggleVerifier() {
         verifier.toggle();
     }
 
+    /**
+     * Toggles whether the system catalog optimizes the ordering of joins. This has an impact on
+     * what the query tree will look like along with query costs.
+     */
     public void toggleJoinOptimization() {
         optimizer.toggleJoinOptimization();
+    }
+
+    /**
+     * Restores the database. This means that data such as users and tables will be restored back to
+     * their defaults.
+     */
+    public void restoreDatabase() {
+
+        parser = new Parser();
+        verifier = new Verifier();
+        securityChecker = new SecurityChecker();
+        optimizer = new Optimizer();
+        compiler = new Compiler();
+
+        logger.clear();
+
+        // load the original data
+        //tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.OriginalData.ORIGINAL_TABLES));
+        //users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
+
+        User DBA = User.DatabaseAdministrator(tables);
+        setCurrentUser(DBA);
+        users.add(0, DBA);
+
+        this.inputType = RuleGraph.Type.UNKNOWN;
+
+        this.resultSet = new ResultSet();
+        this.queryTreeStates = new ArrayList<>();
+        this.recommendedFileStructures = new ArrayList<>();
+
+        // writing out the original table and user data
+
     }
 
     // IO related ------------------------------------------------------------------------------------------------------

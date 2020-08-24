@@ -12,10 +12,17 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import systemcatalog.SystemCatalog;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 public class HelpScreen extends Screen {
 
     private Scene helpScreen;
+    private List<HelpPane> helpPaneList;
+    private boolean toggleUI;
 
     public HelpScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
@@ -26,35 +33,26 @@ public class HelpScreen extends Screen {
         VBox helpPanes = new VBox();
         helpPanes.setMinSize(0, 0);
         helpPanes.setSpacing(30);
-        helpPanes.setBackground(new Background(
-                new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
+        helpPanes.setStyle(toggleUI ? Screen.LIGHT_HI : Screen.DARK_HI);
+
+        this.helpPaneList = new ArrayList<>();
+        helpPaneList.addAll(Arrays.asList(
+                new HelpPane(getSchemaText(), "View Schema Diagram", Diagram.Type.SCHEMA),
+                new HelpPane(getQueryText(), "View Query Diagram", Diagram.Type.QUERY),
+                new HelpPane(getCreateTableText(), "View Create Table Diagram", Diagram.Type.CREATE_TABLE),
+                new HelpPane(getAlterTableText(), "View Alter Table Diagram", Diagram.Type.ALTER_TABLE),
+                new HelpPane(getDropTableText(), "View Drop Table Diagram", Diagram.Type.DROP_TABLE),
+                new HelpPane(getInsertText(), "View Insert Diagram", Diagram.Type.INSERT),
+                new HelpPane(getUpdateText(), "View Update Diagram", Diagram.Type.UPDATE),
+                new HelpPane(getDeleteText(), "View Delete Diagram", Diagram.Type.DELETE),
+                new HelpPane(getGrantText(), "View Grant Diagram", Diagram.Type.GRANT),
+                new HelpPane(getRevokeText(), "View Revoke Diagram", Diagram.Type.REVOKE),
+                new HelpPane(getBuildFileStructureText(), "View Build File Structure Diagram", Diagram.Type.BUILD_FILE_STRUCTURE),
+                new HelpPane(getRemoveFileStructureText(), "View Remove Rile Structure Diagram", Diagram.Type.REMOVE_FILE_STRUCTURE)
+        ));
 
         helpPanes.getChildren().addAll(
-                //getAboutPane(),
-                new HelpPane(getSchemaText(), "View Schema Diagram",
-                        Diagram.Type.SCHEMA).getHelpPane(),
-                new HelpPane(getQueryText(), "View Query Diagram",
-                        Diagram.Type.QUERY).getHelpPane(),
-                new HelpPane(getCreateTableText(), "View Create Table Diagram",
-                        Diagram.Type.CREATE_TABLE).getHelpPane(),
-                new HelpPane(getAlterTableText(), "View Alter Table Diagram",
-                        Diagram.Type.ALTER_TABLE).getHelpPane(),
-                new HelpPane(getDropTableText(), "View Drop Table Diagram",
-                        Diagram.Type.DROP_TABLE).getHelpPane(),
-                new HelpPane(getInsertText(), "View Insert Diagram",
-                        Diagram.Type.INSERT).getHelpPane(),
-                new HelpPane(getUpdateText(), "View Update Diagram",
-                        Diagram.Type.UPDATE).getHelpPane(),
-                new HelpPane(getDeleteText(), "View Delete Diagram",
-                        Diagram.Type.DELETE).getHelpPane(),
-                new HelpPane(getGrantText(), "View Grant Diagram",
-                        Diagram.Type.GRANT).getHelpPane(),
-                new HelpPane(getRevokeText(), "View Revoke Diagram",
-                        Diagram.Type.REVOKE).getHelpPane(),
-                new HelpPane(getBuildFileStructureText(), "View Build File Structure Diagram",
-                        Diagram.Type.BUILD_FILE_STRUCTURE).getHelpPane(),
-                new HelpPane(getRemoveFileStructureText(), "View Remove Rile Structure Diagram",
-                        Diagram.Type.REMOVE_FILE_STRUCTURE).getHelpPane()
+                helpPaneList.stream().map(HelpPane::getHelpPane).collect(Collectors.toList())
         );
 
         // centering the help panes
@@ -62,8 +60,9 @@ public class HelpScreen extends Screen {
         centeredHelpPanes.setMaxWidth(Screen.defaultWidth);
         centeredHelpPanes.setCenter(helpPanes);
         BorderPane.setAlignment(helpPanes, Pos.CENTER);
-        centeredHelpPanes.setStyle("-fx-background-color: rgb(30, 30, 30); -fx-background-insets: 0;" +
-                "-fx-border-color: transparent; -fx-padding: 0;  -fx-border-insets: 30;");
+        //centeredHelpPanes.setStyle("-fx-background-color: rgb(30, 30, 30); -fx-background-insets: 0;" +
+        //        "-fx-border-color: transparent; -fx-padding: 0;  -fx-border-insets: 30;");
+        centeredHelpPanes.setStyle(toggleUI ? Screen.LIGHT_HI : Screen.DARK_HI);
 
         // add the centered help panels to the scroll pane
         ScrollPane scrollHelpPanes = new ScrollPane(centeredHelpPanes);
@@ -72,9 +71,8 @@ public class HelpScreen extends Screen {
         scrollHelpPanes.getStylesheets().add("files/css/ScrollPaneStyle.css");
 
         // increase scroll speed
-        // credit: https://stackoverflow.com/questions/32739269/how-do-i-change-the-amount-by-which-scrollpane-scrolls
         centeredHelpPanes.setOnScroll(e -> {
-            double deltaY = e.getDeltaY() * 1.05;
+            double deltaY = e.getDeltaY() * 1.01;
             double width = scrollHelpPanes.getContent().getBoundsInLocal().getWidth();
             double vValue = scrollHelpPanes.getVvalue();
             scrollHelpPanes.setVvalue(vValue + -(deltaY / width));
@@ -90,7 +88,7 @@ public class HelpScreen extends Screen {
 
         helpScreenLayout.setMinSize(0, 0);
         helpScreenLayout.setPrefSize(defaultWidth, defaultHeight);
-        helpScreenLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
+        helpScreenLayout.setStyle(toggleUI ? Screen.LIGHT_HI : DARK_HI);
 
         helpScreen = new Scene(helpScreenLayout);
     }
@@ -102,6 +100,16 @@ public class HelpScreen extends Screen {
 
     private BorderPane getAboutHelpPane() {
         return new BorderPane();
+    }
+
+    public void setToLightMode() {
+        this.toggleUI = true;
+        this.helpPaneList.forEach(HelpPane::setToLightMode);
+    }
+
+    public void setToDarkMode() {
+        this.toggleUI = false;
+        this.helpPaneList.forEach(HelpPane::setToDarkMode);
     }
 
     private String getSchemaText() {

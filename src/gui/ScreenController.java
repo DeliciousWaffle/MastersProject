@@ -68,11 +68,19 @@ public class ScreenController {
 
     // sets all UI elements to light mode
     public void setToLightMode() {
-
+        //terminalScreen.setToLightMode();
+        //tablesScreen.setToLightMode();
+        //usersScreen.setToLightMode();
+        //optionsScreen.setToLightMode();
+        helpScreen.setToLightMode();
     }
 
     // sets all UI elements to dark mode
     public void setToDarkMode() {
-
+        //terminalScreen.setToDarkMode();
+        //tablesScreen.setToDarkMode();
+        //usersScreen.setToDarkMode();
+        //optionsScreen.setToDarkMode();
+        helpScreen.setToDarkMode();
     }
 }

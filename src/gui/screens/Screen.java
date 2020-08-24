@@ -13,6 +13,13 @@ import javafx.scene.text.Font;
 public abstract class Screen {
 
     public static final double defaultWidth = 1080.0, defaultHeight = 720.0;
+    public static final String
+            DARK_LOW = "-fx-background-color: rgb(90, 90, 90);",
+            DARK_MED = "-fx-background-color: rgb(60, 60, 60);",
+            DARK_HI = "-fx-background-color: rgb(30, 30, 30);",
+            LIGHT_LOW = "-fx-background-color: rgb(120, 120, 120);",
+            LIGHT_MED = "-fx-background-color: rgb(190, 190, 190);",
+            LIGHT_HI = "-fx-background-color: rgb(210, 210, 210);";
 
     public enum Type {
         TERMINAL_SCREEN, TABLES_SCREEN, USERS_SCREEN, OPTIONS_SCREEN, HELP_SCREEN
@@ -155,5 +162,13 @@ public abstract class Screen {
         usersButton.setPrefWidth(newScreenWidth / 5.0);
         optionsButton.setPrefWidth(newScreenWidth / 5.0);
         helpButton.setPrefWidth(newScreenWidth / 5.0);
+    }
+
+    public void setToLightMode() {
+
+    }
+
+    public void setToDarkMode() {
+
     }
 }

@@ -111,11 +111,7 @@ public final class FileType {
         X_IMAGE("terminalscreen/X.png"),
         TREE_IMAGE("terminalscreen/Tree.png"),
         DOLLAR_SIGN_IMAGE("terminalscreen/DollarSign.png"),
-        FOLDER_IMAGE("terminalscreen/Folder.png"),
-
-        // for query tree, a part of terminal screen
-        RIGHT_ARROW("terminalscreen/querytreewindow/RightArrow.png"),
-        LEFT_ARROW("terminalscreen/querytreewindow/LeftArrow.png");
+        FOLDER_IMAGE("terminalscreen/Folder.png");
 
         private final String path;
 
@@ -130,10 +126,9 @@ public final class FileType {
 
     public enum CSS {
 
-        BUTTON_STYLE("ButtonStyle.css"),
         CHOICE_BOX_STYLE("ChoiceBoxStyle.css"),
-        DARK_MODE("DarkMode.css"),
-        LIGHT_MODE("LightMode.css"),
+        DARK_BUTTON_STYLE("DarkButtonStyle.css"),
+        LIGHT_BUTTON_STYLE("LightButtonStyle.css"),
         SCROLL_PANE_STYLE("ScrollPaneStyle.css"),
         TEXT_AREA_STYLE("TextArea.css");
 

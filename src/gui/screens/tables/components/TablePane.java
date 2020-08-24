@@ -23,6 +23,7 @@ import java.util.List;
 public class TablePane {
 
     private BorderPane tablePane;
+    private boolean toggleUIMode;
 
     public TablePane(Table table, List<String> otherTableNames) {
 
@@ -126,5 +127,9 @@ public class TablePane {
 
     public BorderPane getTablePane() {
         return tablePane;
+    }
+
+    public void setToggleUIMode() {
+        this.toggleUIMode = ! toggleUIMode;
     }
 }

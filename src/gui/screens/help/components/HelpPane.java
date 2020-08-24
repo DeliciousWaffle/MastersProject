@@ -1,5 +1,7 @@
 package gui.screens.help.components;
 
+import files.io.FileType;
+import files.io.IO;
 import gui.screens.Screen;
 import gui.screens.help.components.diagramwindows.*;
 import javafx.geometry.Insets;
@@ -40,22 +42,7 @@ public class HelpPane {
         button.setMinSize(0, 0);
         button.setPrefSize(buttonWidth, buttonHeight);
         button.setFont(new Font(fontSize));
-
-        // spicing up button
-        String buttonStyle = "-fx-background-color: #666666; -fx-text-fill: white;";
-        button.setStyle(buttonStyle);
-        button.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-
-        String buttonEnteredStyle = "-fx-background-color: #999999; -fx-text-fill: white;";
-        String buttonExitedStyle = buttonStyle;
-
-        button.setOnMouseEntered(e -> {
-            button.setStyle(buttonEnteredStyle);
-        });
-
-        button.setOnMouseExited(e -> {
-            button.setStyle(buttonExitedStyle);
-        });
+        button.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
 
         // if the button is clicked, what kind of window does it launch?
         switch(diagramType) {
@@ -106,13 +93,19 @@ public class HelpPane {
         helpPane.setBottom(button);
         BorderPane.setMargin(text, new Insets(15));
         BorderPane.setMargin(button, new Insets(15));
-        helpPane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), CornerRadii.EMPTY, Insets.EMPTY)));
         helpPane.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
     }
 
     public BorderPane getHelpPane() {
         return helpPane;
+    }
+
+    public void setToLightMode() {
+        helpPane.setStyle(Screen.LIGHT_MED);
+    }
+
+    public void setToDarkMode() {
+        helpPane.setStyle(Screen.DARK_MED);
     }
 }
