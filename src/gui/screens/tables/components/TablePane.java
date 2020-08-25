@@ -57,7 +57,7 @@ public class TablePane {
             clusteredFileTableOptions.setValue(table.getClusteredWith());
         }
 
-        clusteredFileTableOptions.getStylesheets().add(IO.readCSS(FileType.CSS.CHOICE_BOX_STYLE));
+        clusteredFileTableOptions.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
         clusteredFileTableOptions.setStyle("-fx-font-size: 25; -fx-pref-width: 360;");
         clusteredFileTableOptions.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));

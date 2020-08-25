@@ -174,7 +174,7 @@ public class UsersScreen extends Screen {
 
         ScrollPane userContentScrollPane = new ScrollPane();
         userContentScrollPane.setContent(userContentContainerLayout);
-        userContentScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        userContentScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         userContentScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         userContentScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         userContentScrollPane.setHvalue(0.5);
@@ -194,7 +194,7 @@ public class UsersScreen extends Screen {
         // DBA's table privileges shown first
         tablePrivilegePaneListLayoutList.forEach(e -> e.setAlignment(Pos.CENTER));
         tablePrivilegeListLayoutScrollPane.setContent(tablePrivilegePaneListLayoutList.get(0));
-        tablePrivilegeListLayoutScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        tablePrivilegeListLayoutScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         tablePrivilegeListLayoutScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
         tablePrivilegeListLayoutScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         tablePrivilegeListLayoutScrollPane.setHvalue(0.5);

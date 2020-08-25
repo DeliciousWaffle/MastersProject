@@ -70,7 +70,7 @@ public class ColumnPane {
                 "No File Structure"
         );
 
-        fileStructureChoiceBox.getStylesheets().add("files/css/ChoiceBoxStyle.css");
+        fileStructureChoiceBox.getStylesheets().add("files/css/darkui/DarkChoiceBoxStyle.css");
 
         fileStructureChoiceBox.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));

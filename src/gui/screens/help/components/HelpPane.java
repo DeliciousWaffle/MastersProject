@@ -21,6 +21,8 @@ import javafx.scene.text.TextAlignment;
 public class HelpPane {
 
     private BorderPane helpPane;
+    private Text text;
+    private Button button;
 
     public HelpPane(String helpText, String buttonText, Diagram.Type diagramType) {
 
@@ -31,14 +33,14 @@ public class HelpPane {
         double textWrappingSize = Screen.defaultWidth - 250.0;
 
         // creating text
-        Text text = new Text(buttonWidth, buttonHeight, helpText);
+        this.text = new Text(buttonWidth, buttonHeight, helpText);
         text.setFont(new Font(fontSize));
         text.setTextAlignment(TextAlignment.CENTER);
         text.setWrappingWidth(textWrappingSize);
         text.setFill(Color.WHITE);
 
         // creating the button
-        Button button = new Button(buttonText);
+        this.button = new Button(buttonText);
         button.setMinSize(0, 0);
         button.setPrefSize(buttonWidth, buttonHeight);
         button.setFont(new Font(fontSize));
@@ -85,7 +87,7 @@ public class HelpPane {
         }
 
         // creating the help pane
-        helpPane = new BorderPane();
+        this.helpPane = new BorderPane();
         helpPane.setMinSize(0, 0);
         BorderPane.setAlignment(text, Pos.CENTER);
         BorderPane.setAlignment(button, Pos.CENTER);
@@ -93,6 +95,7 @@ public class HelpPane {
         helpPane.setBottom(button);
         BorderPane.setMargin(text, new Insets(15));
         BorderPane.setMargin(button, new Insets(15));
+        helpPane.setStyle(Screen.DARK_MED);
         helpPane.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
     }
@@ -102,10 +105,14 @@ public class HelpPane {
     }
 
     public void setToLightMode() {
+        this.text.setFill(Color.BLACK);
+        this.button.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
         helpPane.setStyle(Screen.LIGHT_MED);
     }
 
     public void setToDarkMode() {
+        this.text.setFill(Color.WHITE);
+        this.button.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         helpPane.setStyle(Screen.DARK_MED);
     }
 }

@@ -1,15 +1,15 @@
 package gui.screens.help;
 
+import files.io.FileType;
+import files.io.IO;
 import gui.ScreenController;
 import gui.screens.Screen;
 import gui.screens.help.components.Diagram;
 import gui.screens.help.components.HelpPane;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import systemcatalog.SystemCatalog;
 
 import java.util.ArrayList;
@@ -21,8 +21,11 @@ import java.util.stream.Collectors;
 public class HelpScreen extends Screen {
 
     private Scene helpScreen;
+
+    private VBox helpPanes;
+    private BorderPane centeredHelpPanes, helpScreenLayout;
     private List<HelpPane> helpPaneList;
-    private boolean toggleUI;
+    private ScrollPane scrollHelpPanes;
 
     public HelpScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
@@ -30,10 +33,10 @@ public class HelpScreen extends Screen {
         HBox buttonLayout = super.getButtonLayout(screenController);
 
         // following is for the content of the help screen
-        VBox helpPanes = new VBox();
+        this.helpPanes = new VBox();
         helpPanes.setMinSize(0, 0);
         helpPanes.setSpacing(30);
-        helpPanes.setStyle(toggleUI ? Screen.LIGHT_HI : Screen.DARK_HI);
+        helpPanes.setStyle(Screen.DARK_HI);
 
         this.helpPaneList = new ArrayList<>();
         helpPaneList.addAll(Arrays.asList(
@@ -56,30 +59,27 @@ public class HelpScreen extends Screen {
         );
 
         // centering the help panes
-        BorderPane centeredHelpPanes = new BorderPane();
+        this.centeredHelpPanes = new BorderPane();
         centeredHelpPanes.setMaxWidth(Screen.defaultWidth);
         centeredHelpPanes.setCenter(helpPanes);
         BorderPane.setAlignment(helpPanes, Pos.CENTER);
-        //centeredHelpPanes.setStyle("-fx-background-color: rgb(30, 30, 30); -fx-background-insets: 0;" +
-        //        "-fx-border-color: transparent; -fx-padding: 0;  -fx-border-insets: 30;");
-        centeredHelpPanes.setStyle(toggleUI ? Screen.LIGHT_HI : Screen.DARK_HI);
 
         // add the centered help panels to the scroll pane
-        ScrollPane scrollHelpPanes = new ScrollPane(centeredHelpPanes);
+        this.scrollHelpPanes = new ScrollPane(centeredHelpPanes);
         scrollHelpPanes.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollHelpPanes.setFitToWidth(true);
-        scrollHelpPanes.getStylesheets().add("files/css/ScrollPaneStyle.css");
+        scrollHelpPanes.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
 
         // increase scroll speed
         centeredHelpPanes.setOnScroll(e -> {
-            double deltaY = e.getDeltaY() * 1.01;
+            double deltaY = e.getDeltaY() * 1.02;
             double width = scrollHelpPanes.getContent().getBoundsInLocal().getWidth();
             double vValue = scrollHelpPanes.getVvalue();
             scrollHelpPanes.setVvalue(vValue + -(deltaY / width));
         });
 
         // add the button layout and content layout to overall screen
-        BorderPane helpScreenLayout = new BorderPane();
+        this.helpScreenLayout = new BorderPane();
         helpScreenLayout.setTop(buttonLayout);
         helpScreenLayout.setBottom(scrollHelpPanes);
 
@@ -88,7 +88,7 @@ public class HelpScreen extends Screen {
 
         helpScreenLayout.setMinSize(0, 0);
         helpScreenLayout.setPrefSize(defaultWidth, defaultHeight);
-        helpScreenLayout.setStyle(toggleUI ? Screen.LIGHT_HI : DARK_HI);
+        helpScreenLayout.setStyle(DARK_HI);
 
         helpScreen = new Scene(helpScreenLayout);
     }
@@ -98,18 +98,20 @@ public class HelpScreen extends Screen {
         return helpScreen;
     }
 
-    private BorderPane getAboutHelpPane() {
-        return new BorderPane();
-    }
-
     public void setToLightMode() {
-        this.toggleUI = true;
+        this.helpPanes.setStyle(Screen.LIGHT_LOW);
+        this.centeredHelpPanes.setStyle(Screen.LIGHT_LOW);
+        this.helpScreenLayout.setStyle(Screen.LIGHT_LOW);
         this.helpPaneList.forEach(HelpPane::setToLightMode);
+        this.scrollHelpPanes.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
     }
 
     public void setToDarkMode() {
-        this.toggleUI = false;
+        this.helpPanes.setStyle(Screen.DARK_HI);
+        this.centeredHelpPanes.setStyle(Screen.DARK_HI);
+        this.helpScreenLayout.setStyle(Screen.DARK_HI);
         this.helpPaneList.forEach(HelpPane::setToDarkMode);
+        this.scrollHelpPanes.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
     }
 
     private String getSchemaText() {

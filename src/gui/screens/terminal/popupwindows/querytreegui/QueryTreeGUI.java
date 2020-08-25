@@ -41,7 +41,7 @@ public class QueryTreeGUI {
 
         // contains the canvas, allows to scroll horizontally or vertically, which is nifty
         this.container = new ScrollPane();
-        container.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        container.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         container.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         container.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         container.setStyle("-fx-background-color: rgb(30, 30, 30);");

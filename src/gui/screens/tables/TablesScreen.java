@@ -56,13 +56,12 @@ public class TablesScreen extends Screen {
 
         // adding the centered layout to a scroll pane because the data may go off screen
         ScrollPane tablePanesScrollLayout = new ScrollPane(tablePanesLayout);
-        tablePanesScrollLayout.getStylesheets().add("files/css/ScrollPaneStyle.css");
+        tablePanesScrollLayout.getStylesheets().add("files/css/darkui/DarkScrollPaneStyle.css");
         tablePanesLayout.setPadding(new Insets(10, 20, 20, 20));
 
         // increase scroll speed
-        // credit: https://stackoverflow.com/questions/32739269/how-do-i-change-the-amount-by-which-scrollpane-scrolls
         tablePanesLayout.setOnScroll(e -> {
-            double deltaY = e.getDeltaY() * 6;
+            double deltaY = e.getDeltaY() * 1.1;
             double width = tablePanesScrollLayout.getContent().getBoundsInLocal().getWidth();
             double vValue = tablePanesScrollLayout.getVvalue();
             tablePanesScrollLayout.setVvalue(vValue + -(deltaY / width));

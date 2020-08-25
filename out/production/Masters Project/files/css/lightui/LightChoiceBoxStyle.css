@@ -1,17 +1,17 @@
 .choice-box {
     -fx-font-size: 20;
-    -fx-background-color: #888888;
+    -fx-background-color: rgb(100, 100, 100);
     -fx-text-fill: white;
     -fx-pref-width: 250;
     -fx-alignment: CENTER;
 }
 
 .choice-box-popup > .list-view {
-    -fx-background-color: #888888;
+    -fx-background-color: rgb(100, 100, 100);
     -fx-text-fill: white;
     -fx-pref-width: 250;
 }
 
 .choice-box: hover {
-    -fx-background-color: #999999;
+    -fx-background-color: rgb(150, 150, 150);
 }

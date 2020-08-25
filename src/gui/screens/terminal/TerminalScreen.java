@@ -40,8 +40,8 @@ public class TerminalScreen extends Screen {
         TextArea terminal = new TextArea();
         //terminal.setPrefSize(Screen.defaultWidth - 210, Screen.defaultHeight - 420);
         terminal.setFont(new Font(40));
-        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
-        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_TEXT_AREA_STYLE));
+        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         terminal.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         terminalAreaLayout.setTop(inputAreaText);
@@ -62,8 +62,8 @@ public class TerminalScreen extends Screen {
         output.setMinHeight(0);
         output.setFont(new Font(40));
         output.setEditable(false);
-        output.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
-        output.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
+        output.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_TEXT_AREA_STYLE));
+        output.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         output.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         outputAreaLayout.setTop(outputAreaText);

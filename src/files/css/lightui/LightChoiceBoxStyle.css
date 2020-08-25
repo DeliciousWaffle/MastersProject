@@ -1,0 +1,44 @@
+.choice-box {
+    -fx-font-size: 20;
+    -fx-background-color: rgb(120, 120, 120);
+    -fx-text-fill: white;
+    -fx-pref-width: 250;
+    -fx-alignment: CENTER;
+    -fx-mark-color: white;
+}
+
+.choice-box > .label {
+    -fx-text-fill: white;
+}
+
+.choice-box: hover {
+    -fx-background-color: rgb(150, 150, 150);
+}
+
+.choice-box .context-menu {
+    -fx-background-color: rgb(30, 30, 30);
+}
+
+.choice-box .menu-item: focused {
+    -fx-background-color: rgb(200, 200, 200);
+}
+
+.choice-box .menu-item: focused > .label {
+    -fx-text-fill: black;
+}
+
+.choice-box .menu-item > .label {
+    -fx-text-fill: white;
+}
+
+.choice-box .menu-item {
+    -fx-text-fill: white;
+    -fx-background-color: rgb(30, 30, 30);
+    -fx-mark-color: white;
+}
+
+choice-box-popup > .list-view {
+    -fx-background-color: rgb(150, 150, 150);
+    -fx-text-fill: white;
+    -fx-pref-width: 250;
+}

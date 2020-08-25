@@ -1,5 +1,7 @@
 package gui.screens;
 
+import files.io.FileType;
+import files.io.IO;
 import gui.ScreenController;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -17,9 +19,9 @@ public abstract class Screen {
             DARK_LOW = "-fx-background-color: rgb(90, 90, 90);",
             DARK_MED = "-fx-background-color: rgb(60, 60, 60);",
             DARK_HI = "-fx-background-color: rgb(30, 30, 30);",
-            LIGHT_LOW = "-fx-background-color: rgb(120, 120, 120);",
-            LIGHT_MED = "-fx-background-color: rgb(190, 190, 190);",
-            LIGHT_HI = "-fx-background-color: rgb(210, 210, 210);";
+            LIGHT_LOW = DARK_LOW,
+            LIGHT_MED = "-fx-background-color: rgb(150, 150, 150);",
+            LIGHT_HI = "-fx-background-color: rgb(190, 190, 190);";
 
     public enum Type {
         TERMINAL_SCREEN, TABLES_SCREEN, USERS_SCREEN, OPTIONS_SCREEN, HELP_SCREEN
@@ -67,64 +69,11 @@ public abstract class Screen {
         helpButton.setFont(new Font(fontSize));
 
         // setting some styling
-        String buttonStyle = " -fx-background-color: rgb(100, 100, 100); -fx-text-fill: white; -fx-padding: 0;";
-
-        // adds a sick drop shadow effect to the buttons
-        terminalButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        tablesButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        usersButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        optionsButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        helpButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-
-        terminalButton.setStyle(buttonStyle);
-        tablesButton.setStyle(buttonStyle);
-        usersButton.setStyle(buttonStyle);
-        optionsButton.setStyle(buttonStyle);
-        helpButton.setStyle(buttonStyle);
-
-        // more styling
-        String buttonEnteredStyle = "-fx-background-color: rgb(150, 150, 150); -fx-text-fill: white; -fx-border-color: transparent;";
-        String buttonExitedStyle = buttonStyle;
-
-        terminalButton.setOnMouseEntered(e -> {
-            terminalButton.setStyle(buttonEnteredStyle);
-        });
-        tablesButton.setOnMouseEntered(e -> {
-            tablesButton.setStyle(buttonEnteredStyle);
-        });
-        usersButton.setOnMouseEntered(e -> {
-            usersButton.setStyle(buttonEnteredStyle);
-        });
-        optionsButton.setOnMouseEntered(e -> {
-            optionsButton.setStyle(buttonEnteredStyle);
-        });
-        helpButton.setOnMouseEntered(e -> {
-            helpButton.setStyle(buttonEnteredStyle);
-        });
-
-        terminalButton.setOnMouseExited(e -> {
-            terminalButton.setStyle(buttonExitedStyle);
-        });
-        tablesButton.setOnMouseExited(e -> {
-            tablesButton.setStyle(buttonExitedStyle);
-        });
-        usersButton.setOnMouseExited(e -> {
-            usersButton.setStyle(buttonExitedStyle);
-        });
-        optionsButton.setOnMouseExited(e -> {
-            optionsButton.setStyle(buttonExitedStyle);
-        });
-        helpButton.setOnMouseExited(e -> {
-            helpButton.setStyle(buttonExitedStyle);
-        });
-
-
-        // removing the outline that appears when a button was clicked
-        terminalButton.setFocusTraversable(false);
-        tablesButton.setFocusTraversable(false);
-        usersButton.setFocusTraversable(false);
-        optionsButton.setFocusTraversable(false);
-        helpButton.setFocusTraversable(false);
+        terminalButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        tablesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        usersButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        optionsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        helpButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
 
         // setting what screen to go on press
         terminalButton.setOnAction(e -> {
@@ -165,10 +114,18 @@ public abstract class Screen {
     }
 
     public void setToLightMode() {
-
+        terminalButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
+        tablesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
+        usersButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
+        optionsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
+        helpButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
     }
 
     public void setToDarkMode() {
-
+        terminalButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        tablesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        usersButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        optionsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        helpButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
     }
 }

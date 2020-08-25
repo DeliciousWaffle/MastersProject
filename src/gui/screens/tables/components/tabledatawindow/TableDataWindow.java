@@ -108,7 +108,7 @@ public class TableDataWindow extends Stage {
         scrollPane.setContent(columnDataLayout);
         scrollPane.setMinSize(0, 0);
         scrollPane.setPrefSize(Screen.defaultWidth, Screen.defaultHeight);
-        scrollPane.getStylesheets().add("files/css/ScrollPaneStyle.css");
+        scrollPane.getStylesheets().add("files/css/darkui/DarkScrollPaneStyle.css");
         scrollPane.setStyle("-fx-background-color: rgb(30, 30, 30);");
 
         // increase scroll speed
