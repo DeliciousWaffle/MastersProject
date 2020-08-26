@@ -14,7 +14,6 @@ import java.util.*;
  */
 public class Optimizer {
 
-    // represents each state of the query tree when applying the optimization heuristic
     private RuleGraph queryRuleGraph;
     private String[] tokenizedInput;
     private List<Table> tables;
@@ -60,9 +59,11 @@ public class Optimizer {
 
     public void optimize() {
 
+        // query tree creation
         QueryTree workingTree = createQueryTree();
         queryTreeStates.add(workingTree);
 
+        
         workingTree = cascadeSelections(workingTree);
         queryTreeStates.add(workingTree);
 
