@@ -3,6 +3,8 @@ package gui.screens.tables.components;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
 import datastructures.relation.table.component.FileStructure;
+import files.io.FileType;
+import files.io.IO;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.ChoiceBox;
@@ -19,6 +21,8 @@ import javafx.scene.text.Text;
 public class ColumnPane {
 
     private BorderPane columnPane;
+    private Text columnNameText, dataTypeAndSizeText;
+    private ChoiceBox<String> fileStructureChoiceBox;
 
     public ColumnPane(Column column, String keyType) {
 
@@ -29,7 +33,7 @@ public class ColumnPane {
         FileStructure fileStructure = column.getFileStructure();
 
         // convert column name to text
-        Text columnNameText = new Text(columnName);
+        this.columnNameText = new Text(columnName);
         columnNameText.setFont(new Font(25.0));
         columnNameText.fillProperty().set(Color.WHITE);
 
@@ -48,7 +52,7 @@ public class ColumnPane {
                 break;
         }
 
-        Text dataTypeAndSizeText = new Text(dataTypeString + " (" + size + ")");
+        this.dataTypeAndSizeText = new Text(dataTypeString + " (" + size + ")");
         dataTypeAndSizeText.setFont(new Font(25.0));
         dataTypeAndSizeText.fillProperty().set(Color.WHITE);
 
@@ -62,7 +66,7 @@ public class ColumnPane {
         formatColumnData.setPadding(new Insets(0, 0, 10, 0));
 
         // creating a choice box for the data structure to build on
-        ChoiceBox<String> fileStructureChoiceBox = new ChoiceBox<>();
+        this.fileStructureChoiceBox = new ChoiceBox<>();
         fileStructureChoiceBox.getItems().addAll(
                 "Secondary B-Tree",
                 "Clustered B-Tree",
@@ -70,8 +74,7 @@ public class ColumnPane {
                 "No File Structure"
         );
 
-        fileStructureChoiceBox.getStylesheets().add("files/css/darkui/DarkChoiceBoxStyle.css");
-
+        fileStructureChoiceBox.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
         fileStructureChoiceBox.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
@@ -146,7 +149,7 @@ public class ColumnPane {
         BorderPane.setMargin(keyLabel, new Insets(0, 0, 0, 5));
 
         // add text and choice box to the pane
-        columnPane = new BorderPane();
+        this.columnPane = new BorderPane();
         columnPane.setTop(formatColumnData);
         columnPane.setBottom(fileStructureAndKeyLayout);
 
@@ -155,7 +158,7 @@ public class ColumnPane {
 
         columnPane.setPadding(new Insets(10));
         columnPane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(70, 70, 70), CornerRadii.EMPTY, Insets.EMPTY)
+                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)
         ));
         columnPane.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
@@ -163,5 +166,21 @@ public class ColumnPane {
 
     public BorderPane getColumnPane() {
         return columnPane;
+    }
+
+    public void setToLightMode() {
+        this.columnNameText.setFill(Color.BLACK);
+        this.dataTypeAndSizeText.setFill(Color.BLACK);
+        this.fileStructureChoiceBox.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_CHOICE_BOX_STYLE));
+        this.columnPane.setBackground(new Background(
+                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY)));
+    }
+
+    public void setToDarkMode() {
+        this.columnNameText.setFill(Color.WHITE);
+        this.dataTypeAndSizeText.setFill(Color.WHITE);
+        this.fileStructureChoiceBox.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
+        this.columnPane.setBackground(new Background(
+                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));
     }
 }

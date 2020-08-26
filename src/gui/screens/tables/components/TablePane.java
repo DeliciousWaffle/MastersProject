@@ -4,6 +4,7 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import files.io.FileType;
 import files.io.IO;
+import gui.screens.Screen;
 import gui.screens.tables.components.tabledatawindow.TableDataWindow;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,11 +20,15 @@ import javafx.scene.text.TextAlignment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TablePane {
 
     private BorderPane tablePane;
-    private boolean toggleUIMode;
+    private Text tableNameText;
+    private List<ColumnPane> columnPaneList;
+    private ChoiceBox<String> clusteredFileTableOptions;
+    private Button viewTableDataButton;
 
     public TablePane(Table table, List<String> otherTableNames) {
 
@@ -31,24 +36,27 @@ public class TablePane {
 
         // setting the name
         String tableName = table.getTableName();
-        Text text = new Text(tableName);
-        text.setFont(new Font(fontSize));
-        text.setTextAlignment(TextAlignment.CENTER);
-        text.setFill(Color.WHITE);
+        this.tableNameText = new Text(tableName);
+        tableNameText.setFont(new Font(fontSize));
+        tableNameText.setTextAlignment(TextAlignment.CENTER);
+        tableNameText.setFill(Color.WHITE);
 
         // setting the columns
-        List<BorderPane> columnPanes = new ArrayList<>();
+        this.columnPaneList = new ArrayList<>();
 
         for(Column column : table.getColumns()) {
-            columnPanes.add(new ColumnPane(column, "None").getColumnPane());
+            columnPaneList.add(new ColumnPane(column, "None"));
         }
 
         VBox columnPanesLayout = new VBox();
-        columnPanesLayout.getChildren().addAll(columnPanes);
         columnPanesLayout.setSpacing(20);
+        columnPanesLayout.getChildren().addAll(columnPaneList.stream()
+                .map(ColumnPane::getColumnPane)
+                .collect(Collectors.toList())
+        );
 
         // adding a choice box for choosing a table to build a clustered file with
-        ChoiceBox<String> clusteredFileTableOptions = new ChoiceBox<>();
+        this.clusteredFileTableOptions = new ChoiceBox<>();
         clusteredFileTableOptions.getItems().addAll(otherTableNames);
 
         if(table.getClusteredWith().equalsIgnoreCase("none")) {
@@ -63,26 +71,11 @@ public class TablePane {
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // adding a button that allows the user to view the table data
-        Button button = new Button("View Table Data");
-        button.setMinSize(0, 0);
-        button.setPrefWidth(360);
-        button.setFont(new Font(25));
-
-        // spicing up the button
-        String buttonStyle = "-fx-background-color: rgb(100, 100, 100); -fx-text-fill: white;";
-        button.setStyle(buttonStyle);
-        button.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-
-        String buttonEnteredStyle = "-fx-background-color: rgb(150, 150, 150); -fx-text-fill: white;";
-        String buttonExitedStyle = buttonStyle;
-
-        button.setOnMouseEntered(e -> {
-            button.setStyle(buttonEnteredStyle);
-        });
-
-        button.setOnMouseExited(e -> {
-            button.setStyle(buttonExitedStyle);
-        });
+        this.viewTableDataButton = new Button("View Table Data");
+        viewTableDataButton.setMinSize(0, 0);
+        viewTableDataButton.setPrefWidth(360);
+        viewTableDataButton.setFont(new Font(25));
+        viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
 
         // create a new window containing the table's data
         List<String> columnNames = new ArrayList<>();
@@ -92,35 +85,35 @@ public class TablePane {
             columnNames.add(columnName);
         }
 
-        button.setOnAction(e -> {
+        viewTableDataButton.setOnAction(e -> {
             new TableDataWindow(tableName, columnNames, table.getTableData());
         });
 
         // adding everything to the main pane
         BorderPane topContainer = new BorderPane();
-        topContainer.setTop(text);
+        topContainer.setTop(tableNameText);
         topContainer.setBottom(columnPanesLayout);
 
         BorderPane bottomContainer = new BorderPane();
         bottomContainer.setTop(clusteredFileTableOptions);
-        bottomContainer.setBottom(button);
+        bottomContainer.setBottom(viewTableDataButton);
 
-        tablePane = new BorderPane();
+        this.tablePane = new BorderPane();
         tablePane.setTop(topContainer);
         tablePane.setBottom(bottomContainer);
 
-        BorderPane.setAlignment(text, Pos.CENTER);
+        BorderPane.setAlignment(tableNameText, Pos.CENTER);
         BorderPane.setAlignment(columnPanesLayout, Pos.CENTER);
         BorderPane.setAlignment(clusteredFileTableOptions, Pos.CENTER);
-        BorderPane.setAlignment(button, Pos.CENTER);
+        BorderPane.setAlignment(viewTableDataButton, Pos.CENTER);
 
-        BorderPane.setMargin(text, new Insets(20, 20, 10, 20));
+        BorderPane.setMargin(tableNameText, new Insets(20, 20, 10, 20));
         BorderPane.setMargin(columnPanesLayout, new Insets(10, 20, 10, 20));
         BorderPane.setMargin(clusteredFileTableOptions, new Insets(10 + 20, 20, 10 + 20, 20));
-        BorderPane.setMargin(button, new Insets(10, 20, 20, 20));
+        BorderPane.setMargin(viewTableDataButton, new Insets(10, 20, 20, 20));
 
         tablePane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), CornerRadii.EMPTY, Insets.EMPTY)));
+                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));
         tablePane.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
     }
@@ -129,7 +122,21 @@ public class TablePane {
         return tablePane;
     }
 
-    public void setToggleUIMode() {
-        this.toggleUIMode = ! toggleUIMode;
+    public void setToLightMode() {
+        this.tableNameText.setFill(Color.BLACK);
+        this.columnPaneList.forEach(ColumnPane::setToLightMode);
+        this.clusteredFileTableOptions.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_CHOICE_BOX_STYLE));
+        this.viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
+        this.tablePane.setBackground(new Background(
+                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY)));;
+    }
+
+    public void setToDarkMode() {
+        this.tableNameText.setFill(Color.WHITE);
+        this.columnPaneList.forEach(ColumnPane::setToDarkMode);
+        this.clusteredFileTableOptions.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
+        this.viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        this.tablePane.setBackground(new Background(
+                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));;
     }
 }

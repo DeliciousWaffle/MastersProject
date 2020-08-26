@@ -16,10 +16,15 @@ import systemcatalog.SystemCatalog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TablesScreen extends Screen {
 
     private Scene tablesScreen;
+    private HBox tablePanesLayout;
+    private ScrollPane tablePanesScrollLayout;
+    private BorderPane overallLayout;
+    private List<TablePane> tablePaneList;
 
     public TablesScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
@@ -30,7 +35,7 @@ public class TablesScreen extends Screen {
         String blah = IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES);
         List<Table> tables = Serialize.unSerializeTables(blah);
 
-        List<BorderPane> tablePanes = new ArrayList<>();
+        this.tablePaneList = new ArrayList<>();
 
         for(Table table : tables) {
 
@@ -43,20 +48,24 @@ public class TablesScreen extends Screen {
             }
 
             otherTableNames.add(0, "Clustered With No Table");
-            tablePanes.add(new TablePane(table, otherTableNames).getTablePane());
+            tablePaneList.add(new TablePane(table, otherTableNames));
         }
 
         // add the table panes to a vertical layout
-        HBox tablePanesLayout = new HBox();
+        this.tablePanesLayout = new HBox();
         tablePanesLayout.setMinSize(0, 0);
         tablePanesLayout.setSpacing(20);
-        tablePanesLayout.setBackground(new Background(
-                new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
-        tablePanesLayout.getChildren().addAll(tablePanes);
+        tablePanesLayout.setStyle(Screen.DARK_HI);
+
+        tablePanesLayout.getChildren().addAll(tablePaneList
+                .stream()
+                .map(TablePane::getTablePane)
+                .collect(Collectors.toList())
+        );
 
         // adding the centered layout to a scroll pane because the data may go off screen
-        ScrollPane tablePanesScrollLayout = new ScrollPane(tablePanesLayout);
-        tablePanesScrollLayout.getStylesheets().add("files/css/darkui/DarkScrollPaneStyle.css");
+        this.tablePanesScrollLayout = new ScrollPane(tablePanesLayout);
+        tablePanesScrollLayout.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         tablePanesLayout.setPadding(new Insets(10, 20, 20, 20));
 
         // increase scroll speed
@@ -68,12 +77,12 @@ public class TablesScreen extends Screen {
         });
 
         // add the button layout and content layout to overall screen
-        BorderPane overallLayout = new BorderPane();
+        this.overallLayout = new BorderPane();
         overallLayout.setTop(buttonLayout);
         overallLayout.setBottom(tablePanesScrollLayout);
         overallLayout.setMinSize(0, 0);
         overallLayout.setPrefSize(defaultWidth, defaultHeight);
-        overallLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
+        overallLayout.setStyle(Screen.DARK_HI);
 
         tablesScreen = new Scene(overallLayout);
 
@@ -91,5 +100,21 @@ public class TablesScreen extends Screen {
     @Override
     public Scene getScreen() {
         return tablesScreen;
+    }
+
+    public void setToLightMode() {
+        super.setToLightMode();
+        this.tablePanesLayout.setStyle(Screen.LIGHT_LOW);
+        this.overallLayout.setStyle(Screen.LIGHT_LOW);
+        this.tablePanesScrollLayout.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
+        this.tablePaneList.forEach(TablePane::setToLightMode);
+    }
+
+    public void setToDarkMode() {
+        super.setToDarkMode();
+        this.tablePanesLayout.setStyle(Screen.DARK_HI);
+        this.overallLayout.setStyle(Screen.DARK_HI);
+        this.tablePanesScrollLayout.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        this.tablePaneList.forEach(TablePane::setToDarkMode);
     }
 }

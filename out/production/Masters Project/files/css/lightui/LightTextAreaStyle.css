@@ -1,0 +1,15 @@
+.text-area {
+    -fx-background-color: transparent;
+    -fx-background-insets: 100;
+    -fx-text-fill: black;
+    -fx-prompt-text-fill: black;
+}
+
+.text-area .content {
+    -fx-background-color: rgb(250, 250, 250);
+    -fx-background-radius: 10;
+}
+
+.text-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
