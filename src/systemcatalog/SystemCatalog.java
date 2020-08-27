@@ -14,7 +14,7 @@ import datastructures.user.User;
 import systemcatalog.components.Verifier;
 import datastructures.relation.table.Table;
 import systemcatalog.components.SecurityChecker;
-import systemcatalog.components.Optimizer;
+import systemcatalog.components.optimizer.Optimizer;
 import systemcatalog.components.Compiler;
 
 import java.util.ArrayList;
@@ -53,7 +53,7 @@ public class SystemCatalog {
     // following will only be used if the input is a query and it's successfully executed
     private ResultSet resultSet;
     private List<QueryTree> queryTreeStates;
-    private List<String> recommendedFileStructures;
+    private String naiveRelationalAlgebra, optimizedRelationalAlgebra, recommendedFileStructures;
 
     public SystemCatalog() {
 
@@ -97,7 +97,7 @@ public class SystemCatalog {
         // creating query-specific data, initially empty
         this.resultSet = new ResultSet();
         this.queryTreeStates = new ArrayList<>();
-        this.recommendedFileStructures = new ArrayList<>();
+        this.recommendedFileStructures = "";
     }
 
     // execution related -----------------------------------------------------------------------------------------------
@@ -164,15 +164,13 @@ public class SystemCatalog {
 
             // optimizer stuff, if the input is a query, get the query tree states, otherwise skip
             if (inputType == RuleGraph.Type.QUERY) {
-                optimizer.setRuleGraphToUse(ruleGraphToUse);
-                optimizer.setTokenizedInput(tokenizedInput);
-                optimizer.setTables(tables);
-                optimizer.optimize();
-                this.queryTreeStates = optimizer.getQueryTreeStates();
+                this.queryTreeStates = optimizer.getQueryTreeStates(tokenizedInput, tables);
+                this.naiveRelationalAlgebra = optimizer.getNaiveRelationalAlgebra();
+                this.optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra();
                 this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
             } else {
                 this.queryTreeStates = new ArrayList<>();
-                this.recommendedFileStructures = new ArrayList<>();
+                this.recommendedFileStructures = "";
             }
 
             // compiler stuff, if the input is a query, get the result set, otherwise make the changes to the system
@@ -265,8 +263,8 @@ public class SystemCatalog {
      * for that query. Otherwise, an empty list is returned.
      * @return a list of recommended file structures for a query or an empty list
      */
-    public List<String> getRecommendedFileStructures() {
-        return recommendedFileStructures == null ? new ArrayList<>() : recommendedFileStructures;
+    public String getRecommendedFileStructures() {
+        return recommendedFileStructures == null ? "" : recommendedFileStructures;
     }
 
     // Options related -------------------------------------------------------------------------------------------------
@@ -313,7 +311,7 @@ public class SystemCatalog {
 
         this.resultSet = new ResultSet();
         this.queryTreeStates = new ArrayList<>();
-        this.recommendedFileStructures = new ArrayList<>();
+        this.recommendedFileStructures = "";
 
         // writing out the original table and user data
 

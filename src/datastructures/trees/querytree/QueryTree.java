@@ -17,6 +17,8 @@ public class QueryTree implements Iterable<Operator> {
         LEFT, RIGHT, UP, DOWN, NONE
     }
 
+    public static final ArrayList<Traversal> NO_TRAVERSALS = new ArrayList<>();
+
     private QueryTreeNode root;
     private int size;
 
@@ -28,7 +30,6 @@ public class QueryTree implements Iterable<Operator> {
     public QueryTree(QueryTree toCopy) {
 
         String toCopyStructure = toCopy.getTreeStructure();
-
         String[] tokens = toCopyStructure.split("\n");
 
         for(int i = 0; i < tokens.length; i++) {

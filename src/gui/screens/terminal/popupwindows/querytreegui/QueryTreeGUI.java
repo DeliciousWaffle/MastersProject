@@ -64,6 +64,9 @@ public class QueryTreeGUI {
         for(List<QueryTree.Traversal> currentNodesLocation : queryTree.getEveryNodesLocation()) {
             // creating the node
             String text = queryTree.get(currentNodesLocation, QueryTree.Traversal.NONE).toString();
+            if(text.contains("∧")) {
+                text = text.replaceAll("∧ ", "∧\n");
+            }
             NodeGUI nodeGUI = new NodeGUI(text, 0, 0);
             nodeGUIS.add(nodeGUI);
         }
@@ -103,6 +106,8 @@ public class QueryTreeGUI {
                         break;
                     case DOWN:
                         y += nodeOffset;
+                        // to accommodate our compound selections, which are chunky
+                        y += nodeGUIS.get(j).getHeight() > 50 ? nodeGUIS.get(j).getHeight() - 46.552734375 : 0;
                         break;
                 }
             }

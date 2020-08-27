@@ -1,7 +1,8 @@
-package systemcatalog.components;
+package systemcatalog.components.optimizer;
 
 import datastructures.relation.table.Table;
 import datastructures.rulegraph.RuleGraph;
+import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.*;
 import datastructures.trees.querytree.operator.types.*;
@@ -14,76 +15,41 @@ import java.util.*;
  */
 public class Optimizer {
 
-    private RuleGraph queryRuleGraph;
-    private String[] tokenizedInput;
-    private List<Table> tables;
-    private List<QueryTree> queryTreeStates;
-    private List<String> recommendedFileStructures;
+    private final RuleGraph queryRuleGraph;
     private boolean toggleJoinOptimization;
 
     public Optimizer() {
-        this.queryTreeStates = new ArrayList<>();
-        this.recommendedFileStructures = new ArrayList<>();
+        this.queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
         this.toggleJoinOptimization = true;
-    }
-
-    // setters ---------------------------------------------------------------------------------------------------------
-
-    public void setRuleGraphToUse(RuleGraph queryRuleGraph) {
-        this.queryRuleGraph = queryRuleGraph;
-    }
-
-    public void setTokenizedInput(String[] tokenizedInput) {
-        this.tokenizedInput = tokenizedInput;
-    }
-
-    public void setTables(List<Table> tables) {
-        this.tables = tables;
     }
 
     public void toggleJoinOptimization() {
         this.toggleJoinOptimization = ! toggleJoinOptimization;
     }
 
-    // getters ---------------------------------------------------------------------------------------------------------
+    public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
 
-    public List<QueryTree> getQueryTreeStates() {
+        QueryTree queryTree                     = createQueryTree(input, tables);
+        QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
+        QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
+        QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
+        QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), tables);
+        QueryTree afterPushingDownProjections   = pushDownProjections(new QueryTree(afterRearrangingJoins));
+        List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
+
+        List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
+                queryTree, afterCascadingSelections, afterPushingDownSelections, afterFormingJoins,
+                afterRearrangingJoins, afterPushingDownProjections
+        ));
+
+        queryTreeStates.addAll(afterPipeliningSubtrees);
+
         return queryTreeStates;
     }
 
-    public List<String> getRecommendedFileStructures() {
-        return recommendedFileStructures;
-    }
+    // 0. Query Tree Creation ==========================================================================================
 
-    // query tree creation and optimization ----------------------------------------------------------------------------
-
-    public void optimize() {
-
-        // query tree creation
-        QueryTree workingTree = createQueryTree();
-        queryTreeStates.add(workingTree);
-
-        
-        workingTree = cascadeSelections(workingTree);
-        queryTreeStates.add(workingTree);
-
-        workingTree = pushDownSelections(workingTree);
-        queryTreeStates.add(workingTree);
-
-        workingTree = cascadeAndPushDownProjections(workingTree);
-        queryTreeStates.add(workingTree);
-
-        workingTree = formJoins(workingTree);
-        queryTreeStates.add(workingTree);
-
-        workingTree = rearrangeLeafNodes(workingTree, tables);
-        queryTreeStates.add(new QueryTree(workingTree));
-
-        workingTree = findSubtreesToPipeline(workingTree);
-        queryTreeStates.add(workingTree);
-    }
-
-    public QueryTree createQueryTree() {
+    public QueryTree createQueryTree(String[] input, List<Table> tables) {
 
         QueryTree queryTree = new QueryTree((Operator) null);
 
@@ -92,9 +58,9 @@ public class Optimizer {
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the input
-        List<String> columnNames = queryRuleGraph.getTokensAt(tokenizedInput, 1, 2);
-        List<String> aggregationTypes = queryRuleGraph.getTokensAt(tokenizedInput, 3, 4, 5, 6, 7);
-        List<String> aggregatedColumnNames = queryRuleGraph.getTokensAt(tokenizedInput, 9, 10);
+        List<String> columnNames = queryRuleGraph.getTokensAt(input, 1, 2);
+        List<String> aggregationTypes = queryRuleGraph.getTokensAt(input, 3, 4, 5, 6, 7);
+        List<String> aggregatedColumnNames = queryRuleGraph.getTokensAt(input, 9, 10);
 
         // prefix column names
         prefixColumnNames(columnNames, tables);
@@ -116,11 +82,11 @@ public class Optimizer {
 
         // getting the input
         aggregationTypes = new ArrayList<>(); // can't use .clear() because it will null out the values in the tree
-        aggregationTypes = queryRuleGraph.getTokensAt(tokenizedInput, 38, 39, 40, 41, 42);
+        aggregationTypes = queryRuleGraph.getTokensAt(input, 38, 39, 40, 41, 42);
         aggregatedColumnNames = new ArrayList<>();
-        aggregatedColumnNames = queryRuleGraph.getTokensAt(tokenizedInput, 44, 45);
-        List<String> symbols = queryRuleGraph.getTokensAt(tokenizedInput, 47, 48, 49, 50, 51, 52);
-        List<String> values = queryRuleGraph.getTokensAt(tokenizedInput , 53);
+        aggregatedColumnNames = queryRuleGraph.getTokensAt(input, 44, 45);
+        List<String> symbols = queryRuleGraph.getTokensAt(input, 47, 48, 49, 50, 51, 52);
+        List<String> values = queryRuleGraph.getTokensAt(input, 53);
 
         // prefix column names
         prefixColumnNames(aggregatedColumnNames, tables);
@@ -139,11 +105,11 @@ public class Optimizer {
 
         // getting the input
         columnNames = new ArrayList<>();
-        columnNames = queryRuleGraph.getTokensAt(tokenizedInput, 23);
+        columnNames = queryRuleGraph.getTokensAt(input, 23);
         symbols = new ArrayList<>();
-        symbols = queryRuleGraph.getTokensAt(tokenizedInput, 24, 25, 26, 27, 28, 29);
+        symbols = queryRuleGraph.getTokensAt(input, 24, 25, 26, 27, 28, 29);
         values = new ArrayList<>();
-        values = queryRuleGraph.getTokensAt(tokenizedInput, 30);
+        values = queryRuleGraph.getTokensAt(input, 30);
 
         // prefix column names
         prefixColumnNames(columnNames, tables);
@@ -181,7 +147,7 @@ public class Optimizer {
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the tables and the number of cartesian products needed
-        List<String> tableNames = queryRuleGraph.getTokensAt(tokenizedInput, 14, 17);
+        List<String> tableNames = queryRuleGraph.getTokensAt(input, 14, 17);
         int numCartesianProducts = tableNames.size() - 1;
 
         // get to the location that we want
@@ -238,18 +204,18 @@ public class Optimizer {
         // will need to make sure the mapping is correct which makes things complicated
         boolean canStartMapping = false;
 
-        for(int i = 0; i < tokenizedInput.length; i++) {
+        for(int i = 0; i < input.length; i++) {
 
-            String queryToken = tokenizedInput[i];
+            String queryToken = input[i];
 
             if(canStartMapping) {
 
                 // if an exception is thrown, then we're done mapping
                 try {
 
-                    String firstJoinTableName = tokenizedInput[i - 1];
-                    String secondJoinTableName = tokenizedInput[i + 1];
-                    String joinOnColumnName = tokenizedInput[i + 4];
+                    String firstJoinTableName = input[i - 1];
+                    String secondJoinTableName = input[i + 1];
+                    String joinOnColumnName = input[i + 4];
 
                     if(queryToken.equalsIgnoreCase("JOIN")) {
 
@@ -373,7 +339,7 @@ public class Optimizer {
               aggregation node, then add them as group by columns there */
 
         // getting the input
-        List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(tokenizedInput, 35);
+        List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(input, 35);
 
         // prefixing with table names
         prefixColumnNames(havingClauseColumnNames, tables);
@@ -470,10 +436,16 @@ public class Optimizer {
      * @return whether the candidate string is prefixed with a table name
      */
     public boolean hasPrefixedTableName(String columnName) {
+
         return columnName.contains(".");
     }
 
+     
+
+    // 1. Cascading Selections =========================================================================================
+
     public QueryTree cascadeSelections(QueryTree queryTree) {
+
 
         // check if we even need to cascade
         boolean hasCompoundSelection = false;
@@ -524,8 +496,10 @@ public class Optimizer {
             }
         }
 
-        return new QueryTree(queryTree);
+        return queryTree;
     }
+
+    // 2. Pushing Down Selections ======================================================================================
 
     public QueryTree pushDownSelections(QueryTree queryTree) {
 
@@ -637,7 +611,7 @@ public class Optimizer {
             }
         }
 
-        return new QueryTree(queryTree);
+        return queryTree;
     }
 
     /**
@@ -647,7 +621,9 @@ public class Optimizer {
         return simpleSelection.getValue().contains(".");
     }
 
-    public QueryTree cascadeAndPushDownProjections(QueryTree queryTree) {
+    // 5. Pushing Down Projections =====================================================================================
+
+    public QueryTree pushDownProjections(QueryTree queryTree) {
 
         // don't bother with any of this if you can't cascade any of the projections
         int numCartesianProducts = 0;
@@ -901,7 +877,7 @@ public class Optimizer {
 
         } while(numCartesianProductsFound <= numCartesianProducts);
 
-        return new QueryTree(queryTree);
+        return queryTree;
     }
 
     private boolean containsDuplicateColumnNames(String candidate, List<String> columnNames) {
@@ -912,6 +888,8 @@ public class Optimizer {
         }
         return false;
     }
+
+    // 3. Forming Joins ================================================================================================
 
     public QueryTree formJoins(QueryTree queryTree) {
 
@@ -970,15 +948,20 @@ public class Optimizer {
             atRoot = traversals.isEmpty();
         }
 
+        return queryTree;
+    }
+
+    // 4. Rearrangement of Joins =======================================================================================
+
+    public QueryTree rearrangeJoins(QueryTree queryTree, List<Table> tables) {
         return new QueryTree(queryTree);
     }
 
-    // TODO: not sure how to handle yet, rearrangement will put all other nodes out of whack
-    public QueryTree rearrangeLeafNodes(QueryTree queryTree, List<Table> tables) {
-        return new QueryTree(queryTree);
-    }
+    // 6. Finding Subtrees to Pipeline =================================================================================
 
-    public QueryTree findSubtreesToPipeline(QueryTree queryTree) {
+    public List<QueryTree> pipelineSubtrees(QueryTree queryTree) {
+
+        List<QueryTree> pipelinedSubtrees = new ArrayList<>();
 
         // starting at the deepest node of the tree
         String relationName = null;
@@ -1022,11 +1005,26 @@ public class Optimizer {
         // finally pipeline the root
         queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.NONE);
         //System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
-        return new QueryTree(queryTree);
+        return pipelinedSubtrees;
     }
 
-    // utility methods for tree creation/optimization ------------------------------------------------------------------
+    // utility methods =================================================================================================
 
-    // file structure recommendation -----------------------------------------------------------------------------------
+    // naive relational algebra ========================================================================================
 
+    public String getNaiveRelationalAlgebra() {
+        return "";
+    }
+
+    // optimized relational algebra ====================================================================================
+
+    public String getOptimizedRelationalAlgebra() {
+        return "";
+    }
+
+    // file structure recommendation ===================================================================================
+
+    public String getRecommendedFileStructures() {
+        return "";
+    }
 }

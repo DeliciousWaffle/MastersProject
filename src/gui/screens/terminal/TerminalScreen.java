@@ -165,7 +165,7 @@ public class TerminalScreen extends Screen {
         // launch a new window displaying the query tree states
         queryTreeStatesButton.setOnAction(e -> {
             if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
-                new QueryTreeWindow(systemCatalog.getQueryTreeStates());
+                //new QueryTreeWindow(systemCatalog.getQueryTreeStates());
             }
         });
 
