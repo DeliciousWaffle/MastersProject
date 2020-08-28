@@ -61,6 +61,8 @@ public class QueryTreeWindow extends Application { // change back to Stage
     //public QueryTreeWindow(List<QueryTree> queryTreeStates, Stage primaryStage) {
 
 
+        System.out.println(optimizer.getNaiveRelationalAlgebra(queryTreeStates.get(0)));
+
 for(QueryTree queryTree : queryTreeStates) {
     System.out.println(queryTree.getTreeStructure());
     System.out.println("==========================================================================");

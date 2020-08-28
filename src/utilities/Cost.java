@@ -1,15 +1,24 @@
 package utilities;
 
+import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
+
+import java.util.List;
+
 /**
- * This class is used for query cost estimation. Separated into unsorted file, sorted file
- * secondary b-tree, clustered b-tree, hash table, clustered file, and join costs. Other
- * misc calculations follow after that. Here is a key of all the variables here.
- * r          (numRecords)         number of records in a file
+ * This class is used for query cost estimation. Separated into starting calculations, b-tree specific
+ * calculations, unsorted file, sorted file, secondary b-tree, clustered b-tree, hash table, clustered file,
+ * and join costs. Other misc calculations follow after that. Each calculation has a "to string" method
+ * associated with it in order to view how numbers are used and for debugging purposes.
+ * Here is a key of all the variables used in this class.
+ * Variable:  Denoted As:          Description:
+ * -------------------------------------------------------------------------------------------------------
+ * r          (numberRecords)         number of records in a file
  * |r|        (recordSize)         size of a record
  * block size (BLOCK_SIZE)         given
  * bf         (blockingFactor)     blocking factor
  * b          (blocks)             blocks
- * d                               distinct values of an attribute
+ * d          (distinctValues)                     distinct values of an attribute
  * s          (selectivity)        selectivity of an attribute
  * l          (levels)             number of levels in a b-tree
  * m          (degree)             degree of the tree
@@ -369,7 +378,25 @@ public class Cost {
 
     // other -----------------------------------------------------------------------------------------------------------
 
-    // bf
+    // r - number of records in the file
+    public static int getNumberRecords(Table table) {
+        return 0;
+    }
+
+    public static String getNumberRecordsToString(Table table) {
+        return "";
+    }
+
+    // |r| - record size
+    public static int getRecordSize(List<Column> columns) {
+        return 0;
+    }
+
+    public static String getRecordSizeToString(List<Column> columns) {
+        return "";
+    }
+
+    // bf - blocking factor
     public static int blockingFactor(int recordSize) {
         return (int) Math.floor((double) BLOCK_SIZE / recordSize);
     }
@@ -380,7 +407,7 @@ public class Cost {
                 "bf = " + blockingFactor(recordSize);
     }
 
-    // b
+    // b - blocks
     public static int blocks(int numRecords, int blockingFactor) {
         return (int) Math.ceil((double) numRecords / blockingFactor);
     }
@@ -391,7 +418,7 @@ public class Cost {
                 "b = " + blocks(numRecords, blockingFactor);
     }
 
-    // s
+    // s - selectivity
     public static double selectivity(int numRecords, int distinctValues) {
         return (double) numRecords / distinctValues;
     }
@@ -402,7 +429,7 @@ public class Cost {
                 "s = " + selectivity(numRecords, distinctValues);
     }
 
-    // m
+    // m - b-tree degree
     public static int degree(int keySize) {
         return (int) Math.floor((double) (BLOCK_SIZE + 4 + keySize) / (keySize + 8));
     }
@@ -413,7 +440,7 @@ public class Cost {
                 "m = " + degree(keySize);
     }
 
-    // l
+    // l - b-tree levels
     public static int levels(int numRecords, int degree) {
         double temp1 = numRecords + 1 / 2.0;
         double temp2 = Math.ceil(degree / 2.0);
@@ -426,7 +453,7 @@ public class Cost {
                 "l = " + levels(numRecords, degree);
     }
 
-    // bL
+    // bL - number nodes at b-tree terminal level
     public static int terminalLevelNodes(int numRecords, int degree) {
         return (int) Math.floor(numRecords / (Math.ceil(degree / 2.0) - 1));
     }

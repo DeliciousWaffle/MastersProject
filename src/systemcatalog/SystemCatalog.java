@@ -165,8 +165,8 @@ public class SystemCatalog {
             // optimizer stuff, if the input is a query, get the query tree states, otherwise skip
             if (inputType == RuleGraph.Type.QUERY) {
                 this.queryTreeStates = optimizer.getQueryTreeStates(tokenizedInput, tables);
-                this.naiveRelationalAlgebra = optimizer.getNaiveRelationalAlgebra();
-                this.optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra();
+                //this.naiveRelationalAlgebra = optimizer.getNaiveRelationalAlgebra();
+                //this.optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra();
                 this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
             } else {
                 this.queryTreeStates = new ArrayList<>();
@@ -282,7 +282,7 @@ public class SystemCatalog {
      * what the query tree will look like along with query costs.
      */
     public void toggleJoinOptimization() {
-        optimizer.toggleJoinOptimization();
+        optimizer.toggleRearrangeLeafNodes();
     }
 
     /**

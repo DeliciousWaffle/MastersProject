@@ -61,11 +61,12 @@ public class QueryTreeGUI {
         double nodeOffset = 100;
 
         // adding the nodes, their locations will be tweaked later
-        for(List<QueryTree.Traversal> currentNodesLocation : queryTree.getEveryNodesLocation()) {
+        for(List<QueryTree.Traversal> currentNodesLocation : queryTree.getEveryOperatorsLocation()) {
             // creating the node
             String text = queryTree.get(currentNodesLocation, QueryTree.Traversal.NONE).toString();
             if(text.contains("∧")) {
                 text = text.replaceAll("∧ ", "∧\n");
+                text = text.replaceAll("∨ ", "∨\n");
             }
             NodeGUI nodeGUI = new NodeGUI(text, 0, 0);
             nodeGUIS.add(nodeGUI);
@@ -74,7 +75,7 @@ public class QueryTreeGUI {
         for(int i = 0; i < nodeGUIS.size(); i++) {
 
             NodeGUI currentNodeGUI = nodeGUIS.get(i);
-            List<QueryTree.Traversal> currentNodesLocation = queryTree.getEveryNodesLocation().get(i);
+            List<QueryTree.Traversal> currentNodesLocation = queryTree.getEveryOperatorsLocation().get(i);
 
             double x = 0;
             double y = 0;
@@ -161,8 +162,8 @@ public class QueryTreeGUI {
             NodeGUI prevQueryNodeGUI = nodeGUIS.get(i - 1);
             NodeGUI currQueryNodeGUI = nodeGUIS.get(i);
 
-            int prevTraversalSize = queryTree.getEveryNodesLocation().get(i-1).size();
-            int currTraversalSize = queryTree.getEveryNodesLocation().get(i).size();
+            int prevTraversalSize = queryTree.getEveryOperatorsLocation().get(i-1).size();
+            int currTraversalSize = queryTree.getEveryOperatorsLocation().get(i).size();
 
             if(currTraversalSize <= prevTraversalSize) {
 

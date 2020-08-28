@@ -6,8 +6,10 @@ import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.*;
 import datastructures.trees.querytree.operator.types.*;
+import utilities.Cost;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Responsible for determining the execution strategy of a query. This involves creating a query tree
@@ -16,15 +18,15 @@ import java.util.*;
 public class Optimizer {
 
     private final RuleGraph queryRuleGraph;
-    private boolean toggleJoinOptimization;
+    private boolean toggleRearrangeLeafNodes;
 
     public Optimizer() {
         this.queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
-        this.toggleJoinOptimization = true;
+        this.toggleRearrangeLeafNodes = true;
     }
 
-    public void toggleJoinOptimization() {
-        this.toggleJoinOptimization = ! toggleJoinOptimization;
+    public void toggleRearrangeLeafNodes() {
+        this.toggleRearrangeLeafNodes = !toggleRearrangeLeafNodes;
     }
 
     public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
@@ -33,7 +35,7 @@ public class Optimizer {
         QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
-        QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), tables);
+        QueryTree afterRearrangingJoins         = rearrangeLeafNodes(new QueryTree(afterFormingJoins), tables);
         QueryTree afterPushingDownProjections   = pushDownProjections(new QueryTree(afterRearrangingJoins));
         List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
 
@@ -55,7 +57,6 @@ public class Optimizer {
 
         /* 1. get the contents of the select clause and form into either a projection
               or aggregation and set as root for query tree */
-        // -------------------------------------------------------------------------------------------------------------
 
         // getting the input
         List<String> columnNames = queryRuleGraph.getTokensAt(input, 1, 2);
@@ -440,12 +441,11 @@ public class Optimizer {
         return columnName.contains(".");
     }
 
-     
+
 
     // 1. Cascading Selections =========================================================================================
 
     public QueryTree cascadeSelections(QueryTree queryTree) {
-
 
         // check if we even need to cascade
         boolean hasCompoundSelection = false;
@@ -490,8 +490,8 @@ public class Optimizer {
                 traversals.remove(traversals.size() - 1);
             }
 
-            for(int i = 0; i < simpleSelections.size(); i++) {
-                queryTree.add(traversals, QueryTree.Traversal.DOWN, simpleSelections.get(i));
+            for (SimpleSelection simpleSelection : simpleSelections) {
+                queryTree.add(traversals, QueryTree.Traversal.DOWN, simpleSelection);
                 traversals.add(QueryTree.Traversal.DOWN);
             }
         }
@@ -619,6 +619,169 @@ public class Optimizer {
      */
     private boolean isJoinCondition(SimpleSelection simpleSelection) {
         return simpleSelection.getValue().contains(".");
+    }
+
+    // 3. Forming Joins ================================================================================================
+
+    public QueryTree formJoins(QueryTree queryTree) {
+
+        // don't bother if there is nothing to join
+        boolean canFormJoins = false;
+
+        for(Operator operator : queryTree) {
+            if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+                if(isJoinCondition((SimpleSelection) operator)) {
+                    canFormJoins = true;
+                }
+            }
+        }
+
+        if(! canFormJoins) {
+            return new QueryTree(queryTree);
+        }
+
+        // locate each selection that contains a join criteria, using the first relation node
+        // as a starting point since it will be the deepest node
+        String relationName = null;
+        boolean foundFirstRelation = false;
+
+        for(Operator operator : queryTree) {
+            if(! foundFirstRelation) {
+                if (operator.getType() == Operator.Type.RELATION) {
+                    relationName = ((Relation) operator).getTableName();
+                    foundFirstRelation = true;
+                }
+            }
+        }
+
+        List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationName);
+
+        boolean atRoot = false;
+
+        while(! atRoot) {
+
+            Operator operator = queryTree.get(traversals, QueryTree.Traversal.NONE);
+
+            if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+                SimpleSelection selection = (SimpleSelection) operator;
+
+                // get the join criteria and set the cartesian product to a join node, also remove the selection
+                if(isJoinCondition(selection)) {
+
+                    String firstJoinCol = selection.getColumnName();
+                    String secondJoinCol = selection.getValue();
+
+                    queryTree.set(traversals, QueryTree.Traversal.DOWN, new InnerJoin(firstJoinCol, secondJoinCol));
+                    queryTree.remove(traversals, QueryTree.Traversal.NONE);
+                }
+            }
+
+            traversals.remove(traversals.size() - 1);
+            atRoot = traversals.isEmpty();
+        }
+
+        return queryTree;
+    }
+
+    // 4. Rearrangement of Leaf Nodes ==================================================================================
+
+    /**
+     * Rearranges the leaf nodes (the tables) such that ones with the most restricted references
+     * are executed first in the query tree. This takes into account selections that are performed
+     * in the subtree of where that table occurs. Performing this action will reduce the write to
+     * disk cost when pipelining intermediary subtrees of the query tree, thus, increasing performance.
+     * @param queryTree is the query tree to perform the reordering of leaf nodes on
+     * @param tables are a list of tables in the system that will be referenced to determine the cost
+     * of executing a particular subtree and whether a leaf node will need to be rearranged
+     * @return the query tree after the leaf nodes have been rearranged in order to reduce write to disk costs
+     */
+    public QueryTree rearrangeLeafNodes(QueryTree queryTree, List<Table> tables) {
+
+        // don't bother if the user doesn't wish to rearrange the leaf nodes
+        if (! toggleRearrangeLeafNodes) {
+            return queryTree;
+        }
+
+        // also don't bother if there are only 1 or 2 tables being referenced, the ordering of leaf nodes will not make a difference
+        if (queryTree.getNumRelations() <= 2) {
+            return queryTree;
+        }
+
+        // get the locations of each leaf node (table) in the query tree
+        List<List<QueryTree.Traversal>> relationLocations = getRelationLocations(queryTree);
+
+        // get the names of each table that appears in the query tree
+        List<String> tableNames = getTableNamesFromRelationLocations(relationLocations, queryTree);
+
+        // get each table that matches the table name provided
+        List<Table> correspondingTables = getCorrespondingTablesFromTableNames(tableNames, tables);
+
+        // order this list such that the tables match the ordering of leaf node locations
+        orderTablesToTableNames(correspondingTables, tableNames);
+
+        // determine the costs of each table when moving up the query tree
+        List<Integer> costs = getTableCosts(correspondingTables);
+
+        // for each leaf node location, traverse up until a join, calculating cost along the way
+
+        // now order each subtree such that ones that produce the least cost are executed first
+
+        // TODO implement a swap method in query tree
+
+
+        return queryTree;
+    }
+
+    private List<List<QueryTree.Traversal>> getRelationLocations(QueryTree queryTree) {
+
+        List<List<QueryTree.Traversal>> relationLocations = new ArrayList<>();
+        List<List<QueryTree.Traversal>> allOperatorLocations = queryTree.getEveryOperatorsLocation();
+
+        for(List<QueryTree.Traversal> operatorLocation : allOperatorLocations) {
+            Operator operator = queryTree.get(operatorLocation, QueryTree.Traversal.NONE);
+            if(operator.getType() == Operator.Type.RELATION) {
+                relationLocations.add(operatorLocation);
+            }
+        }
+
+        return relationLocations;
+    }
+
+    private List<String> getTableNamesFromRelationLocations(List<List<QueryTree.Traversal>> relationLocations, QueryTree queryTree) {
+
+        List<String> tableNames = new ArrayList<>();
+
+        for(List<QueryTree.Traversal> relationLocation : relationLocations) {
+            Relation relation = (Relation) queryTree.get(relationLocation, QueryTree.Traversal.NONE);
+            String tableName = relation.getTableName();
+            tableNames.add(tableName);
+        }
+
+        return tableNames;
+    }
+
+    //TODO not sure if work
+    private List<Table> getCorrespondingTablesFromTableNames(List<String> tableNames, List<Table> tables) {
+        return tables.stream()
+                .filter(table -> tableNames.stream()
+                        .anyMatch(tableName -> table.getTableName().equalsIgnoreCase(tableName)))
+                .collect(Collectors.toList());
+    }
+
+    private void orderTablesToTableNames(List<Table> tables, List<String> tableNames) {
+
+    }
+
+    private List<Integer> getTableCosts(List<Table> tables) {
+
+        List<Integer> tableCosts = new ArrayList<>();
+
+        for(Table table : tables) {
+            //int recordSize = table
+           // int blockingFactor = Cost.blockingFactor(table.getNumRows());
+            //int s = Cost.
+        }
+        return null;
     }
 
     // 5. Pushing Down Projections =====================================================================================
@@ -889,74 +1052,6 @@ public class Optimizer {
         return false;
     }
 
-    // 3. Forming Joins ================================================================================================
-
-    public QueryTree formJoins(QueryTree queryTree) {
-
-        // don't bother if there is nothing to join
-        boolean canFormJoins = false;
-
-        for(Operator operator : queryTree) {
-            if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
-                if(isJoinCondition((SimpleSelection) operator)) {
-                    canFormJoins = true;
-                }
-            }
-        }
-
-        if(! canFormJoins) {
-            return new QueryTree(queryTree);
-        }
-
-        // locate each selection that contains a join criteria, using the first relation node
-        // as a starting point since it will be the deepest node
-        String relationName = null;
-        boolean foundFirstRelation = false;
-
-        for(Operator operator : queryTree) {
-            if(! foundFirstRelation) {
-                if (operator.getType() == Operator.Type.RELATION) {
-                    relationName = ((Relation) operator).getTableName();
-                    foundFirstRelation = true;
-                }
-            }
-        }
-
-        List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationName);
-
-        boolean atRoot = false;
-
-        while(! atRoot) {
-
-            Operator operator = queryTree.get(traversals, QueryTree.Traversal.NONE);
-
-            if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
-                SimpleSelection selection = (SimpleSelection) operator;
-
-                // get the join criteria and set the cartesian product to a join node, also remove the selection
-                if(isJoinCondition(selection)) {
-
-                    String firstJoinCol = selection.getColumnName();
-                    String secondJoinCol = selection.getValue();
-
-                    queryTree.set(traversals, QueryTree.Traversal.DOWN, new InnerJoin(firstJoinCol, secondJoinCol));
-                    queryTree.remove(traversals, QueryTree.Traversal.NONE);
-                }
-            }
-
-            traversals.remove(traversals.size() - 1);
-            atRoot = traversals.isEmpty();
-        }
-
-        return queryTree;
-    }
-
-    // 4. Rearrangement of Joins =======================================================================================
-
-    public QueryTree rearrangeJoins(QueryTree queryTree, List<Table> tables) {
-        return new QueryTree(queryTree);
-    }
-
     // 6. Finding Subtrees to Pipeline =================================================================================
 
     public List<QueryTree> pipelineSubtrees(QueryTree queryTree) {
@@ -1012,8 +1107,17 @@ public class Optimizer {
 
     // naive relational algebra ========================================================================================
 
-    public String getNaiveRelationalAlgebra() {
-        return "";
+    public String getNaiveRelationalAlgebra(QueryTree initialState) {
+
+        StringBuilder naiveRelationalAlgebra = new StringBuilder();
+
+        for(Operator operator : initialState) {
+            naiveRelationalAlgebra.append(operator).append("\n");
+        }
+
+        naiveRelationalAlgebra.deleteCharAt(naiveRelationalAlgebra.length() - 1);
+
+        return naiveRelationalAlgebra.toString();
     }
 
     // optimized relational algebra ====================================================================================

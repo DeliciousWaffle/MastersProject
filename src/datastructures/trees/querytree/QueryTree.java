@@ -91,7 +91,7 @@ public class QueryTree implements Iterable<Operator> {
         return size;
     }
 
-    public List<List<Traversal>> getEveryNodesLocation() {
+    public List<List<Traversal>> getEveryOperatorsLocation() {
 
         List<List<Traversal>> everyNodesLocation = new ArrayList<>();
 
@@ -591,6 +591,16 @@ public class QueryTree implements Iterable<Operator> {
         }
 
         size--;
+    }
+
+    public int getNumRelations() {
+        int numRelations = 0;
+        for(Operator operator : this) {
+            if(operator.getType() == Operator.Type.RELATION) {
+                numRelations++;
+            }
+        }
+        return numRelations;
     }
 
     public String getTreeStructure() {
