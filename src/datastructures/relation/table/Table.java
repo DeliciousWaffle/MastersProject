@@ -5,7 +5,9 @@ import datastructures.relation.table.component.TableData;
 import datastructures.relation.table.component.DataType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A representation of the table stored within the database. This stores stuff
@@ -15,8 +17,8 @@ public class Table {
 
     private String tableName;
     private List<Column> columns;
-    private String primaryKey;
-    private List<String> foreignKeys;
+    private List<String> primaryKeys;
+    private Map<String, String> foreignKeys;
     private String clusteredWith;
     private TableData tableData;
 
@@ -28,8 +30,8 @@ public class Table {
 
         this.tableName = "none";
         this.columns = new ArrayList<>();
-        this.primaryKey = "none";
-        this.foreignKeys = new ArrayList<>();
+        this.primaryKeys = new ArrayList<>();
+        this.foreignKeys = new HashMap<>();
         this.clusteredWith = "none";
         this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
     }
@@ -43,8 +45,8 @@ public class Table {
 
         this.tableName = tableName;
         this.columns = new ArrayList<>();
-        this.primaryKey = "none";
-        this.foreignKeys = new ArrayList<>();
+        this.primaryKeys = new ArrayList<>();
+        this.foreignKeys = new HashMap<>();
         this.clusteredWith = "none";
         this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
     }
@@ -53,14 +55,14 @@ public class Table {
      * Used when the user uses the CREATE TABLE command. Table data is set later.
      * @param tableName is the name of the table
      * @param columns are the columns that the table contains
-     * @param primaryKey is the primary key of this table
+     * @param primaryKeys is the primary key of this table
      * @param foreignKeys are foreign keys of this table
      */
-    public Table(String tableName, List<Column> columns, String primaryKey, List<String> foreignKeys) {
+    public Table(String tableName, List<Column> columns, List<String> primaryKeys, Map<String, String> foreignKeys) {
 
         this(tableName);
         this.columns = columns;
-        this.primaryKey = primaryKey;
+        this.primaryKeys = primaryKeys;
         this.foreignKeys = foreignKeys;
         this.clusteredWith = "none";
         this.tableData = new TableData(new ArrayList<>(), new ArrayList<>());
@@ -77,20 +79,22 @@ public class Table {
         for(Column column : toCopy.getColumns()) {
             this.columns.add(new Column(column));
         }
-        this.primaryKey = toCopy.primaryKey;
-        this.foreignKeys = new ArrayList<>();
-        for(String foreignKey : toCopy.foreignKeys) {
-            this.foreignKeys.add(foreignKey);
-        }
+        this.primaryKeys = new ArrayList<>();
+        this.primaryKeys.addAll(toCopy.primaryKeys);
+        this.foreignKeys = new HashMap<>();
+        this.foreignKeys.putAll(toCopy.foreignKeys);
         this.clusteredWith = toCopy.clusteredWith;
         this.tableData = new TableData(toCopy.getTableData());
     }
+
     // getters, setters ------------------------------------------------------------------------------------------------
 
     /**
      * @return the name of this table
      */
-    public String getTableName() { return tableName; }
+    public String getTableName() {
+        return tableName;
+    }
 
     /**
      * @param tableName is the table name to be set
@@ -147,47 +151,46 @@ public class Table {
     }
 
     /**
-     * @return the primary key of this table
+     * @return the primary keys of this table
      */
-    public String getPrimaryKey() { return primaryKey; }
-
-    /**
-     * @param primaryKey is what to set the new primary key to
-     */
-    public void setPrimaryKey(String primaryKey) {
-        this.primaryKey = primaryKey;
+    public List<String> getPrimaryKeys() {
+        return primaryKeys;
     }
 
     /**
-     * @return whether this table has a primary key
+     * @param primaryKeys is what to set the new primary key to
      */
-    public boolean hasPrimaryKey() {
-        return ! primaryKey.equals("none");
+    public void setPrimaryKeys(List<String> primaryKeys) {
+        this.primaryKeys = primaryKeys;
     }
 
     /**
      * @return the foreign keys of this table
      */
-    public List<String> getForeignKeys() { return foreignKeys; }
+    public Map<String, String> getForeignKeys() {
+        return foreignKeys;
+    }
 
     /**
      * @param foreignKeys are the foreign keys to set
      */
-    public void setForeignKeys(List<String> foreignKeys) { this.foreignKeys = foreignKeys; }
+    public void setForeignKeys(Map<String, String> foreignKeys) {
+        this.foreignKeys = foreignKeys;
+    }
 
     /**
-     * @param foreignKey is the foreign key to add
+     * @param columnName is the foreign key to add
      */
-    public void addForeignKey(String foreignKey) {
-        if(! hasColumn(foreignKey)) {
-            foreignKeys.add(foreignKey);
-        }
+    public void addForeignKey(String tableName, String columnName) {
+        foreignKeys.put(tableName, columnName);
     }
 
     /**
      * @return the table name that this table is clustered with
      */
-    public String getClusteredWith() { return clusteredWith; }
+    public String getClusteredWith() {
+        return clusteredWith;
+    }
 
     /**
      * @param clusteredWith is the table that this table will be clustered with
@@ -199,7 +202,9 @@ public class Table {
     /**
      * @return whether this table is clustered with another table
      */
-    public boolean isClustered() { return ! clusteredWith.equals("none"); }
+    public boolean isClustered() {
+        return ! clusteredWith.equals("none");
+    }
 
     /**
      * @return all the data held within a table
@@ -220,12 +225,16 @@ public class Table {
     /**
      * @return the number of columns within the table
      */
-    public int getNumCols() { return columns.size(); }
+    public int getNumCols() {
+        return columns.size();
+    }
 
     /**
      * @return the number of rows within the table
      */
-    public int getNumRows() { return tableData.getNumRows(); }
+    public int getNumRows() {
+        return tableData.getNumRows();
+    }
 
     /**
      * Given a column name, returns a reference to that column.
@@ -234,9 +243,9 @@ public class Table {
      */
     public Column getColumn(String columnName) {
 
-        for(int i = 0; i < columns.size(); i++) {
-            if(columns.get(i).getName().equalsIgnoreCase(columnName)) {
-                return columns.get(i);
+        for (Column column : columns) {
+            if (column.getName().equalsIgnoreCase(columnName)) {
+                return column;
             }
         }
 
@@ -338,10 +347,6 @@ public class Table {
             }
         }
 
-        if(! otherTable.getPrimaryKey().equals(this.getPrimaryKey())) {
-            return false;
-        }
-
         if(! otherTable.getClusteredWith().equals(this.getClusteredWith())) {
             return false;
         }
@@ -368,15 +373,25 @@ public class Table {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
-        stringBuilder.append("\n").append("Primary Key: ").append(primaryKey).append("\n");
+        stringBuilder.append("\n").append("Primary Key(s): ").append("\n");
+        if(primaryKeys.isEmpty()) {
+            stringBuilder.append("none");
+        } else {
+            for(String primaryKey : primaryKeys) {
+                stringBuilder.append(primaryKey).append(", ");
+            }
+            // remove ", "
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
         stringBuilder.append("Foreign Key(s): ");
         if(foreignKeys.isEmpty()) {
             stringBuilder.append("none");
         } else {
-            for(String foreignKey : foreignKeys) {
-                stringBuilder.append(foreignKey).append(", ");
+            for(Map.Entry<String, String> entry : foreignKeys.entrySet()) {
+                stringBuilder.append(entry.getKey()).append(entry.getValue()).append(", ");
             }
-            // remove ", "
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }

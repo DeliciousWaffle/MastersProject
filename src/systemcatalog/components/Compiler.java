@@ -200,7 +200,7 @@ public class Compiler {
                 String keyTypeName = ruleGraphToUse.getTokensAt(tokenizedInput, 12, 13).get(0);
                 String columnName = ruleGraphToUse.getTokensAt(tokenizedInput, 15).get(0);
 
-                if (keyTypeName.equalsIgnoreCase("foreign")) {
+                /*if (keyTypeName.equalsIgnoreCase("foreign")) {
                     for (Table table : tables) {
                         if (table.getTableName().equalsIgnoreCase(tableName)) {
                             table.addForeignKey(columnName);
@@ -215,7 +215,7 @@ public class Compiler {
                             break;
                         }
                     }
-                }
+                }*/
 
                 // just adding a new column to the table
             } else {

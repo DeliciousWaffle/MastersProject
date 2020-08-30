@@ -13,12 +13,12 @@ import java.util.List;
  * Here is a key of all the variables used in this class.
  * Variable:  Denoted As:          Description:
  * -------------------------------------------------------------------------------------------------------
- * r          (numberRecords)         number of records in a file
+ * r          (numberRecords)      number of records in a file
  * |r|        (recordSize)         size of a record
  * block size (BLOCK_SIZE)         given
  * bf         (blockingFactor)     blocking factor
  * b          (blocks)             blocks
- * d          (distinctValues)                     distinct values of an attribute
+ * d          (distinctValues)     distinct values of an attribute
  * s          (selectivity)        selectivity of an attribute
  * l          (levels)             number of levels in a b-tree
  * m          (degree)             degree of the tree
@@ -26,12 +26,105 @@ import java.util.List;
  * Each formula has an associated "to string" method that is used for displaying
  * how calculations are performed. Also used for debugging purposes.
  */
-public class Cost {
+public class QueryCost {
 
     private static final int BLOCK_SIZE = 512;
 
     // can't instantiate me!
-    private Cost() {}
+    private QueryCost() {}
+
+    // starting calculations -------------------------------------------------------------------------------------------
+
+    // r - number of records in the file
+    public static int getNumberRecords(Table table) {
+        return table.getNumRows();
+    }
+
+    public static String getNumberRecordsToString(Table table) {
+        return "r = " + getNumberRecords(table);
+    }
+
+    // |r| - record size
+    public static int getRecordSize(List<Column> columns) {
+        return columns.stream()
+                .map(Column::size)
+                .reduce(0, Integer::sum);
+    }
+
+    public static String getRecordSizeToString(List<Column> columns) {
+        return "|r| = " + getRecordSize(columns);
+    }
+
+    // bf - blocking factor
+    public static int blockingFactor(int recordSize) {
+        return (int) Math.floor((double) BLOCK_SIZE / recordSize);
+    }
+
+    public static String blockingFactorToString(int recordSize) {
+        return "bf = ⌊BlockSize / |r|⌋\n" +
+                "bf = ⌊" + BLOCK_SIZE + " / |" + recordSize + "|⌋\n" +
+                "bf = " + blockingFactor(recordSize);
+    }
+
+    // b - blocks
+    public static int blocks(int numRecords, int blockingFactor) {
+        return (int) Math.ceil((double) numRecords / blockingFactor);
+    }
+
+    public static String blocksToString(int numRecords, int blockingFactor) {
+        return "b = ⌈r / bf⌉\n" +
+                "b = ⌈" + numRecords + " / " + blockingFactor + " ⌉\n" +
+                "b = " + blocks(numRecords, blockingFactor);
+    }
+
+    // s - selectivity
+    public static double selectivity(int numRecords, int distinctValues) {
+        return (double) numRecords / distinctValues;
+    }
+
+    public static String selectivityToString(int numRecords, int distinctValues) {
+        return "s = r/d\n" +
+                "s = " + numRecords + "/" + distinctValues + "\n" +
+                "s = " + selectivity(numRecords, distinctValues);
+    }
+
+    // b-tree specific calculations ------------------------------------------------------------------------------------
+
+    // m - b-tree degree
+    public static int degree(int keySize) {
+        return (int) Math.floor((double) (BLOCK_SIZE + 4 + keySize) / (keySize + 8));
+    }
+
+    public static String degreeToString(int keySize) {
+        return "m = ⌊(BlockSize + 4 + KeySize) / (KeySize + 8)⌋\n" +
+                "m = ⌊(" + BLOCK_SIZE + " + 4 + " + keySize + ") / (" + keySize + " + 8)⌋\n" +
+                "m = " + degree(keySize);
+    }
+
+    // l - b-tree levels
+    public static int levels(int numRecords, int degree) {
+        double temp1 = numRecords + 1 / 2.0;
+        double temp2 = Math.ceil(degree / 2.0);
+        return (int) (log(temp1) / log(temp2) + 1);
+    }
+
+    public static String levelsToString(int numRecords, int degree) {
+        return "l = (log(r + (1 / 2)) / log(m / 2) + 1)\n" +
+                "l = (log(" + numRecords + " + (1 / 2)) / log(" + degree + " / 2) + 1)\n" +
+                "l = " + levels(numRecords, degree);
+    }
+
+    // bL - number nodes at b-tree terminal level
+    public static int terminalLevelNodes(int numRecords, int degree) {
+        return (int) Math.floor(numRecords / (Math.ceil(degree / 2.0) - 1));
+    }
+
+    public static String terminalLevelNodesToString(int numRecords, int degree) {
+        return "bL = ⌊r / (⌈m / 2⌉ - 1)⌋ \n" +
+                "bL = ⌊" + numRecords + " / (⌈" + degree + " / 2⌉ - 1)⌋ \n" +
+                "bL = " + terminalLevelNodes(numRecords, degree);
+
+    }
 
     // unsorted file costs ---------------------------------------------------------------------------------------------
 
@@ -376,94 +469,7 @@ public class Cost {
                 "CJ3 = " + clusteredJoin(table1Blocks, table2Blocks);
     }
 
-    // other -----------------------------------------------------------------------------------------------------------
-
-    // r - number of records in the file
-    public static int getNumberRecords(Table table) {
-        return 0;
-    }
-
-    public static String getNumberRecordsToString(Table table) {
-        return "";
-    }
-
-    // |r| - record size
-    public static int getRecordSize(List<Column> columns) {
-        return 0;
-    }
-
-    public static String getRecordSizeToString(List<Column> columns) {
-        return "";
-    }
-
-    // bf - blocking factor
-    public static int blockingFactor(int recordSize) {
-        return (int) Math.floor((double) BLOCK_SIZE / recordSize);
-    }
-
-    public static String blockingFactorToString(int recordSize) {
-        return "bf = ⌊BlockSize / |r|⌋\n" +
-                "bf = ⌊" + BLOCK_SIZE + " / |" + recordSize + "|⌋\n" +
-                "bf = " + blockingFactor(recordSize);
-    }
-
-    // b - blocks
-    public static int blocks(int numRecords, int blockingFactor) {
-        return (int) Math.ceil((double) numRecords / blockingFactor);
-    }
-
-    public static String blocksToString(int numRecords, int blockingFactor) {
-        return "b = ⌈r / bf⌉\n" +
-                "b = ⌈" + numRecords + " / " + blockingFactor + " ⌉\n" +
-                "b = " + blocks(numRecords, blockingFactor);
-    }
-
-    // s - selectivity
-    public static double selectivity(int numRecords, int distinctValues) {
-        return (double) numRecords / distinctValues;
-    }
-
-    public static String selectivityToString(int numRecords, int distinctValues) {
-        return "s = r/d\n" +
-                "s = " + numRecords + "/" + distinctValues + "\n" +
-                "s = " + selectivity(numRecords, distinctValues);
-    }
-
-    // m - b-tree degree
-    public static int degree(int keySize) {
-        return (int) Math.floor((double) (BLOCK_SIZE + 4 + keySize) / (keySize + 8));
-    }
-
-    public static String degreeToString(int keySize) {
-        return "m = ⌊(BlockSize + 4 + KeySize) / (KeySize + 8)⌋\n" +
-                "m = ⌊(" + BLOCK_SIZE + " + 4 + " + keySize + ") / (" + keySize + " + 8)⌋\n" +
-                "m = " + degree(keySize);
-    }
-
-    // l - b-tree levels
-    public static int levels(int numRecords, int degree) {
-        double temp1 = numRecords + 1 / 2.0;
-        double temp2 = Math.ceil(degree / 2.0);
-        return (int) (log(temp1) / log(temp2) + 1);
-    }
-
-    public static String levelsToString(int numRecords, int degree) {
-        return "l = (log(r + (1 / 2)) / log(m / 2) + 1)\n" +
-                "l = (log(" + numRecords + " + (1 / 2)) / log(" + degree + " / 2) + 1)\n" +
-                "l = " + levels(numRecords, degree);
-    }
-
-    // bL - number nodes at b-tree terminal level
-    public static int terminalLevelNodes(int numRecords, int degree) {
-        return (int) Math.floor(numRecords / (Math.ceil(degree / 2.0) - 1));
-    }
-
-    public static String terminalLevelNodesToString(int numRecords, int degree) {
-        return "bL = ⌊r / (⌈m / 2⌉ - 1)⌋ \n" +
-                "bL = ⌊" + numRecords + " / (⌈" + degree + " / 2⌉ - 1)⌋ \n" +
-                "bL = " + terminalLevelNodes(numRecords, degree);
-
-    }
+    // other calculations ----------------------------------------------------------------------------------------------
 
     public static double log(double value) {
         return Math.log(value) / Math.log(2);

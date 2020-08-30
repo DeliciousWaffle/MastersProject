@@ -38,7 +38,7 @@ public class QueryTreeWindow extends Application { // change back to Stage
         String query = "select col1, col2, col3 from tab1, tab2, tab3 where tab1.col1 = tab2.col1 and tab2.col1 = tab3.col1 and col3 = 7 and tab1.col1 = 3";
         String[] tokens = Parser.formatAndTokenizeInput(query);
         Optimizer optimizer = new Optimizer();
-        List<Table> tables = new ArrayList<>(Arrays.asList(
+        List<Table> tables = new ArrayList<>();/*(Arrays.asList(
                 new Table("tab1", Arrays.asList(
                         new Column("col1", DataType.NUMBER, 1),
                         new Column("col2", DataType.NUMBER, 1),
@@ -52,7 +52,7 @@ public class QueryTreeWindow extends Application { // change back to Stage
                         new Column("col1", DataType.NUMBER, 1)),
                         "col1", new ArrayList<>())
                 )
-        );
+        );*/
         List<QueryTree> queryTreeStates = optimizer.getQueryTreeStates(tokens, tables);
 
         //new QueryTreeWindow(queryTreeStates, primaryStage);

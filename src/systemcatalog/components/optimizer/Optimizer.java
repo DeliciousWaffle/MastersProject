@@ -6,7 +6,7 @@ import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.*;
 import datastructures.trees.querytree.operator.types.*;
-import utilities.Cost;
+import utilities.QueryCost;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -777,11 +777,15 @@ public class Optimizer {
         List<Integer> tableCosts = new ArrayList<>();
 
         for(Table table : tables) {
-            //int recordSize = table
-           // int blockingFactor = Cost.blockingFactor(table.getNumRows());
-            //int s = Cost.
+            int numberRecords = QueryCost.getNumberRecords(table);
+            int recordSize = QueryCost.getNumberRecords(table);
+            int blockingFactor = QueryCost.blockingFactor(recordSize);
+            int blocks = QueryCost.blocks(numberRecords, blockingFactor);
+
+            tableCosts.add(blocks);
         }
-        return null;
+
+        return tableCosts;
     }
 
     // 5. Pushing Down Projections =====================================================================================

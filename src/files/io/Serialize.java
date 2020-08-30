@@ -10,8 +10,7 @@ import datastructures.user.User;
 import datastructures.relation.table.component.DataType;
 import datastructures.user.component.Privilege;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Responsible for serializing and un-serializing all data so that it can be used in
@@ -103,15 +102,11 @@ public class Serialize {
                             break;
                         case "UpdateColumns":
                             String[] updateColumnsTokens = data.split("\\s+");
-                            for(String updateColumn : updateColumnsTokens) {
-                                updateColumns.add(updateColumn);
-                            }
+                            updateColumns.addAll(Arrays.asList(updateColumnsTokens));
                             break;
                         case "ReferencesColumns":
                             String[] referenceColumnsTokens = data.split("\\s+");
-                            for(String referenceColumn : referenceColumnsTokens) {
-                                referenceColumns.add(referenceColumn);
-                            }
+                            referenceColumns.addAll(Arrays.asList(referenceColumnsTokens));
                             break;
                         default: {
                             System.out.println("In Utilities.createUserData()");
@@ -291,7 +286,8 @@ public class Serialize {
         List<Column> columnList = new ArrayList<>();
         Column column = new Column();
 
-        List<String> foreignKeyList = new ArrayList<>();
+        List<String> primaryKeyList = new ArrayList<>();
+        Map<String, String> foreignKeyList = new HashMap<>();
 
         for(int i = 0; i < lines.length; i++) {
 
@@ -311,9 +307,13 @@ public class Serialize {
                     columnList.add(column);
                     column = new Column();
                     break;
+                case "PRIMARY KEY LIST DONE":
+                    table.setPrimaryKeys(primaryKeyList);
+                    primaryKeyList = new ArrayList<>();
+                    break;
                 case "FOREIGN KEY LIST DONE":
                     table.setForeignKeys(foreignKeyList);
-                    foreignKeyList = new ArrayList<>();
+                    foreignKeyList = new HashMap<>();
                     break;
                 // lines that don't contain "DONE" have some form of data to add
                 default: {
@@ -335,13 +335,15 @@ public class Serialize {
                             FileStructure fileStructure = FileStructure.convertToFileStructure(columnTokens[3]);
                             column = new Column(columnName, dataType, size, fileStructure);
                             break;
-                        case "PrimaryKey":
-                            table.setPrimaryKey(data);
+                        case "PrimaryKeyList":
+                            String[] primaryKeyTokens = data.split("\\s+");
+                            Collections.addAll(primaryKeyList, primaryKeyTokens);
                             break;
                         case "ForeignKeyList":
                             String[] foreignKeyTokens = data.split("\\s+");
                             for(String foreignKey : foreignKeyTokens) {
-                                foreignKeyList.add(foreignKey);
+                                String[] tableColumnPair = foreignKey.split("\\.");
+                                foreignKeyList.put(tableColumnPair[0], tableColumnPair[1]);
                             }
                             break;
                         case "IsClusteredWith":
@@ -410,15 +412,24 @@ public class Serialize {
             toSerialize.deleteCharAt(toSerialize.length() - 1);
             toSerialize.append("\t").append("COLUMN LIST DONE").append("\n");
 
-            toSerialize.append("\t").append("PrimaryKey: ").append(table.getPrimaryKey()).append("\n");
+            List<String> primaryKeyList = table.getPrimaryKeys();
+            toSerialize.append("\t").append("PrimaryKeyList: ");
 
-            List<String> foreignKeyList = table.getForeignKeys();
+            for(String primaryKey : primaryKeyList) {
+                toSerialize.append(primaryKey).append(" ");
+            }
+
+            // remove " "
+            toSerialize.deleteCharAt(toSerialize.length() - 1);
+            toSerialize.append("\t").append("PRIMARY KEY LIST DONE").append("\n");
+
+            Map<String, String> foreignKeyList = table.getForeignKeys();
             toSerialize.append("\t").append("ForeignKeyList: ");
 
             if(! foreignKeyList.isEmpty()) {
 
-                for(String foreignKey : foreignKeyList) {
-                    toSerialize.append(foreignKey).append(" ");
+                for(Map.Entry<String, String> foreignKey : foreignKeyList.entrySet()) {
+                    toSerialize.append(foreignKey.getKey()).append(".").append(foreignKey.getValue()).append(" ");
                 }
 
                 // remove " "

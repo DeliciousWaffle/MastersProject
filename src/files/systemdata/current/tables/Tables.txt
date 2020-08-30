@@ -15,8 +15,9 @@ Table: Customers
 		Column: Country CHAR 15 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
-	PrimaryKey: none
-	ForeignKeyList: EMPTY
+	PrimaryKeyList: CustomerID CustomerName
+	PRIMARY KEY LIST DONE
+	ForeignKeyList: Categories.CustomerID Employees.EmployeeID
 	FOREIGN KEY LIST DONE
 	IsClusteredWith: none
 	TableDataFilename: Customers.txt
