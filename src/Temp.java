@@ -4,6 +4,7 @@ import datastructures.relation.table.component.DataType;
 import datastructures.relation.table.component.TableData;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -12,7 +13,48 @@ public class Temp {
     public static void main(String[] args) {
         List<Table> tables = new ArrayList<>();
         tables.addAll(Arrays.asList());
+        //temp();
         customers();
+    }
+
+    public static void temp() {
+        int[] a = new int[60];
+        for(int i = 0; i < a.length; i++)
+            a[i] = i + 1;
+        System.out.println(Arrays.toString(a));
+        StringBuilder s = new StringBuilder();
+        try {
+            File currentDirFile = Paths.get("src", "a.txt").toFile();
+            Scanner sc = new Scanner(currentDirFile);
+            while(sc.hasNextLine())
+                s.append(sc.nextLine().trim()).append("\n");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        String[] blah = s.toString().split("\n");
+        for(int i = 0; i < blah.length; i++) {
+            for(int j = i + 1; j < blah.length - 1; j++) {
+                if(blah[i].equalsIgnoreCase(blah[j])) {
+                    System.out.println(true);
+                }
+            }
+        }
+        String[] b = new String[60];
+        String[] c = new String[60];
+        for(int i = 0; i < blah.length; i++) {
+            b[i] = blah[i].split(" ")[0];
+            c[i] = blah[i].split(" ")[1];
+        }
+        s = new StringBuilder();
+        for(String x : b) {
+            s.append("\"").append(x).append("\"").append(",");
+        }
+        System.out.println(s.toString());
+        s = new StringBuilder();
+        for(String x : c) {
+            s.append("\"").append(x).append("\"").append(",");
+        }
+        System.out.println(s.toString());
     }
 
     public static Table customers() {
@@ -28,24 +70,18 @@ public class Temp {
         foreignKeys.put("Employees", "EmployeeID");
         Table table = new Table(tableName, columns, primaryKeys, foreignKeys);
 
-        int[] a = new int[54];
-        for(int i = 0; i < a.length; i++)
-            a[i] = i + 1;
-        StringBuilder s = new StringBuilder();
-        try {
-            Scanner sc = new Scanner(new File("a.txt"));
-            while(sc.hasNextLine())
-                s.append(sc.nextLine().trim()).append("\n");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        String[] b = s.toString().split("\n");
-        s = new StringBuilder();
-        for(String x : b) {
-            s.append("\"").append(x).append("\"").append(",");
-        }
+        int[] customerID = new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60};
+        String[] firstName= new String[] {"Genaro","Dane","Monty","Pat","Casey","Herb","Forrest","Enrique","Michale","Edgar","Thomas","Shirley","King","Chauncey","Tanner","Pablo","Kenton","Cole","Johnnie","Andrea","Mina","Lana","Shameka","Kimberely","Claudine","Valrie","Sherita","Denna","Judy","Shawanda","Dagmar","Angelika","Sharon","Wynona","Analisa","Aliza","Leonila","Luanne","Alana","Yetta","Neda","Malik","Francisco","Mattie","Melvin","Nolan","Lekisha","Creola","Bruce","Chante","Willodean","Efren","Signe","Keith","Dona","Tammi","Season","Lady","Sheree","Terry"};
+        String[] lastName = new String[] {"Curnutt","Knapp","Tokarski","Devaughn","Pegg","Campisi","Levering","Brazell","Krogman","Linn","Swift","Mcgarr","Muir","Poirier","Lytch","Harbert","Serrato","Bermejo","Bakewell","Addington","Kennerly","Whiteman","Cockrill","Dantin","Meier","Sauter","Atwell","Hartt","Saine","Poynter","Trumble","Fichter","Soukup","Paulding","Larocca","Cacciatore","Askins","Covarrubias","Rhodes","Stutes","Weis","Loredo","Rau","Fujii","Turner","Lu","Luongo","Ohlsen","Sprvill","Perkin","Oubre","Paylor","Wolk","Cloyd","Kuehne","Brenes","Mathieson","Nance","Legg","Lemmer"};
 
-        table.setTableData(null);
+        List<List<String>> td = new ArrayList<>();
+
+        for(int i = 0; i < customerID.length; i++) {
+            List<String> d = new ArrayList<>(Arrays.asList(Integer.toString(customerID[i]), firstName[i], lastName[i], Integer.toString(employeeID[i])));
+            td.add(d);
+        }
+        table.setTableData(new TableData(new ArrayList<>(), td));
+        System.out.println(table.toString());
         return table;
     }
 
