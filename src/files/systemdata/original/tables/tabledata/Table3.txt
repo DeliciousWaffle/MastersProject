@@ -1,3 +1,0 @@
-Col6  Col7
-skip
-null  null

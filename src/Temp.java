@@ -2,6 +2,7 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
 import datastructures.relation.table.component.TableData;
+import datastructures.user.User;
 import files.io.FileType;
 import files.io.IO;
 import files.io.Serialize;
@@ -42,6 +43,11 @@ public class Temp {
         tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
         for(Table table : tables) {
             System.out.println(table.toString());
+            System.out.println("---------------------------------------------------------------------------");
+        }
+        List<User> users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
+        for(User user : users) {
+            System.out.println(user.toString());
             System.out.println("---------------------------------------------------------------------------");
         }
     }

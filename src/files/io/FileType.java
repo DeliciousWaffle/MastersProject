@@ -15,7 +15,6 @@ public final class FileType {
 
     public enum CurrentData {
 
-        CURRENT_OPTIONS(Paths.get("options", "Options.txt")),
         CURRENT_USERS(Paths.get("users", "Users.txt")),
         CURRENT_TABLES(Paths.get("tables", "Tables.txt"));
 
@@ -47,7 +46,6 @@ public final class FileType {
 
     public enum OriginalData {
 
-        ORIGINAL_OPTIONS(Paths.get("options", "Options.txt")),
         ORIGINAL_USERS(Paths.get("users", "Users.txt")),
         ORIGINAL_TABLES(Paths.get("tables", "Tables.txt"));
 
