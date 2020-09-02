@@ -1,21 +1,35 @@
 User: Bob
     TablePrivilegesList: NOT EMPTY
-        TablePrivileges: Table1
+        TablePrivileges: Customers
             Privilege: ALTER
             Privilege: DELETE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Table2
-            Privilege: UPDATE
-                UpdateColumns: Col1 Col4
-            UPDATE PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Table3
-            Privilege: REFERENCES
-                ReferencesColumns: Col1 Col2 Col3
-            REFERENCES PRIVILEGE DONE
-            Privilege: SELECT
             Privilege: INDEX
+            Privilege: INSERT
+            Privilege: SELECT
+            Privilege: UPDATE
+                UpdateColumns: CustomerID FirstName LastName
+            UPDATE PRIVILEGE DONE
+            Privilege: REFERENCES
+                ReferencesColumns: CustomerID FirstName LastName
+            REFERENCES PRIVILEGE DONE
         TABLE PRIVILEGES DONE
+        TablePrivileges: Products
+            Privilege: ALTER
+            Privilege: DELETE
+            Privilege: INDEX
+            Privilege: INSERT
+            Privilege: SELECT
+            Privilege: UPDATE
+                UpdateColumns: ProductID ProductName Price
+            UPDATE PRIVILEGE DONE
+            Privilege: REFERENCES
+                ReferencesColumns: ProductID ProductName Price
+            REFERENCES PRIVILEGE DONE
+        TABLE PRIVILEGES DONE
+        TablePrivileges: Employees
+            Privilege: SELECT
+        TABLE PRIVILEGES DONE
+            
     TABLE PRIVILEGES LIST DONE
     PassableTablePrivilegesList: NOT EMPTY
         TablePrivileges: Table1

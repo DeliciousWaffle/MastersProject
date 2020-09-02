@@ -1,0 +1,15 @@
+StoreID StoreName                 Address                        City                      State ManagerID 
+------- ------------------------- ------------------------------ ------------------------- ----- --------- 
+1       Jake-Mart                 9486 Cranbourne Hill           Dubova                    CT    1         
+2       JaKohl's                  4536 E Mallow Hollow           Telč                      NC    4         
+3       J.B. Maxx                 724 S Wilna Road               Almirante                 OH    7         
+4       Busseijer                 443 N Atholl Links             Belo sur Tsiribihina      KY    13        
+5       Jake's Club               3697 Fenwick Garth             Masparrito                LA    14        
+6       Place with Food           8834 W Hill View Limes         Velká nad Veličkou        CT    20        
+7       Beds, Bussa's, and Beyond 5263 N Thames Glebe            Santa Cruz da Graciosa    NY    23        
+8       Bussarget                 8015 E Lambourne Acre          Palilula                  FL    25        
+9       Jakecy's                  7927 S Brick Acre              Stockholm                 OH    27        
+10      JBPenney                  8537 Victory Terrace           Eirunepé                  AR    28        
+11      Jakestrom                 6795 Thames Wharf              Żabieniec                 AK    31        
+12      By-Vee                    6504 W Back Esplanade          Qalaikhumb                VT    35        
+13      Bussa's Beef              6901 E Allington Loan          Banjar Bongangede         GA    39        

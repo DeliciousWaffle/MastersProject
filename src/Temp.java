@@ -2,6 +2,8 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
 import datastructures.relation.table.component.TableData;
+import files.io.FileType;
+import files.io.IO;
 import files.io.Serialize;
 
 import java.io.File;
@@ -18,17 +20,30 @@ public class Temp {
 
     public static void main(String[] args) {
         List<Table> tables = new ArrayList<>();
-        tables.addAll(Arrays.asList());
+        tables.addAll(Arrays.asList(
         //temp();
-        //customers();
-        //products();
-        //employees();
-        //stores();
-        //suppliers();
-        //customerPurchaseDetails();
-        //employeePurchaseDetails();
-        //shippingDetails();
-        inventoryDetails();
+        customers(),
+        products(),
+        employees(),
+        stores(),
+        suppliers(),
+        customerPurchaseDetails(),
+        employeePurchaseDetails(),
+        shippingDetails(),
+        inventoryDetails()
+        ));
+        String serialized = Serialize.serializeTables(tables);
+        IO.writeCurrentData(serialized, FileType.CurrentData.CURRENT_TABLES);
+        for(Table table : tables) {
+            String tableName = table.getTableName();
+            String serializedTableData = Serialize.serializeTableData(table);
+            IO.writeCurrentTableData(serializedTableData, FileType.CurrentTableData.CURRENT_TABLE_DATA, tableName + ".txt");
+        }
+        tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
+        for(Table table : tables) {
+            System.out.println(table.toString());
+            System.out.println("---------------------------------------------------------------------------");
+        }
     }
 
     public static void temp() {
@@ -144,7 +159,7 @@ public class Temp {
         }
         // max(column name.length, column.size) for each padding amount entry
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(10, 15, 15)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 // DONE
@@ -169,7 +184,7 @@ public class Temp {
         }
 
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(9, 25, 5)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 //DONE
@@ -203,7 +218,7 @@ public class Temp {
         }
 
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(10, 15, 15, 12, 30, 25, 5, 6)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 
@@ -235,7 +250,7 @@ public class Temp {
             td.add(d);
         }
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(7, 25, 30, 25, 5, 9)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 
@@ -269,7 +284,7 @@ public class Temp {
         }
 
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(10, 25, 12, 30, 15, 5)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 
@@ -300,7 +315,7 @@ public class Temp {
         }
 
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(10, 9, 8, 20)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 
@@ -332,7 +347,7 @@ public class Temp {
         }
 
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(10, 9, 8, 20, 14)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 
@@ -370,7 +385,7 @@ public class Temp {
         }
 
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(10, 7, 9, 8, 11, 11)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 
@@ -399,7 +414,7 @@ public class Temp {
         }
 
         table.setTableData(new TableData(new ArrayList<>(Arrays.asList(7, 9, 8)), td));
-        System.out.println(table.toString());
+        //System.out.println(table.toString());
         return table;
     }
 }

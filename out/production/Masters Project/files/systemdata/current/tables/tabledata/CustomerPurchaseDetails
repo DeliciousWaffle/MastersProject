@@ -1,0 +1,162 @@
+CustomerID ProductID Quantity PaymentMethod        
+---------- --------- -------- -------------------- 
+1          90        13       American Express     
+2          176       6        Visa                 
+2          140       1        Capital One          
+2          172       11       Check                
+3          11        15       Chase                
+3          149       3        Visa                 
+3          130       14       Visa                 
+3          75        4        Check                
+4          86        7        Discover             
+4          109       1        Chase                
+4          128       14       American Express     
+4          5         19       Visa                 
+5          74        16       Discover             
+5          76        4        Capital One          
+6          33        16       Visa                 
+7          113       18       Visa                 
+7          5         18       Chase                
+8          43        1        Chase                
+8          20        14       Visa                 
+9          144       4        Chase                
+9          128       4        American Express     
+9          85        20       Check                
+9          76        13       Master Card          
+10         157       7        Visa                 
+10         174       20       American Express     
+10         112       16       American Express     
+11         165       4        Visa                 
+11         152       1        Discover             
+12         27        15       Discover             
+12         41        7        Master Card          
+13         129       15       Cash                 
+13         55        12       Chase                
+13         67        17       American Express     
+13         30        3        Master Card          
+13         169       1        Master Card          
+14         125       7        Cash                 
+14         78        13       Cash                 
+15         44        11       Capital One          
+15         131       6        Visa                 
+15         144       15       Cash                 
+15         154       9        Visa                 
+16         143       5        Cash                 
+16         20        12       American Express     
+16         161       5        Cash                 
+17         29        20       Cash                 
+17         158       3        Check                
+17         33        8        Check                
+18         57        6        Master Card          
+19         40        13       Discover             
+19         129       13       Cash                 
+19         153       11       Capital One          
+20         10        14       Chase                
+20         65        18       American Express     
+20         135       8        Chase                
+20         33        10       Capital One          
+21         54        3        American Express     
+22         172       4        Cash                 
+23         147       6        Check                
+23         102       8        Chase                
+24         110       19       Discover             
+24         119       15       Check                
+25         175       12       Visa                 
+25         41        15       Check                
+25         9         6        American Express     
+26         54        3        Master Card          
+26         73        15       American Express     
+26         99        7        Visa                 
+26         38        17       Cash                 
+27         177       15       American Express     
+28         9         13       Visa                 
+28         64        1        Master Card          
+28         166       17       Master Card          
+28         156       13       Discover             
+28         110       15       Master Card          
+29         151       6        Capital One          
+29         167       1        Master Card          
+29         157       1        Chase                
+30         142       8        Cash                 
+30         32        16       Capital One          
+30         165       8        Chase                
+30         3         11       Visa                 
+30         125       1        Chase                
+31         148       19       Chase                
+31         139       4        American Express     
+31         140       2        Cash                 
+32         122       9        Capital One          
+32         97        8        Chase                
+33         5         15       Master Card          
+34         80        18       Master Card          
+34         167       5        Chase                
+34         103       14       Check                
+34         25        14       Chase                
+35         170       8        Capital One          
+36         95        3        American Express     
+37         25        19       Check                
+37         50        14       Cash                 
+38         142       15       Discover             
+39         174       12       Discover             
+40         51        5        Check                
+40         29        6        Discover             
+40         119       17       Master Card          
+40         59        15       Capital One          
+41         71        19       Master Card          
+41         81        1        Visa                 
+41         19        20       Capital One          
+42         144       10       American Express     
+42         49        18       Chase                
+43         35        3        Discover             
+43         11        4        Discover             
+44         108       9        Capital One          
+44         48        11       Visa                 
+45         162       8        Chase                
+46         99        9        Discover             
+46         112       4        American Express     
+46         62        8        Chase                
+46         141       17       American Express     
+47         138       6        Capital One          
+47         141       4        Cash                 
+47         172       4        Discover             
+47         163       18       American Express     
+48         119       16       Visa                 
+48         69        1        Visa                 
+48         109       16       Capital One          
+48         166       9        Chase                
+48         1         9        American Express     
+49         60        5        Capital One          
+49         110       18       Discover             
+49         89        11       Check                
+49         178       18       Check                
+49         131       15       Capital One          
+50         170       18       Chase                
+50         73        10       Cash                 
+51         3         17       American Express     
+51         107       4        Chase                
+51         88        4        Discover             
+52         130       17       Visa                 
+52         10        19       Visa                 
+53         107       2        Discover             
+53         132       14       American Express     
+53         113       19       Visa                 
+54         157       5        Chase                
+54         125       13       Check                
+54         28        17       Visa                 
+55         136       17       Chase                
+56         162       8        Cash                 
+56         143       18       Master Card          
+56         104       11       Visa                 
+56         23        1        Chase                
+56         7         2        Check                
+57         166       10       Check                
+57         137       6        Check                
+58         61        17       Visa                 
+58         98        14       Visa                 
+58         27        20       Cash                 
+58         14        10       Master Card          
+59         115       17       Check                
+59         54        18       Discover             
+59         78        4        Visa                 
+60         76        2        Cash                 
+60         77        13       Chase                

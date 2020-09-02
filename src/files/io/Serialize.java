@@ -340,6 +340,9 @@ public class Serialize {
                             Collections.addAll(primaryKeyList, primaryKeyTokens);
                             break;
                         case "ForeignKeyList":
+                            if(data.equalsIgnoreCase("EMPTY")) {
+                                break;
+                            }
                             String[] foreignKeyTokens = data.split("\\s+");
                             for(String foreignKey : foreignKeyTokens) {
                                 String[] tableColumnPair = foreignKey.split("\\.");
@@ -421,6 +424,7 @@ public class Serialize {
 
             // remove " "
             toSerialize.deleteCharAt(toSerialize.length() - 1);
+            toSerialize.append("\n");
             toSerialize.append("\t").append("PRIMARY KEY LIST DONE").append("\n");
 
             Map<String, String> foreignKeyList = table.getForeignKeys();

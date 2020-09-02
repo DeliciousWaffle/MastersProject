@@ -373,7 +373,7 @@ public class Table {
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
-        stringBuilder.append("\n").append("Primary Key(s): ").append("\n");
+        stringBuilder.append("\n").append("Primary Key(s): ");
         if(primaryKeys.isEmpty()) {
             stringBuilder.append("none");
         } else {
@@ -385,20 +385,18 @@ public class Table {
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
 
-        stringBuilder.append("Foreign Key(s): ");
+        stringBuilder.append("\nForeign Key(s): ");
         if(foreignKeys.isEmpty()) {
             stringBuilder.append("none");
         } else {
             for(Map.Entry<String, String> entry : foreignKeys.entrySet()) {
-                stringBuilder.append(entry.getKey()).append(entry.getValue()).append(", ");
+                stringBuilder.append(entry.getKey()).append(".").append(entry.getValue()).append(", ");
             }
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
         }
 
-        stringBuilder.append("\n");
-
-        stringBuilder.append("Clustered With Table: ").append(clusteredWith).append("\n\n");
+        stringBuilder.append("\nClustered With Table: ").append(clusteredWith).append("\n\n");
 
         // adding table data stuff
         for(Column column : columns) {

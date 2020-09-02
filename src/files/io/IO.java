@@ -73,8 +73,12 @@ public final class IO {
         write(data, currentDataFileType.getPath());
     }
 
-    public static void writeCurrentTableData(String data, FileType.CurrentTableData currentTableDataFileType,
-                                             String tableName) {
+    /**
+     * @param data
+     * @param currentTableDataFileType
+     * @param tableName the name of the table appended with ".txt"
+     */
+    public static void writeCurrentTableData(String data, FileType.CurrentTableData currentTableDataFileType, String tableName) {
         write(data, currentTableDataFileType.getPath().resolve(tableName));
     }
 

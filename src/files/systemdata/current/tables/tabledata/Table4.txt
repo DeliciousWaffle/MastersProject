@@ -1,3 +1,0 @@
-Col8       Col9
-skip
-null       null
