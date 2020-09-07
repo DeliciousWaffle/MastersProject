@@ -43,7 +43,7 @@ public class ResultSet {
 
         // used for identifying which column belongs to which table
         for(Column column: copyTable.getColumns()) {
-            column.setName(copyTable.getTableName() + "." + column.getName());
+            column.setName(copyTable.getTableName() + "." + column.getColumnName());
         }
 
         this.columns = copyTable.getColumns();
@@ -129,10 +129,10 @@ public class ResultSet {
         List<Integer> columnsToProjectIndexes = new ArrayList<>();
 
         for(int cols = 0; cols < columns.size(); cols++) {
-            String columnName = columns.get(cols).getName();
+            String columnName = columns.get(cols).getColumnName();
 
             for(Column columnToProject : columnsToProject) {
-                String columnToProjectName = columnToProject.getName();
+                String columnToProjectName = columnToProject.getColumnName();
 
                 if(columnName.equalsIgnoreCase(columnToProjectName)) {
                     columnsToProjectIndexes.add(cols);
@@ -249,10 +249,10 @@ public class ResultSet {
 
         // get the location of the column to perform a selection on
         int selectionColumnIndex = 0;
-        String selectionColumnName = condition.getColumn().getName();
+        String selectionColumnName = condition.getColumn().getColumnName();
 
         for(int cols = 0; cols < selectionColumns.size(); cols++) {
-            String columnName = selectionColumns.get(cols).getName();
+            String columnName = selectionColumns.get(cols).getColumnName();
             if(selectionColumnName.equals(columnName)) {
                 selectionColumnIndex = cols;
                 break;
@@ -461,7 +461,7 @@ public class ResultSet {
     public ResultSet joinUsing(ResultSet otherResultSet, Column joinOn) {
 
         // if there is a table name associated with the join on column, remove that
-        String columnNameToJoinOn = joinOn.getName();
+        String columnNameToJoinOn = joinOn.getColumnName();
 
         if(columnNameToJoinOn.contains(".")) {
             int removeUpUntilIndex = columnNameToJoinOn.indexOf(".") + 1; // + 1 removes the "."
@@ -474,7 +474,7 @@ public class ResultSet {
 
         // first table
         for(Column column : this.columns) {
-            String columnName = column.getName();
+            String columnName = column.getColumnName();
             if(columnName.equalsIgnoreCase(columnNameToJoinOn)) {
                 thisColumnToJoinOn = column;
                 break;
@@ -483,7 +483,7 @@ public class ResultSet {
 
         // second table
         for(Column column : otherResultSet.columns) {
-            String columnName = column.getName();
+            String columnName = column.getColumnName();
             if(columnName.equalsIgnoreCase(columnNameToJoinOn)) {
                 otherColumnToJoinOn = column;
                 break;
@@ -515,11 +515,11 @@ public class ResultSet {
         int firstColumnIndex = -1;
         int secondColumnIndex = -1;
 
-        String thisColumnName = thisColumnToJoinOn.getName();
-        String otherColumnName = otherColumnToJoinOn.getName();
+        String thisColumnName = thisColumnToJoinOn.getColumnName();
+        String otherColumnName = otherColumnToJoinOn.getColumnName();
 
         for(int i = 0; i < joinColumns.size(); i++) {
-            String columnName = joinColumns.get(i).getName();
+            String columnName = joinColumns.get(i).getColumnName();
             if(columnName.equalsIgnoreCase(thisColumnName)) {
                 firstColumnIndex = i;
                 break;
@@ -529,7 +529,7 @@ public class ResultSet {
         // skip past the index previously found, should not throw an exception if there exists another column
         try {
             for(int i = firstColumnIndex + 1; i < joinColumns.size(); i++) {
-                String columnName = joinColumns.get(i).getName();
+                String columnName = joinColumns.get(i).getColumnName();
                 if(columnName.equalsIgnoreCase(otherColumnName)) {
                     secondColumnIndex = i;
                     break;
@@ -599,7 +599,7 @@ public class ResultSet {
 
             Keyword keyword = entry.getKey();
             Column column = entry.getValue();
-            String columnName = column.getName();
+            String columnName = column.getColumnName();
 
             String groupByColumnName = keyword + "(" + columnName + ")";
 
@@ -680,10 +680,10 @@ public class ResultSet {
 
         // get column index for this result set
         int columnIndex = 0;
-        String columnNameToOrderBy = columnToOrderBy.getName();
+        String columnNameToOrderBy = columnToOrderBy.getColumnName();
 
         for(int i = 0; i < columns.size(); i++) {
-            String columnName = columns.get(i).getName();
+            String columnName = columns.get(i).getColumnName();
             if(columnName.equalsIgnoreCase(columnNameToOrderBy)) {
                 columnIndex = i;
             }
@@ -804,10 +804,10 @@ public class ResultSet {
      */
     public List<String> getColumnDataAt(Column column) {
 
-        String columnName = column.getName();
+        String columnName = column.getColumnName();
 
         for(int cols = 0; cols < columns.size(); cols++) {
-            String thisColumnName = columns.get(cols).getName();
+            String thisColumnName = columns.get(cols).getColumnName();
             if(columnName.equalsIgnoreCase(thisColumnName)) {
                 return getColumnDataAt(cols);
             }
@@ -902,7 +902,7 @@ public class ResultSet {
         // figuring out padding amounts and adding to the list of column sizes
         for(Column column : columns) {
 
-            int columnNameLength = column.getName().length();
+            int columnNameLength = column.getColumnName().length();
             int maxNumSpaces = column.size();
 
             if(columnNameLength > maxNumSpaces) {
@@ -914,7 +914,7 @@ public class ResultSet {
 
         for(Column column : columns) {
 
-            String columnName = column.getName();
+            String columnName = column.getColumnName();
 
             StringBuilder spaces = new StringBuilder();
             int columnNameLength = columnName.length();
@@ -938,7 +938,7 @@ public class ResultSet {
         for(Column column : columns) {
 
             int maxColumnNameLength = column.size();
-            int columnNameLength = column.getName().length();
+            int columnNameLength = column.getColumnName().length();
             int numDashes = Math.max(maxColumnNameLength, columnNameLength);
 
             StringBuilder dashes = new StringBuilder();

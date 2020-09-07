@@ -29,11 +29,6 @@ public class Parser {
 
         input = input.toLowerCase();
 
-        // capitalize keywords within input
-        for(Keyword keyword : Keyword.values()) {
-            input = input.replaceAll(keyword.toString().toLowerCase(), keyword.toString());
-        }
-
         // remove spaces at the beginning of the input
         input = input.replaceAll("^\\s+", "");
 
@@ -41,15 +36,19 @@ public class Parser {
         String[] tokens = input.split("\\s+");
         StringBuilder formatted = new StringBuilder();
 
-        // re-add the spaces
+        // capitalizing keywords
+        for(int i = 0; i < tokens.length; i++) {
+            tokens[i] = Keyword.toUppercase(tokens[i]);
+        }
+
+        // re-create the input, but with fixed spaces
         for(String token : tokens) {
             formatted.append(token).append(" ");
         }
 
-        // re-add ";"
+        // re-add ";" which is used for determining where the input will end later on
         formatted.append(";");
 
-        // TODO might be error-prone, length changes in loop
         // adding spaces between ",", ")", "(" too
         for(int i = 1; i < formatted.length() - 1; i++) {
 

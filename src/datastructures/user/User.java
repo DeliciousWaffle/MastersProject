@@ -69,7 +69,7 @@ public class User {
 
             // need to get the update and reference columns
             for(Column column : table.getColumns()) {
-                String columnName = column.getName();
+                String columnName = column.getColumnName();
                 updateColumns.add(columnName);
                 referenceColumns.add(columnName);
             }

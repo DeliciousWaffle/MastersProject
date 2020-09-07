@@ -1,6 +1,5 @@
 package files.io;
 
-import datastructures.options.Options;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.FileStructure;
@@ -396,7 +395,7 @@ public class Serialize {
 
                 for(Column column : columns) {
 
-                    String columnName = column.getName();
+                    String columnName = column.getColumnName();
                     String dataType = column.getDataType().toString();
                     String size = Integer.toString(column.size());
                     String fileStructure = column.getFileStructure().toString();
@@ -482,7 +481,7 @@ public class Serialize {
         // figuring out padding amounts and adding to the list of column sizes
         for(Column column : table.getColumns()) {
 
-            int columnNameLength = column.getName().length();
+            int columnNameLength = column.getColumnName().length();
             int maxNumSpaces = column.size();
 
             if(columnNameLength > maxNumSpaces) {
@@ -505,7 +504,7 @@ public class Serialize {
 
             for(int cols = 0; cols < numCols; cols++) {
 
-                int columnNameLength = table.getColumns().get(cols).getName().length();
+                int columnNameLength = table.getColumns().get(cols).getColumnName().length();
                 int columnSize = Math.max(columnNameLength, columnSizes.get(cols));
                 int endIndex = columnSize + beginIndex;
 
@@ -560,7 +559,7 @@ public class Serialize {
         // adding column names so we know what we're looking at
         for(Column column : table.getColumns()) {
 
-            String columnName = column.getName();
+            String columnName = column.getColumnName();
 
             StringBuilder spaces = new StringBuilder();
             int columnNameLength = columnName.length();

@@ -27,7 +27,7 @@ public class ColumnPane {
     public ColumnPane(Column column, String keyType) {
 
         // get data
-        String columnName = column.getName();
+        String columnName = column.getColumnName();
         DataType dataType = column.getDataType();
         int size = column.size();
         FileStructure fileStructure = column.getFileStructure();

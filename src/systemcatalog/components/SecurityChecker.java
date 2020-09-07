@@ -4,7 +4,6 @@ import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.user.User;
-import utilities.enums.InputType;
 import datastructures.user.component.Privilege;
 
 import java.util.ArrayList;
@@ -139,7 +138,7 @@ public class SecurityChecker {
         for(Table table : tables) {
             if(table.getTableName().equalsIgnoreCase(tableName)) {
                 for(Column column : table.getColumns()) {
-                    columnNames.add(column.getName());
+                    columnNames.add(column.getColumnName());
                 }
                 break;
             }

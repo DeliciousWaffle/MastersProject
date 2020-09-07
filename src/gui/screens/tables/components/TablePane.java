@@ -4,7 +4,6 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import files.io.FileType;
 import files.io.IO;
-import gui.screens.Screen;
 import gui.screens.tables.components.tabledatawindow.TableDataWindow;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -81,7 +80,7 @@ public class TablePane {
         List<String> columnNames = new ArrayList<>();
 
         for(Column column : table.getColumns()) {
-            String columnName = column.getName();
+            String columnName = column.getColumnName();
             columnNames.add(columnName);
         }
 

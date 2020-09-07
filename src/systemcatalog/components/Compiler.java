@@ -9,7 +9,6 @@ import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.types.Relation;
 import datastructures.user.component.Privilege;
 import datastructures.user.component.TablePrivileges;
-import utilities.enums.InputType;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
 import datastructures.user.User;
@@ -181,7 +180,7 @@ public class Compiler {
             for (Table table : tables) {
                 if (table.getTableName().equalsIgnoreCase(tableName)) {
                     for (Column column : table.getColumns()) {
-                        if (column.getName().equalsIgnoreCase(columnName)) {
+                        if (column.getColumnName().equalsIgnoreCase(columnName)) {
                             column.setSize(size);
                             column.setDataType(dataType);
                             break outerLoop;
@@ -289,7 +288,7 @@ public class Compiler {
                 DataType dataType = null;
 
                 for (int i = 0; i < table.getNumCols(); i++) {
-                    if (table.getColumns().get(i).getName().equalsIgnoreCase(columnName)) {
+                    if (table.getColumns().get(i).getColumnName().equalsIgnoreCase(columnName)) {
                         mappedColInd = i;
                         dataType = table.getColumns().get(i).getDataType();
                         break;
@@ -388,7 +387,7 @@ public class Compiler {
                 int mappedColInd = -1;
 
                 for (int i = 0; i < table.getNumCols(); i++) {
-                    if (table.getColumns().get(i).getName().equalsIgnoreCase(setColumnInput)) {
+                    if (table.getColumns().get(i).getColumnName().equalsIgnoreCase(setColumnInput)) {
                         mappedColInd = i;
                         break;
                     }
@@ -408,7 +407,7 @@ public class Compiler {
                     int whereMappedColInd = -1;
 
                     for (int i = 0; i < table.getNumCols(); i++) {
-                        if (table.getColumns().get(i).getName().equalsIgnoreCase(whereColumnInput)) {
+                        if (table.getColumns().get(i).getColumnName().equalsIgnoreCase(whereColumnInput)) {
                             whereMappedColInd = i;
                             break;
                         }
@@ -548,7 +547,7 @@ public class Compiler {
                 String tableName = table.getTableName();
                 if(tableName.equalsIgnoreCase(tableInput)) {
                     for(Column column : table.getColumns()) {
-                        String columnName = column.getName();
+                        String columnName = column.getColumnName();
                         updateColumnsInput.add(columnName);
                         referenceColumnsInput.add(columnName);
                     }

@@ -1,8 +1,6 @@
 package gui.screens.terminal.popupwindows;
 
 import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
-import datastructures.relation.table.component.DataType;
 import datastructures.trees.querytree.QueryTree;
 import files.io.FileType;
 import files.io.IO;
@@ -17,7 +15,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import systemcatalog.components.optimizer.Optimizer;
+import systemcatalog.components.Optimizer;
 import systemcatalog.components.Parser;
 
 import java.util.ArrayList;

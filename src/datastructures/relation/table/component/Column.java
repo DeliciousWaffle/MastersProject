@@ -42,7 +42,7 @@ public class Column {
         this.size = toCopy.size;
         this.fileStructure = toCopy.fileStructure;
     }
-    public String getName() { return name; }
+    public String getColumnName() { return name; }
 
     public void setName(String name) { this.name = name; }
 
@@ -79,7 +79,7 @@ public class Column {
 
         Column otherColumn = (Column) other;
 
-        if(! otherColumn.getName().equals(this.getName())) {
+        if(! otherColumn.getColumnName().equals(this.getColumnName())) {
             //System.out.println("Columns not equal");
             //System.out.println("Other Column name: " + otherColumn.getName() +
             //        " This Column name: " + this.getName());

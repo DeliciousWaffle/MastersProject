@@ -132,7 +132,7 @@ public class Table {
      * @param columnToRemove is the column to remove
      */
     public void removeColumn(Column columnToRemove) {
-        removeColumn(columnToRemove.getName());
+        removeColumn(columnToRemove.getColumnName());
     }
 
     /**
@@ -141,7 +141,7 @@ public class Table {
      */
     public void removeColumn(String columnToRemove) {
         for(int i = 0; i < columns.size(); i++) {
-            String columnName = columns.get(i).getName();
+            String columnName = columns.get(i).getColumnName();
             if(columnName.equalsIgnoreCase(columnToRemove)) {
                 columns.remove(i);
                 tableData.deleteColumnAt(i);
@@ -244,7 +244,7 @@ public class Table {
     public Column getColumn(String columnName) {
 
         for (Column column : columns) {
-            if (column.getName().equalsIgnoreCase(columnName)) {
+            if (column.getColumnName().equalsIgnoreCase(columnName)) {
                 return column;
             }
         }
@@ -258,7 +258,7 @@ public class Table {
      * @return whether the candidate column is a member of this table
      */
     public boolean hasColumn(Column candidate) {
-        return hasColumn(candidate.getName());
+        return hasColumn(candidate.getColumnName());
     }
 
     /**
@@ -268,7 +268,7 @@ public class Table {
     public boolean hasColumn(String candidate) {
 
         for(Column column : columns) {
-            if(column.getName().equalsIgnoreCase(candidate)) {
+            if(column.getColumnName().equalsIgnoreCase(candidate)) {
                 return true;
             }
         }
@@ -401,7 +401,7 @@ public class Table {
         // adding table data stuff
         for(Column column : columns) {
 
-            String columnName = column.getName();
+            String columnName = column.getColumnName();
 
             StringBuilder spaces = new StringBuilder();
             int columnNameLength = columnName.length();
@@ -425,7 +425,7 @@ public class Table {
         for(Column column : columns) {
 
             int maxColumnNameLength = column.size();
-            int columnNameLength = column.getName().length();
+            int columnNameLength = column.getColumnName().length();
             int numDashes = Math.max(maxColumnNameLength, columnNameLength);
 
             StringBuilder dashes = new StringBuilder();

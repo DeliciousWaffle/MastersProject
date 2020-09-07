@@ -8,7 +8,8 @@ package datastructures.trees.querytree.operator;
 public abstract class Operator {
 
     public enum Type {
-        PROJECTION, SIMPLE_SELECTION, COMPOUND_SELECTION, AGGREGATE_SELECTION, AGGREGATION, CARTESIAN_PRODUCT, INNER_JOIN, RELATION
+        PROJECTION, SIMPLE_SELECTION, COMPOUND_SELECTION, AGGREGATE_SELECTION, AGGREGATION,
+        CARTESIAN_PRODUCT, INNER_JOIN, RELATION, PIPELINED
     }
 
     public abstract Type getType();

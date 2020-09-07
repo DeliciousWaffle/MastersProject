@@ -14,7 +14,7 @@ import datastructures.user.User;
 import systemcatalog.components.Verifier;
 import datastructures.relation.table.Table;
 import systemcatalog.components.SecurityChecker;
-import systemcatalog.components.optimizer.Optimizer;
+import systemcatalog.components.Optimizer;
 import systemcatalog.components.Compiler;
 
 import java.util.ArrayList;

@@ -33,7 +33,7 @@ public class Condition {
     @Override
     public String toString() {
         StringBuilder print = new StringBuilder();
-        print.append(column.getName()).append(" ").append(symbol).append(" ").append(target);
+        print.append(column.getColumnName()).append(" ").append(symbol).append(" ").append(target);
         return print.toString();
     }
 }

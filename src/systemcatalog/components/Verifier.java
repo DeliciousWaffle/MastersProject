@@ -4,7 +4,6 @@ import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.user.User;
-import utilities.enums.InputType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -202,7 +201,7 @@ public class Verifier {
 
                 for(Column column1 : table.getColumns()) {
 
-                    if(column1.getName().equalsIgnoreCase(column)) {
+                    if(column1.getColumnName().equalsIgnoreCase(column)) {
 
                         boolean isNumericConstant = Parser.isNumeric(constant);
 

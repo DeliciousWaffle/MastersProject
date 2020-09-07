@@ -1,68 +1,46 @@
 package ztest.systemcatalog.component;
 
+import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
+import datastructures.relation.table.component.DataType;
+import datastructures.rulegraph.RuleGraph;
+import datastructures.rulegraph.types.RuleGraphTypes;
+import datastructures.trees.querytree.QueryTree;
+import files.io.FileType;
+import files.io.IO;
+import files.io.Serialize;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import systemcatalog.components.Optimizer;
+import systemcatalog.components.Parser;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class OptimizerTest {
-/*
-    private static Optimizer optimizer;
-    private static RuleGraph queryRuleGraph;
+
     private static List<Table> tables;
 
     @BeforeAll
     public static void create() {
-
-        optimizer = new Optimizer();
-        queryRuleGraph = new RuleGraphTypes().getQueryRuleGraph();
-
-        tables = new ArrayList<>();
-        Table tab1 = new Table("Tab1");
-        Table tab2 = new Table("Tab2");
-        Table tab3 = new Table("Tab3");
-        Table tab4 = new Table("Tab4");
-
-        ArrayList<Column> columns = new ArrayList<>();
-        columns.add(new Column("Col1", DataType.NUMBER, 20));
-        columns.add(new Column("Col2", DataType.NUMBER, 20));
-        columns.add(new Column("jCol1", DataType.NUMBER, 20));
-        tab1.setColumns(columns);
-
-        columns = new ArrayList<>();
-        columns.add(new Column("Col3", DataType.NUMBER, 20));
-        columns.add(new Column("Col4", DataType.NUMBER, 20));
-        columns.add(new Column("jCol1", DataType.NUMBER, 20));
-        columns.add(new Column("jCol2", DataType.NUMBER, 20));
-        tab2.setColumns(columns);
-
-        columns = new ArrayList<>();
-        columns.add(new Column("Col5", DataType.NUMBER, 20));
-        columns.add(new Column("Col6", DataType.NUMBER, 20));
-        columns.add(new Column("jCol1", DataType.NUMBER, 20));
-        columns.add(new Column("jCol2", DataType.NUMBER, 20));
-        tab3.setColumns(columns);
-
-        columns = new ArrayList<>();
-        columns.add(new Column("Col7", DataType.NUMBER, 20));
-        columns.add(new Column("Col8", DataType.NUMBER, 20));
-        columns.add(new Column("jCol2", DataType.NUMBER, 20));
-        tab4.setColumns(columns);
-
-        tables.add(tab1);
-        tables.add(tab2);
-        tables.add(tab3);
-        tables.add(tab4);
+        tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "SELECT Tab1.COL1 FROM TAB1",
-            "SELECT COL1 FROM TAB1",
-            "SELECT COL1, COL2, JCOL1 FROM TAB1",
-            "SELECT COL1 FROM TAB1 WHERE COL1 = A",
-            "SELECT COL1 FROM TAB1 WHERE COL1 = A AND COL2 = B",
-            "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1)",
-            "SELECT COL1, COL3, JCOL2 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3",
-            "SELECT COL1 FROM TAB1, TAB2 JOIN TAB3 USING(JCOL2)",
-            "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 JOIN TAB4 USING(JCOL2)",
+            "SELECT FirstName FROM Customers",
+            "SELECT Customers.FirstName FROM Customers",
+            "SELECT CustomerID, FirstName, LastName FROM Customers",
+            "SELECT FirstName, LastName FROM Customers WHERE CustomerID = 1",
+            "SELECT * FROM Customers WHERE FirstName = Genaro AND LastName = Curnutt",
+            "SELECT * FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID)",
+            "SELECT * FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID), Products",
+            "SELECT FirstName FROM Customers, Products JOIN EmployeePurchaseDetails USING(ProductID)",
+            "SELECT FirstName FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID), Employees JOIN EmployeePurchaseDetails USING(EmployeeID)",
             "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 WHERE COL1 = A",
             "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 WHERE COL1 = A AND COL2 = 7 AND COL3 = 3",
             "SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1",
@@ -74,26 +52,48 @@ public class OptimizerTest {
             "SELECT COL1, COL2, MIN(COL2), MAX(COL2) FROM TAB1 GROUP BY COL1, COL2, JCOL1 HAVING COUNT(COL1) > 4",
             "SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1, TAB2, TAB3 JOIN TAB4 USING(JCOL2) WHERE COL1 = A GROUP BY COL1, COL2, COL5 HAVING COUNT(COL1) > 5"
     })
-    public void testCreation(String input) {
-        String[] inputTokens = new Parser().formatAndTokenizeInput(input);
-        System.out.println("Input:");
-        System.out.println(input);
-        System.out.println();
-        QueryTree queryTree = optimizer.createQueryTree(queryRuleGraph, inputTokens, tables);
-        queryTree = optimizer.cascadeSelections(queryTree);
-        //System.out.println("After Cascading Selections:");
-        //System.out.println(queryTree.getStructure());
-        queryTree = optimizer.pushDownSelections(queryTree);
-        //System.out.println("After Pushing Down Selections:");
-        //System.out.println(queryTree.getStructure());
-        queryTree = optimizer.cascadeAndPushDownProjections(queryTree);
-        //System.out.println("After Cascading and Pushing Down Projections");
-        //System.out.println(queryTree.getStructure());
-        queryTree = optimizer.formJoins(queryTree);
-        System.out.println(queryTree.getTreeStructure());
-        queryTree = optimizer.findSubtreesToPipeline(queryTree);
+    public void testCreationWithNoVerifier(String input) {
 
-        System.out.println("----------------------------------------");
+        System.out.println(input + "\n");
+
+        String[] tokenizedInput = Parser.formatAndTokenizeInput(input);
+        Optimizer optimizer = new Optimizer();
+        optimizer.toggleRearrangeLeafNodes();
+        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(tokenizedInput, tables);
+
+        System.out.println("Query Tree Creation:");
+        System.out.println(queryTrees.get(0).getTreeStructure());
+        System.out.println("Cascade Selections:");
+        System.out.println(queryTrees.get(1).getTreeStructure());
+        System.out.println(queryTrees.get(1).getOperatorsAndLocations());
+        System.out.println("Push Down Selections:");
+        System.out.println(queryTrees.get(2).getTreeStructure());
+        System.out.println("Form Joins:");
+        System.out.println(queryTrees.get(3).getTreeStructure());
+        System.out.println("Rearrange Leaf Nodes:");
+        System.out.println(queryTrees.get(4).getTreeStructure());
+        System.out.println("Push Down Projections:");
+        System.out.println(queryTrees.get(5).getTreeStructure());
+        System.out.println("Pipeline Subtrees:");
+        StringBuilder sb = new StringBuilder();
+        for(int i = 6; i < queryTrees.size(); i++) { // 6 is the index of where pipelining begins
+            sb.append(queryTrees.get(i).getTreeStructure());
+            sb.append("Pipeline Subtrees Again:");
+        }
+        sb.delete(sb.length() - 24, sb.length()); // removing "Pipeline Subtrees Again"
+        System.out.println(sb.toString());
+        System.out.println("relational algebra: " + optimizer.getNaiveRelationalAlgebra(queryTrees.get(0)));
+        System.out.println("=========================================================================================");
+
         assertTrue(true);
-    }*/
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            ""
+    })
+    public void testCreationWithVerifier(String input) {
+
+        assertTrue(true);
+    }
 }
