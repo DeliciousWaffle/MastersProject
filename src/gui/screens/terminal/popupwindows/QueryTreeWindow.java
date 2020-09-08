@@ -51,7 +51,7 @@ public class QueryTreeWindow extends Application { // change back to Stage
                         "col1", new ArrayList<>())
                 )
         );*/
-        List<QueryTree> queryTreeStates = optimizer.getQueryTreeStates(tokens, tables);
+        /*List<QueryTree> queryTreeStates = optimizer.getQueryTreeStates(tokens, tables);
 
         //new QueryTreeWindow(queryTreeStates, primaryStage);
     //}
@@ -65,7 +65,7 @@ for(QueryTree queryTree : queryTreeStates) {
     System.out.println(queryTree.getTreeStructure());
     System.out.println("==========================================================================");
 }
-
+*/
 
         // root container to hold all of our junk, query tree states will be held above while buttons below
         BorderPane root = new BorderPane();
@@ -74,9 +74,9 @@ for(QueryTree queryTree : queryTreeStates) {
         this.queryTreeGUIStates = new ArrayList<>();
         this.stateIndex = 0;
 
-        for(QueryTree queryTree : queryTreeStates) {
-            queryTreeGUIStates.add(new QueryTreeGUI(queryTree));
-        }
+        //for(QueryTree queryTree : queryTreeStates) {
+        //    queryTreeGUIStates.add(new QueryTreeGUI(queryTree));
+        //}
 
         // labels mapped to the current query tree state that give info about the optimization taking place
         getOptimizationInfoLabels();

@@ -59,30 +59,29 @@ public class OptimizerTest {
         String[] tokenizedInput = Parser.formatAndTokenizeInput(input);
         Optimizer optimizer = new Optimizer();
         optimizer.toggleRearrangeLeafNodes();
-        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(tokenizedInput, tables);
+        List<QueryTree> queryTrees;// = optimizer.getQueryTreeStates(tokenizedInput, tables);
 
         System.out.println("Query Tree Creation:");
-        System.out.println(queryTrees.get(0).getTreeStructure());
+        //System.out.println(queryTrees.get(0).getTreeStructure());
         System.out.println("Cascade Selections:");
-        System.out.println(queryTrees.get(1).getTreeStructure());
-        System.out.println(queryTrees.get(1).getOperatorsAndLocations());
+        //System.out.println(queryTrees.get(1).getTreeStructure());
         System.out.println("Push Down Selections:");
-        System.out.println(queryTrees.get(2).getTreeStructure());
+        //System.out.println(queryTrees.get(2).getTreeStructure());
         System.out.println("Form Joins:");
-        System.out.println(queryTrees.get(3).getTreeStructure());
+        //System.out.println(queryTrees.get(3).getTreeStructure());
         System.out.println("Rearrange Leaf Nodes:");
-        System.out.println(queryTrees.get(4).getTreeStructure());
+        //System.out.println(queryTrees.get(4).getTreeStructure());
         System.out.println("Push Down Projections:");
-        System.out.println(queryTrees.get(5).getTreeStructure());
+        //System.out.println(queryTrees.get(5).getTreeStructure());
         System.out.println("Pipeline Subtrees:");
         StringBuilder sb = new StringBuilder();
-        for(int i = 6; i < queryTrees.size(); i++) { // 6 is the index of where pipelining begins
-            sb.append(queryTrees.get(i).getTreeStructure());
+        //for(int i = 6; i < queryTrees.size(); i++) { // 6 is the index of where pipelining begins
+            //sb.append(queryTrees.get(i).getTreeStructure());
             sb.append("Pipeline Subtrees Again:");
-        }
+        //}
         sb.delete(sb.length() - 24, sb.length()); // removing "Pipeline Subtrees Again"
         System.out.println(sb.toString());
-        System.out.println("relational algebra: " + optimizer.getNaiveRelationalAlgebra(queryTrees.get(0)));
+        //System.out.println("relational algebra: " + optimizer.getNaiveRelationalAlgebra(queryTrees.get(0)));
         System.out.println("=========================================================================================");
 
         assertTrue(true);

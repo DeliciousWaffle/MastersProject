@@ -44,7 +44,7 @@ public class Optimizer {
 
     public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
 
-        QueryTree queryTree                     = createQueryTree(input, tables);
+        /*QueryTree queryTree                     = createQueryTree(input, tables);
         QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
@@ -59,17 +59,18 @@ public class Optimizer {
 
         queryTreeStates.addAll(afterPipeliningSubtrees);
 
-        return queryTreeStates;
+        return queryTreeStates;*/
+        return null;
     }
 
     // 0. Query Tree Creation ==========================================================================================
 
-    public QueryTree createQueryTree(String[] input, List<Table> tables) {
+    /*public QueryTree createQueryTree(String[] input, List<Table> tables) {
 
         QueryTree queryTree = new QueryTree((Operator) null);
 
-        /* 1. get the contents of the select clause and form into either a projection
-              or aggregation and set as root for query tree */
+        // 1. get the contents of the select clause and form into either a projection
+             // or aggregation and set as root for query tree
 
         // getting data from the input that we will need for query tree creation
         List<String> columnNames = queryRuleGraph.getTokensAt(input, 1, 2);
@@ -94,7 +95,7 @@ public class Optimizer {
             queryTree.setRoot(new Projection(columnNames));
         }
 
-        /* 2. if there is a HAVING clause, create an aggregate selection and add it above the root */
+        // 2. if there is a HAVING clause, create an aggregate selection and add it above the root
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the input
@@ -116,7 +117,7 @@ public class Optimizer {
                     new AggregateSelection(aggregationTypes, aggregatedColumnNames, symbols, values));
         }
 
-        /* 3. if there is a WHERE clause, create a selection and place it at the very bottom of the tree so far */
+        // 3. if there is a WHERE clause, create a selection and place it at the very bottom of the tree so far
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the input
@@ -159,7 +160,7 @@ public class Optimizer {
             }
         }
 
-        /* 4. determine if any cartesian products need to be added */
+        // 4. determine if any cartesian products need to be added
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the tables and the number of cartesian products needed
@@ -209,7 +210,7 @@ public class Optimizer {
             queryTree.set(traversals, QueryTree.Traversal.LEFT, new Relation(tableNames.get(0)));
         }
 
-        /* 5. if a join using was used, need to set/add the selection node to account for the join criteria */
+        // 5. if a join using was used, need to set/add the selection node to account for the join criteria
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the table names, number of joins used, and the column names to join on
@@ -351,8 +352,8 @@ public class Optimizer {
             }
         }
 
-        /* 7. if there are any column names in the having clause that are not already in the
-              aggregation node, then add them as group by columns there */
+        // 7. if there are any column names in the having clause that are not already in the
+        //      aggregation node, then add them as group by columns there
 
         // getting the input
         List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(input, 35);
@@ -438,7 +439,7 @@ public class Optimizer {
             columnNames.set(i, prefixColumnName(columnNames.get(i), tables));
         }
     }
-
+*/
     /**
      * Prefixes a column name to a table name. Involves looking through all the
      * tables available and determining which one that column belongs to.
@@ -480,7 +481,7 @@ public class Optimizer {
 
     // 1. Cascading Selections =========================================================================================
 
-    public QueryTree cascadeSelections(QueryTree queryTree) {
+    /*public QueryTree cascadeSelections(QueryTree queryTree) {
 
         // check if we even need to cascade
         boolean hasCompoundSelection = false;
@@ -647,7 +648,7 @@ public class Optimizer {
         }
 
         return queryTree;
-    }
+    }*/
 
     /**
      * @return whether the provided simple selection is a join condition.
@@ -658,7 +659,7 @@ public class Optimizer {
 
     // 3. Forming Joins ================================================================================================
 
-    public QueryTree formJoins(QueryTree queryTree) {
+    /*public QueryTree formJoins(QueryTree queryTree) {
 
         // don't bother if there is nothing to join
         boolean canFormJoins = false;
@@ -716,7 +717,7 @@ public class Optimizer {
         }
 
         return queryTree;
-    }
+    }*/
 
     // 4. Rearrangement of Leaf Nodes ==================================================================================
 
@@ -726,11 +727,11 @@ public class Optimizer {
      * in the subtree of where that table is located. Performing this action will reduce the write to
      * disk cost when pipelining intermediary subtrees of the query tree, thus, increasing performance.
      * @param queryTree is the query tree to perform the reordering of leaf nodes on
-     * @param tables are a list of tables in the system that will be referenced to determine the cost
+     //* @param tables are a list of tables in the system that will be referenced to determine the cost
      * of executing a particular subtree and whether a leaf node will need to be rearranged
      * @return the query tree after the leaf nodes have been rearranged in order to reduce write to disk costs
      */
-    public QueryTree rearrangeLeafNodes(QueryTree queryTree, List<Table> tables) {
+    /*public QueryTree rearrangeLeafNodes(QueryTree queryTree, List<Table> tables) {
 
         // don't bother if the user doesn't wish to rearrange the leaf nodes
         if (! toggleRearrangeLeafNodes) {
@@ -782,7 +783,7 @@ public class Optimizer {
         }
 
         return relationLocations;
-    }
+    }*/
 
     private List<String> getTableNamesFromRelationLocations(List<List<QueryTree.Traversal>> relationLocations, QueryTree queryTree) {
 
@@ -827,7 +828,7 @@ public class Optimizer {
 
     // 5. Pushing Down Projections =====================================================================================
 
-    public QueryTree pushDownProjections(QueryTree queryTree) {
+    /*public QueryTree pushDownProjections(QueryTree queryTree) {
 
         // TODO remove
         if(queryTree != null) {
@@ -986,7 +987,7 @@ System.out.println(queryTree.getTreeStructure());
         List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationNames.get(0));
 
         // move up until reached the second cartesian product, this will be our starting point
-        int numCartesianProductsAndJoinsEncountered = 0;
+        int numCartesianProductsAndJoinsEncountered = 0;*/
 //TODO
         /*while(numCartesianProductsAndJoinsEncountered < 2) {
             traversals.remove(traversals.size() - 1);
@@ -997,7 +998,7 @@ System.out.println(queryTree.getTreeStructure());
         }*/
 
         // keep adding projections below cartesian products until done
-        do {
+        /*do {
 
             // will eventually insert below the current cartesian product, need to move up the tree,
             // adding columns along the way
@@ -1176,12 +1177,12 @@ System.out.println(queryTree.getTreeStructure());
     // utility methods =================================================================================================
 
     // naive relational algebra ========================================================================================
-
+*/
     public String getNaiveRelationalAlgebra(QueryTree initialState) {
 
         StringBuilder naiveRelationalAlgebra = new StringBuilder();
 
-        boolean hasOneRelation = this.getTypeOccurrence(initialState, Operator.Type.RELATION) == 1;
+        /*boolean hasOneRelation = this.getTypeOccurrence(initialState, Operator.Type.RELATION) == 1;
 
         if(hasOneRelation) {
 
@@ -1207,7 +1208,7 @@ System.out.println(queryTree.getTreeStructure());
 
         for(int i = 0; i < numBrackets; i++) {
             naiveRelationalAlgebra.append("]");
-        }
+        }*/
 
         return naiveRelationalAlgebra.toString();
     }
