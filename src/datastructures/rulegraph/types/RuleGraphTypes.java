@@ -258,19 +258,25 @@ public final class RuleGraphTypes {
         insertRuleGraph.addRule("VALUES",    false, 3);
         insertRuleGraph.addRule("(",         false, 4);
         insertRuleGraph.addRule("Value",     true,  5);
-        insertRuleGraph.addRule(",",         false, 6);
-        insertRuleGraph.addRule(")",         false, 7);
-        insertRuleGraph.addRule(";",         false, 8);
+        insertRuleGraph.addRule("\"",        false, 6);
+        insertRuleGraph.addRule("Value",     true,  7);
+        insertRuleGraph.addRule("\"",        false, 8);
+        insertRuleGraph.addRule(",",         false, 9);
+        insertRuleGraph.addRule(")",         false, 10);
+        insertRuleGraph.addRule(";",         false, 11);
 
         insertRuleGraph.setChildren(0, 1);
         insertRuleGraph.setChildren(1, 2);
         insertRuleGraph.setChildren(2, 3);
         insertRuleGraph.setChildren(3, 4);
-        insertRuleGraph.setChildren(4, 5);
-        insertRuleGraph.setChildren(5, 6, 7);
-        insertRuleGraph.setChildren(6, 5);
+        insertRuleGraph.setChildren(4, 5, 6);
+        insertRuleGraph.setChildren(5, 9);
+        insertRuleGraph.setChildren(6, 7);
         insertRuleGraph.setChildren(7, 8);
-        insertRuleGraph.setChildren(8);
+        insertRuleGraph.setChildren(8, 9);
+        insertRuleGraph.setChildren(9, 5, 6, 10);
+        insertRuleGraph.setChildren(10, 11);
+        insertRuleGraph.setChildren(11);
 
         return insertRuleGraph;
     }
@@ -291,21 +297,27 @@ public final class RuleGraphTypes {
         deleteRuleGraph.addRule(">=",         false, 9);
         deleteRuleGraph.addRule("<=",         false, 10);
         deleteRuleGraph.addRule("Constant",   true,  11);
-        deleteRuleGraph.addRule(";",          false, 12);
+        deleteRuleGraph.addRule("\"",         false, 12);
+        deleteRuleGraph.addRule("Constant",   true,  13);
+        deleteRuleGraph.addRule("\"",         false, 14);
+        deleteRuleGraph.addRule(";",          false, 15);
 
         deleteRuleGraph.setChildren(0,  1);
         deleteRuleGraph.setChildren(1,  2);
         deleteRuleGraph.setChildren(2,  3);
         deleteRuleGraph.setChildren(3,  4);
         deleteRuleGraph.setChildren(4,  5, 6, 7, 8, 9, 10);
-        deleteRuleGraph.setChildren(5,  11);
-        deleteRuleGraph.setChildren(6,  11);
-        deleteRuleGraph.setChildren(7,  11);
-        deleteRuleGraph.setChildren(8,  11);
-        deleteRuleGraph.setChildren(9,  11);
-        deleteRuleGraph.setChildren(10, 11);
-        deleteRuleGraph.setChildren(11, 12);
-        deleteRuleGraph.setChildren(12);
+        deleteRuleGraph.setChildren(5,  11, 12);
+        deleteRuleGraph.setChildren(6,  11, 12);
+        deleteRuleGraph.setChildren(7,  11, 12);
+        deleteRuleGraph.setChildren(8,  11, 12);
+        deleteRuleGraph.setChildren(9,  11, 12);
+        deleteRuleGraph.setChildren(10, 11, 12);
+        deleteRuleGraph.setChildren(11, 15);
+        deleteRuleGraph.setChildren(12, 13);
+        deleteRuleGraph.setChildren(13, 14);
+        deleteRuleGraph.setChildren(14, 15);
+        deleteRuleGraph.setChildren(15);
 
         return deleteRuleGraph;
     }
@@ -320,23 +332,35 @@ public final class RuleGraphTypes {
         updateRuleGraph.addRule("ColumnName", true,  3);
         updateRuleGraph.addRule("=",          false, 4);
         updateRuleGraph.addRule("Constant",   true,  5);
-        updateRuleGraph.addRule("WHERE",      false, 6);
-        updateRuleGraph.addRule("ColumnName", true,  7);
-        updateRuleGraph.addRule("=",          false, 8);
-        updateRuleGraph.addRule("Constant",   true,  9);
-        updateRuleGraph.addRule(";",          false, 10);
+        updateRuleGraph.addRule("\"",         false, 6);
+        updateRuleGraph.addRule("Constant",   true,  7);
+        updateRuleGraph.addRule("\"",         false, 8);
+        updateRuleGraph.addRule("WHERE",      false, 9);
+        updateRuleGraph.addRule("ColumnName", true,  10);
+        updateRuleGraph.addRule("=",          false, 11);
+        updateRuleGraph.addRule("Constant",   true,  12);
+        updateRuleGraph.addRule("\"",         false, 13);
+        updateRuleGraph.addRule("Constant",   true,  14);
+        updateRuleGraph.addRule("\"",         false, 15);
+        updateRuleGraph.addRule(";",          false, 16);
 
-        updateRuleGraph.setChildren(0, 1);
-        updateRuleGraph.setChildren(1, 2);
-        updateRuleGraph.setChildren(2, 3);
-        updateRuleGraph.setChildren(3, 4);
-        updateRuleGraph.setChildren(4, 5);
-        updateRuleGraph.setChildren(5, 6, 10);
-        updateRuleGraph.setChildren(6, 7);
-        updateRuleGraph.setChildren(7, 8);
-        updateRuleGraph.setChildren(8, 9);
-        updateRuleGraph.setChildren(9, 10);
-        updateRuleGraph.setChildren(10);
+        updateRuleGraph.setChildren(0,  1);
+        updateRuleGraph.setChildren(1,  2);
+        updateRuleGraph.setChildren(2,  3);
+        updateRuleGraph.setChildren(3,  4);
+        updateRuleGraph.setChildren(4,  5, 6);
+        updateRuleGraph.setChildren(5,  9);
+        updateRuleGraph.setChildren(6,  7);
+        updateRuleGraph.setChildren(7,  8);
+        updateRuleGraph.setChildren(8,  9);
+        updateRuleGraph.setChildren(9,  10);
+        updateRuleGraph.setChildren(10, 11);
+        updateRuleGraph.setChildren(11, 12, 13);
+        updateRuleGraph.setChildren(12, 16);
+        updateRuleGraph.setChildren(13, 14);
+        updateRuleGraph.setChildren(14, 15);
+        updateRuleGraph.setChildren(15, 16);
+        updateRuleGraph.setChildren(16);
 
         return updateRuleGraph;
     }
