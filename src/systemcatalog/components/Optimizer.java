@@ -39,13 +39,13 @@ public class Optimizer {
     }
 
     public void toggleRearrangeLeafNodes() {
-        this.toggleRearrangeLeafNodes = !toggleRearrangeLeafNodes;
+        this.toggleRearrangeLeafNodes = ! toggleRearrangeLeafNodes;
     }
 
     public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
 
-        /*QueryTree queryTree                     = createQueryTree(input, tables);
-        QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
+        QueryTree queryTree                     = createQueryTree(input, tables);
+        /*QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
         QueryTree afterRearrangingJoins         = rearrangeLeafNodes(new QueryTree(afterFormingJoins), tables);
@@ -57,15 +57,13 @@ public class Optimizer {
                 afterRearrangingJoins, afterPushingDownProjections
         ));
 
-        queryTreeStates.addAll(afterPipeliningSubtrees);
+        queryTreeStates.addAll(afterPipeliningSubtrees);*/
 
-        return queryTreeStates;*/
-        return null;
+        return Arrays.asList(queryTree);
     }
 
-    // 0. Query Tree Creation ==========================================================================================
 
-    /*public QueryTree createQueryTree(String[] input, List<Table> tables) {
+    public QueryTree createQueryTree(String[] input, List<Table> tables) {
 
         QueryTree queryTree = new QueryTree((Operator) null);
 
@@ -410,6 +408,7 @@ public class Optimizer {
         return queryTree;
     }
 
+    /*
     public List<String> handleStars(List<String> columnNames, List<String> tableNames, List<Table> tables) {
 
         // just return the provided list if a "*" doesn't exist

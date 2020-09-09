@@ -32,25 +32,32 @@ public class OptimizerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "SELECT FirstName FROM Customers",
-            "SELECT Customers.FirstName FROM Customers",
-            "SELECT CustomerID, FirstName, LastName FROM Customers",
-            "SELECT FirstName, LastName FROM Customers WHERE CustomerID = 1",
-            "SELECT * FROM Customers WHERE FirstName = Genaro AND LastName = Curnutt",
-            "SELECT * FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID)",
-            "SELECT * FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID), Products",
-            "SELECT FirstName FROM Customers, Products JOIN EmployeePurchaseDetails USING(ProductID)",
-            "SELECT FirstName FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID), Employees JOIN EmployeePurchaseDetails USING(EmployeeID)",
-            "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 WHERE COL1 = A",
-            "SELECT COL1 FROM TAB1 JOIN TAB2 USING(JCOL1), TAB3 WHERE COL1 = A AND COL2 = 7 AND COL3 = 3",
-            "SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1",
-            "SELECT MIN(COL1) FROM TAB1;",
-            "SELECT COL1, COL2, MIN(jCOL1), MAX(jCOL1) FROM TAB1 GROUP BY COL1, COL2",
-            "SELECT COL1, MIN(COL2) FROM TAB1 GROUP BY COL1 HAVING MAX(jCOL1) > 6",
-            "SELECT COL1, MIN(COL2) FROM TAB1, TAB2 GROUP BY COL1 HAVING MAX(jCOL2) = 1",
-            "SELECT MIN(COL1) FROM TAB1 GROUP BY COL2",
-            "SELECT COL1, COL2, MIN(COL2), MAX(COL2) FROM TAB1 GROUP BY COL1, COL2, JCOL1 HAVING COUNT(COL1) > 4",
-            "SELECT COL1, COL2, MIN(COL3), MAX(COL4) FROM TAB1, TAB2, TAB3 JOIN TAB4 USING(JCOL2) WHERE COL1 = A GROUP BY COL1, COL2, COL5 HAVING COUNT(COL1) > 5"
+            "SELECT FirstName FROM Customers", // simple query
+            "SELECT Customers.FirstName FROM Customers", // simple query with column name prefixed with table name
+            "SELECT CustomerID, FirstName, LastName FROM Customers", // many columns in projection
+            "SELECT * FROM Customers", // using *
+            "SELECT FirstName FROM Customers WHERE CustomerID = 1", // using a where clause
+            "SELECT FirstName, LastName FROM Customers WHERE FirstName = Genaro AND LastName = Curnutt", // where clause with 2 predicates
+            "SELECT FirstName, LastName FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID)", // basic join
+            "SELECT FirstName, LastName FROM Customers, CustomerPurchaseDetails WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // basic join with where clause containing join condition
+            "SELECT * FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID)", // basic join with *
+            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID) JOIN Products USING(ProductID)", // basic join with 3 tables
+            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers, CustomerPurchaseDetails, Products WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID AND CustomerPurchaseDetails.ProductID = Products.ProductID", // basic join with 3 tables where join condition is in where clause
+            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID) JOIN Products USING(ProductID) WHERE CustomerID = 1 AND ProductID = 1", // basic join with 3 tables along with a two predicates in where clause
+            "SELECT FirstName, LastName, ProductName FROM Customers, Products", // basic cartesian product
+            "SELECT FirstName, LastName, ProductName FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID), Products", // join combined with cartesian product
+            "SELECT FirstName FROM Customers, Products JOIN EmployeePurchaseDetails USING(ProductID)", // cartesian product combined with join
+            "SELECT FirstName FROM Customers JOIN CustomerPurchaseDetails USING(CustomerID), Employees JOIN EmployeePurchaseDetails USING(EmployeeID)", // 2 joins combined as cartesian products
+            "SELECT MIN(CustomerID) FROM Customers", // simple aggregate function
+            "SELECT COUNT(State) FROM Employees GROUP BY State", // aggregate function with group by clause
+            "SELECT State, COUNT(State) FROM Employees GROUP BY State", // aggregate function with group by clause and a column to group by
+            "SELECT State, COUNT(State) FROM Employees GROUP BY State HAVING COUNT(STATE) > 2", // aggregate function with group by clause and having clause
+            "SELECT FirstName, LastName, MIN(Salary), COUNT(State) FROM Stores GROUP BY FirstName, LastName", // aggregate function with more advanced group by clause
+            "SELECT State, COUNT(State) FROM Employees WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // complex aggregate function with where clause
+            "SELECT MIN(CustomerID) FROM Customers JOIN EmployeePurchaseDetails USING(EmployeeID)", // simple aggregate function with joins
+            "SELECT CustomerID, MIN(CustomerID) FROM Customers JOIN EmployeePurchaseDetails USING(EmployeeID) GROUP BY CustomerID", // aggregate function with joins and group by clause
+            "SELECT CustomerID, MIN(CustomerID) FROM Customers JOIN EmployeePurchaseDetails USING(EmployeeID) GROUP BY CustomerID HAVING COUNT(CustomerID) = 1", // aggregate function with joins, group by, and having clauses
+            "SELECT State, COUNT(State) FROM Employees JOIN EmployeePurchaseDetails USING(EmployeeID) WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // aggregate function with joins, where, group by, and having clauses
     })
     public void testCreationWithNoVerifier(String input) {
 
