@@ -22,13 +22,13 @@ import java.util.List;
  * s          (selectivity)        selectivity of an attribute
  * l          (levels)             number of levels in a b-tree
  * m          (degree)             degree of the tree
- * bL         (terminalLevelNodes) number of nodes at the terminal level of a b-tree
+ * bl         (terminalLevelNodes) number of nodes at the terminal level of a b-tree
  * Each formula has an associated "to string" method that is used for displaying
  * how calculations are performed. Also used for debugging purposes.
  */
-public class QueryCost {
+public final class QueryCost {
 
-    private static final int BLOCK_SIZE = 512;
+    private static final int BLOCK_SIZE = 1024;
 
     // can't instantiate me!
     private QueryCost() {}

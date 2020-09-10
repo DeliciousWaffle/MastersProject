@@ -5,7 +5,14 @@ import utilities.enums.Keyword;
 import utilities.enums.Symbol;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+/**
+ * A graph containing a set of rules that the input must abide by. If the input is syntactically correct, then this
+ * class offers methods for extracting data so that it can be used elsewhere in the application. For reference,
+ * go to src/files/assets/helpscreen for a collection of images that showcase the syntax of each command possible.
+ */
 public class RuleGraph {
 
     public enum Type {
@@ -76,6 +83,7 @@ public class RuleGraph {
      */
     public boolean isSyntacticallyCorrect(String[] tokens) {
 
+        // used for debugging purposes
         StringBuilder debugTokens = new StringBuilder();
         StringBuilder debugGraph  = new StringBuilder();
 
@@ -127,56 +135,7 @@ public class RuleGraph {
             // didn't find anything, what the heck happened?
             if(! foundChild) {
 
-                StringBuilder printChildren = new StringBuilder();
-
-                for(RuleNode child : pointersChildren) {
-                    printChildren.append("\"").append(child.getData()).append("\", ");
-                }
-
-                printChildren.delete(printChildren.length() - 2, printChildren.length() - 1);
-                debugGraph.append("ERROR!");
-
-                String[] debugTokensTokens = debugTokens.toString().split("\\s+");
-                String[] debugGraphTokens  = debugGraph.toString().split("\\s+");
-
-                debugTokens = new StringBuilder("Tokens: ");
-                debugGraph  = new StringBuilder("Graph:  ");
-
-                for(int i = 0; i < debugTokensTokens.length; i++) {
-
-                    String debugToken = debugTokensTokens[i];
-                    String debugGraphToken = debugGraphTokens[i];
-
-                    debugTokens.append(debugToken);
-                    debugGraph.append(debugGraphToken);
-
-                    int paddingAmount = Math.abs(debugToken.length() - debugGraphToken.length());
-
-                    for(int j = 0; j < paddingAmount; j++) {
-
-                        if(debugToken.length() > debugGraphToken.length()) {
-                            debugGraph.append(" ");
-                        } else {
-                            debugTokens.append(" ");
-                        }
-                    }
-
-                    debugTokens.append("->");
-                    debugGraph.append("->");
-                }
-
-                // TODO figure out why .length() and not .length() - 1
-                // remove "->"
-                debugTokens.delete(debugTokens.length() - 2, debugTokens.length());
-                debugGraph.delete(debugGraph.length() - 2, debugGraph.length());
-
-                System.out.println("In GraphParser.isSyntacticallyCorrect()");
-                System.out.println("Current Token:      " + token);
-                System.out.println("Expected token(s):  " + printChildren.toString());
-                System.out.println("Traversal:");
-                System.out.println(debugTokens.toString());
-                System.out.println(debugGraph.toString());
-
+                printDebugger(pointersChildren, token, debugTokens, debugGraph);
                 return false;
             }
 
@@ -184,6 +143,7 @@ public class RuleGraph {
             debugGraph.append(" ");
         }
 
+        //printDebugger(new RuleNode[0], "null", debugTokens, debugGraph);
         return true;
     }
 
@@ -307,7 +267,7 @@ public class RuleGraph {
 
             if(isKeyword && isMutable) {
 
-                System.out.println("In GraphParser.hasKeywordInWrongSpot()");
+                System.out.println("In RuleGraph.hasKeywordInWrongSpot()");
                 System.out.println("Keyword: " + token + " does not belong here!");
                 return true;
             }
@@ -316,76 +276,11 @@ public class RuleGraph {
         return false;
     }
 
-    public boolean isKeyword(String candidate) {
-
-        for(Keyword keyword : Keyword.values()) {
-            if(candidate.equalsIgnoreCase(keyword.toString())) {
-                return true;
-            }
-        }
-
-        for(Symbol symbol : Symbol.values()) {
-            if(candidate.equalsIgnoreCase(symbol.getSymbol())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public ArrayList<String> getTokensAt(String[] tokens, int... ids) {
-
-        ArrayList<String> tokensToGet = new ArrayList<>();
-
-        RuleNode root = new RuleNode("ROOT", false, -1);
-        root.setChildren(rules.get(0));
-        RuleNode pointer = root;
-
-        for(String token : tokens) {
-
-            RuleNode[] pointersChildren = pointer.getChildren();
-            boolean foundChild = false;
-            RuleNode mutableChild = null;
-
-            for (RuleNode child : pointersChildren) {
-
-                String rule = child.getData();
-                boolean isMutable = child.isMutable();
-
-                if (isMutable) {
-                    mutableChild = child;
-                }
-
-                if (rule.equalsIgnoreCase(token) && !isMutable) {
-
-                    pointer = child;
-                    foundChild = true;
-                    break;
-                }
-            }
-
-            if (!foundChild && mutableChild != null) {
-                pointer = mutableChild;
-            }
-
-            // see if this current token matches any of the IDs supplied
-            int currentId = pointer.getId();
-
-            for(int id : ids) {
-                if(currentId == id) {
-                    tokensToGet.add(token);
-                    break;
-                }
-            }
-        }
-
-        return tokensToGet;
-    }
-
     /**
-     * Makes sure that the correct data type is being used for an associated keyword.
-     * Eg. SELECT col1 FROM tab1 WHERE col1 > "not a number" will return false while
-     * SELECT col1 FROM tab1 WHERE col1 > "17" will return true.
+     * Makes sure that the correct data type is being used for an associated keyword. This means that if
+     * ">", "<", ">=", "<=" is encountered, make sure the next value present is numeric.
+     * Eg. SELECT col1 FROM tab1 WHERE col1 > "Steve" will return false while because "Steve" is not
+     * a numeric value while SELECT col1 FROM tab1 WHERE col1 > 17 will return true.
      * @param tokens
      * @param dataTypeId of the rule with the data (this comes after ids)
      * @param operatorIds of the rules that enforce a particular data type (they come before id)
@@ -445,8 +340,8 @@ public class RuleGraph {
 
                 } catch(NumberFormatException e) {
 
-                    System.out.println("In GraphParser.hasIncorrectDataType()");
-                    System.out.println("Expected a number, but found: " + token);
+                    System.out.println("In RuleGraph.hasIncorrectDataType()");
+                    System.out.println("Expected a number, but found a string");
                     return true;
                 }
             }
@@ -456,20 +351,19 @@ public class RuleGraph {
     }
 
     /**
-     * Makes sure that none of the target ids supplied are 100% numeric.
-     * @param tokens
-     * @param targetIds are the ids to validate
-     * @return whether the input contains illegal numeric values
+     * @param tokens is the tokenized input, assumed to be syntactically correct
+     * @param targetIds are the ids to check
+     * @return whether the input contains numeric values at the supplied target ids
      */
-    public boolean hasIllegalNumericAt(String[] tokens, int... targetIds) {
-
-        boolean encounteredTarget = false;
+    public boolean hasNumericAt(String[] tokens, int... targetIds) {
 
         RuleNode root = new RuleNode("ROOT", false, -1);
         root.setChildren(rules.get(0));
         RuleNode pointer = root;
 
         for(String token : tokens) {
+
+            boolean encounteredTarget = false;
 
             RuleNode[] pointersChildren = pointer.getChildren();
             boolean foundChild = false;
@@ -497,9 +391,11 @@ public class RuleGraph {
             }
 
             // did we find one of the targets?
+            int idEncountered = -1;
             for(int id : targetIds) {
                 if(id == pointer.getId()) {
                     encounteredTarget = true;
+                    idEncountered = id;
                     break;
                 }
             }
@@ -510,6 +406,8 @@ public class RuleGraph {
                 try {
                     Double.parseDouble(token);
                     isNumeric = true;
+                    System.out.println("In RuleGraph.hasNumericAt()");
+                    System.out.println("Found: " + token + " at id " + idEncountered);
                 } catch (NumberFormatException e) {
                     isNumeric = false;
                 }
@@ -521,6 +419,55 @@ public class RuleGraph {
         }
 
         return false;
+    }
+
+    public List<String> getTokensAt(String[] tokens, int... ids) {
+
+        List<String> tokensToGet = new ArrayList<>();
+
+        RuleNode root = new RuleNode("ROOT", false, -1);
+        root.setChildren(rules.get(0));
+        RuleNode pointer = root;
+
+        for(String token : tokens) {
+
+            RuleNode[] pointersChildren = pointer.getChildren();
+            boolean foundChild = false;
+            RuleNode mutableChild = null;
+
+            for (RuleNode child : pointersChildren) {
+
+                String rule = child.getData();
+                boolean isMutable = child.isMutable();
+
+                if (isMutable) {
+                    mutableChild = child;
+                }
+
+                if (rule.equalsIgnoreCase(token) && !isMutable) {
+
+                    pointer = child;
+                    foundChild = true;
+                    break;
+                }
+            }
+
+            if (!foundChild && mutableChild != null) {
+                pointer = mutableChild;
+            }
+
+            // see if this current token matches any of the IDs supplied
+            int currentId = pointer.getId();
+
+            for(int id : ids) {
+                if(currentId == id) {
+                    tokensToGet.add(token);
+                    break;
+                }
+            }
+        }
+
+        return tokensToGet;
     }
 
     /**
@@ -546,5 +493,77 @@ public class RuleGraph {
         }
 
         System.out.println(ruleSet.toString());
+    }
+
+    private boolean isKeyword(String candidate) {
+
+        for(Keyword keyword : Keyword.values()) {
+            if(candidate.equalsIgnoreCase(keyword.toString())) {
+                return true;
+            }
+        }
+
+        for(Symbol symbol : Symbol.values()) {
+            if(candidate.equalsIgnoreCase(symbol.getSymbol())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void printDebugger(RuleNode[] pointersChildren, String token, StringBuilder debugTokens, StringBuilder debugGraph) {
+
+        StringBuilder printChildren = new StringBuilder();
+
+        for(RuleNode child : pointersChildren) {
+            printChildren.append("\"").append(child.getData()).append("\", ");
+        }
+
+        if(printChildren.length() != 0) {
+            printChildren.delete(printChildren.length() - 2, printChildren.length() - 1);
+        }
+
+        debugGraph.append("ERROR!");
+
+        String[] debugTokensTokens = debugTokens.toString().split("\\s+");
+        String[] debugGraphTokens  = debugGraph.toString().split("\\s+");
+
+        debugTokens = new StringBuilder("Tokens: ");
+        debugGraph  = new StringBuilder("Graph:  ");
+
+        for(int i = 0; i < debugTokensTokens.length; i++) {
+
+            String debugToken = debugTokensTokens[i];
+            String debugGraphToken = debugGraphTokens[i];
+
+            debugTokens.append(debugToken);
+            debugGraph.append(debugGraphToken);
+
+            int paddingAmount = Math.abs(debugToken.length() - debugGraphToken.length());
+
+            for(int j = 0; j < paddingAmount; j++) {
+
+                if(debugToken.length() > debugGraphToken.length()) {
+                    debugGraph.append(" ");
+                } else {
+                    debugTokens.append(" ");
+                }
+            }
+
+            debugTokens.append("->");
+            debugGraph.append("->");
+        }
+
+        // remove "->"
+        debugTokens.delete(debugTokens.length() - 2, debugTokens.length());
+        debugGraph.delete(debugGraph.length() - 2, debugGraph.length());
+
+        System.out.println("In RuleGraph.isSyntacticallyCorrect()");
+        System.out.println("Current Token:      " + token);
+        System.out.println("Expected token(s):  " + printChildren.toString());
+        System.out.println("Traversal:");
+        System.out.println(debugTokens.toString());
+        System.out.println(debugGraph.toString());
     }
 }

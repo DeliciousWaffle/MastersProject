@@ -2,9 +2,9 @@ package datastructures.rulegraph.component;
 
 public class RuleNode {
 
-    private String data;
-    private boolean mutable;
-    private int id;
+    private final String data;
+    private final boolean mutable;
+    private final int id;
     private RuleNode[] children;
 
     public RuleNode(String data, boolean mutable, int id) {
@@ -45,12 +45,12 @@ public class RuleNode {
     @Override
     public String toString() {
 
-        StringBuilder data = new StringBuilder();
+        StringBuilder print = new StringBuilder();
 
-        data.append("Data: ").append(data).append("\n");
-        data.append("Mutable: ").append(mutable).append("\n");
-        data.append("ID: ").append(id).append("\n");
+        print.append("Data: ").append(print).append("\n");
+        print.append("Mutable: ").append(mutable).append("\n");
+        print.append("ID: ").append(id).append("\n");
 
-        return data.toString();
+        return print.toString();
     }
 }

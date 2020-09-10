@@ -44,7 +44,7 @@ public class Optimizer {
 
     public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
 
-        QueryTree queryTree                     = createQueryTree(input, tables);
+        //QueryTree queryTree                     = createQueryTree(input, tables);
         /*QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
@@ -59,77 +59,100 @@ public class Optimizer {
 
         queryTreeStates.addAll(afterPipeliningSubtrees);*/
 
-        return Arrays.asList(queryTree);
+        return Arrays.asList();
     }
 
 
-    public QueryTree createQueryTree(String[] input, List<Table> tables) {
+    /*public QueryTree createQueryTree(String[] input, List<Table> tables) {
 
         QueryTree queryTree = new QueryTree((Operator) null);
+
+        // getting all the data that we will need for query tree creation
+        List<String> selectClauseColumnNames = queryRuleGraph.getTokensAt(input, 1, 2);
+        List<String> selectClauseAggregationTypes = queryRuleGraph.getTokensAt(input, 3, 4, 5, 6, 7);
+        List<String> selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(input, 9, 10);
+
+        List<String> tableNames = queryRuleGraph.getTokensAt(input, 14, 17);
+        List<String> firstJoinOnColumnNames;
+        List<String> innerJoinSymbols;
+        List<String> secondJoinOnColumnNames;
+        int numJoins;
+        int numCartesianProducts;
+
+        List<String> whereClauseColumnNames;
+        List<String> whereClauseSymbols;
+        List<String> whereClauseNumericValues;
+        List<String> whereClauseStringValues;
+        int numWhereClauseAnds;
+
+        List<String> groupByColumnNames;
+
+        List<String> havingClauseAggregationTypes;
+        List<String> havingClauseColumnNames;
+        List<String> havingClauseSymbols;
+        List<String> havingClauseNumericValues;
+        List<String> havingClauseStringValues;
 
         // 1. get the contents of the select clause and form into either a projection
              // or aggregation and set as root for query tree
 
         // getting data from the input that we will need for query tree creation
-        List<String> columnNames = queryRuleGraph.getTokensAt(input, 1, 2);
-        List<String> aggregationTypes = queryRuleGraph.getTokensAt(input, 3, 4, 5, 6, 7);
-        List<String> aggregatedColumnNames = queryRuleGraph.getTokensAt(input, 9, 10);
-        List<String> tableNames = queryRuleGraph.getTokensAt(input, 14, 17);
+
 
         // if a "*" is used, replace with a list of all column names from all tables present
-        columnNames = handleStars(columnNames, tableNames, tables);
+        selectClauseColumnNames = handleStars(selectClauseColumnNames, tableNames, tables);
 
         // prefix column names
-        prefixColumnNames(columnNames, tables);
-        prefixColumnNames(aggregatedColumnNames, tables);
+        prefixColumnNames(selectClauseColumnNames, tables);
+        prefixColumnNames(selectClauseAggregatedColumnNames, tables);
 
         // creating either a projection of aggregation based on the columns
-        boolean hasAggregation = ! aggregationTypes.isEmpty();
+        boolean hasAggregation = ! selectClauseAggregationTypes.isEmpty();
 
         // setting the projection or aggregation as the root node
         if (hasAggregation) {
-            queryTree.setRoot(new Aggregation(columnNames, aggregationTypes, aggregatedColumnNames));
+            queryTree.setRoot(new Aggregation(selectClauseColumnNames, selectClauseAggregationTypes, selectClauseAggregatedColumnNames));
         } else {
-            queryTree.setRoot(new Projection(columnNames));
+            queryTree.setRoot(new Projection(selectClauseColumnNames));
         }
 
         // 2. if there is a HAVING clause, create an aggregate selection and add it above the root
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the input
-        aggregationTypes = new ArrayList<>();
-        aggregationTypes = queryRuleGraph.getTokensAt(input, 38, 39, 40, 41, 42);
-        aggregatedColumnNames = new ArrayList<>();
-        aggregatedColumnNames = queryRuleGraph.getTokensAt(input, 44, 45);
+        selectClauseAggregationTypes = new ArrayList<>();
+        selectClauseAggregationTypes = queryRuleGraph.getTokensAt(input, 38, 39, 40, 41, 42);
+        selectClauseAggregatedColumnNames = new ArrayList<>();
+        selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(input, 44, 45);
         List<String> symbols = queryRuleGraph.getTokensAt(input, 47, 48, 49, 50, 51, 52);
         List<String> values = queryRuleGraph.getTokensAt(input, 53);
 
         // prefix column names
-        prefixColumnNames(aggregatedColumnNames, tables);
+        prefixColumnNames(selectClauseAggregatedColumnNames, tables);
 
-        boolean hasAggregateSelection = ! aggregatedColumnNames.isEmpty();
+        boolean hasAggregateSelection = ! selectClauseAggregatedColumnNames.isEmpty();
 
         if(hasAggregateSelection) {
             // creating the aggregate selection and adding it above the root node
             queryTree.add(new ArrayList<>(), QueryTree.Traversal.UP,
-                    new AggregateSelection(aggregationTypes, aggregatedColumnNames, symbols, values));
+                    new AggregateSelection(selectClauseAggregationTypes, selectClauseAggregatedColumnNames, symbols, values));
         }
 
         // 3. if there is a WHERE clause, create a selection and place it at the very bottom of the tree so far
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the input
-        columnNames = new ArrayList<>();
-        columnNames = queryRuleGraph.getTokensAt(input, 23);
+        selectClauseColumnNames = new ArrayList<>();
+        selectClauseColumnNames = queryRuleGraph.getTokensAt(input, 23);
         symbols = new ArrayList<>();
         symbols = queryRuleGraph.getTokensAt(input, 24, 25, 26, 27, 28, 29);
         values = new ArrayList<>();
         values = queryRuleGraph.getTokensAt(input, 30);
 
         // prefix column names
-        prefixColumnNames(columnNames, tables);
+        prefixColumnNames(selectClauseColumnNames, tables);
 
-        boolean hasSelection = ! columnNames.isEmpty();
+        boolean hasSelection = ! selectClauseColumnNames.isEmpty();
 
         if(hasSelection) {
 
@@ -144,16 +167,16 @@ public class Optimizer {
             }
 
             // determine if the selection is simple or compound
-            boolean isSimpleSelection = columnNames.size() == 1;
+            boolean isSimpleSelection = selectClauseColumnNames.size() == 1;
             Operator simpleSelection = null;
             Operator compoundSelection = null;
 
             // add it to the bottom
             if(isSimpleSelection) {
-                simpleSelection = new SimpleSelection(columnNames.get(0), symbols.get(0), values.get(0));
+                simpleSelection = new SimpleSelection(selectClauseColumnNames.get(0), symbols.get(0), values.get(0));
                 queryTree.add(traversals, QueryTree.Traversal.DOWN, simpleSelection);
             } else {
-                compoundSelection = new CompoundSelection(columnNames, symbols, values);
+                compoundSelection = new CompoundSelection(selectClauseColumnNames, symbols, values);
                 queryTree.add(traversals, QueryTree.Traversal.DOWN, compoundSelection);
             }
         }
@@ -212,7 +235,7 @@ public class Optimizer {
         // -------------------------------------------------------------------------------------------------------------
 
         // getting the table names, number of joins used, and the column names to join on
-        columnNames = new ArrayList<>();
+        selectClauseColumnNames = new ArrayList<>();
         symbols = new ArrayList<>();
         values = new ArrayList<>();
 
@@ -238,7 +261,7 @@ public class Optimizer {
                         String symbol = "=";
                         secondJoinTableName = secondJoinTableName + "." + joinOnColumnName;
 
-                        columnNames.add(firstJoinTableName);
+                        selectClauseColumnNames.add(firstJoinTableName);
                         symbols.add(symbol);
                         values.add(secondJoinTableName);
                     }
@@ -260,7 +283,7 @@ public class Optimizer {
         }
 
         // don't bother with any of this if there is nothing to add
-        boolean haveSelectionsToAdd = ! columnNames.isEmpty();
+        boolean haveSelectionsToAdd = ! selectClauseColumnNames.isEmpty();
 
         if(haveSelectionsToAdd) {
 
@@ -306,7 +329,7 @@ public class Optimizer {
 
                 if (foundSimpleSelection) {
 
-                    columnNames.add(((SimpleSelection)
+                    selectClauseColumnNames.add(((SimpleSelection)
                             queryTree.get(traversals, QueryTree.Traversal.NONE)).getColumnName());
                     symbols.add(((SimpleSelection)
                             queryTree.get(traversals, QueryTree.Traversal.NONE)).getSymbol());
@@ -315,7 +338,7 @@ public class Optimizer {
 
                 } else if(foundCompoundSelection) {
 
-                    columnNames.addAll(((CompoundSelection)
+                    selectClauseColumnNames.addAll(((CompoundSelection)
                             queryTree.get(traversals, QueryTree.Traversal.NONE)).getColumnNames());
                     symbols.addAll(((CompoundSelection)
                             queryTree.get(traversals, QueryTree.Traversal.NONE)).getSymbols());
@@ -331,21 +354,21 @@ public class Optimizer {
 
                 // set the selection
                 queryTree.set(traversals, QueryTree.Traversal.NONE,
-                        new CompoundSelection(columnNames, symbols, values));
+                        new CompoundSelection(selectClauseColumnNames, symbols, values));
 
             // didn't find a selection, will set the node either as a simple or compound selection
             } else {
 
                 // traversal should be set at the first cartesian product node
                 // determine if the selection to add is simple or compound
-                boolean isSimpleSelection = columnNames.size() == 1;
+                boolean isSimpleSelection = selectClauseColumnNames.size() == 1;
 
                 if (isSimpleSelection) {
                     queryTree.add(traversals, QueryTree.Traversal.UP,
-                            new SimpleSelection(columnNames.get(0), symbols.get(0), values.get(0)));
+                            new SimpleSelection(selectClauseColumnNames.get(0), symbols.get(0), values.get(0)));
                 } else {
                     queryTree.add(traversals, QueryTree.Traversal.UP,
-                            new CompoundSelection(columnNames, symbols, values));
+                            new CompoundSelection(selectClauseColumnNames, symbols, values));
                 }
             }
         }

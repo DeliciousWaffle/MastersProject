@@ -95,7 +95,7 @@ public class Verifier {
     public boolean isValidQuery() {
 
         // make sure all tables exist
-        ArrayList<String> candidateTables = ruleGraphToUse.getTokensAt(tokenizedInput, 14, 17);
+        List<String> candidateTables = ruleGraphToUse.getTokensAt(tokenizedInput, 14, 17);
 
         for(Table currentTable : tables) {
 
@@ -114,7 +114,7 @@ public class Verifier {
         }
 
         // make sure all columns exist in the tables supplied
-        ArrayList<String> candidateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 2, 10, 20, 23, 35, 45);
+        List<String> candidateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 2, 10, 20, 23, 35, 45);
 
         for(Table currentTable : tables) {
             for(String candidateColumn : candidateColumns) {
@@ -130,8 +130,8 @@ public class Verifier {
         // ensure that the columns used to join on in the using clause appear in the corresponding tables
         // Eg. if have t1 JOIN t2 USING(col1) JOIN t3 USING(col2)
         // t1 and t2 must have "col1" and t2 and t3 must have "col2" in their tables
-        ArrayList<String> tablesJoined  = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 17);
-        ArrayList<String> columnsJoined = ruleGraphToUse.getTokensAt(tokenizedInput, 20);
+        List<String> tablesJoined  = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 17);
+        List<String> columnsJoined = ruleGraphToUse.getTokensAt(tokenizedInput, 20);
         HashMap<String, ArrayList<String>> columnTablePairs = new HashMap<>();
 
         for(int i = 0; i < columnsJoined.size(); i++) {
@@ -184,8 +184,8 @@ public class Verifier {
 
 
         // make sure that column name matches the data type of the constant in where clause
-        ArrayList<String> whereColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
-        ArrayList<String> constants = ruleGraphToUse.getTokensAt(tokenizedInput, 31);
+        List<String> whereColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
+        List<String> constants = ruleGraphToUse.getTokensAt(tokenizedInput, 31);
         int pairSize = whereColumns.size();
 
         for(int i = 0; i < pairSize; i++) {
@@ -260,7 +260,7 @@ public class Verifier {
         }
 
         // make sure that none of the column names are numeric
-        ArrayList<String> columns = ruleGraphToUse.getTokensAt(tokenizedInput, 4);
+        List<String> columns = ruleGraphToUse.getTokensAt(tokenizedInput, 4);
 
         for(String column : columns) {
             isNumeric = Parser.isNumeric(column);
@@ -284,7 +284,7 @@ public class Verifier {
         }
 
         // make sure none of the columns' sizes are greater than 99
-        ArrayList<String> columnSizes = ruleGraphToUse.getTokensAt(tokenizedInput, 8);
+        List<String> columnSizes = ruleGraphToUse.getTokensAt(tokenizedInput, 8);
 
         for(String columnSize : columnSizes) {
             int size = Integer.parseInt(columnSize);
@@ -388,7 +388,7 @@ public class Verifier {
         }
 
         // make sure that each new column's value matches the datatype in the corresponding table
-        ArrayList<String> valuesToInsert = ruleGraphToUse.getTokensAt(tokenizedInput, 5);
+        List<String> valuesToInsert = ruleGraphToUse.getTokensAt(tokenizedInput, 5);
         List<Column> columns = referencedTable.getColumns();
 
         for(int i = 0; i < columns.size(); i++) {
@@ -510,7 +510,7 @@ public class Verifier {
         }
 
         // make sure that columns exist for corresponding table if using UPDATE or REFERENCES
-        ArrayList<String> updateAndReferencesCols = ruleGraphToUse.getTokensAt(tokenizedInput, 12, 16);
+        List<String> updateAndReferencesCols = ruleGraphToUse.getTokensAt(tokenizedInput, 12, 16);
 
         for(String candidate : updateAndReferencesCols) {
             boolean hasCandidate = referencedTable.hasColumn(candidate);
@@ -520,7 +520,7 @@ public class Verifier {
         }
 
         // make sure user(s) exists
-        ArrayList<String> usersReferenced = ruleGraphToUse.getTokensAt(tokenizedInput, 22);
+        List<String> usersReferenced = ruleGraphToUse.getTokensAt(tokenizedInput, 22);
 
         for(String candidate : usersReferenced) {
 

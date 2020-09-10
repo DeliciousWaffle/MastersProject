@@ -1,8 +1,11 @@
 package systemcatalog.components;
 
-import datastructures.misc.Logger;
 import utilities.enums.Keyword;
 import datastructures.rulegraph.RuleGraph;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct.
@@ -27,52 +30,119 @@ public class Parser {
      */
     public static String[] formatAndTokenizeInput(String input) {
 
-        input = input.toLowerCase();
+        // remove spaces at the beginning and end of the input
+        input = input.trim();
 
-        // remove spaces at the beginning of the input
-        input = input.replaceAll("^\\s+", "");
-
-        // tokenize via spaces (removes redundant spaces too)
-        String[] tokens = input.split("\\s+");
-        StringBuilder formatted = new StringBuilder();
+        // tokenize the input via spaces, removes redundant input too
+        String[] inputAsTokens = input.split("\\s+");
+        StringBuilder rebuildInput = new StringBuilder();
 
         // capitalizing keywords
-        for(int i = 0; i < tokens.length; i++) {
-            tokens[i] = Keyword.toUppercase(tokens[i]);
+        for(int i = 0; i < inputAsTokens.length; i++) {
+            inputAsTokens[i] = Keyword.toUppercase(inputAsTokens[i]);
         }
 
         // re-create the input, but with fixed spaces
-        for(String token : tokens) {
-            formatted.append(token).append(" ");
+        for(String token : inputAsTokens) {
+            rebuildInput.append(token).append(" ");
         }
 
         // re-add ";" which is used for determining where the input will end later on
-        formatted.append(";");
+        rebuildInput.append(";");
 
-        // adding spaces between ",", ")", "(" too
-        for(int i = 1; i < formatted.length() - 1; i++) {
+        // adding spaces between ',', ')', '(', '"' too
+        for(int i = 1; i < rebuildInput.length() - 1; i++) {
 
-            char token = formatted.charAt(i);
+            char token = rebuildInput.charAt(i);
 
-            if(token == ',' || token == ')' || token == '(') {
+            if(token == ',' || token == ')' || token == '(' || token == '"') {
 
                 // is a space needed before/after?
-                char beforeToken = formatted.charAt(i - 1);
-                char afterToken = formatted.charAt(i + 1);
+                char beforeToken = rebuildInput.charAt(i - 1);
+                char afterToken = rebuildInput.charAt(i + 1);
                 int offset = 0;
 
                 if(beforeToken != ' ') {
-                    formatted.insert(i, " ");
+                    rebuildInput.insert(i, " ");
                     offset = 1;
                 }
 
                 if(afterToken != ' ') {
-                    formatted.insert(i + 1 + offset, " ");
+                    rebuildInput.insert(i + 1 + offset, " ");
                 }
             }
         }
 
-        return formatted.toString().split("\\s+");
+        // need to handle stuff that appears in double quotes which makes things difficult
+        inputAsTokens = rebuildInput.toString().split("\\s+");
+
+        // collecting strings that appear in double quotes
+        List<String> stringInDoubleQuotesList = new ArrayList<>();
+        StringBuilder stringInDoubleQuotes = new StringBuilder();
+
+        char[] inputAsChars = input.toCharArray();
+        int count = 0;
+
+        for(int i = 0; i < inputAsChars.length; i++) {
+
+            char currentChar = inputAsChars[i];
+
+            // keep moving forward in the array until the second '"' is found
+            if(currentChar == '"') {
+                for(int j = i + 1; j < inputAsChars.length; j++) { // j = i + 1 skips over current '"'
+                    currentChar = inputAsChars[j];
+
+                    if(currentChar == '"') {
+                        i = j; // set to the closing '"' for now then i will increment to next token in outer loop
+                        break; // found second '"', we're done
+                    }
+
+                    stringInDoubleQuotes.append(currentChar);
+                }
+
+                stringInDoubleQuotesList.add(stringInDoubleQuotes.toString()); // add the contents of what's in ""
+                stringInDoubleQuotes = new StringBuilder();
+            }
+
+        }
+
+        // combining what we currently have with the stuff in double quotes
+        List<String> handleDoubleQuotes = new ArrayList<>();
+
+        for(int i = 0; i < inputAsTokens.length; i++) {
+
+            String currentToken = inputAsTokens[i];
+
+            // similar process to what we did with the characters, skip everything in the middle of ""
+            if(currentToken.equalsIgnoreCase("\"")) {
+                handleDoubleQuotes.add(currentToken); // add the first "
+
+                for(int j = i + 1; j < inputAsTokens.length; j++) {
+                    currentToken = inputAsTokens[j];
+
+                    if(currentToken.equalsIgnoreCase("\"")) {
+                        i = j;
+                        break;
+                    }
+                }
+
+                handleDoubleQuotes.add(stringInDoubleQuotesList.remove(0)); // add the item in between ""
+                handleDoubleQuotes.add(currentToken); // add the last "
+
+            // just normal formatted input, just add it
+            } else {
+                handleDoubleQuotes.add(currentToken);
+            }
+        }
+
+        // populate the stuff to return with the correct input
+        String[] formattedInput = new String[handleDoubleQuotes.size()];
+
+        for(int i = 0; i < handleDoubleQuotes.size(); i++) {
+            formattedInput[i] = handleDoubleQuotes.get(i);
+        }
+
+        return formattedInput;
     }
 
     /**
@@ -187,15 +257,18 @@ public class Parser {
     }
 
     public boolean isValidQuery() {
-        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 10, 14, 17, 20, 23, 35, 45) &&
-                // > (26), < (27), >= (28), <= (29) can only be used with a numeric value (30) in WHERE clause
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput,30, 26, 27, 28, 29) &&
-                // same thing in having clause
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 53, 49, 50, 51, 52);
+        return ! ruleGraphToUse.hasNumericAt(tokenizedInput,2, 9, 13, 15, 18, 20, 27, 29, 38, 43, 52, 62) &&
+                // table names referenced in from clause must be unique
+                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 13, 15, 18) &&
+                // column names referenced in group by clause must be unique
+                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 43) &&
+                // >, <, >=, and <= can only be used with a numeric value
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 37, 32, 33, 34, 35) &&
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 61, 56, 57, 58, 59);
     }
 
     public boolean isValidCreateTable() {
-        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 4) &&
+        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 4) &&
                 // can't have duplicate column names
                 ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 4) &&
                 // size of the column can only be numeric
@@ -203,31 +276,31 @@ public class Parser {
     }
 
     public boolean isValidDropTable() {
-        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2);
+        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2);
     }
 
     public boolean isValidAlterTable() {
-        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 6, 15) &&
+        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 6, 15) &&
                 // size can only be numeric
                 ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 10);
     }
 
     public boolean isValidInsert() {
-        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2);
+        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 7);
     }
 
     public boolean isValidDelete() {
-        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 2, 4) &&
-                // > (7), < (8), >= (9), <= (10) can only be used with a numeric value (11)
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 11, 7, 8, 9, 10);
+        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 4, 13) &&
+                // >, <, >=, and <= can only be used with a numeric value
+                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 12, 7, 8, 9, 10);
     }
 
     public boolean isValidUpdate() {
-        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 1, 3, 7);
+        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 1, 3, 7, 10, 14);
     }
 
     public boolean isValidGrant() {
-        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 12, 16, 20, 22) &&
+        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 12, 16, 20, 22) &&
                 // can't grant the same privilege more than once, update and reference
                 // columns must be unique, and usernames must be unique
                 ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 1, 2, 3, 4, 5, 6, 12, 16, 22);
@@ -239,12 +312,12 @@ public class Parser {
     }
 
     public boolean isValidBuildFileStructure() {
-        return  ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 7, 9, 12, 14) &&
+        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 7, 9, 12, 14) &&
                 // can't cluster a table with itself
                 ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput,12, 14);
     }
 
     public boolean isValidRemoveFileStructure() {
-        return ! ruleGraphToUse.hasIllegalNumericAt(tokenizedInput, 4, 6);
+        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 4, 6);
     }
 }

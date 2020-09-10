@@ -94,7 +94,7 @@ public class SecurityChecker {
 
     public boolean isValidQuery() {
 
-        ArrayList<String> referencedTableNames = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 15, 17);
+        List<String> referencedTableNames = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 15, 17);
         //ArrayList<String> referencedColumnNames = ruleGraph.getTokensAt(input, );
         HashMap<String, ArrayList<String>> tableColumnPairs = new HashMap<>();
         return true;
@@ -152,24 +152,24 @@ public class SecurityChecker {
         String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 20).get(0);
 
         // if WITH GRANT OPTION is used, make sure the user is allowed to pass on privileges to others
-        ArrayList<String> withToken = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
+        List<String> withToken = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
         boolean grantOptionUsed = ! withToken.isEmpty();
 
         if(grantOptionUsed) {
 
-            ArrayList<String> updateToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
-            ArrayList<String> referencesToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
+            List<String> updateToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
+            List<String> referencesToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
 
             boolean isPassingUpdatePrivilege = ! updateToken.isEmpty();
             boolean isPassingReferencesPrivilege = ! referencesToken.isEmpty();
 
             if(isPassingUpdatePrivilege) {
-                ArrayList<String> passedUpdateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 12);
+                List<String> passedUpdateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 12);
                 return currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedUpdateColumns);
             }
 
             if(isPassingReferencesPrivilege) {
-                ArrayList<String> passedReferencesColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 16);
+                List<String> passedReferencesColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 16);
                 return currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedReferencesColumns);
             }
         }

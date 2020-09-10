@@ -43,7 +43,7 @@ public final class RuleGraphTypes {
         queryRuleGraph.addRule("<",          false, 24);
         queryRuleGraph.addRule(">=",         false, 25);
         queryRuleGraph.addRule("<=",         false, 26);
-        queryRuleGraph.addRule("ColumnName", false, 27);
+        queryRuleGraph.addRule("ColumnName", true,  27);
         queryRuleGraph.addRule("WHERE",      false, 28);
         queryRuleGraph.addRule("ColumnName", true,  29);
         queryRuleGraph.addRule("=",          false, 30);
@@ -96,9 +96,9 @@ public final class RuleGraphTypes {
         queryRuleGraph.setChildren(10, 11, 12);
         queryRuleGraph.setChildren(11, 2, 3, 4, 5, 6, 7);
         queryRuleGraph.setChildren(12, 13);
-        queryRuleGraph.setChildren(13, 14, 16, 28, 65);
+        queryRuleGraph.setChildren(13, 14, 16, 28, 41, 65);
         queryRuleGraph.setChildren(14, 15);
-        queryRuleGraph.setChildren(15, 14, 28, 65);
+        queryRuleGraph.setChildren(15, 14, 28, 41, 65);
         queryRuleGraph.setChildren(16, 17);
         queryRuleGraph.setChildren(17, 18);
         queryRuleGraph.setChildren(18, 19);
@@ -110,7 +110,7 @@ public final class RuleGraphTypes {
         queryRuleGraph.setChildren(24, 27);
         queryRuleGraph.setChildren(25, 27);
         queryRuleGraph.setChildren(26, 27);
-        queryRuleGraph.setChildren(27, 16, 28, 65);
+        queryRuleGraph.setChildren(27, 16, 28, 41, 65);
         queryRuleGraph.setChildren(28, 29);
         queryRuleGraph.setChildren(29, 30, 31, 32, 33, 34, 35);
         queryRuleGraph.setChildren(30, 36, 37);

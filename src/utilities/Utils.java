@@ -9,9 +9,13 @@ import java.util.NoSuchElementException;
 /**
  * Contains random stuff that I don't know where to place just yet.
  */
-public class Utilities {
+public class Utils {
 
-    public Table getTableReference(String tableName, List<Table> tables) {
+    public List<Table> getTablesFromTableNames(List<Table> tableNames, List<Table> tables) {
+        return null;
+    }
+
+    public Table getTableFromTableName(String tableName, List<Table> tables) {
         try {
             return tables
                     .stream()
@@ -25,7 +29,7 @@ public class Utilities {
         return new Table();
     }
 
-    public User getUserReference(String username, List<User> users) {
+    public User getUserFromUsername(String username, List<User> users) {
         try {
             return users.stream()
                     .filter(user -> user.getUsername().equalsIgnoreCase(username))
