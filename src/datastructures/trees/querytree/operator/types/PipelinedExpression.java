@@ -5,13 +5,13 @@ import datastructures.trees.querytree.operator.Operator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Pipelined extends Operator {
+public class PipelinedExpression extends Operator {
 
     public static final String SYMBOL = "\uD835\uDCAB";
     private final String subscript;
     private final List<Operator> pipelinedOperators;
 
-    public Pipelined(List<Operator> pipelinedOperators, int subscript) {
+    public PipelinedExpression(List<Operator> pipelinedOperators, int subscript) {
         this.pipelinedOperators = pipelinedOperators;
         switch(subscript) {
             case 1:
@@ -47,7 +47,7 @@ public class Pipelined extends Operator {
         }
     }
 
-    public Pipelined(Pipelined toCopy) {
+    public PipelinedExpression(PipelinedExpression toCopy) {
         this.subscript = toCopy.subscript;
         this.pipelinedOperators = new ArrayList<>();
         toCopy.pipelinedOperators.forEach(e -> pipelinedOperators.add(e.copy(e)));
@@ -82,7 +82,7 @@ public class Pipelined extends Operator {
 
     @Override
     public Operator copy(Operator operator) {
-        return new Pipelined((Pipelined) operator);
+        return new PipelinedExpression((PipelinedExpression) operator);
     }
 
     @Override

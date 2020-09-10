@@ -1,11 +1,10 @@
 package systemcatalog.components;
 
 import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
-import datastructures.trees.querytree.operator.*;
+import datastructures.trees.querytree.operator.Operator;
 import datastructures.trees.querytree.operator.types.*;
 import utilities.QueryCost;
 
@@ -39,7 +38,7 @@ public class Optimizer {
     }
 
     public void toggleRearrangeLeafNodes() {
-        this.toggleRearrangeLeafNodes = ! toggleRearrangeLeafNodes;
+        this.toggleRearrangeLeafNodes = !toggleRearrangeLeafNodes;
     }
 
     public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
@@ -63,44 +62,48 @@ public class Optimizer {
     }
 
 
-    /*public QueryTree createQueryTree(String[] input, List<Table> tables) {
+    public QueryTree createQueryTree(String[] input, List<Table> tables) {
 
-        QueryTree queryTree = new QueryTree((Operator) null);
+        // extracting all the data from the input
 
-        // getting all the data that we will need for query tree creation
+        // select clause data
         List<String> selectClauseColumnNames = queryRuleGraph.getTokensAt(input, 1, 2);
         List<String> selectClauseAggregationTypes = queryRuleGraph.getTokensAt(input, 3, 4, 5, 6, 7);
-        List<String> selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(input, 9, 10);
+        List<String> selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(input, 9);
 
-        List<String> tableNames = queryRuleGraph.getTokensAt(input, 14, 17);
-        List<String> firstJoinOnColumnNames;
-        List<String> innerJoinSymbols;
-        List<String> secondJoinOnColumnNames;
-        int numJoins;
-        int numCartesianProducts;
+        // from clause data
+        List<String> tableNames = queryRuleGraph.getTokensAt(input, 13, 15, 18);
+        List<String> firstJoinOnColumnNames = queryRuleGraph.getTokensAt(input, 20);
+        List<String> innerJoinSymbols = queryRuleGraph.getTokensAt(input, 21, 22, 23, 24, 25, 26);
+        List<String> secondJoinOnColumnNames = queryRuleGraph.getTokensAt(input, 27);
+        int numCartesianProducts = queryRuleGraph.getTokensAt(input, 14).size();
+        int numJoins = queryRuleGraph.getTokensAt(input, 16).size();
 
-        List<String> whereClauseColumnNames;
-        List<String> whereClauseSymbols;
-        List<String> whereClauseNumericValues;
-        List<String> whereClauseStringValues;
-        int numWhereClauseAnds;
+        // where clause data
+        List<String> whereClauseColumnNames = queryRuleGraph.getTokensAt(input, 29);
+        List<String> whereClauseSymbols = queryRuleGraph.getTokensAt(input, 30, 31, 32, 33, 34, 35);
+        List<String> whereClauseValues = queryRuleGraph.getTokensAt(input, 36, 38);
+        int numWhereClauseAnds = queryRuleGraph.getTokensAt(input, 40).size();
 
-        List<String> groupByColumnNames;
+        // group by clause data
+        List<String> groupByColumnNames = queryRuleGraph.getTokensAt(input, 43);
 
-        List<String> havingClauseAggregationTypes;
-        List<String> havingClauseColumnNames;
-        List<String> havingClauseSymbols;
-        List<String> havingClauseNumericValues;
-        List<String> havingClauseStringValues;
+        // having clause data
+        List<String> havingClauseAggregationTypes = queryRuleGraph.getTokensAt(input, 46, 47, 48, 49, 50);
+        List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(input, 52);
+        List<String> havingClauseSymbols = queryRuleGraph.getTokensAt(input, 54, 55, 56, 57, 58, 59);
+        List<String> havingClauseValues = queryRuleGraph.getTokensAt(input, 60, 62);
 
-        // 1. get the contents of the select clause and form into either a projection
-             // or aggregation and set as root for query tree
+        // creating each relational algebra expression from the given input
 
-        // getting data from the input that we will need for query tree creation
+System.out.println(whereClauseValues);
+        // building the tree
 
-
+        return null;
+    }
+}
         // if a "*" is used, replace with a list of all column names from all tables present
-        selectClauseColumnNames = handleStars(selectClauseColumnNames, tableNames, tables);
+        /*selectClauseColumnNames = handleStars(selectClauseColumnNames, tableNames, tables);
 
         // prefix column names
         prefixColumnNames(selectClauseColumnNames, tables);
@@ -429,7 +432,7 @@ public class Optimizer {
         }
 
         return queryTree;
-    }
+    }*/
 
     /*
     public List<String> handleStars(List<String> columnNames, List<String> tableNames, List<Table> tables) {
@@ -469,7 +472,7 @@ public class Optimizer {
      * @param tables are all the tables in the database
      * @return column name prefixed with the table name
      */
-    public String prefixColumnName(String columnName, List<Table> tables) {
+    /*public String prefixColumnName(String columnName, List<Table> tables) {
 
         // don't need to prefix the table name if it's already there
         if(hasPrefixedTableName(columnName)) {
@@ -490,16 +493,16 @@ public class Optimizer {
         }
 
         return columnName;
-    }
+    }*/
 
     /**
      * @param columnName is the string to check
      * @return whether the candidate string is prefixed with a table name
      */
-    public boolean hasPrefixedTableName(String columnName) {
+    /*public boolean hasPrefixedTableName(String columnName) {
 
         return columnName.contains(".");
-    }
+    }*/
 
     // 1. Cascading Selections =========================================================================================
 
@@ -675,9 +678,9 @@ public class Optimizer {
     /**
      * @return whether the provided simple selection is a join condition.
      */
-    private boolean isJoinCondition(SimpleSelection simpleSelection) {
+    /*private boolean isJoinCondition(SimpleSelection simpleSelection) {
         return simpleSelection.getValue().contains(".");
-    }
+    }*/
 
     // 3. Forming Joins ================================================================================================
 
@@ -807,7 +810,7 @@ public class Optimizer {
         return relationLocations;
     }*/
 
-    private List<String> getTableNamesFromRelationLocations(List<List<QueryTree.Traversal>> relationLocations, QueryTree queryTree) {
+    /*private List<String> getTableNamesFromRelationLocations(List<List<QueryTree.Traversal>> relationLocations, QueryTree queryTree) {
 
         List<String> tableNames = new ArrayList<>();
 
@@ -837,8 +840,8 @@ public class Optimizer {
         List<Integer> tableCosts = new ArrayList<>();
 
         for(Table table : tables) {
-            int numberRecords = QueryCost.getNumberRecords(table);
-            int recordSize = QueryCost.getNumberRecords(table);
+            int numberRecords = QueryCost.numberRecords(table);
+            int recordSize = QueryCost.numberRecords(table);
             int blockingFactor = QueryCost.blockingFactor(recordSize);
             int blocks = QueryCost.blocks(numberRecords, blockingFactor);
 
@@ -1199,7 +1202,7 @@ System.out.println(queryTree.getTreeStructure());
     // utility methods =================================================================================================
 
     // naive relational algebra ========================================================================================
-*/
+
     public String getNaiveRelationalAlgebra(QueryTree initialState) {
 
         StringBuilder naiveRelationalAlgebra = new StringBuilder();
@@ -1230,7 +1233,7 @@ System.out.println(queryTree.getTreeStructure());
 
         for(int i = 0; i < numBrackets; i++) {
             naiveRelationalAlgebra.append("]");
-        }*/
+        }
 
         return naiveRelationalAlgebra.toString();
     }
@@ -1246,4 +1249,4 @@ System.out.println(queryTree.getTreeStructure());
     public String getRecommendedFileStructures() {
         return "";
     }
-}
+}*/

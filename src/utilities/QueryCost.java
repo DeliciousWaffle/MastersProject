@@ -11,18 +11,19 @@ import java.util.List;
  * and join costs. Other misc calculations follow after that. Each calculation has a "to string" method
  * associated with it in order to view how numbers are used and for debugging purposes.
  * Here is a key of all the variables used in this class.
- * Variable:  Denoted As:          Description:
+ * Variable:  Denoted As:             Description:
  * -------------------------------------------------------------------------------------------------------
- * r          (numberRecords)      number of records in a file
- * |r|        (recordSize)         size of a record
- * block size (BLOCK_SIZE)         given
- * bf         (blockingFactor)     blocking factor
- * b          (blocks)             blocks
- * d          (distinctValues)     distinct values of an attribute
- * s          (selectivity)        selectivity of an attribute
- * l          (levels)             number of levels in a b-tree
- * m          (degree)             degree of the tree
- * bl         (terminalLevelNodes) number of nodes at the terminal level of a b-tree
+ * r          (numberRecords)         number of records in a file
+ * |r|        (recordSize)            size of a record
+ * block size (BLOCK_SIZE)            given
+ * bf         (blockingFactor)        blocking factor
+ * b          (blocks)                blocks
+ * d          (distinctValues)        distinct values of an attribute
+ * s          (selectivity)           selectivity of an attribute
+ * fs         (foreignKeySelectivity) estimate of the number of foreign keys to primary keys
+ * l          (levels)                number of levels in a b-tree
+ * m          (degree)                degree of the tree
+ * bl         (terminalLevelNodes)    number of nodes at the terminal level of a b-tree
  * Each formula has an associated "to string" method that is used for displaying
  * how calculations are performed. Also used for debugging purposes.
  */
@@ -36,23 +37,23 @@ public final class QueryCost {
     // starting calculations -------------------------------------------------------------------------------------------
 
     // r - number of records in the file
-    public static int getNumberRecords(Table table) {
+    public static int numberRecords(Table table) {
         return table.getNumRows();
     }
 
-    public static String getNumberRecordsToString(Table table) {
-        return "r = " + getNumberRecords(table);
+    public static String numberRecordsToString(Table table) {
+        return "r = " + numberRecords(table);
     }
 
     // |r| - record size
-    public static int getRecordSize(List<Column> columns) {
+    public static int recordSize(List<Column> columns) {
         return columns.stream()
                 .map(Column::size)
                 .reduce(0, Integer::sum);
     }
 
-    public static String getRecordSizeToString(List<Column> columns) {
-        return "|r| = " + getRecordSize(columns);
+    public static String recordSizeToString(List<Column> columns) {
+        return "|r| = " + recordSize(columns);
     }
 
     // bf - blocking factor
@@ -77,9 +78,33 @@ public final class QueryCost {
                 "b = " + blocks(numRecords, blockingFactor);
     }
 
+    /**
+     * @param table is the table that the column provided belongs to
+     * @param column is the column to look through
+     * @return the number of distinct values that appear in the column provided
+     */
+    public static int distinctValues(Table table, Column column) {
+
+        List<Column> columns = table.getColumns();
+        int colLocation = -1;
+
+        for(int i = 0; i < columns.size(); i++) {
+            if(columns.get(i).getColumnName().equalsIgnoreCase(column.getColumnName())) {
+                colLocation = i;
+                break;
+            }
+        }
+
+        List<String> rowsOfColumn = table.getTableData().getRowsAt(colLocation);
+
+        return (int) rowsOfColumn.stream()
+                .distinct()
+                .count();
+    }
+
     // s - selectivity
-    public static double selectivity(int numRecords, int distinctValues) {
-        return (double) numRecords / distinctValues;
+    public static int selectivity(int numRecords, int distinctValues) {
+        return (int) Math.ceil((double) numRecords / distinctValues);
     }
 
     public static String selectivityToString(int numRecords, int distinctValues) {
@@ -114,16 +139,27 @@ public final class QueryCost {
                 "l = " + levels(numRecords, degree);
     }
 
-    // bL - number nodes at b-tree terminal level
+    // bl - number nodes at b-tree terminal level
     public static int terminalLevelNodes(int numRecords, int degree) {
         return (int) Math.floor(numRecords / (Math.ceil(degree / 2.0) - 1));
     }
 
     public static String terminalLevelNodesToString(int numRecords, int degree) {
-        return "bL = ⌊r / (⌈m / 2⌉ - 1)⌋ \n" +
-                "bL = ⌊" + numRecords + " / (⌈" + degree + " / 2⌉ - 1)⌋ \n" +
-                "bL = " + terminalLevelNodes(numRecords, degree);
+        return "bl = ⌊r / (⌈m / 2⌉ - 1)⌋ \n" +
+                "bl = ⌊" + numRecords + " / (⌈" + degree + " / 2⌉ - 1)⌋ \n" +
+                "bl = " + terminalLevelNodes(numRecords, degree);
 
+    }
+
+    // fs - estimate of the number of foreign keys to primary keys
+    public static int foreignKeySelectivity(int tableWithPrimaryKeyNumRows, int tableWithForeignKeyNumRows) {
+        return (int) Math.ceil((double) tableWithForeignKeyNumRows / tableWithPrimaryKeyNumRows);
+    }
+
+    public static String foreignKeySelectivityToString(int tableWithPrimaryKeyNumRows, int tableWithForeignKeyNumRows) {
+        return "fs = ⌈t2.r / t1.r⌉ \n" +
+                "fs = ⌈" + tableWithForeignKeyNumRows + " / " + tableWithPrimaryKeyNumRows + "⌉ \n" +
+                "fs = " + foreignKeySelectivity(tableWithPrimaryKeyNumRows, tableWithForeignKeyNumRows);
     }
 
     // unsorted file costs ---------------------------------------------------------------------------------------------
@@ -163,7 +199,6 @@ public final class QueryCost {
         return "CUpu = b\n" +
                 "CUpu = " + blocks;
     }
-
 
     public static int unsortedPrintSorted(int blocks) {
         return ((int) (blocks * log(blocks))) + blocks;
