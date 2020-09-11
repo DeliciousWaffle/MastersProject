@@ -167,7 +167,7 @@ public class SystemCatalog {
                 this.queryTreeStates = optimizer.getQueryTreeStates(tokenizedInput, tables);
                 //this.naiveRelationalAlgebra = optimizer.getNaiveRelationalAlgebra();
                 //this.optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra();
-                this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
+                //this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
             } else {
                 this.queryTreeStates = new ArrayList<>();
                 this.recommendedFileStructures = "";

@@ -1,0 +1,155 @@
+package systemcatalog.components;
+
+import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
+import datastructures.trees.querytree.operator.Operator;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+/**
+ * Class that offers additional functionality to the Optimizer class because that class
+ * got very hairy and this keeps things somewhat clean.
+ */
+public final class OptimizerUtilities {
+
+    /**
+     * Given a list of table names and a list of tables from the system, returns the tables referenced.
+     * @param tableNames is a list of table names referenced
+     * @param tables is a list of tables of the system
+     * @return a list of tables referenced from the given table names
+     */
+    public static List<Table> getReferencedTables(List<String> tableNames, List<Table> tables) {
+        return tableNames.stream()
+                .map(tableName -> getReferencedTable(tableName, tables))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Given a table name and a list of tables from the system, returns the table referenced.
+     * @param tableName is the table name of the table referenced
+     * @param tables is a list of tables in the system
+     * @return the table referenced from the table name or null if not found
+     */
+    public static Table getReferencedTable(String tableName, List<Table> tables) {
+        for(Table table : tables) {
+            if(table.getTableName().equalsIgnoreCase(tableName)) {
+                return table;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * If a "*" is used in the SELECT clause, this returns all the columns of any tables that are
+     * referenced in the FROM clause. This also prefixes each column name with its respected table name.
+     * If a "*" is not found in the provided list of column names, makes no changes and returns.
+     * @param columnNames is a list of column names referenced in the SELECT clause, may contain a "*"
+     * @param referencedTables are tables referenced in the FROM clause
+     * @return a list of all column names that belong to any tables referenced in the FROM clause if
+     * a "*" is present in columnNames
+     */
+    public static void getColumnNamesFromStar(List<String> columnNames, List<Table> referencedTables) {
+
+        // return if there are not any column names to begin with
+        if(columnNames.isEmpty()) {
+            return;
+        }
+
+        // also return if "*" doesn't exist
+        boolean hasStar = columnNames.get(0).equalsIgnoreCase("*");
+
+        if(! hasStar) {
+            return;
+        }
+
+        // otherwise remove the "*" and for each table, pull out it's column names and add them to the list to return
+        columnNames.remove(0);
+
+        for(Table table : referencedTables) {
+            List<String> referencedTablesColumnNames = table.getColumns().stream()
+                    .map(e -> table.getTableName() + "." + e.getColumnName())
+                    .collect(Collectors.toList());
+            columnNames.addAll(referencedTablesColumnNames);
+        }
+    }
+
+    /**
+     * Prefixes all column names present in the system with their respective table names.
+     * @param columnNames is a list of column names to prefix
+     * @param tables are the tables in the system
+     */
+    public static void prefixColumnNamesWithTableNames(List<String> columnNames, List<Table> tables) {
+        for(int i = 0; i < columnNames.size(); i++) {
+            columnNames.set(i, prefixColumnNameWithTableName(columnNames.get(i), tables));
+        }
+    }
+
+    /**
+     * Prefixes a column name to a table name. Involves looking through all the tables available
+     * and determining which one that column belongs to.
+     * @param columnName is the column name to prefix
+     * @param tables are all the tables in the database
+     * @return column name prefixed with the table name
+     */
+    public static String prefixColumnNameWithTableName(String columnName, List<Table> tables) {
+
+        // don't need to prefix the table name if it's prefixed
+        if(hasPrefixedTableName(columnName)) {
+            return columnName;
+        }
+
+        // also don't need to prefix "." with anything
+        if(columnName.equals(".")) {
+            return columnName;
+        }
+
+        // otherwise prefix
+        for(Table table : tables) {
+            if(table.hasColumn(columnName)) {
+                columnName = table.getTableName() + "." + columnName;
+                break;
+            }
+        }
+
+        return columnName;
+    }
+
+    /**
+     * @param columnName is the string to check
+     * @return whether the candidate string is prefixed with a table name
+     */
+    public static boolean hasPrefixedTableName(String columnName) {
+        return columnName.contains(".");
+    }
+
+    /**
+     * Adds unique column names to the provided list of column names
+     * @param columnNames is the list of column names to add to
+     * @param toAdd are the column names to add
+     * @return list of unique column names
+     */
+    public static List<String> addUniqueColumnNames(List<String> columnNames, List<String> toAdd) {
+        columnNames.addAll(toAdd);
+        return columnNames.stream()
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Wraps quotation marks around present string values in the given list.
+     * @param values is the list of values to perform this operation on
+     */
+    public static void addQuotationsToStringValues(List<String> values) {
+        for(int i = 0; i < values.size(); i++) {
+            String value = values.get(i);
+            boolean isNumeric = Parser.isNumeric(value);
+            boolean hasPrefixedTableName = hasPrefixedTableName(value); // don't wrap column names in quotes
+            if(! isNumeric && ! hasPrefixedTableName) {
+                values.set(i, "\"" + value + "\"");
+            }
+        }
+    }
+}

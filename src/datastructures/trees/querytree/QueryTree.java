@@ -113,8 +113,11 @@ public final class QueryTree {
      */
     public void add(List<Traversal> traversals, Traversal targetLocation, Operator operatorToAdd) {
 
+        // might make changes to the list, will need a separate copy to prevent unwanted mutation
+        traversals = Traversal.copyTraversalList(traversals);
+
         // check that the root node exists before doing any adding, this will only fire when creating a deep copy
-        if(root == null) {
+        if(root == null || (traversals.isEmpty() && targetLocation == Traversal.NONE)) {
             setRoot(operatorToAdd);
             return;
         }

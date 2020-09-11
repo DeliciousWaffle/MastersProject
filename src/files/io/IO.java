@@ -31,8 +31,7 @@ public final class IO {
         return read(originalDataFileType.getPath());
     }
 
-    public static String readOriginalTableData(FileType.OriginalTableData originalTableDataFileType,
-                                               String tableName) {
+    public static String readOriginalTableData(FileType.OriginalTableData originalTableDataFileType, String tableName) {
         return read(originalTableDataFileType.getPath().resolve(tableName));
     }
 

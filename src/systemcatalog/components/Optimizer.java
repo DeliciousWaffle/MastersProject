@@ -6,10 +6,10 @@ import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;
 import datastructures.trees.querytree.operator.types.*;
-import utilities.QueryCost;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Responsible for determining the execution strategy of a query. This involves converting the user's input
@@ -43,7 +43,7 @@ public class Optimizer {
 
     public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
 
-        //QueryTree queryTree                     = createQueryTree(input, tables);
+        QueryTree queryTree                     = createQueryTree(input, tables);
         /*QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
@@ -76,8 +76,7 @@ public class Optimizer {
         List<String> firstJoinOnColumnNames = queryRuleGraph.getTokensAt(input, 20);
         List<String> innerJoinSymbols = queryRuleGraph.getTokensAt(input, 21, 22, 23, 24, 25, 26);
         List<String> secondJoinOnColumnNames = queryRuleGraph.getTokensAt(input, 27);
-        int numCartesianProducts = queryRuleGraph.getTokensAt(input, 14).size();
-        int numJoins = queryRuleGraph.getTokensAt(input, 16).size();
+        int numCartesianProducts = queryRuleGraph.getTokensAt(input, 14, 16).size();
 
         // where clause data
         List<String> whereClauseColumnNames = queryRuleGraph.getTokensAt(input, 29);
@@ -94,415 +93,117 @@ public class Optimizer {
         List<String> havingClauseSymbols = queryRuleGraph.getTokensAt(input, 54, 55, 56, 57, 58, 59);
         List<String> havingClauseValues = queryRuleGraph.getTokensAt(input, 60, 62);
 
-        // creating each relational algebra expression from the given input
+        // the following is just some data cleaning
 
-System.out.println(whereClauseValues);
-        // building the tree
+        List<Table> referencedTables = OptimizerUtilities.getReferencedTables(tableNames, tables);
 
-        return null;
-    }
-}
-        // if a "*" is used, replace with a list of all column names from all tables present
-        /*selectClauseColumnNames = handleStars(selectClauseColumnNames, tableNames, tables);
+        // extract all column names if a "*" is used
+        OptimizerUtilities.getColumnNamesFromStar(selectClauseColumnNames, referencedTables);
 
-        // prefix column names
-        prefixColumnNames(selectClauseColumnNames, tables);
-        prefixColumnNames(selectClauseAggregatedColumnNames, tables);
+        // append each column name referenced with it's associated table name
+        OptimizerUtilities.prefixColumnNamesWithTableNames(selectClauseColumnNames, referencedTables);
+        OptimizerUtilities.prefixColumnNamesWithTableNames(selectClauseAggregatedColumnNames, referencedTables);
+        OptimizerUtilities.prefixColumnNamesWithTableNames(firstJoinOnColumnNames, referencedTables);
+        OptimizerUtilities.prefixColumnNamesWithTableNames(secondJoinOnColumnNames, referencedTables);
+        OptimizerUtilities.prefixColumnNamesWithTableNames(whereClauseColumnNames, referencedTables);
+        OptimizerUtilities.prefixColumnNamesWithTableNames(groupByColumnNames, referencedTables);
+        OptimizerUtilities.prefixColumnNamesWithTableNames(havingClauseColumnNames, referencedTables);
 
-        // creating either a projection of aggregation based on the columns
-        boolean hasAggregation = ! selectClauseAggregationTypes.isEmpty();
+        // add each join column to where clause column names
+        whereClauseColumnNames.addAll(firstJoinOnColumnNames);
+        whereClauseSymbols.addAll(innerJoinSymbols);
+        whereClauseValues.addAll(secondJoinOnColumnNames);
 
-        // setting the projection or aggregation as the root node
-        if (hasAggregation) {
-            queryTree.setRoot(new Aggregation(selectClauseColumnNames, selectClauseAggregationTypes, selectClauseAggregatedColumnNames));
-        } else {
-            queryTree.setRoot(new Projection(selectClauseColumnNames));
-        }
+        // wrap each value that appears in the WHERE and HAVING clauses in quotation marks
+        OptimizerUtilities.addQuotationsToStringValues(whereClauseValues);
+        OptimizerUtilities.addQuotationsToStringValues(havingClauseValues);
 
-        // 2. if there is a HAVING clause, create an aggregate selection and add it above the root
-        // -------------------------------------------------------------------------------------------------------------
+        // add unique column names that don't appear in select clause from group by when using aggregation
+        selectClauseColumnNames = OptimizerUtilities.addUniqueColumnNames(selectClauseColumnNames, groupByColumnNames);
 
-        // getting the input
-        selectClauseAggregationTypes = new ArrayList<>();
-        selectClauseAggregationTypes = queryRuleGraph.getTokensAt(input, 38, 39, 40, 41, 42);
-        selectClauseAggregatedColumnNames = new ArrayList<>();
-        selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(input, 44, 45);
-        List<String> symbols = queryRuleGraph.getTokensAt(input, 47, 48, 49, 50, 51, 52);
-        List<String> values = queryRuleGraph.getTokensAt(input, 53);
+        // checking to see what will be eventually added to the tree
 
-        // prefix column names
-        prefixColumnNames(selectClauseAggregatedColumnNames, tables);
+        boolean hasAggregateSelection = ! havingClauseAggregationTypes.isEmpty();
+        boolean hasAggregation = ! selectClauseAggregatedColumnNames.isEmpty();
+        boolean hasProjection = ! selectClauseColumnNames.isEmpty() && ! hasAggregation;
+        boolean hasCompoundSelection = whereClauseColumnNames.size() >= 2;
+        boolean hasSimpleSelection = whereClauseColumnNames.size() == 1;
+        boolean hasOneRelation = tableNames.size() == 1;
+        boolean hasOneCartesianProduct = numCartesianProducts == 1;
+        boolean hasMultipleCartesianProducts = numCartesianProducts >= 2;
 
-        boolean hasAggregateSelection = ! selectClauseAggregatedColumnNames.isEmpty();
+        // add each present relational algebra operator to the tree
+
+        QueryTree queryTree = new QueryTree((Operator) null);
+        List<QueryTree.Traversal> traversals = new ArrayList<>();
 
         if(hasAggregateSelection) {
-            // creating the aggregate selection and adding it above the root node
-            queryTree.add(new ArrayList<>(), QueryTree.Traversal.UP,
-                    new AggregateSelection(selectClauseAggregationTypes, selectClauseAggregatedColumnNames, symbols, values));
-        }
-
-        // 3. if there is a WHERE clause, create a selection and place it at the very bottom of the tree so far
-        // -------------------------------------------------------------------------------------------------------------
-
-        // getting the input
-        selectClauseColumnNames = new ArrayList<>();
-        selectClauseColumnNames = queryRuleGraph.getTokensAt(input, 23);
-        symbols = new ArrayList<>();
-        symbols = queryRuleGraph.getTokensAt(input, 24, 25, 26, 27, 28, 29);
-        values = new ArrayList<>();
-        values = queryRuleGraph.getTokensAt(input, 30);
-
-        // prefix column names
-        prefixColumnNames(selectClauseColumnNames, tables);
-
-        boolean hasSelection = ! selectClauseColumnNames.isEmpty();
-
-        if(hasSelection) {
-
-            // will place the selection at the very bottom of the tree as the only child
-            List<QueryTree.Traversal> traversals = new ArrayList<>();
-
-            // could have 2 children already, if that's the case, traverse down once
-            boolean hasTwoChildren = queryTree.getSize() == 2;
-
-            if(hasTwoChildren) {
-                traversals.add(QueryTree.Traversal.DOWN);
-            }
-
-            // determine if the selection is simple or compound
-            boolean isSimpleSelection = selectClauseColumnNames.size() == 1;
-            Operator simpleSelection = null;
-            Operator compoundSelection = null;
-
-            // add it to the bottom
-            if(isSimpleSelection) {
-                simpleSelection = new SimpleSelection(selectClauseColumnNames.get(0), symbols.get(0), values.get(0));
-                queryTree.add(traversals, QueryTree.Traversal.DOWN, simpleSelection);
-            } else {
-                compoundSelection = new CompoundSelection(selectClauseColumnNames, symbols, values);
-                queryTree.add(traversals, QueryTree.Traversal.DOWN, compoundSelection);
-            }
-        }
-
-        // 4. determine if any cartesian products need to be added
-        // -------------------------------------------------------------------------------------------------------------
-
-        // getting the tables and the number of cartesian products needed
-
-        int numCartesianProducts = tableNames.size() - 1;
-
-        // get to the location that we want
-        List<QueryTree.Traversal> traversals = new ArrayList<>();
-        int numTraversals = queryTree.getSize() - 1;
-
-        for(int i = 0; i < numTraversals; i++) {
+            queryTree.add(traversals, QueryTree.Traversal.NONE, new AggregateSelection(
+                    havingClauseAggregationTypes, havingClauseColumnNames, havingClauseSymbols, havingClauseValues
+            ));
             traversals.add(QueryTree.Traversal.DOWN);
         }
 
-        // no cartesian products, just the table
-        if(numCartesianProducts == 0) {
-
-            queryTree.add(traversals, QueryTree.Traversal.DOWN, new Relation(tableNames.get(0)));
-
-        // only 1 between 2 tables
-        } else if(numCartesianProducts == 1) {
-
-            queryTree.add(traversals, QueryTree.Traversal.DOWN, new CartesianProduct());
+        if(hasAggregation) {
+            queryTree.add(traversals, QueryTree.Traversal.NONE, new Aggregation(
+                    selectClauseColumnNames, selectClauseAggregationTypes, selectClauseAggregatedColumnNames
+            ));
             traversals.add(QueryTree.Traversal.DOWN);
-            queryTree.add(traversals, QueryTree.Traversal.LEFT, new Relation(tableNames.get(0)));
-            queryTree.add(traversals, QueryTree.Traversal.RIGHT, new Relation(tableNames.get(1)));
+        }
 
-        // more than 1 cartesian product,
-        } else {
-
-            queryTree.add(traversals, QueryTree.Traversal.DOWN, new CartesianProduct());
+        if(hasProjection) {
+            queryTree.add(traversals, QueryTree.Traversal.NONE, new Projection(selectClauseColumnNames));
             traversals.add(QueryTree.Traversal.DOWN);
+        }
 
-            for(int i = 0; i < numCartesianProducts; i++) {
+        if(hasCompoundSelection) {
+            queryTree.add(traversals, QueryTree.Traversal.NONE, new CompoundSelection(
+                    whereClauseColumnNames, whereClauseSymbols, whereClauseValues
+            ));
+            traversals.add(QueryTree.Traversal.DOWN);
+        }
 
-                queryTree.add(traversals, QueryTree.Traversal.LEFT, new CartesianProduct());
+        if(hasSimpleSelection) {
+            queryTree.add(traversals, QueryTree.Traversal.NONE, new SimpleSelection(
+                    whereClauseColumnNames.get(0), whereClauseSymbols.get(0), whereClauseValues.get(0)
+            ));
+            traversals.add(QueryTree.Traversal.DOWN);
+        }
 
-                // doesn't need this because multiple cartesian products are associative,
-                // but the tree output makes more sense if adding relations in reverse
-                int indexToGet = tableNames.size() - i - 1;
-                queryTree.add(traversals, QueryTree.Traversal.RIGHT, new Relation(tableNames.get(indexToGet)));
+        List<Operator> cartesianProducts = Stream.generate(CartesianProduct::new)
+                .limit(numCartesianProducts)
+                .collect(Collectors.toList());
+
+        List<Operator> relations = tableNames.stream()
+                .map(Relation::new)
+                .collect(Collectors.toList());
+
+        if(hasOneRelation) {
+            queryTree.add(traversals, QueryTree.Traversal.NONE, relations.get(0));
+        }
+
+        if(hasOneCartesianProduct) {
+            queryTree.add(traversals, QueryTree.Traversal.NONE, cartesianProducts.get(0));
+            queryTree.add(traversals, QueryTree.Traversal.LEFT, relations.get(0));
+            queryTree.add(traversals, QueryTree.Traversal.RIGHT, relations.get(1));
+        }
+
+        if(hasMultipleCartesianProducts) {
+            while(! cartesianProducts.isEmpty()) {
+                queryTree.add(traversals, QueryTree.Traversal.NONE, cartesianProducts.remove(0));
+                int lastIndex = relations.size() - 1;
+                queryTree.add(traversals, QueryTree.Traversal.RIGHT, relations.remove(lastIndex));
                 traversals.add(QueryTree.Traversal.LEFT);
             }
-
-            // add final relation to left side, overwrite the cartesian product that's there
-            traversals.remove(traversals.size() - 1);
-            queryTree.set(traversals, QueryTree.Traversal.LEFT, new Relation(tableNames.get(0)));
-        }
-
-        // 5. if a join using was used, need to set/add the selection node to account for the join criteria
-        // -------------------------------------------------------------------------------------------------------------
-
-        // getting the table names, number of joins used, and the column names to join on
-        selectClauseColumnNames = new ArrayList<>();
-        symbols = new ArrayList<>();
-        values = new ArrayList<>();
-
-        // will need to make sure the mapping is correct which makes things complicated
-        boolean canStartMapping = false;
-
-        for(int i = 0; i < input.length; i++) {
-
-            String queryToken = input[i];
-
-            if(canStartMapping) {
-
-                // if an exception is thrown, then we're done mapping
-                try {
-
-                    String firstJoinTableName = input[i - 1];
-                    String secondJoinTableName = input[i + 1];
-                    String joinOnColumnName = input[i + 4];
-
-                    if(queryToken.equalsIgnoreCase("JOIN")) {
-
-                        firstJoinTableName = firstJoinTableName + "." + joinOnColumnName;
-                        String symbol = "=";
-                        secondJoinTableName = secondJoinTableName + "." + joinOnColumnName;
-
-                        selectClauseColumnNames.add(firstJoinTableName);
-                        symbols.add(symbol);
-                        values.add(secondJoinTableName);
-                    }
-
-                } catch(ArrayIndexOutOfBoundsException e) {
-                    break;
-                }
-            }
-
-            // start mapping
-            if(queryToken.equalsIgnoreCase("FROM")) {
-                canStartMapping = true;
-            }
-
-            // finished mapping
-            if(queryToken.equalsIgnoreCase("WHERE") || queryToken.equalsIgnoreCase(";")) {
-                break;
-            }
-        }
-
-        // don't bother with any of this if there is nothing to add
-        boolean haveSelectionsToAdd = ! selectClauseColumnNames.isEmpty();
-
-        if(haveSelectionsToAdd) {
-
-            // check if we have a selection already
-            boolean foundSelection = false;
-
-            // TODO: change back to break statements once query tree is fixed
-            boolean skipOverStuff = false;
-
-            traversals = new ArrayList<>();
-
-            for (Operator operator : queryTree) {
-
-                if (! skipOverStuff) {
-
-                    // found something!
-                    if (operator.getType() == Operator.Type.COMPOUND_SELECTION ||
-                            operator.getType() == Operator.Type.SIMPLE_SELECTION) {
-                        foundSelection = true;
-                        skipOverStuff = true;
-                    }
-
-                    // went too far!
-                    if (operator.getType() == Operator.Type.CARTESIAN_PRODUCT ||
-                            operator.getType() == Operator.Type.RELATION) {
-                        skipOverStuff = true;
-                    }
-
-                    if(! skipOverStuff) {
-                        traversals.add(QueryTree.Traversal.DOWN);
-                    }
-                }
-            }
-
-            // if we found a selection and have something to add, will set the node as a compound selection
-            if (foundSelection) {
-
-                boolean foundSimpleSelection = queryTree.get(traversals, QueryTree.Traversal.NONE)
-                        .getType() == Operator.Type.SIMPLE_SELECTION;
-
-                boolean foundCompoundSelection = queryTree.get(traversals, QueryTree.Traversal.NONE)
-                        .getType() == Operator.Type.COMPOUND_SELECTION;
-
-                if (foundSimpleSelection) {
-
-                    selectClauseColumnNames.add(((SimpleSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getColumnName());
-                    symbols.add(((SimpleSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getSymbol());
-                    values.add(((SimpleSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getValue());
-
-                } else if(foundCompoundSelection) {
-
-                    selectClauseColumnNames.addAll(((CompoundSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getColumnNames());
-                    symbols.addAll(((CompoundSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getSymbols());
-                    values.addAll(((CompoundSelection)
-                            queryTree.get(traversals, QueryTree.Traversal.NONE)).getValues());
-
-                } else {
-
-                    System.out.println("In Optimizer.createTree()");
-                    System.out.println("Didn't find a simple or compound selection");
-                    return queryTree;
-                }
-
-                // set the selection
-                queryTree.set(traversals, QueryTree.Traversal.NONE,
-                        new CompoundSelection(selectClauseColumnNames, symbols, values));
-
-            // didn't find a selection, will set the node either as a simple or compound selection
-            } else {
-
-                // traversal should be set at the first cartesian product node
-                // determine if the selection to add is simple or compound
-                boolean isSimpleSelection = selectClauseColumnNames.size() == 1;
-
-                if (isSimpleSelection) {
-                    queryTree.add(traversals, QueryTree.Traversal.UP,
-                            new SimpleSelection(selectClauseColumnNames.get(0), symbols.get(0), values.get(0)));
-                } else {
-                    queryTree.add(traversals, QueryTree.Traversal.UP,
-                            new CompoundSelection(selectClauseColumnNames, symbols, values));
-                }
-            }
-        }
-
-        // 7. if there are any column names in the having clause that are not already in the
-        //      aggregation node, then add them as group by columns there
-
-        // getting the input
-        List<String> havingClauseColumnNames = queryRuleGraph.getTokensAt(input, 35);
-
-        // prefixing with table names
-        prefixColumnNames(havingClauseColumnNames, tables);
-
-        boolean hasHavingColumnNames = ! havingClauseColumnNames.isEmpty();
-
-        if(hasHavingColumnNames) {
-
-            traversals = new ArrayList<>();
-            hasAggregateSelection = queryTree.get(traversals, QueryTree.Traversal.NONE)
-                    .getType() == Operator.Type.AGGREGATE_SELECTION;
-
-            Aggregation aggregation = null;
-
-            if(hasAggregateSelection) {
-                aggregation = ((Aggregation) queryTree.get(traversals, QueryTree.Traversal.DOWN));
-            } else {
-                aggregation = ((Aggregation) queryTree.get(traversals, QueryTree.Traversal.NONE));
-            }
-
-            List<String> groupByColumnNames = aggregation.getGroupByColumnNames();
-            boolean doneFindingDuplicates = false;
-
-            while(! doneFindingDuplicates) {
-
-                boolean hasDuplicates = false;
-
-                outerLoop:
-                for(int i = 0; i < havingClauseColumnNames.size(); i++) {
-                    String havingClauseColumnName = havingClauseColumnNames.get(i);
-
-                    for(int j = 0; j < groupByColumnNames.size(); j++) {
-                        String groupByColumnName = groupByColumnNames.get(j);
-
-                        if(havingClauseColumnName.equalsIgnoreCase(groupByColumnName)) {
-                            hasDuplicates = true;
-                            havingClauseColumnNames.remove(i);
-                            break outerLoop;
-                        }
-                    }
-                }
-
-                if(! hasDuplicates) {
-                    doneFindingDuplicates = true;
-                }
-            }
-
-            groupByColumnNames.addAll(havingClauseColumnNames);
+            queryTree.add(traversals, QueryTree.Traversal.NONE, relations.remove(0));
         }
 
         return queryTree;
-    }*/
+    }
+}
 
     /*
-    public List<String> handleStars(List<String> columnNames, List<String> tableNames, List<Table> tables) {
 
-        // just return the provided list if a "*" doesn't exist
-        boolean hasStar = columnNames.get(0).equalsIgnoreCase("*");
-
-        if(! hasStar) {
-            return columnNames;
-        }
-
-        // otherwise remove the "*" and for each table, pull out it's column names and add them to the list to return
-        columnNames.remove(0);
-
-        List<Table> referencedTables = getReferencedTables(tableNames, tables);
-
-        for(Table table : referencedTables) {
-            List<String> referencedTablesColumnNames = table.getColumns().stream()
-                    .map(e -> table.getTableName() + "." + e.getColumnName())
-                    .collect(Collectors.toList());
-            columnNames.addAll(referencedTablesColumnNames);
-        }
-
-        return columnNames;
-    }
-
-    public void prefixColumnNames(List<String> columnNames, List<Table> tables) {
-        for(int i = 0; i < columnNames.size(); i++) {
-            columnNames.set(i, prefixColumnName(columnNames.get(i), tables));
-        }
-    }
-*/
-    /**
-     * Prefixes a column name to a table name. Involves looking through all the
-     * tables available and determining which one that column belongs to.
-     * @param columnName is the column name to prefix
-     * @param tables are all the tables in the database
-     * @return column name prefixed with the table name
-     */
-    /*public String prefixColumnName(String columnName, List<Table> tables) {
-
-        // don't need to prefix the table name if it's already there
-        if(hasPrefixedTableName(columnName)) {
-            return columnName;
-        }
-
-        // also don't need to prefix "." with anything
-        if(columnName.equals(".")) {
-            return columnName;
-        }
-
-        // otherwise prefix
-        for(Table table : tables) {
-            if(table.hasColumn(columnName)) {
-                columnName = table.getTableName() + "." + columnName;
-                break;
-            }
-        }
-
-        return columnName;
-    }*/
-
-    /**
-     * @param columnName is the string to check
-     * @return whether the candidate string is prefixed with a table name
-     */
-    /*public boolean hasPrefixedTableName(String columnName) {
-
-        return columnName.contains(".");
-    }*/
 
     // 1. Cascading Selections =========================================================================================
 
