@@ -3,7 +3,10 @@ package systemcatalog.components;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.trees.querytree.operator.Operator;
+import datastructures.trees.querytree.operator.types.SimpleSelection;
+import org.junit.jupiter.params.ParameterizedTest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -151,5 +154,104 @@ public final class OptimizerUtilities {
                 values.set(i, "\"" + value + "\"");
             }
         }
+    }
+
+    /**
+     * @param listOfLists is a list of lists containing elements
+     * @param <T> is a generic type
+     * @return given a list of lists, returns the list with the fewest elements
+     */
+    public static <T> List<T> getListOfFewestElements(List<List<T>> listOfLists) {
+        int indexOfSmallestList = 0, smallestSize = listOfLists.get(0).size();
+        for(int i = 0; i < listOfLists.size(); i++) {
+            int listSize = listOfLists.get(i).size();
+            if(listSize < smallestSize) {
+                smallestSize = listSize;
+                indexOfSmallestList = i;
+            }
+        }
+        return listOfLists.get(indexOfSmallestList);
+    }
+
+    /**
+     * @param listOfLists is a list of lists containing elements
+     * @param <T> is a generic type
+     * @return given a list of lists, returns the list with the most elements
+     */
+    public static <T> List<T> getListOfMostElements(List<List<T>> listOfLists) {
+        int indexOfLargestList = 0, largestSize = listOfLists.get(0).size();
+        for(int i = 0; i < listOfLists.size(); i++) {
+            int listSize = listOfLists.get(i).size();
+            if(listSize > largestSize) {
+                largestSize = listSize;
+                indexOfLargestList = i;
+            }
+        }
+        return listOfLists.get(indexOfLargestList);
+    }
+
+    /**
+     * @param selections is a list of selections to check, note: if a selection with a join condition
+     * is found, will remove it from this list
+     * @return a list of simple selections that have a join condition
+     */
+    public static List<Operator> getSelectionsWithJoinConditions(List<Operator> selections) {
+        List<Operator> selectionsWithJoinConditions = new ArrayList<>();
+        boolean finished = false;
+        while (! finished) {
+            boolean madeModification = false;
+            for (int i = 0; i < selections.size(); i++) {
+                SimpleSelection currentSimpleSelection = (SimpleSelection) selections.get(i);
+                String value = currentSimpleSelection.getValue();
+                if (value.contains(".")) {
+                    selectionsWithJoinConditions.add(selections.remove(i));
+                    madeModification = true;
+                    break;
+                }
+            }
+            if (! madeModification) {
+                finished = true;
+            }
+        }
+        return selectionsWithJoinConditions;
+    }
+
+    /**
+     * Given a list of stuff, performs Heap's algorithm in order to produce a list of lists
+     * which contains every permutation of the original list. When first calling, set i to
+     * the size of the list to permute and the permuted list should initially be empty.
+     * Source: https://en.wikipedia.org/wiki/Heap%27s_algorithm
+     * @param i is the initial size of the list before recursively calling itself
+     * @param list is the list to permute
+     * @param permutedList is a list containing all permutations of list, originally empty
+     * @param <T> is a generic type
+     */
+    public static <T> void permuteList(int i, List<T> list, List<List<T>> permutedList) {
+        if (i == 1) {
+            permutedList.add(new ArrayList<>(list));
+        } else {
+            permuteList(i - 1, list, permutedList);
+            for (int j = 0; j < i - 1; j++) {
+                if (j % 2 == 0) {
+                    swap(j, i - 1, list);
+                } else {
+                    swap(0, i - 1, list);
+                }
+                permuteList(i - 1, list, permutedList);
+            }
+        }
+    }
+
+    /**
+     * Swaps two elements in a list.
+     * @param i first index to swap
+     * @param j second index to swap
+     * @param list a referenced to the list
+     * @param <T> is a generic type
+     */
+    public static <T> void swap(int i, int j, List<T> list) {
+        T temp = list.get(i);
+        list.set(i, list.get(j));
+        list.set(j, temp);
     }
 }

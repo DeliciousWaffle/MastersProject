@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static datastructures.trees.querytree.QueryTree.Traversal.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class QueryTreeTest {
@@ -50,24 +51,52 @@ public class QueryTreeTest {
         Operator r3 = new Relation("r3");
 
         QueryTree queryTree = new QueryTree(p1);
-        queryTree.add(new ArrayList<>(), QueryTree.Traversal.DOWN, s1);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN)), QueryTree.Traversal.DOWN, c1);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN)), QueryTree.Traversal.LEFT, p2);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT)), QueryTree.Traversal.DOWN, s2);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT, QueryTree.Traversal.DOWN)), QueryTree.Traversal.DOWN, c2);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT, QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN)), QueryTree.Traversal.LEFT, p3);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT, QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT)), QueryTree.Traversal.DOWN, s3);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT, QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT, QueryTree.Traversal.DOWN)), QueryTree.Traversal.DOWN, r1);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT, QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN)), QueryTree.Traversal.RIGHT, p4);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.LEFT, QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.RIGHT)), QueryTree.Traversal.DOWN, r2);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN)), QueryTree.Traversal.RIGHT, p5);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.RIGHT)), QueryTree.Traversal.DOWN, s4);
-        queryTree.add(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.RIGHT, QueryTree.Traversal.DOWN)), QueryTree.Traversal.DOWN, r3);
+        queryTree.add(new ArrayList<>(), DOWN, s1);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN)), DOWN, c1);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN)), LEFT, p2);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT)), DOWN, s2);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN)), DOWN, c2);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN, DOWN)), LEFT, p3);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN, DOWN, LEFT)), DOWN, s3);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN, DOWN, LEFT, DOWN)), DOWN, r1);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN, DOWN)), QueryTree.Traversal.RIGHT, p4);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN, DOWN, QueryTree.Traversal.RIGHT)), DOWN, r2);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN)), QueryTree.Traversal.RIGHT, p5);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, QueryTree.Traversal.RIGHT)), DOWN, s4);
+        queryTree.add(new ArrayList<>(Arrays.asList(DOWN, DOWN, QueryTree.Traversal.RIGHT, DOWN)), DOWN, r3);
 
         return queryTree;
     }
 
+    /*@Test
+    public void testRemove1() {
+
+        System.out.println("testRemove1()");
+
+        QueryTree queryTree = getQueryTree();
+        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+
+        Operator operator = queryTree.remove(new ArrayList<>(), QueryTree.Traversal.NONE);
+
+        System.out.println("\nRemoved Object: " + operator + "\n");
+        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+    }
+
     @Test
+    public void testRemove2() {
+
+        System.out.println("testRemove2()");
+
+        QueryTree queryTree = getQueryTree();
+        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+
+        Operator operator = queryTree.remove(Arrays.asList(DOWN, DOWN), RIGHT);
+
+        System.out.println("\nRemoved Object: " + operator + "\n");
+        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+    }*/
+
+    /*@Test
     public void testSwap() {
 
         System.out.println("testSwap()");
@@ -96,6 +125,19 @@ public class QueryTreeTest {
         queryTree = getQueryTree();
         queryTree.removeSubtree(new ArrayList<>(Arrays.asList(QueryTree.Traversal.DOWN, QueryTree.Traversal.DOWN, QueryTree.Traversal.RIGHT)));
         assertEquals(11, queryTree.getSize());
+        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+    }*/
+
+    @Test
+    public void testSubtreeRemoval2() {
+
+        System.out.println("testSubtreeRemoval2()");
+
+        QueryTree queryTree = getQueryTree();
+        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+
+        System.out.println("removed: " + queryTree.removeSubtree(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN))));
+
         queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
     }
 

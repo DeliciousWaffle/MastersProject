@@ -243,7 +243,9 @@ public final class QueryTree {
      * @param traversals is a list of traversals needed to get to the location
      * @param target is the location of the node to remove
      */
-    public void remove(List<Traversal> traversals, Traversal target) {
+    public Operator remove(List<Traversal> traversals, Traversal target) {
+
+        Operator operatorRemoved = null;
 
         QueryTreeNode pointer = traverse(traversals);
 
@@ -251,11 +253,13 @@ public final class QueryTree {
             case LEFT: {
 
                 if (! pointer.getLeftChild().hasAnyChildren()) {
+                    operatorRemoved = pointer.getLeftChild().getOperator();
                     pointer.setLeftChild(null);
 
                 } else {
 
                     QueryTreeNode toRemove = pointer.getLeftChild();
+                    operatorRemoved = toRemove.getOperator();
 
                     if (toRemove.hasOnlyChild()) {
                         QueryTreeNode toRemovesChild = toRemove.getOnlyChild();
@@ -284,11 +288,13 @@ public final class QueryTree {
             case RIGHT: {
 
                 if (! pointer.getRightChild().hasAnyChildren()) {
+                    operatorRemoved = pointer.getRightChild().getOperator();
                     pointer.setRightChild(null);
 
                 } else {
 
                     QueryTreeNode toRemove = pointer.getRightChild();
+                    operatorRemoved = toRemove.getOperator();
 
                     if (toRemove.hasOnlyChild()) {
                         QueryTreeNode toRemovesChild = toRemove.getOnlyChild();
@@ -317,13 +323,27 @@ public final class QueryTree {
             case UP: {
 
                 if (pointer.getParent().getParent() == null) {
+                    operatorRemoved = pointer.getParent().getOperator();
                     pointer.setParent(null);
                     root = pointer;
 
                 } else {
                     QueryTreeNode toRemove = pointer.getParent();
+                    operatorRemoved = toRemove.getOperator();
                     QueryTreeNode toRemovesParent = toRemove.getParent();
-                    toRemovesParent.setOnlyChild(pointer);
+                    Traversal toRemovesLocationWithRespectToParent =
+                            getLocationWithRespectToParent(toRemove, toRemovesParent);
+                    switch(toRemovesLocationWithRespectToParent) {
+                        case LEFT:
+                            toRemovesParent.setLeftChild(pointer);
+                            break;
+                        case RIGHT:
+                            toRemovesParent.setRightChild(pointer);
+                            break;
+                        case DOWN:
+                            toRemovesParent.setOnlyChild(pointer);
+                            break;
+                    }
                     pointer.setParent(toRemovesParent);
                 }
 
@@ -333,22 +353,23 @@ public final class QueryTree {
             case DOWN: {
 
                 if (! pointer.getOnlyChild().hasAnyChildren()) {
+                    operatorRemoved = pointer.getOnlyChild().getOperator();
                     pointer.setOnlyChild(null);
 
                 } else {
 
                     QueryTreeNode toRemove = pointer.getOnlyChild();
+                    operatorRemoved = toRemove.getOperator();
 
                     if (toRemove.hasOnlyChild()) {
                         QueryTreeNode toRemovesChild = toRemove.getOnlyChild();
                         toRemovesChild.setParent(pointer);
                         pointer.setOnlyChild(toRemovesChild);
 
-                    // can't perform the removal without creating 3 children
                     } else {
                         System.out.println("In QueryTree.remove()");
-                        System.out.println("Removal violates the property of a having at most 2 child nodes!");
-                        return;
+                        System.out.println("Removing a node with 2 children");
+                        return null;
                     }
                 }
 
@@ -357,53 +378,63 @@ public final class QueryTree {
 
             case NONE: {
 
-                if (!pointer.hasAnyChildren()) {
+                operatorRemoved = pointer.getOperator();
 
-                    QueryTreeNode pointersParent = pointer.getParent();
+                if (pointer == root) {
 
-                    if (pointersParent.hasLeftChild() && pointersParent.getLeftChild() == pointer) {
-                        pointersParent.setLeftChild(null);
-                    } else if (pointersParent.hasRightChild() && pointersParent.getRightChild() == pointer) {
-                        pointersParent.setRightChild(null);
-                    } else if (pointersParent.hasOnlyChild() && pointersParent.getOnlyChild() == pointer) {
-                        pointersParent.setOnlyChild(null);
-                    }
+                    root = pointer.getOnlyChild();
+                    root.setParent(null);
 
                 } else {
 
-                    if (pointer.hasOnlyChild()) {
+                    if (!pointer.hasAnyChildren()) {
 
                         QueryTreeNode pointersParent = pointer.getParent();
-                        QueryTreeNode pointersChild = pointer.getOnlyChild();
 
                         if (pointersParent.hasLeftChild() && pointersParent.getLeftChild() == pointer) {
-                            pointersParent.setLeftChild(pointersChild);
+                            pointersParent.setLeftChild(null);
                         } else if (pointersParent.hasRightChild() && pointersParent.getRightChild() == pointer) {
-                            pointersParent.setRightChild(pointersChild);
+                            pointersParent.setRightChild(null);
                         } else if (pointersParent.hasOnlyChild() && pointersParent.getOnlyChild() == pointer) {
-                            pointersParent.setOnlyChild(pointersChild);
+                            pointersParent.setOnlyChild(null);
                         }
-
-                        pointersChild.setParent(pointersParent);
 
                     } else {
 
-                        QueryTreeNode pointersParent = pointer.getParent();
+                        if (pointer.hasOnlyChild()) {
 
-                        // if the parent has more than 1 child too, the removal will
-                        // violate what it means to be a binary tree
-                        if (! pointersParent.hasOnlyChild()) {
-                            System.out.println("In QueryTree.remove()");
-                            System.out.println("Removal will create a non-binary tree");
+                            QueryTreeNode pointersParent = pointer.getParent();
+                            QueryTreeNode pointersChild = pointer.getOnlyChild();
+
+                            if (pointersParent.hasLeftChild() && pointersParent.getLeftChild() == pointer) {
+                                pointersParent.setLeftChild(pointersChild);
+                            } else if (pointersParent.hasRightChild() && pointersParent.getRightChild() == pointer) {
+                                pointersParent.setRightChild(pointersChild);
+                            } else if (pointersParent.hasOnlyChild() && pointersParent.getOnlyChild() == pointer) {
+                                pointersParent.setOnlyChild(pointersChild);
+                            }
+
+                            pointersChild.setParent(pointersParent);
 
                         } else {
-                            QueryTreeNode pointersLeftChild = pointer.getLeftChild();
-                            QueryTreeNode pointersRightChild = pointer.getRightChild();
-                            pointersParent.setOnlyChild(null);
-                            pointersParent.setLeftChild(pointersLeftChild);
-                            pointersParent.setRightChild(pointersRightChild);
-                            pointersLeftChild.setParent(pointersParent);
-                            pointersRightChild.setParent(pointersParent);
+
+                            QueryTreeNode pointersParent = pointer.getParent();
+
+                            // if the parent has more than 1 child too, the removal will
+                            // violate what it means to be a binary tree
+                            if (!pointersParent.hasOnlyChild()) {
+                                System.out.println("In QueryTree.remove()");
+                                System.out.println("Removal will create a non-binary tree");
+
+                            } else {
+                                QueryTreeNode pointersLeftChild = pointer.getLeftChild();
+                                QueryTreeNode pointersRightChild = pointer.getRightChild();
+                                pointersParent.setOnlyChild(null);
+                                pointersParent.setLeftChild(pointersLeftChild);
+                                pointersParent.setRightChild(pointersRightChild);
+                                pointersLeftChild.setParent(pointersParent);
+                                pointersRightChild.setParent(pointersParent);
+                            }
                         }
                     }
                 }
@@ -413,19 +444,22 @@ public final class QueryTree {
         }
 
         size--;
+
+        return operatorRemoved;
     }
 
     /**
      * Given the location of a node in the query tree, removes it along with any children that it may have.
      * @param traversals is a list of traversals to get to a node
+     * @return a list of operators removed
      */
-    public void removeSubtree(List<Traversal> traversals) {
+    public List<Operator> removeSubtree(List<Traversal> traversals) {
 
         QueryTreeNode pointer = traverse(traversals);
+        List<Operator> operatorsInSubtree = getOperatorsInSubtree(pointer, new ArrayList<>());
 
         // need to update size to reflect changes
-        int numChildren = getNumNodesInSubtree(pointer, 0);
-        size -= numChildren;
+        size -= operatorsInSubtree.size();
 
         // removing the node now
         QueryTreeNode parent = pointer.getParent();
@@ -443,6 +477,8 @@ public final class QueryTree {
                 parent.setOnlyChild(null);
                 break;
         }
+
+        return operatorsInSubtree;
     }
 
     /**
@@ -451,6 +487,19 @@ public final class QueryTree {
      */
     public int getTypeOccurrence(Operator.Type type) {
         return getOperatorsAndLocationsOfType(type).size();
+    }
+
+    /**
+     * Returns the first occurrence of the type supplied. Should only be called if
+     * expecting just a single value to be returned.
+     * @param typeToGet is the type of operator to get from the query tree
+     * @return the first occurrence of the type supplied
+     */
+    public Map.Entry<Operator, List<QueryTree.Traversal>> getFirstOccurrenceOfType(Operator.Type typeToGet) {
+        return getOperatorsAndLocationsOfType(typeToGet)
+                .entrySet()
+                .iterator()
+                .next();
     }
 
     /**
@@ -598,24 +647,24 @@ public final class QueryTree {
     }
 
     /**
-     * Given a pointer to a node, returns the number of nodes present in that node's subtree. Did a recursion.
+     * Given a pointer to a node, returns a list of operators present in that node's subtree. Did a recursion.
      * @param pointer is the pointer to a node
-     * @param numChildren is the number of children in that node's subtree
-     * @return number of children in a given node's subtree
+     * @param operators is a list of operators contained in the subtree
+     * @return a list of operators contained in the subtree specified
      */
-    private int getNumNodesInSubtree(QueryTreeNode pointer, int numChildren) {
+    private List<Operator> getOperatorsInSubtree(QueryTreeNode pointer, List<Operator> operators) {
 
-        if (pointer == null) {
-            return numChildren;
+        if(pointer == null) {
+            return operators;
         }
 
-        numChildren++;
+        operators.add(pointer.getOperator());
 
-        numChildren = getNumNodesInSubtree(pointer.getOnlyChild(), numChildren);
-        numChildren = getNumNodesInSubtree(pointer.getLeftChild(), numChildren);
-        numChildren = getNumNodesInSubtree(pointer.getRightChild(), numChildren);
+        operators = getOperatorsInSubtree(pointer.getOnlyChild(), operators);
+        operators = getOperatorsInSubtree(pointer.getLeftChild(), operators);
+        operators = getOperatorsInSubtree(pointer.getRightChild(), operators);
 
-        return numChildren;
+        return operators;
     }
 
     /**

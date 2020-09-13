@@ -5,22 +5,28 @@ import datastructures.trees.querytree.operator.Operator;
 public class InnerJoin extends Operator {
 
     private final Type type;
-    private final String joinOnColumn1, joinOnColumn2;
+    private final String joinOnColumn1, symbol, joinOnColumn2;
 
-    public InnerJoin(String joinOnColumn1, String joinOnColumn2) {
+    public InnerJoin(String joinOnColumn1, String symbol, String joinOnColumn2) {
         this.type = Type.INNER_JOIN;
         this.joinOnColumn1 = joinOnColumn1;
+        this.symbol = symbol;
         this.joinOnColumn2 = joinOnColumn2;
     }
 
     public InnerJoin(InnerJoin toCopy) {
         this.type = Type.INNER_JOIN;
         this.joinOnColumn1 = toCopy.joinOnColumn1;
+        this.symbol = toCopy.symbol;
         this.joinOnColumn2 = toCopy.joinOnColumn2;
     }
 
     public String getJoinOnColumn1() {
         return joinOnColumn1;
+    }
+
+    public String getSymbol() {
+        return symbol;
     }
 
     public String getJoinOnColumn2() {
@@ -39,6 +45,6 @@ public class InnerJoin extends Operator {
 
     @Override
     public String toString() {
-        return "\u2A1D" + " (" + joinOnColumn1 + " = " + joinOnColumn2 + ")";
+        return "\u2A1D" + " (" + joinOnColumn1 + " " + symbol + " " + joinOnColumn2 + ")";
     }
 }
