@@ -24,7 +24,7 @@ public final class QueryTree {
 
         LEFT, RIGHT, UP, DOWN, NONE;
 
-        public static final List<Traversal> NO_TRAVERSALS = new ArrayList<>();
+        public static final List<Traversal> NO_TRAVERSALS = new ArrayList<>(); // just for clarification
 
         /**
          * Creates a deep copy, that is, a separate copy of the given traversal.
@@ -542,6 +542,10 @@ public final class QueryTree {
                     break;
                 case DOWN:
                     pointer = pointer.getOnlyChild();
+                    break;
+                case NONE:
+                default:
+                    // pointer will remain as the root
                     break;
             }
         }

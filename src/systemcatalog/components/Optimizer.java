@@ -6,6 +6,7 @@ import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;
 import datastructures.trees.querytree.operator.types.*;
+import utilities.QueryCost;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,8 +24,8 @@ import static datastructures.trees.querytree.operator.Operator.Type.*;
  * Step 1: Break up any selections with conjunctions with a cascade a of selections
  * Step 2: Move these selections as far down the query tree as possible
  * Step 3: Combine cartesian products and selections with a join condition into joins
- * Step 4: Rearrange these joins such that subtrees with the most restricted references are done first
- * Step 5: Move projections as far down the query tree as possible
+ * Step 4: Move projections as far down the query tree as possible
+ * Step 5: Rearrange these joins such that subtrees with the most restricted references are done first
  * Step 6: Identify subtrees that can be pipelined
  * This class is also responsible for producing naive and optimized relational algebra expressions which help
  * show the user how their query can be further optimized. Additionally, recommendations for file structures
@@ -41,7 +42,7 @@ public class Optimizer {
     }
 
     public void toggleRearrangeLeafNodes() {
-        this.toggleRearrangeLeafNodes = !toggleRearrangeLeafNodes;
+        this.toggleRearrangeLeafNodes = ! toggleRearrangeLeafNodes;
     }
 
     public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
@@ -50,9 +51,10 @@ public class Optimizer {
         QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
-        QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), input, tables);
-        /*QueryTree afterPushingDownProjections   = pushDownProjections(new QueryTree(afterRearrangingJoins));
-        List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
+        QueryTree afterPushingDownProjections   = pushDownProjections(new QueryTree(afterFormingJoins));
+        //QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), input, tables);
+         // TODO change back to afterRearrangingJoins
+        /*List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
 
         List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
                 queryTree, afterCascadingSelections, afterPushingDownSelections, afterFormingJoins,
@@ -67,8 +69,12 @@ public class Optimizer {
     /**
      * Responsible for query tree creation. This involves extracting the user's input and making references
      * to the system tables in order to create relational algebra operators and add them to the tree.
+     * For initial query tree creation, tableNames should be an empty list. Otherwise, it is used for creating
+     * permutations of possible query trees when rearrangingJoins() is eventually reached.
      * @param input is the user's tokenized input
      * @param tables is a list of system tables
+     * @param tableNames should be an empty list if calling for the first time, otherwise used for creating
+     * permutations of query trees
      * @return the query tree after creation
      */
     public QueryTree createQueryTree(String[] input, List<Table> tables, List<String> tableNames) {
@@ -81,7 +87,7 @@ public class Optimizer {
         List<String> selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(input, 9);
 
         // from clause data
-        if(tableNames.isEmpty()) {
+        if(tableNames.isEmpty()) { // initial query tree creation, extract table data from input
             tableNames = queryRuleGraph.getTokensAt(input, 13, 15, 18);
         }
         List<String> firstJoinOnColumnNames = queryRuleGraph.getTokensAt(input, 20);
@@ -422,297 +428,54 @@ public class Optimizer {
     }
 
     /**
-     * Rearranges the ordering of joins such that ones with the most restricted references
-     * are executed first in the query tree. This takes into account selections that are performed
-     * in the subtree of where that table is located as well as available file structures.
-     * Performing this action will reduce the write to disk cost when pipelining intermediary
-     * subtrees of the query tree, thus, increasing performance.
-     * @param queryTree is the query tree to perform the reordering of leaf nodes on
-     * @param tables are a list of tables in the system that will be referenced to determine the cost
-     * of executing a particular subtree and whether a leaf node will need to be rearranged
-     * @return the query tree after the leaf nodes have been rearranged in order to reduce write to disk costs
+     * Performs the 4th step in the optimization process which is to create projections and push
+     * them down the tree. These will be placed right below cartesian products and joins. These
+     * projections will only contain the columns that are needed for the end result which means
+     * unnecessary columns will be removed.
+     * @param queryTree is the query tree whose projections will be pushed down
+     * @return the query tree after pushing down projections
      */
-    public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) {
+    public QueryTree pushDownProjections(QueryTree queryTree) {
 
-        // don't bother if we only have a single table or have 1 or 0 joins
+        // will not need to push down projections if there is only one relation
         boolean hasOneRelation = queryTree.getTypeOccurrence(RELATION) == 1;
-        boolean hasOneOrLessInnerJoins = queryTree.getTypeOccurrence(INNER_JOIN) <= 1;
 
-        if(hasOneRelation || hasOneOrLessInnerJoins) {
+        if(hasOneRelation) {
             return queryTree;
         }
 
-        // permuting a list of all possible query tree orientations while preserving join integrity
-        List<String> tableNames = queryRuleGraph.getTokensAt(input, 13, 15, 18);
-        System.out.println("REARRANGE JOINS");
-        List<List<String>> permutedTableNames = new ArrayList<>();
-        OptimizerUtilities.permuteList(tableNames.size(), tableNames, permutedTableNames);
-        permutedTableNames.forEach(System.out::println);
+        // get each relation and location from the query tree
+        Map<Operator, List<QueryTree.Traversal>> relationsAndLocations =
+                queryTree.getOperatorsAndLocationsOfType(RELATION);
 
-        List<QueryTree> permutedQueryTrees = new ArrayList<>();
-        for(int i = 0; i < permutedTableNames.size(); i++) {
-            QueryTree permutedQueryTree = createQueryTree(input, tables, permutedTableNames.get(i));
-            permutedQueryTree = cascadeSelections(permutedQueryTree);
-            permutedQueryTree = pushDownSelections(permutedQueryTree);
-            permutedQueryTree = formJoins(permutedQueryTree);
-            permutedQueryTrees.add(permutedQueryTree);
-        }
-        System.out.println("START PERMUTING==================================================================================");
-        // filter out permutations that contain cartesian products, these will be inherently worse
-        permutedQueryTrees.forEach(e -> e.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v)));
-System.out.println("DONE PERMUTING==================================================================================\n");
-        return queryTree;
-    }
-}
+        for(Map.Entry<Operator, List<QueryTree.Traversal>> entry : relationsAndLocations.entrySet()) {
+            List<QueryTree.Traversal> relationLocation = entry.getValue();
+            // adding a traversal to include the root node
+            relationLocation.add(0, NONE);
+            List<QueryTree.Traversal> traversals = new ArrayList<>();
+            // start from the root of the query tree and work towards the location of the current relation
+            for(QueryTree.Traversal traversal : relationLocation) {
+                traversals.add(traversal);
+                Operator operator = queryTree.get(traversals, NONE);
+                // add the current operators data to the data that will be needed for the new projection node
 
-    /*
-
-    // 4. Rearrangement of Leaf Nodes ==================================================================================
-
-    /**
-     * Rearranges the leaf nodes (the tables) such that ones with the most restricted references
-     * are executed first in the query tree. This takes into account selections that are performed
-     * in the subtree of where that table is located. Performing this action will reduce the write to
-     * disk cost when pipelining intermediary subtrees of the query tree, thus, increasing performance.
-     * @param queryTree is the query tree to perform the reordering of leaf nodes on
-     //* @param tables are a list of tables in the system that will be referenced to determine the cost
-     * of executing a particular subtree and whether a leaf node will need to be rearranged
-     * @return the query tree after the leaf nodes have been rearranged in order to reduce write to disk costs
-     */
-    /*public QueryTree rearrangeLeafNodes(QueryTree queryTree, List<Table> tables) {
-
-        // don't bother if the user doesn't wish to rearrange the leaf nodes
-        if (! toggleRearrangeLeafNodes) {
-            return queryTree;
-        }
-
-        // also don't bother if there are only 1 or 2 tables being referenced, the ordering of leaf nodes will not make a difference
-        if (queryTree.getNumRelations() <= 2) {
-            return queryTree;
-        }
-
-        // get the locations of each table in the query tree
-        List<List<QueryTree.Traversal>> tableLocations = getTableLocationsInQueryTree(queryTree);
-
-        // get the names of each table that appears in the query tree
-        List<String> tableNames = getTableNamesFromRelationLocations(tableLocations, queryTree);
-
-        // get each table referenced in the query tree from the tables in the system
-        List<Table> referencedTables = getReferencedTables(tableNames, tables);
-
-        // order the referenced tables such that they match the ordering of tables in the query tree
-        orderReferencedTables(referencedTables, tableNames);
-
-        // get the cost of executing each table
-        List<Integer> costs = getTableCosts(referencedTables);
-
-        // for each leaf node location, traverse up until a join, calculating cost along the way
-
-        // sort each referenced table
-
-        // now order each subtree such that ones that produce the least cost are executed first
-
-        // TODO implement a swap method in query tree
-
-
-        return queryTree;
-    }
-
-    private List<List<QueryTree.Traversal>> getTableLocationsInQueryTree(QueryTree queryTree) {
-
-        List<List<QueryTree.Traversal>> relationLocations = new ArrayList<>();
-        List<List<QueryTree.Traversal>> allOperatorLocations = queryTree.getEveryOperatorsLocation();
-
-        for(List<QueryTree.Traversal> operatorLocation : allOperatorLocations) {
-            Operator operator = queryTree.get(operatorLocation, QueryTree.Traversal.NONE);
-            if(operator.getType() == Operator.Type.RELATION) {
-                relationLocations.add(operatorLocation);
             }
+
+            // add this new projection right below the first instance of a cartesian product or join
         }
 
-        return relationLocations;
-    }*/
+        System.out.println("Push Down Selections");
+        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
 
-    /*private List<String> getTableNamesFromRelationLocations(List<List<QueryTree.Traversal>> relationLocations, QueryTree queryTree) {
-
-        List<String> tableNames = new ArrayList<>();
-
-        for(List<QueryTree.Traversal> relationLocation : relationLocations) {
-            Relation relation = (Relation) queryTree.get(relationLocation, QueryTree.Traversal.NONE);
-            String tableName = relation.getTableName();
-            tableNames.add(tableName);
-        }
-
-        return tableNames;
+        return queryTree;
     }
 
-    //TODO not sure if work
-    private List<Table> getReferencedTables(List<String> tableNames, List<Table> tables) {
-        return tables.stream()
-                .filter(table -> tableNames.stream()
-                        .anyMatch(tableName -> table.getTableName().equalsIgnoreCase(tableName)))
-                .collect(Collectors.toList());
-    }
 
-    private void orderReferencedTables(List<Table> tables, List<String> tableNames) {
-
-    }
-
-    private List<Integer> getTableCosts(List<Table> tables) {
-
-        List<Integer> tableCosts = new ArrayList<>();
-
-        for(Table table : tables) {
-            int numberRecords = QueryCost.numberRecords(table);
-            int recordSize = QueryCost.numberRecords(table);
-            int blockingFactor = QueryCost.blockingFactor(recordSize);
-            int blocks = QueryCost.blocks(numberRecords, blockingFactor);
-
-            tableCosts.add(blocks);
-        }
-
-        return tableCosts;
-    }
+}
 
     // 5. Pushing Down Projections =====================================================================================
 
-    /*public QueryTree pushDownProjections(QueryTree queryTree) {
-
-        // TODO remove
-        if(queryTree != null) {
-            return queryTree;
-        }
-
-        // if we only have 1 table in the query tree, there is no need to push down projections
-        boolean hasOneTable = getTypeOccurrence(queryTree, Operator.Type.RELATION) == 1;
-
-        if(hasOneTable) {
-            return queryTree;
-        }
-
-        int numCartesianProductsAndJoins = getTypeOccurrence(queryTree, Operator.Type.CARTESIAN_PRODUCT) +
-                getTypeOccurrence(queryTree, Operator.Type.INNER_JOIN);
-
-System.out.println(queryTree.getTreeStructure());
-
-        // figure out what relations we have
-        List<String> relationNames = new ArrayList<>();
-
-        for(Operator operator : queryTree) {
-            if(operator.getType() == Operator.Type.RELATION) {
-                relationNames.add(((Relation) operator).getTableName());
-            }
-        }
-
-        // for each relation, explore each node along the traversal to reach that relation
-        // adding each column needed that appears with that relation's name to the working projection
-        for(String relationName : relationNames) {
-
-            List<String> projectedColumnNames = new ArrayList<>();
-
-            List<QueryTree.Traversal> relationTraversalLocation = queryTree.getRelationLocation(relationName);
-            Stack<QueryTree.Traversal> traversalStack = new Stack<>();
-            traversalStack.addAll(relationTraversalLocation);
-
-            while(! traversalStack.isEmpty()) {
-
-                Operator operator = queryTree.get(traversalStack, QueryTree.Traversal.NONE);
-
-                if(operator.getType() == Operator.Type.AGGREGATE_SELECTION) {
-
-                    AggregateSelection aggregateSelection = (AggregateSelection) operator;
-
-                    // check aggregate column names, if there is any, remove the aggregation type
-                    for(String aggregateColumnName : aggregateSelection.getColumnNames()) {
-                        String candidateRelation = aggregateColumnName.split("\\.")[0];
-
-                        if(candidateRelation.equalsIgnoreCase(relationName)) {
-                            if(! containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
-                                projectedColumnNames.add(aggregateColumnName);
-                            }
-                        }
-                    }
-
-                } else if(operator.getType() == Operator.Type.AGGREGATION) {
-
-                    Aggregation aggregation = (Aggregation) operator;
-
-                    // check group by column names
-                    for(String groupByColumnName : aggregation.getGroupByColumnNames()) {
-                        String candidateRelation = groupByColumnName.split("\\.")[0];
-                        if(candidateRelation.equalsIgnoreCase(relationName)) {
-                            if(! containsDuplicateColumnNames(groupByColumnName, projectedColumnNames)) {
-                                projectedColumnNames.add(groupByColumnName);
-                            }
-                        }
-                    }
-
-                    // check aggregate column names, if there is any, remove the aggregation type
-                    for(String aggregateColumnName : aggregation.getColumnNames()) {
-                        String candidateRelation = aggregateColumnName.split("\\.")[0];
-                        if(candidateRelation.equalsIgnoreCase(relationName)) {
-                            if(! containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
-                                projectedColumnNames.add(aggregateColumnName);
-                            }
-                        }
-                    }
-
-                } else if(operator.getType() == Operator.Type.PROJECTION) {
-
-                    Projection projection = (Projection) operator;
-
-                    for(String projectedColumnName : projection.getColumnNames()) {
-                        String candidateRelation = projectedColumnName.split("\\.")[0];
-                        if(candidateRelation.equalsIgnoreCase(relationName)) {
-                            if(! containsDuplicateColumnNames(projectedColumnName, projectedColumnNames)) {
-                                projectedColumnNames.add(projectedColumnName);
-                            }
-                        }
-                    }
-                }
-
-                else if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
-
-                    SimpleSelection simpleSelection = (SimpleSelection) operator;
-
-                    if(isJoinCondition(simpleSelection)) {
-
-                        String candidateFirstRelation = simpleSelection.getColumnName().split("\\.")[0];
-                        String candidateSecondRelation = simpleSelection.getValue().split("\\.")[0];
-
-                        if(candidateFirstRelation.equalsIgnoreCase(relationName)) {
-                            if(! containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
-                                projectedColumnNames.add(simpleSelection.getColumnName());
-                            }
-                        } else if(candidateSecondRelation.equalsIgnoreCase(relationName)) {
-                            if(! containsDuplicateColumnNames(simpleSelection.getValue(), projectedColumnNames)) {
-                                projectedColumnNames.add(simpleSelection.getValue());
-                            }
-                        }
-
-                    } else {
-
-                        String candidateRelation = simpleSelection.getColumnName().split("\\.")[0];
-
-                        if(candidateRelation.equalsIgnoreCase(relationName)) {
-                            if(! containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
-                                projectedColumnNames.add(simpleSelection.getColumnName());
-                            }
-                        }
-                    }
-
-                    // TODO
-                } else if(operator.getType() == Operator.Type.INNER_JOIN) {
-
-                    InnerJoin innerJoin = (InnerJoin) operator;
-
-                    //split check dups
-                    System.out.println("remove"+innerJoin.getJoinOnColumn1());
-                    System.out.println(innerJoin.getJoinOnColumn2());
-                }
-
-                traversalStack.pop();
-            }
+    /*
 
             // finally add the projection node right below the cartesian product closest to the relation
             boolean foundCartesian = queryTree.get(relationTraversalLocation, QueryTree.Traversal.UP).getType() == Operator.Type.CARTESIAN_PRODUCT || queryTree.get(relationTraversalLocation, QueryTree.Traversal.UP).getType() == Operator.Type.INNER_JOIN;
@@ -735,18 +498,18 @@ System.out.println(queryTree.getTreeStructure());
         List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationNames.get(0));
 
         // move up until reached the second cartesian product, this will be our starting point
-        int numCartesianProductsAndJoinsEncountered = 0;*/
+        int numCartesianProductsAndJoinsEncountered = 0;
 //TODO
-        /*while(numCartesianProductsAndJoinsEncountered < 2) {
+        while(numCartesianProductsAndJoinsEncountered < 2) {
             traversals.remove(traversals.size() - 1);
             if(queryTree.get(traversals, QueryTree.Traversal.NONE).getType() == Operator.Type.CARTESIAN_PRODUCT ||
                     queryTree.get(traversals, QueryTree.Traversal.NONE).getType() == Operator.Type.INNER_JOIN) {
                 numCartesianProductsAndJoinsEncountered++;
             }
-        }*/
+        }
 
         // keep adding projections below cartesian products until done
-        /*do {
+        do {
 
             // will eventually insert below the current cartesian product, need to move up the tree,
             // adding columns along the way
@@ -840,6 +603,100 @@ System.out.println(queryTree.getTreeStructure());
 
         return queryTree;
     }
+
+      Rearranges the ordering of joins such that ones with the most restricted references
+      are executed first in the query tree. This takes into account selections that are performed
+      in the subtree of where that table is located as well as available file structures.
+      Performing this action will reduce the write to disk cost when pipelining intermediary
+      subtrees of the query tree, thus, increasing performance.
+      @param queryTree is the query tree to perform the reordering of leaf nodes on
+      @param tables are a list of tables in the system that will be referenced to determine the cost
+      of executing a particular subtree and whether a leaf node will need to be rearranged
+      @return the query tree after the leaf nodes have been rearranged in order to reduce write to disk costs
+
+        public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) {
+
+            // don't bother if we only have a single table or have 1 or 0 joins
+            boolean hasOneRelation = queryTree.getTypeOccurrence(RELATION) == 1;
+            boolean hasOneOrLessInnerJoins = queryTree.getTypeOccurrence(INNER_JOIN) <= 1;
+
+            if(hasOneRelation || hasOneOrLessInnerJoins) {
+                return queryTree;
+            }
+
+            // permuting a list of all possible relation locations which will produce a list of all
+            // possible query tree orientations, making calls to previous methods to recreate these new query trees
+            List<String> tableNames = queryRuleGraph.getTokensAt(input, 13, 15, 18);
+            List<List<String>> permutedTableNames = new ArrayList<>();
+            OptimizerUtilities.permuteList(tableNames.size(), tableNames, permutedTableNames);
+
+            List<QueryTree> permutedQueryTrees = new ArrayList<>();
+
+            for(int i = 0; i < permutedTableNames.size(); i++) {
+                QueryTree permutedQueryTree = createQueryTree(input, tables, permutedTableNames.get(i));
+                permutedQueryTree = cascadeSelections(permutedQueryTree);
+                permutedQueryTree = pushDownSelections(permutedQueryTree);
+                permutedQueryTree = formJoins(permutedQueryTree);
+                permutedQueryTrees.add(permutedQueryTree);
+            }
+
+            // filter out query tree permutations that contain cartesian products, these will be inherently worse
+            permutedQueryTrees = OptimizerUtilities.removeQueryTreesWithOperatorsOfType(permutedQueryTrees, CARTESIAN_PRODUCT);
+            permutedQueryTrees.forEach(e -> e.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v)));
+            // for each query tree permutation, calculate the cost it will take to execute each one with respect
+            // to file structures already built
+            int lowestCost = Integer.MAX_VALUE, indexOfLowestCost = 0;
+
+            for (QueryTree permutedQueryTree : permutedQueryTrees) {
+                // convert the operators from this permuted query tree to a stack
+                Deque<Operator> operatorStack = OptimizerUtilities.setToDeque(permutedQueryTree.getOperatorsAndLocations().keySet());
+                Deque<Integer> costStack = new ArrayDeque<>();
+
+                while(! operatorStack.isEmpty()) {
+                    Operator operator = operatorStack.getFirst();
+                    switch(operator.getType()) {
+                        case RELATION: {
+                            Relation relation = (Relation) operator;
+                            Table table = OptimizerUtilities.getReferencedTable(relation.getTableName(), tables);
+                            assert table != null;
+                            int recordSize = table.getRecordSize();
+                            int numRecords = table.getNumRows();
+                            int blockingFactor = QueryCost.blockingFactor(recordSize);
+                            int blocks = QueryCost.blocks(numRecords, blockingFactor);
+                            costStack.push(blocks);
+                            break;
+                        }
+                        case SIMPLE_SELECTION: {
+                            SimpleSelection simpleSelection = (SimpleSelection) operator;
+
+                            break;
+                        }
+                        case INNER_JOIN: {
+                            InnerJoin innerJoin = (InnerJoin) operator;
+                            break;
+                        }
+                    }
+                }
+                // for each relation, traverse up the tree, calculating cost along the way
+
+
+                // get each node from the tree
+                // determine type of node
+                // relation
+                // map to system data
+                // get size and add it to running cost
+                // selection
+                // map to system data
+                // calculate the cost and add it to running cost
+                // join
+                // map to system data
+                // calculate the cost and add it to running cost
+            }
+
+            System.out.println("rearranged joins");
+
+            return queryTree;
+        }
 
     private int getTypeOccurrence(QueryTree queryTree, Operator.Type type) {
 

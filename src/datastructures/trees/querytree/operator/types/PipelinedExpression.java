@@ -81,6 +81,11 @@ public class PipelinedExpression extends Operator {
     }
 
     @Override
+    public List<String> getReferencedColumnNames() {
+        return new ArrayList<>();
+    }
+
+    @Override
     public Operator copy(Operator operator) {
         return new PipelinedExpression((PipelinedExpression) operator);
     }

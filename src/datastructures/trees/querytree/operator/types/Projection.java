@@ -7,16 +7,13 @@ import java.util.List;
 
 public class Projection extends Operator {
 
-    private final Type type;
     private final List<String> columnNames;
 
     public Projection(List<String> columnNames) {
-        this.type = Type.PROJECTION;
         this.columnNames = columnNames;
     }
 
     public Projection(Projection toCopy) {
-        this.type = Type.PROJECTION;
         this.columnNames = new ArrayList<>();
         this.columnNames.addAll(toCopy.columnNames);
     }
@@ -27,7 +24,12 @@ public class Projection extends Operator {
 
     @Override
     public Type getType() {
-        return type;
+        return Type.PROJECTION;
+    }
+
+    @Override
+    public List<String> getReferencedColumnNames() {
+        return columnNames;
     }
 
     @Override
@@ -40,7 +42,7 @@ public class Projection extends Operator {
 
         StringBuilder print = new StringBuilder();
 
-        print.append("\u03C0").append(" (");
+        print.append("π").append(" (");
 
         if(columnNames.size() == 1) {
             print.append(columnNames.get(0));

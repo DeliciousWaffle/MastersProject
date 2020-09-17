@@ -7,12 +7,10 @@ import java.util.List;
 
 public class AggregateSelection extends Operator {
 
-    private final Type type;
     private final List<String> aggregateTypes, columnNames, symbols, values;
 
     public AggregateSelection(List<String> aggregateTypes, List<String> columnNames,
                               List<String> symbols, List<String> values) {
-        this.type = Type.AGGREGATE_SELECTION;
         this.aggregateTypes = aggregateTypes;
         this.columnNames = columnNames;
         this.symbols = symbols;
@@ -20,7 +18,6 @@ public class AggregateSelection extends Operator {
     }
 
     public AggregateSelection(AggregateSelection toCopy) {
-        this.type = Type.AGGREGATE_SELECTION;
         this.aggregateTypes = new ArrayList<>();
         this.aggregateTypes.addAll(toCopy.aggregateTypes);
         this.columnNames = new ArrayList<>();
@@ -42,10 +39,6 @@ public class AggregateSelection extends Operator {
         return aggregateTypes;
     }
 
-    public List<String> getColumnNames() {
-        return columnNames;
-    }
-
     public List<String> getSymbols() {
         return symbols;
     }
@@ -56,7 +49,12 @@ public class AggregateSelection extends Operator {
 
     @Override
     public Operator.Type getType() {
-        return type;
+        return Type.AGGREGATE_SELECTION;
+    }
+
+    @Override
+    public List<String> getReferencedColumnNames() {
+        return columnNames;
     }
 
     @Override
@@ -68,8 +66,7 @@ public class AggregateSelection extends Operator {
     public String toString() {
         StringBuilder print = new StringBuilder();
 
-        // sigma unicode value
-        print.append("\u03C3 [");
+        print.append("σ [");
 
         for(int i = 0; i < aggregateTypes.size(); i++) {
 
@@ -82,7 +79,7 @@ public class AggregateSelection extends Operator {
             print.append(" ").append(symbol).append(" ").append(value);
 
             // logical conjunction unicode value
-            print.append(" ").append("\u2227").append(" ");
+            print.append(" ").append("∧").append(" ");
         }
 
         // remove logical conjunction and spaces

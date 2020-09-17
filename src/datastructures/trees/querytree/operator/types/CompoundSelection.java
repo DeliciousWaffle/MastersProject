@@ -4,21 +4,19 @@ import datastructures.trees.querytree.operator.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CompoundSelection extends Operator {
 
-    private final Type type;
     private final List<String> columnNames, symbols, values;
 
     public CompoundSelection(List<String> columnNames, List<String> symbols, List<String> values) {
-        this.type = Type.COMPOUND_SELECTION;
         this.columnNames = columnNames;
         this.symbols = symbols;
         this.values = values;
     }
 
     public CompoundSelection(CompoundSelection toCopy) {
-        this.type = Type.COMPOUND_SELECTION;
         this.columnNames = new ArrayList<>();
         this.columnNames.addAll(toCopy.columnNames);
         this.symbols = new ArrayList<>();
@@ -47,7 +45,14 @@ public class CompoundSelection extends Operator {
 
     @Override
     public Type getType() {
-        return type;
+        return Type.COMPOUND_SELECTION;
+    }
+
+    @Override
+    public List<String> getReferencedColumnNames() {
+        return columnNames.stream()
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     @Override

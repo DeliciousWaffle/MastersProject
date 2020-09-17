@@ -2,18 +2,18 @@ package datastructures.trees.querytree.operator.types;
 
 import datastructures.trees.querytree.operator.Operator;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Relation extends Operator {
 
-    private Type type;
     private String tableName;
 
     public Relation(String tableName) {
-        this.type = Type.RELATION;
         this.tableName = tableName;
     }
 
     public Relation(Relation toCopy) {
-        this.type = Type.RELATION;
         this.tableName = toCopy.tableName;
     }
 
@@ -24,6 +24,11 @@ public class Relation extends Operator {
     @Override
     public Type getType() {
         return Type.RELATION;
+    }
+
+    @Override
+    public List<String> getReferencedColumnNames() {
+        return new ArrayList<>();
     }
 
     @Override

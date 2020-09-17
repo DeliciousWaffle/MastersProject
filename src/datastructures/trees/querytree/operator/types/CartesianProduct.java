@@ -2,17 +2,21 @@ package datastructures.trees.querytree.operator.types;
 
 import datastructures.trees.querytree.operator.Operator;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CartesianProduct extends Operator {
 
-    private final Type type;
-
-    public CartesianProduct() {
-        this.type = Type.CARTESIAN_PRODUCT;
-    }
+    public CartesianProduct() {}
 
     @Override
     public Type getType() {
-        return type;
+        return Type.CARTESIAN_PRODUCT;
+    }
+
+    @Override
+    public List<String> getReferencedColumnNames() {
+        return new ArrayList<>();
     }
 
     @Override
@@ -22,6 +26,6 @@ public class CartesianProduct extends Operator {
 
     @Override
     public String toString() {
-        return "\u2715";
+        return "✕";
     }
 }

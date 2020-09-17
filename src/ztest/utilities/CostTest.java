@@ -37,7 +37,7 @@ class CostTest {
     @Test
     public void question2A() {
 
-        // produce temp1 with btree on Site.OwnerID (Owner Table)
+        // cost with btree on Site.OwnerID
 
         // Owner table
         int recordSize = 63;
@@ -48,18 +48,17 @@ class CostTest {
         // Site table
         int siteNumRecords = 5811;
         int keySize = 4;
-        int degree = QueryCost.degree(keySize);
-        int siteOwnerIDLevels = QueryCost.levels(siteNumRecords, degree);
-        int siteOwnerIDForeignKeySelectivity = QueryCost.foreignKeySelectivity(3954, 5811);
-
-        int joinCost = QueryCost.bTreeJoin(ownerBlocks, ownerNumRecords, siteOwnerIDLevels, siteOwnerIDForeignKeySelectivity);
-        //System.out.println(joinCost);
+        int degree = QueryCost.degree(keySize); // 86
+        int siteOwnerIDLevels = QueryCost.levels(siteNumRecords, degree); // 3
+        int siteOwnerIDForeignKeySelectivity = QueryCost.foreignKeySelectivity(3954, 5811); // 2
+        int joinCost = QueryCost.bTreeJoin(ownerBlocks, ownerNumRecords, siteOwnerIDLevels, siteOwnerIDForeignKeySelectivity); // 20018
+        assertEquals(20018, joinCost);
     }
 
     @Test
     public void question2B() {
 
-        // product temp1 with btree on Owner.OwnerID
+        // cost with btree on Owner.OwnerID
 
         // Site table
         int recordSize = 44;
@@ -100,7 +99,7 @@ class CostTest {
         int CBn = QueryCost.secondaryBTreeNonUnique(statusLevels, statusDegree, selectivity);
 
         int CJ2 = QueryCost.bTreeJoin(blocks, selectivity, 3, 1);
-        System.out.println(CJ2);
+        //System.out.println(CJ2);
 
     }
 

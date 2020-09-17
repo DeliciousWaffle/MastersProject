@@ -2,13 +2,12 @@ package systemcatalog.components;
 
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
+import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;
-import datastructures.trees.querytree.operator.types.SimpleSelection;
+import datastructures.trees.querytree.operator.types.*;
 import org.junit.jupiter.params.ParameterizedTest;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -243,7 +242,7 @@ public final class OptimizerUtilities {
     }
 
     /**
-     * Swaps two elements in a list.
+     * Swaps two elements in a list. Helper method for permuteList().
      * @param i first index to swap
      * @param j second index to swap
      * @param list a referenced to the list
@@ -253,5 +252,173 @@ public final class OptimizerUtilities {
         T temp = list.get(i);
         list.set(i, list.get(j));
         list.set(j, temp);
+    }
+
+    /**
+     * @param queryTrees is a list of query trees to operator on
+     * @return a list of query trees that don't contain the operator specified
+     */
+    public static List<QueryTree> removeQueryTreesWithOperatorsOfType(List<QueryTree> queryTrees, Operator.Type type) {
+        return queryTrees.stream()
+                .filter(queryTree -> queryTree.getTypeOccurrence(type) == 0)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * @param set is the set to convert
+     * @param <T> is a generic type
+     * @return a deque
+     */
+    public static <T> Deque<T> setToDeque(Set<T> set) {
+        List<T> operators = new ArrayList<>(set);
+        Deque<T> stack = new ArrayDeque<>();
+        while(! operators.isEmpty()) {
+            stack.addFirst(operators.remove(0));
+        }
+        return stack;
+    }
+
+    /**
+     * Given the current operator and a relation name,
+     * @param operator
+     * @return
+     */
+    public static List<String> getColumnNamesFromOperator(Operator operator) {
+        List<String> columnNames = new ArrayList<>();
+        switch(operator.getType()) {
+            case AGGREGATE_SELECTION:
+                List<String> aggregateSelectionColumnNames = ((AggregateSelection) operator).getColumnNames();
+                // remove
+                break;
+            case AGGREGATION:
+                columnNames.addAll(((Aggregation) operator));
+                break;
+            case PROJECTION:
+                columnNames.addAll(((Projection) operator));
+                break;
+            case INNER_JOIN:
+                columnNames.addAll(((InnerJoin) operator));
+                break;
+            case SIMPLE_SELECTION:
+                columnNames.addAll(((SimpleSelection) operator));
+                break;
+            default:
+                break;
+        }
+
+        return columnNames;
+    }
+
+    public static List<String> getColumnNamesWithRelationName(List<String> columnNames) {
+        return columnNames
+    }
+
+    public static <T> List<T> removeDuplicatesFromList(List<T> list) {
+        return list.stream()
+                .distinct()
+                .collect(Collectors.toList());
+    }
+}
+        public QueryTree pushDownProjections(QueryTree queryTree) {
+
+                while(! traversalStack.isEmpty()) {
+
+                    Operator operator = queryTree.get(traversalStack, QueryTree.Traversal.NONE);
+
+                    if(operator.getType() == Operator.Type.AGGREGATE_SELECTION) {
+
+                        AggregateSelection aggregateSelection = (AggregateSelection) operator;
+
+                        // check aggregate column names, if there is any, remove the aggregation type
+                        for(String aggregateColumnName : aggregateSelection.getColumnNames()) {
+                            String candidateRelation = aggregateColumnName.split("\\.")[0];
+
+                            if(candidateRelation.equalsIgnoreCase(relationName)) {
+                                if(! containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
+                                    projectedColumnNames.add(aggregateColumnName);
+                                }
+                            }
+                        }
+
+                    } else if(operator.getType() == Operator.Type.AGGREGATION) {
+
+                        Aggregation aggregation = (Aggregation) operator;
+
+                        // check group by column names
+                        for(String groupByColumnName : aggregation.getGroupByColumnNames()) {
+                            String candidateRelation = groupByColumnName.split("\\.")[0];
+                            if(candidateRelation.equalsIgnoreCase(relationName)) {
+                                if(! containsDuplicateColumnNames(groupByColumnName, projectedColumnNames)) {
+                                    projectedColumnNames.add(groupByColumnName);
+                                }
+                            }
+                        }
+
+                        // check aggregate column names, if there is any, remove the aggregation type
+                        for(String aggregateColumnName : aggregation.getColumnNames()) {
+                            String candidateRelation = aggregateColumnName.split("\\.")[0];
+                            if(candidateRelation.equalsIgnoreCase(relationName)) {
+                                if(! containsDuplicateColumnNames(aggregateColumnName, projectedColumnNames)) {
+                                    projectedColumnNames.add(aggregateColumnName);
+                                }
+                            }
+                        }
+
+                    } else if(operator.getType() == Operator.Type.PROJECTION) {
+
+                        Projection projection = (Projection) operator;
+
+                        for(String projectedColumnName : projection.getColumnNames()) {
+                            String candidateRelation = projectedColumnName.split("\\.")[0];
+                            if(candidateRelation.equalsIgnoreCase(relationName)) {
+                                if(! containsDuplicateColumnNames(projectedColumnName, projectedColumnNames)) {
+                                    projectedColumnNames.add(projectedColumnName);
+                                }
+                            }
+                        }
+                    }
+
+                    else if(operator.getType() == Operator.Type.SIMPLE_SELECTION) {
+
+                        SimpleSelection simpleSelection = (SimpleSelection) operator;
+
+                        if(isJoinCondition(simpleSelection)) {
+
+                            String candidateFirstRelation = simpleSelection.getColumnName().split("\\.")[0];
+                            String candidateSecondRelation = simpleSelection.getValue().split("\\.")[0];
+
+                            if(candidateFirstRelation.equalsIgnoreCase(relationName)) {
+                                if(! containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
+                                    projectedColumnNames.add(simpleSelection.getColumnName());
+                                }
+                            } else if(candidateSecondRelation.equalsIgnoreCase(relationName)) {
+                                if(! containsDuplicateColumnNames(simpleSelection.getValue(), projectedColumnNames)) {
+                                    projectedColumnNames.add(simpleSelection.getValue());
+                                }
+                            }
+
+                        } else {
+
+                            String candidateRelation = simpleSelection.getColumnName().split("\\.")[0];
+
+                            if(candidateRelation.equalsIgnoreCase(relationName)) {
+                                if(! containsDuplicateColumnNames(simpleSelection.getColumnName(), projectedColumnNames)) {
+                                    projectedColumnNames.add(simpleSelection.getColumnName());
+                                }
+                            }
+                        }
+
+                        // TODO
+                    } else if(operator.getType() == Operator.Type.INNER_JOIN) {
+
+                        InnerJoin innerJoin = (InnerJoin) operator;
+
+                        //split check dups
+                        System.out.println("remove"+innerJoin.getJoinOnColumn1());
+                        System.out.println(innerJoin.getJoinOnColumn2());
+                    }
+
+                    traversalStack.pop();
+                }
     }
 }

@@ -2,6 +2,9 @@ package datastructures.trees.querytree.operator.types;
 
 import datastructures.trees.querytree.operator.Operator;
 
+import java.util.Collections;
+import java.util.List;
+
 public class SimpleSelection extends Operator {
 
     private final Type type;
@@ -39,12 +42,17 @@ public class SimpleSelection extends Operator {
     }
 
     @Override
+    public List<String> getReferencedColumnNames() {
+        return Collections.singletonList(columnName);
+    }
+
+    @Override
     public Operator copy(Operator operator) {
         return new SimpleSelection((SimpleSelection) operator);
     }
 
     @Override
     public String toString() {
-        return "\u03C3" + " (" + columnName + " " + symbol + " " + value + ")";
+        return "σ" + " (" + columnName + " " + symbol + " " + value + ")";
     }
 }

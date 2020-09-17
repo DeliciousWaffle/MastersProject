@@ -152,8 +152,8 @@ public final class QueryCost {
     }
 
     // fs - estimate of the number of foreign keys to primary keys
-    public static int foreignKeySelectivity(int tableWithPrimaryKeyNumRows, int tableWithForeignKeyNumRows) {
-        return (int) Math.ceil((double) tableWithForeignKeyNumRows / tableWithPrimaryKeyNumRows);
+    public static int foreignKeySelectivity(int tableWithPrimaryKeyNumRecs, int tableWithForeignKeyNumRecs) {
+        return (int) Math.ceil((double) tableWithForeignKeyNumRecs / tableWithPrimaryKeyNumRecs);
     }
 
     public static String foreignKeySelectivityToString(int tableWithPrimaryKeyNumRows, int tableWithForeignKeyNumRows) {
@@ -484,14 +484,14 @@ public final class QueryCost {
 
     }
 
-    public static int bTreeJoin(int table1Blocks, int table1NumRecords, int table2Levels, int table2Selectivity) {
-        return table1Blocks + table1NumRecords * (table2Levels + table2Selectivity);
+    public static int bTreeJoin(int table2Blocks, int table2NumRecs, int table1IndColLevels, int table2IndColSelectivity) {
+        return table2Blocks + table2NumRecs * (table1IndColLevels + table2IndColSelectivity);
     }
 
-    public static String bTreeJoinToString(int table1Blocks, int table1NumRecords, int table2Levels, int table2Selectivity) {
-        return "CJ2 = R1.blocks + R1.numrecs * (R2.IndexedCol.levels + R2.IndexedCol.selectivity)\n" +
-                "CJ2 = " + table1Blocks + " + " + table1NumRecords + " * (" + table2Levels + " + " + table2Selectivity + ")\n" +
-                "CJ2 = " + bTreeJoin(table1Blocks, table1NumRecords, table2Levels, table2Selectivity);
+    public static String bTreeJoinToString(int table2Blocks, int table2NumRecs, int table1IndColLevels, int table2IndColSelectivity) {
+        return "CJ2 = T2.b + T2.r * (T1.IndCol.l + T1.Ind.s)\n" +
+                "CJ2 = " + table2Blocks + " + " + table2NumRecs + " * (" + table1IndColLevels + " + " + table2IndColSelectivity + ")\n" +
+                "CJ2 = " + bTreeJoin(table2Blocks, table2NumRecs, table1IndColLevels, table2IndColSelectivity);
     }
 
     public static int clusteredJoin(int table1Blocks, int table2Blocks) {

@@ -282,7 +282,7 @@ public class Table {
      * this method will return 12
      * @return the total size of all columns within the table
      */
-    public int getTotalColumnSize() {
+    public int getRecordSize() {
 
         int totalColSize = 0;
 

@@ -4,27 +4,26 @@ import datastructures.trees.querytree.operator.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Aggregation extends Operator {
 
-    private final Type type;
-    private final List<String> groupByColumnNames, aggregationTypes, columnNames;
+    private final List<String> groupByColumnNames, aggregationTypes, aggregatedColumnNames;
 
-    public Aggregation(List<String> groupByColumnNames, List<String> aggregationTypes, List<String> columnNames) {
-        this.type = Type.AGGREGATION;
+    public Aggregation(List<String> groupByColumnNames, List<String> aggregationTypes, List<String> aggregatedColumnNames) {
         this.groupByColumnNames = groupByColumnNames;
         this.aggregationTypes = aggregationTypes;
-        this.columnNames = columnNames;
+        this.aggregatedColumnNames = aggregatedColumnNames;
     }
 
     public Aggregation(Aggregation toCopy) {
-        this.type = Type.AGGREGATION;
         this.groupByColumnNames = new ArrayList<>();
         this.groupByColumnNames.addAll(toCopy.groupByColumnNames);
         this.aggregationTypes = new ArrayList<>();
         this.aggregationTypes.addAll(toCopy.aggregationTypes);
-        this.columnNames = new ArrayList<>();
-        this.columnNames.addAll(toCopy.columnNames);
+        this.aggregatedColumnNames = new ArrayList<>();
+        this.aggregatedColumnNames.addAll(toCopy.aggregatedColumnNames);
     }
 
     public List<String> getGroupByColumnNames() {
@@ -35,13 +34,20 @@ public class Aggregation extends Operator {
         return aggregationTypes;
     }
 
-    public List<String> getColumnNames() {
-        return columnNames;
+    public List<String> getAggregatedColumnNames() {
+        return aggregatedColumnNames;
     }
 
     @Override
     public Type getType() {
-        return type;
+        return Type.AGGREGATION;
+    }
+
+    @Override
+    public List<String> getReferencedColumnNames() {
+        return Stream.concat(groupByColumnNames.stream(), aggregatedColumnNames.stream())
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -72,12 +78,12 @@ public class Aggregation extends Operator {
 
         print.append("\uD835\uDCA2 ");
 
-        if(columnNames.size() == 1) {
-            print.append(aggregationTypes.get(0)).append("(").append(columnNames.get(0)).append(")");
+        if(aggregatedColumnNames.size() == 1) {
+            print.append(aggregationTypes.get(0)).append("(").append(aggregatedColumnNames.get(0)).append(")");
         } else {
             for(int i = 0; i < aggregationTypes.size(); i++) {
                 String aggregationType = aggregationTypes.get(i);
-                String columnName = columnNames.get(i);
+                String columnName = aggregatedColumnNames.get(i);
                 String formatted = aggregationType + "(" + columnName + ")";
                 print.append(formatted).append(", ");
             }
