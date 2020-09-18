@@ -21,7 +21,7 @@ public class InnerJoin extends Operator {
         this.joinOnColumn2 = toCopy.joinOnColumn2;
     }
 
-    public String getJoinOnColumn1() {
+    public String getFirstJoinColumnName() {
         return joinOnColumn1;
     }
 
@@ -29,7 +29,7 @@ public class InnerJoin extends Operator {
         return symbol;
     }
 
-    public String getJoinOnColumn2() {
+    public String getSecondJoinColumnName() {
         return joinOnColumn2;
     }
 

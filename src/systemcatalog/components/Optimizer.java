@@ -6,7 +6,6 @@ import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;
 import datastructures.trees.querytree.operator.types.*;
-import utilities.QueryCost;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -214,7 +213,7 @@ public class Optimizer {
             }
             queryTree.add(traversals, NONE, relations.remove(0));
         }
-        //queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
         return queryTree;
     }
 
@@ -253,8 +252,8 @@ public class Optimizer {
             queryTree.add(compoundSelectionsLocation, NONE, simpleSelection);
         }
 
-        //System.out.println("\nCascade Selections:");
-        //queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        System.out.println("\nCascade Selections:");
+        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }
@@ -358,8 +357,8 @@ public class Optimizer {
             }
         }
 
-        //System.out.println("\nPush Down Selections:");
-        //queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        System.out.println("\nPush Down Selections:");
+        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }
@@ -421,8 +420,8 @@ public class Optimizer {
             }
         }
 
-        //System.out.println("Form Joins");
-        //queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        System.out.println("Form Joins");
+        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
 
         return  queryTree;
     }
@@ -430,8 +429,9 @@ public class Optimizer {
     /**
      * Performs the 4th step in the optimization process which is to create projections and push
      * them down the tree. These will be placed right below cartesian products and joins. These
-     * projections will only contain the columns that are needed for the end result which means
-     * unnecessary columns will be removed.
+     * projections will only contain the columns that are needed for the end result which means that
+     * columns that are not referenced further up the query tree will be omitted. If there exists only
+     * one relation, this is completely unnecessary and an unmodified query tree will be returned.
      * @param queryTree is the query tree whose projections will be pushed down
      * @return the query tree after pushing down projections
      */
@@ -440,32 +440,106 @@ public class Optimizer {
         // will not need to push down projections if there is only one relation
         boolean hasOneRelation = queryTree.getTypeOccurrence(RELATION) == 1;
 
-        if(hasOneRelation) {
+        if (hasOneRelation) {
             return queryTree;
         }
 
-        // get each relation and location from the query tree
-        Map<Operator, List<QueryTree.Traversal>> relationsAndLocations =
-                queryTree.getOperatorsAndLocationsOfType(RELATION);
+        // for each relation, starting from the root, move down the query tree until that relation is reached
+        // while adding all referenced column names that appear in the operator nodes along the way
+        // the locations of each relation changes while adding new projections, this helps with that problem
+        List<Operator> relations = new ArrayList<>(queryTree.getOperatorsAndLocationsOfType(RELATION).keySet());
 
-        for(Map.Entry<Operator, List<QueryTree.Traversal>> entry : relationsAndLocations.entrySet()) {
-            List<QueryTree.Traversal> relationLocation = entry.getValue();
-            // adding a traversal to include the root node
-            relationLocation.add(0, NONE);
-            List<QueryTree.Traversal> traversals = new ArrayList<>();
+        for (Operator relation : relations) {
+
+            String tableName = ((Relation) relation).getTableName();
+            List<QueryTree.Traversal> relationLocation =
+                    queryTree.getOperatorsAndLocationsOfType(RELATION).get(relation);
+            relationLocation.add(0, NONE); // adding this traversal to include the root node
+
+            List<String> columnNamesForProjection = new ArrayList<>();
+
+            List<QueryTree.Traversal> traversals = new ArrayList<>(); // used for getting to the relation's location
             // start from the root of the query tree and work towards the location of the current relation
-            for(QueryTree.Traversal traversal : relationLocation) {
+            for (QueryTree.Traversal traversal : relationLocation) {
                 traversals.add(traversal);
                 Operator operator = queryTree.get(traversals, NONE);
-                // add the current operators data to the data that will be needed for the new projection node
-
+                // add the current operators data to the data that will be used for the projection node
+                columnNamesForProjection = OptimizerUtilities.addUniqueColumnNames(
+                        columnNamesForProjection,
+                        OptimizerUtilities.getColumnNamesWithRelationName(
+                                operator.getReferencedColumnNames(),
+                                tableName
+                        )
+                );
             }
 
             // add this new projection right below the first instance of a cartesian product or join
+            Projection projection = new Projection(columnNamesForProjection);
+            boolean foundCartesianOrJoinAbove = queryTree.get(relationLocation, UP).getType() == CARTESIAN_PRODUCT ||
+                    queryTree.get(relationLocation, UP).getType() == INNER_JOIN;
+            while (!foundCartesianOrJoinAbove) {
+                int lastIndex = relationLocation.size() - 1;
+                relationLocation.remove(lastIndex);
+                foundCartesianOrJoinAbove = queryTree.get(relationLocation, UP).getType() == CARTESIAN_PRODUCT ||
+                        queryTree.get(relationLocation, UP).getType() == INNER_JOIN;
+            }
+            queryTree.add(relationLocation, UP, projection);
         }
 
-        System.out.println("Push Down Selections");
+        // after that, will need to add projections between sequential cartesian products and sequential joins will get
+        // the column names referenced in the projections added from earlier which are located to the left and right of
+        // cartesian products/joins, removing the join criteria (if join) and add above the cartesian product/join
+        // also adds projections right before aggregations too!
+        boolean needsBetweenTreatment = queryTree.getTypeOccurrence(CARTESIAN_PRODUCT) +
+                queryTree.getTypeOccurrence(INNER_JOIN) >= 2;
+        boolean needsProjectionBeforeAggregation =
+                (queryTree.getTypeOccurrence(INNER_JOIN) >= 1 && queryTree.getTypeOccurrence(AGGREGATION) == 1) ||
+                (queryTree.getTypeOccurrence(CARTESIAN_PRODUCT) >= 1 && queryTree.getTypeOccurrence(AGGREGATION) == 1);
+
+        System.out.println("\nPush Down 1st Projections");
         queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        if (needsBetweenTreatment || needsProjectionBeforeAggregation) {
+
+            List<Operator> cartesianProductsAndJoins = Stream.concat(
+                    queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT).keySet().stream(),
+                    queryTree.getOperatorsAndLocationsOfType(INNER_JOIN).keySet().stream()
+            ).collect(Collectors.toList());
+
+            for (Operator operator : cartesianProductsAndJoins) {
+
+                // all this mess does is get the current operator's location
+                List<QueryTree.Traversal> operatorsLocation = Stream.concat(
+                        queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT).entrySet().stream(),
+                        queryTree.getOperatorsAndLocationsOfType(INNER_JOIN).entrySet().stream()
+                ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).get(operator);
+
+                // avoid producing a redundant projection (only occurs if root node is a projection)
+                if (queryTree.get(operatorsLocation, UP).getType() == PROJECTION) {
+                    continue;
+                }
+
+                // get and add all column names from the left and right projections
+                List<String> columnNamesToProject = new ArrayList<>();
+                columnNamesToProject.addAll(queryTree.get(operatorsLocation, LEFT).getReferencedColumnNames());
+                columnNamesToProject.addAll(queryTree.get(operatorsLocation, RIGHT).getReferencedColumnNames());
+
+                // if current operator is a join, subtract the join criteria from the list of column names to project
+                if (operator.getType() == INNER_JOIN) {
+                    String firstJoinColumnName = ((InnerJoin) operator).getFirstJoinColumnName();
+                    String secondJoinColumnName = ((InnerJoin) operator).getSecondJoinColumnName();
+                    columnNamesToProject = OptimizerUtilities
+                            .minus(columnNamesToProject, Arrays.asList(firstJoinColumnName, secondJoinColumnName));
+                }
+
+                Operator projection = new Projection(columnNamesToProject);
+                queryTree.add(operatorsLocation, UP, projection);
+            }
+            System.out.println("\nPush Down 2nd Projections");
+            queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        }
+
+        //System.out.println("\nPush Down Projections");
+        //queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }

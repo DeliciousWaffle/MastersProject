@@ -31,31 +31,31 @@ public class OptimizerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            //"SELECT FirstName FROM Customers", // simple query
-            //"SELECT Customers.FirstName FROM Customers", // simple query with column name prefixed with table name
-            //"   SELECT CustomerID,   FirstName, LastName  FROM   Customers   ", // many columns in projection
-            //"SELECT * FROM Customers", // using *
-            //"SELECT FirstName FROM Customers WHERE CustomerID = 1", // using a where clause
-            //"SELECT FirstName, LastName FROM Customers WHERE FirstName = \" Genaro   Blah\" AND LastName = \"  Curnutt \" AND CustomerID = 5 AND CustomerID = 7 AND LastName = \"Blaj\"", // where clause with 2 predicates
-            //"SELECT FirstName, LastName FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // basic join
-            //"SELECT FirstName, LastName FROM Customers, CustomerPurchaseDetails WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // basic join with where clause containing join condition
-            //"SELECT * FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // basic join with *
-            //"SELECT FirstName, LastName, Stores FROM Employees INNER JOIN Stores ON EmployeeID = ManagerID", // join that's not prefixed with table name
-            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID INNER JOIN Products ON CustomerPurchaseDetails.ProductID = Products.ProductID", // basic join with 3 tables
-            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers, CustomerPurchaseDetails, Products WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID AND CustomerPurchaseDetails.ProductID = Products.ProductID", // basic join with 3 tables where join condition is in where clause
-            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID INNER JOIN Products ON CustomerPurchaseDetails.ProductID = Products.ProductID WHERE Customers.CustomerID = 1 AND Products.ProductID > 1 AND CustomerPurchaseDetails.PaymentMethod = \"blah\"", // basic join with 3 tables along with three predicates in where clause
-            //"SELECT FirstName, LastName, ProductName FROM Customers, Products", // basic cartesian product
-            //"SELECT MIN(CustomerID) FROM Customers", // simple aggregate function
-            //"SELECT COUNT(State) FROM Employees GROUP BY State", // aggregate function with group by clause
-            //"SELECT State, COUNT(State) FROM Employees GROUP BY State", // aggregate function with group by clause and a column to group by
-            //"SELECT State, COUNT(State) FROM Employees GROUP BY State HAVING COUNT(STATE) > 2", // aggregate function with group by clause and having clause
-            //"SELECT FirstName, LastName, MIN(Salary), COUNT(State) FROM Employees GROUP BY FirstName, LastName", // aggregate function with more advanced group by clause
-            //"SELECT State, COUNT(State) FROM Employees WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // complex aggregate function with where clause
-            //"SELECT MIN(CustomerID) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID", // simple aggregate function with join
-            //"SELECT EmployeeID, MIN(EmployeeID) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID GROUP BY EmployeeID", // aggregate function with joins and group by clause
-            //"SELECT EmployeeID, MIN(EmployeeID) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID GROUP BY EmployeeID HAVING COUNT(CustomerID) = 1", // aggregate function with joins, group by, and having clauses
-            //"SELECT State, COUNT(State) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // aggregate function with joins, where, group by, and having clauses
-            "SELECT State, COUNT(State) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID INNER JOIN Products ON EmployeePurchaseDetails.ProductID = Products.ProductID WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // aggregate function with 3 joins, where, group by, and having clause
+            "SELECT FirstName FROM Customers", // simple query
+            "SELECT Customers.FirstName FROM Customers", // simple query with column name prefixed with table name
+            "   SELECT CustomerID,   FirstName, LastName  FROM   Customers   ", // many columns in projection
+            "SELECT * FROM Customers", // using *
+            "SELECT FirstName FROM Customers WHERE CustomerID = 1", // using a where clause
+            "SELECT FirstName, LastName FROM Customers WHERE FirstName = \" Genaro   Blah\" AND LastName = \"  Curnutt \" AND CustomerID = 5 AND CustomerID = 7 AND LastName = \"Blaj\"", // where clause with 2 predicates
+            "SELECT FirstName, LastName FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // basic join
+            "SELECT FirstName, LastName FROM Customers, CustomerPurchaseDetails WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // basic join with where clause containing join condition
+            "SELECT * FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // basic join with *
+            "SELECT FirstName, LastName, Stores FROM Employees INNER JOIN Stores ON EmployeeID = ManagerID", // join that's not prefixed with table name
+            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID INNER JOIN Products ON CustomerPurchaseDetails.ProductID = Products.ProductID", // basic join with 3 tables ===
+            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers, CustomerPurchaseDetails, Products WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID AND CustomerPurchaseDetails.ProductID = Products.ProductID", // basic join with 3 tables where join condition is in where clause ===
+            "SELECT FirstName, LastName, ProductName, Price, Quantity, PaymentMethod FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID INNER JOIN Products ON CustomerPurchaseDetails.ProductID = Products.ProductID WHERE Customers.CustomerID = 1 AND Products.ProductID > 1 AND CustomerPurchaseDetails.PaymentMethod = \"blah\"", // basic join with 3 tables along with three predicates in where clause ===
+            "SELECT FirstName, LastName, ProductName FROM Customers, Products", // basic cartesian product
+            "SELECT MIN(CustomerID) FROM Customers", // simple aggregate function
+            "SELECT COUNT(State) FROM Employees GROUP BY State", // aggregate function with group by clause
+            "SELECT State, COUNT(State) FROM Employees GROUP BY State", // aggregate function with group by clause and a column to group by
+            "SELECT State, COUNT(State) FROM Employees GROUP BY State HAVING COUNT(STATE) > 2", // aggregate function with group by clause and having clause
+            "SELECT FirstName, LastName, MIN(Salary), COUNT(State) FROM Employees GROUP BY FirstName, LastName", // aggregate function with more advanced group by clause
+            "SELECT State, COUNT(State) FROM Employees WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // complex aggregate function with where clause
+            "SELECT MIN(CustomerID) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID", // simple aggregate function with join
+            "SELECT EmployeeID, MIN(EmployeeID) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID GROUP BY EmployeeID", // aggregate function with join and group by clause
+            "SELECT EmployeeID, MIN(EmployeeID) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID GROUP BY EmployeeID HAVING COUNT(CustomerID) = 1", // aggregate function with join, group by, and having clauses
+            "SELECT State, COUNT(State) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // aggregate function with join, where, group by, and having clauses
+            "SELECT State, COUNT(State) FROM Employees INNER JOIN EmployeePurchaseDetails ON Employees.EmployeeID = EmployeePurchaseDetails.EmployeeID INNER JOIN Products ON EmployeePurchaseDetails.ProductID = Products.ProductID WHERE EmployeeID = 1 GROUP BY State HAVING COUNT(State) > 1", // aggregate function with 3 joins, where, group by, and having clause ===
     })
     public void testCreationWithNoVerifier(String input) {
 
