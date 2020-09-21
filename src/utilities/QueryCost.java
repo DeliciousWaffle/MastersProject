@@ -38,7 +38,7 @@ public final class QueryCost {
 
     // r - number of records in the file
     public static int numberRecords(Table table) {
-        return table.getNumRows();
+        return table.getNumRecords();
     }
 
     public static String numberRecordsToString(Table table) {

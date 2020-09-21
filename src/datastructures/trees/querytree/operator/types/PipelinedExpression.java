@@ -7,7 +7,7 @@ import java.util.List;
 
 public class PipelinedExpression extends Operator {
 
-    public static final String SYMBOL = "\uD835\uDCAB";
+    public static final String SYMBOL = "\uD835\uDCAB"; // fancy "P"
     private final String subscript;
     private final List<Operator> pipelinedOperators;
 

@@ -6,6 +6,7 @@ import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;
 import datastructures.trees.querytree.operator.types.*;
 import org.junit.jupiter.params.ParameterizedTest;
+import sun.awt.image.ImageWatched;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -308,4 +309,42 @@ public final class OptimizerUtilities {
         return toKeep;
     }
 
+    /**
+     * @param original is the linked hash map whose first and last elements will be swapped
+     * @param <K> a generic key of this map
+     * @param <V> a generic value of this map
+     */
+    public static <K, V> Map<K, V> swapFirstAndLastElementsOfLinkedHashMap(Map<K, V> original) {
+        Map<K, V> swapped = new LinkedHashMap<>();
+        Iterator<Map.Entry<K, V>> iterator = original.entrySet().iterator();
+        Map.Entry<K, V> firstEntry = iterator.next();
+        Map.Entry<K, V> lastEntry = firstEntry; // handles case in which the original contains a single entry
+        while (iterator.hasNext()) {
+            lastEntry = iterator.next();
+        }
+        // remove the first and last entries from the original
+        original.remove(firstEntry.getKey());
+        original.remove(lastEntry.getKey());
+        // put the last entry, put all remaining entries, and put first entry into swapped from original
+        swapped.put(lastEntry.getKey(), lastEntry.getValue());
+        swapped.putAll(original);
+        swapped.put(firstEntry.getKey(), firstEntry.getValue());
+        return swapped;
+    }
+
+    /**
+     * @param original is the linked hash map whose first element will be placed last in the sequence
+     * @param <K> a generic key of this map
+     * @param <V> a generic value of this map
+     */
+    public static <K, V> void putFirstElementLastOfLinkedHashMap(Map<K, V> original) {
+        // don't bother with any of this if there's only one element/no elements
+        if (original.size() <= 1) {
+            return;
+        }
+        Iterator<Map.Entry<K, V>> iterator = original.entrySet().iterator();
+        Map.Entry<K, V> firstEntry = iterator.next();
+        original.remove(firstEntry.getKey());
+        original.put(firstEntry.getKey(), firstEntry.getValue());
+    }
 }

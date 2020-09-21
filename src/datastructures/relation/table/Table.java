@@ -232,7 +232,7 @@ public class Table {
     /**
      * @return the number of rows within the table
      */
-    public int getNumRows() {
+    public int getNumRecords() {
         return tableData.getNumRows();
     }
 
@@ -330,10 +330,10 @@ public class Table {
             return false;
         }
 
-        if(otherTable.getNumRows() != this.getNumRows()) {
+        if(otherTable.getNumRecords() != this.getNumRecords()) {
             System.out.println("Tables not equal");
-            System.out.println("Other Table number rows: " + otherTable.getNumRows() +
-                    " This Table number rows: " + this.getNumRows());
+            System.out.println("Other Table number rows: " + otherTable.getNumRecords() +
+                    " This Table number rows: " + this.getNumRecords());
             return false;
         }
 

@@ -461,21 +461,31 @@ public final class QueryTree {
         // need to update size to reflect changes
         size -= operatorsInSubtree.size();
 
-        // removing the node now
-        QueryTreeNode parent = pointer.getParent();
+        // check to see if removing the root node of the tree
+        boolean isRoot = pointer == root;
 
-        Traversal locationWithRespectToParent = getLocationWithRespectToParent(pointer, parent);
+        if (isRoot) {
 
-        switch(locationWithRespectToParent) {
-            case LEFT:
-                parent.setLeftChild(null);
-                break;
-            case RIGHT:
-                parent.setRightChild(null);
-                break;
-            case DOWN:
-                parent.setOnlyChild(null);
-                break;
+            pointer.setOnlyChild(null);
+            root = null;
+
+        } else {
+
+            // removing the node now
+            QueryTreeNode parent = pointer.getParent();
+            Traversal locationWithRespectToParent = getLocationWithRespectToParent(pointer, parent);
+
+            switch (locationWithRespectToParent) {
+                case LEFT:
+                    parent.setLeftChild(null);
+                    break;
+                case RIGHT:
+                    parent.setRightChild(null);
+                    break;
+                case DOWN:
+                    parent.setOnlyChild(null);
+                    break;
+            }
         }
 
         return operatorsInSubtree;
@@ -507,9 +517,13 @@ public final class QueryTree {
      * @return a list of operators from this query tree based on the type to get
      */
     public Map<Operator, List<Traversal>> getOperatorsAndLocationsOfType(Operator.Type typeToGet) {
-        return getOperatorsAndLocations().entrySet().stream()
+        Map<Operator, List<Traversal>> toGetOperatorsAndLocations = new LinkedHashMap<>();
+        getOperatorsAndLocations()
+                .entrySet()
+                .stream()
                 .filter(entry -> entry.getKey().getType() == typeToGet)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .forEach(entry -> toGetOperatorsAndLocations.put(entry.getKey(), entry.getValue()));
+        return toGetOperatorsAndLocations;
     }
 
     /**
@@ -638,11 +652,11 @@ public final class QueryTree {
      * @return the location of the pointer with respect to its parent
      */
     private Traversal getLocationWithRespectToParent(QueryTreeNode pointer, QueryTreeNode parent) {
-        if(parent.hasOnlyChild() && parent.getOnlyChild() == pointer) {
+        if (parent.hasOnlyChild() && parent.getOnlyChild() == pointer) {
             return Traversal.DOWN;
-        } else if(parent.hasLeftChild() && parent.getLeftChild() == pointer) {
+        } else if (parent.hasLeftChild() && parent.getLeftChild() == pointer) {
             return Traversal.LEFT;
-        } else if(parent.hasRightChild() && parent.getRightChild() == pointer) {
+        } else if (parent.hasRightChild() && parent.getRightChild() == pointer) {
             return Traversal.RIGHT;
         } else {
             System.out.println("QueryTree.getLocationWithRespectToParent()");

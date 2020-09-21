@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import systemcatalog.components.OptimizerUtilities;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Class used for testing methods.
@@ -11,7 +13,14 @@ import java.util.Arrays;
 public class MethodTest {
     @Test
     public void blah() {
-        System.out.println(OptimizerUtilities.minus(Arrays.asList("Col1", "Col2", "Col3", "Col4"), Arrays.asList("Col2", "Col7")));
+        Map<Integer, String> blah = new LinkedHashMap<>();
+        blah.put(0, "a");
+        blah.put(1, "b");
+        blah.put(2, "c");
+        blah.put(3, "d");
+
+        OptimizerUtilities.putFirstElementLastOfLinkedHashMap(blah);
+        System.out.println(blah);
     }
 
 }

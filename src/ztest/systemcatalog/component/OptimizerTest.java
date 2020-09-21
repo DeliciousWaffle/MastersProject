@@ -66,6 +66,7 @@ public class OptimizerTest {
         List<Table> tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
         Optimizer optimizer = new Optimizer();
         optimizer.getQueryTreeStates(tokens, tables);
+        System.out.println("=========================================================================================");
 
         /*String[] tokenizedInput = Parser.formatAndTokenizeInput(input);
         Optimizer optimizer = new Optimizer();
@@ -93,7 +94,6 @@ public class OptimizerTest {
         sb.delete(sb.length() - 24, sb.length()); // removing "Pipeline Subtrees Again"
         System.out.println(sb.toString());
         //System.out.println("relational algebra: " + optimizer.getNaiveRelationalAlgebra(queryTrees.get(0)));
-        System.out.println("=========================================================================================");
 */
     }
 }
