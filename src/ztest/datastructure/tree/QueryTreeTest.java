@@ -1,21 +1,15 @@
 package ztest.datastructure.tree;
 
-import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
-import datastructures.relation.table.component.DataType;
-import datastructures.trees.conditiontree.component.Condition;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;
 import datastructures.trees.querytree.operator.types.*;
 import org.junit.jupiter.api.Test;
-import utilities.enums.Symbol;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static datastructures.trees.querytree.QueryTree.Traversal.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class QueryTreeTest {
 
@@ -134,11 +128,11 @@ public class QueryTreeTest {
         System.out.println("testSubtreeRemoval2()");
 
         QueryTree queryTree = getQueryTree();
-        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+        queryTree.getOperatorsAndLocations(QueryTree.TreeTraversal.PREORDER).forEach((key, value) -> System.out.println(key + " " + value));
 
         System.out.println("removed: " + queryTree.removeSubtree(new ArrayList<>(Arrays.asList(DOWN, DOWN, LEFT, DOWN))));
 
-        queryTree.getOperatorsAndLocations().forEach((key, value) -> System.out.println(key + " " + value));
+        queryTree.getOperatorsAndLocations(QueryTree.TreeTraversal.PREORDER).forEach((key, value) -> System.out.println(key + " " + value));
     }
 
 /*

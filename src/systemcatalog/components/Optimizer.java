@@ -9,9 +9,11 @@ import datastructures.trees.querytree.operator.types.*;
 import utilities.QueryCost;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static datastructures.trees.querytree.QueryTree.TreeTraversal.*;
 import static datastructures.trees.querytree.QueryTree.Traversal.*;
 import static datastructures.trees.querytree.operator.Operator.Type.*;
 
@@ -216,7 +218,7 @@ public class Optimizer {
         }
 
         System.out.println("Initial Query Tree");
-        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }
@@ -257,7 +259,7 @@ public class Optimizer {
         }
 
         System.out.println("\nCascade Selections:");
-        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }
@@ -286,7 +288,7 @@ public class Optimizer {
 
         // getting all simple selections from the query tree
         Map<Operator, List<QueryTree.Traversal>> simpleSelectionsAndLocations =
-                queryTree.getOperatorsAndLocationsOfType(SIMPLE_SELECTION);
+                queryTree.getOperatorsAndLocationsOfType(SIMPLE_SELECTION, PREORDER);
         List<Operator> simpleSelections = new ArrayList<>(simpleSelectionsAndLocations.keySet());
 
         // removing each simple selection from the query tree, this will be used as a starting point
@@ -308,7 +310,7 @@ public class Optimizer {
 
         // place the remaining selections right above their respective relations
         Map<Operator, List<QueryTree.Traversal>> relationsAndLocations =
-                queryTree.getOperatorsAndLocationsOfType(RELATION);
+                queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER);
 
         for(Operator simpleSelection : simpleSelections) {
             String prefixedTableName = ((SimpleSelection) simpleSelection).getColumnName().split("\\.")[0];
@@ -325,7 +327,7 @@ public class Optimizer {
         // place the selections with join conditions above cartesian products
         for(Operator simpleSelection : selectionsWithJoinConditions) {
             // changing the traversal locations for each relation, will need to get the updated versions
-            relationsAndLocations = queryTree.getOperatorsAndLocationsOfType(RELATION);
+            relationsAndLocations = queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER);
             String firstPrefixedTableName = ((SimpleSelection) simpleSelection).getColumnName().split("\\.")[0];
             String secondPrefixedTableName = ((SimpleSelection) simpleSelection).getValue().split("\\.")[0];
             // find each corresponding table name and get their traversals
@@ -362,7 +364,7 @@ public class Optimizer {
         }
 
         System.out.println("\nPush Down Selections:");
-        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }
@@ -393,7 +395,7 @@ public class Optimizer {
 
             // cartesian products and their locations will change upon removal of selections
             Map<Operator, List<QueryTree.Traversal>> cartesianProductsAndLocations =
-                    queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT);
+                    queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT, PREORDER);
 
             boolean madeChanges = false;
 
@@ -425,7 +427,7 @@ public class Optimizer {
         }
 
         System.out.println("\nForm Joins");
-        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
 
         return  queryTree;
     }
@@ -451,13 +453,13 @@ public class Optimizer {
         // for each relation, starting from the root, move down the query tree until that relation is reached
         // while adding all referenced column names that appear in the operator nodes along the way
         // the locations of each relation changes while adding new projections, this helps with that problem
-        List<Operator> relations = new ArrayList<>(queryTree.getOperatorsAndLocationsOfType(RELATION).keySet());
+        List<Operator> relations = new ArrayList<>(queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER).keySet());
 
         for (Operator relation : relations) {
 
             String tableName = ((Relation) relation).getTableName();
             List<QueryTree.Traversal> relationLocation =
-                    queryTree.getOperatorsAndLocationsOfType(RELATION).get(relation);
+                    queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER).get(relation);
             relationLocation.add(0, NONE); // adding this traversal to include the root node
 
             List<String> columnNamesForProjection = new ArrayList<>();
@@ -503,16 +505,16 @@ public class Optimizer {
         if (needsBetweenTreatment || needsProjectionBeforeAggregation) {
 
             List<Operator> cartesianProductsAndJoins = Stream.concat(
-                    queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT).keySet().stream(),
-                    queryTree.getOperatorsAndLocationsOfType(INNER_JOIN).keySet().stream()
+                    queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT, PREORDER).keySet().stream(),
+                    queryTree.getOperatorsAndLocationsOfType(INNER_JOIN, PREORDER).keySet().stream()
             ).collect(Collectors.toList());
 
             for (Operator operator : cartesianProductsAndJoins) {
 
                 // all this mess does is get the current operator's location
                 List<QueryTree.Traversal> operatorsLocation = Stream.concat(
-                        queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT).entrySet().stream(),
-                        queryTree.getOperatorsAndLocationsOfType(INNER_JOIN).entrySet().stream()
+                        queryTree.getOperatorsAndLocationsOfType(CARTESIAN_PRODUCT, PREORDER).entrySet().stream(),
+                        queryTree.getOperatorsAndLocationsOfType(INNER_JOIN, PREORDER).entrySet().stream()
                 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).get(operator);
 
                 // avoid producing a redundant projection (only occurs if root node is a projection)
@@ -531,6 +533,10 @@ public class Optimizer {
                     String secondJoinColumnName = ((InnerJoin) operator).getSecondJoinColumnName();
                     columnNamesToProject = OptimizerUtilities
                             .minus(columnNamesToProject, Arrays.asList(firstJoinColumnName, secondJoinColumnName));
+                    // may get an empty list, in this case, add all referenced column names from the aggregation above
+                    if (columnNamesToProject.isEmpty()) {
+                        columnNamesToProject.addAll(queryTree.get(operatorsLocation, UP).getReferencedColumnNames());
+                    }
                 }
 
                 Operator projection = new Projection(columnNamesToProject);
@@ -539,7 +545,7 @@ public class Optimizer {
         }
 
         System.out.println("\nPush Down Projections");
-        queryTree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }
@@ -595,7 +601,7 @@ public class Optimizer {
         for (QueryTree permutedQueryTree : permutedQueryTrees) {
             // convert the operators from this permuted query tree to a stack
             Deque<Operator> operatorStack =
-                    OptimizerUtilities.setToDeque(permutedQueryTree.getOperatorsAndLocations().keySet());
+                    OptimizerUtilities.setToDeque(permutedQueryTree.getOperatorsAndLocations(PREORDER).keySet());
             Deque<Integer> costStack = new ArrayDeque<>();
 
             // perform the calculation
@@ -661,16 +667,12 @@ public class Optimizer {
         // then, add this newly created query tree to the list of pipelined query trees
         // although the size of the query tree will change, the locations of the projections will not
         Map<Operator, List<QueryTree.Traversal>> projectionsAndLocations =
-                new LinkedHashMap<>(queryTree.getOperatorsAndLocationsOfType(PROJECTION));
-
-        // root is will be located first, but needs to be executed last to prevent everything from breaking
-        OptimizerUtilities.putFirstElementLastOfLinkedHashMap(projectionsAndLocations);
+                new LinkedHashMap<>(queryTree.getOperatorsAndLocationsOfType(PROJECTION, POSTORDER));
 
         int numSubscripts = 0; // used to keep track of the pipelined expressions
 
         for (Map.Entry<Operator, List<QueryTree.Traversal>> entry : projectionsAndLocations.entrySet()) {
             List<QueryTree.Traversal> projectionLocation = entry.getValue();
-            //System.out.println("Removing at: " + queryTree.get(projectionLocation, NONE) + " " + projectionLocation);
             List<Operator> pipelinedOperators = queryTree.removeSubtree(projectionLocation);
             Operator pipelinedExpression = new PipelinedExpression(pipelinedOperators, numSubscripts);
             numSubscripts++;
@@ -691,118 +693,9 @@ public class Optimizer {
         System.out.println("\nPipelined Expressions");
         pipelinedSubtrees.forEach(pipelinedSubtree -> {
             System.out.println();
-            pipelinedSubtree.getOperatorsAndLocations().forEach((k, v) -> System.out.println(k + " " + v));
+            pipelinedSubtree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
         });
 
         return pipelinedSubtrees;
     }
 }
-
-    /*public List<QueryTree> pipelineSubtrees(QueryTree queryTree) {
-
-        // TODO remove
-        if(queryTree != null) {
-            return new ArrayList<>(Arrays.asList(new QueryTree(queryTree)));
-        }
-
-        List<QueryTree> pipelinedSubtrees = new ArrayList<>();
-
-        // starting at the deepest node of the tree
-        String relationName = null;
-        boolean foundFirstRelation = false;
-
-        for(Operator operator : queryTree) {
-            if(! foundFirstRelation) {
-                if (operator.getType() == Operator.Type.RELATION) {
-                    relationName = ((Relation) operator).getTableName();
-                    foundFirstRelation = true;
-                }
-            }
-        }
-
-        List<QueryTree.Traversal> traversals = queryTree.getRelationLocation(relationName);
-
-        // identifying trees that can be pipeline (those that appear right under a join or cartesian product)
-        boolean atRoot = false;
-
-        while(! atRoot) {
-
-            Operator operator = queryTree.get(traversals, QueryTree.Traversal.NONE);
-
-            if(operator.getType() == Operator.Type.CARTESIAN_PRODUCT ||
-                    operator.getType() == Operator.Type.INNER_JOIN) {
-                // need to make sure that the candidate nodes have children, if not, can pipeline whole thing
-                queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.LEFT);
-                if(queryTree.canPipelineSubtree(traversals, QueryTree.Traversal.LEFT)) {
-                    //System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.LEFT));
-                }
-                queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.RIGHT);
-                if(queryTree.canPipelineSubtree(traversals, QueryTree.Traversal.RIGHT)) {
-                    //System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.RIGHT));
-                }
-            }
-
-            traversals.remove(traversals.size() - 1);
-            atRoot = traversals.isEmpty();
-        }
-
-        // finally pipeline the root
-        queryTree.tryToPipelineSubtree(traversals, QueryTree.Traversal.NONE);
-        //System.out.println("Pipelining: " + queryTree.get(traversals, QueryTree.Traversal.NONE));
-
-        pipelinedSubtrees.add(new QueryTree(queryTree));
-
-        return pipelinedSubtrees;
-    }
-
-    // utility methods =================================================================================================
-
-    // naive relational algebra ========================================================================================
-
-    public String getNaiveRelationalAlgebra(QueryTree initialState) {
-
-        StringBuilder naiveRelationalAlgebra = new StringBuilder();
-
-        /*boolean hasOneRelation = this.getTypeOccurrence(initialState, Operator.Type.RELATION) == 1;
-
-        if(hasOneRelation) {
-
-            for(Operator operator : initialState) {
-                naiveRelationalAlgebra.append("[").append(operator).append(" ");
-            }
-
-            // remove " "
-            naiveRelationalAlgebra.deleteCharAt(naiveRelationalAlgebra.length() - 1);
-
-        } else {
-
-
-        }
-
-
-
-
-
-
-
-        int numBrackets = initialState.getSize();
-
-        for(int i = 0; i < numBrackets; i++) {
-            naiveRelationalAlgebra.append("]");
-        }
-
-        return naiveRelationalAlgebra.toString();
-    }
-
-    // optimized relational algebra ====================================================================================
-
-    public String getOptimizedRelationalAlgebra() {
-        return "";
-    }
-
-    // file structure recommendation ===================================================================================
-
-    public String getRecommendedFileStructures() {
-        return "";
-    }
-}*/

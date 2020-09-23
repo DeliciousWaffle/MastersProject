@@ -6,6 +6,9 @@ import datastructures.trees.querytree.component.QueryTreeNode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static datastructures.trees.querytree.QueryTree.Traversal.*;
+import static datastructures.trees.querytree.QueryTree.TreeTraversal.*;
+
 /**
  * A representation of a relational algebra query tree. Basically looks like a binary tree, but with a large occurrence
  * of unary nodes. Structurally, this class is strange. Each node has a reference to its parent along with any child
@@ -15,6 +18,14 @@ import java.util.stream.Collectors;
  * supplying a list of traversals to reach that location.
  */
 public final class QueryTree {
+
+    /**
+     * Enum representing the type of traversal to use when iterating over the elements contained in
+     * the query tree. Currently only supports preorder and postorder traversals.
+     */
+    public enum TreeTraversal {
+        PREORDER, POSTORDER
+    }
 
     /**
      * Enum representing the types of traversals that can be taken in order to reach an element
@@ -34,16 +45,16 @@ public final class QueryTree {
         public static Traversal copyTraversal(Traversal toCopy) {
             switch(toCopy) {
                 case LEFT:
-                    return Traversal.LEFT;
+                    return LEFT;
                 case RIGHT:
-                    return Traversal.RIGHT;
+                    return RIGHT;
                 case UP:
-                    return Traversal.UP;
+                    return UP;
                 case DOWN:
-                    return Traversal.DOWN;
+                    return DOWN;
                 case NONE:
                 default:
-                    return Traversal.NONE;
+                    return NONE;
             }
         }
 
@@ -79,13 +90,13 @@ public final class QueryTree {
     public QueryTree(QueryTree toCopy) {
 
         // get the each operator and its location from the query tree to copy
-        Map<Operator, List<Traversal>> operatorsAndLocations = toCopy.getOperatorsAndLocations();
+        Map<Operator, List<Traversal>> operatorsAndLocations = toCopy.getOperatorsAndLocations(PREORDER);
 
         // using the above info, make the copy
         for(Map.Entry<Operator, List<Traversal>> entry : operatorsAndLocations.entrySet()) {
             Operator operator = entry.getKey();
             List<Traversal> traversals = entry.getValue();
-            this.add(traversals, Traversal.NONE, operator);
+            this.add(traversals, NONE, operator);
         }
     }
 
@@ -117,13 +128,13 @@ public final class QueryTree {
         traversals = Traversal.copyTraversalList(traversals);
 
         // check that the root node exists before doing any adding, this will only fire when creating a deep copy
-        if(root == null || (traversals.isEmpty() && targetLocation == Traversal.NONE)) {
+        if(root == null || (traversals.isEmpty() && targetLocation == NONE)) {
             setRoot(operatorToAdd);
             return;
         }
 
         // if there is no target location, set it to the last traversal in the traversal list
-        if(targetLocation == Traversal.NONE) {
+        if(targetLocation == NONE) {
             int lastIndex = traversals.size() - 1;
             targetLocation = traversals.remove(lastIndex);
         }
@@ -132,16 +143,16 @@ public final class QueryTree {
         QueryTreeNode nodeToAdd = new QueryTreeNode(operatorToAdd, pointer);
 
         // perform an insertion if there is a child occupying the target location of where to add
-        if (pointer.hasLeftChild() && targetLocation == Traversal.LEFT) {
+        if (pointer.hasLeftChild() && targetLocation == LEFT) {
             insertLeft(pointer, nodeToAdd);
 
-        } else if (pointer.hasRightChild() && targetLocation == Traversal.RIGHT) {
+        } else if (pointer.hasRightChild() && targetLocation == RIGHT) {
             insertRight(pointer, nodeToAdd);
 
-        } else if (pointer.hasParent() && targetLocation == Traversal.UP) {
+        } else if (pointer.hasParent() && targetLocation == UP) {
             insertAbove(pointer, nodeToAdd);
 
-        } else if (pointer.hasOnlyChild() && targetLocation == Traversal.DOWN) {
+        } else if (pointer.hasOnlyChild() && targetLocation == DOWN) {
             insertBelow(pointer, nodeToAdd);
 
         // otherwise, just add the child node at the given location
@@ -232,8 +243,8 @@ public final class QueryTree {
     public void swap(List<Traversal> traversals1, List<Traversal> traversals2) {
         Operator operator1 = traverse(traversals1).getOperator();
         Operator operator2 = traverse(traversals2).getOperator();
-        set(traversals1, Traversal.NONE, operator2);
-        set(traversals2, Traversal.NONE, operator1);
+        set(traversals1, NONE, operator2);
+        set(traversals2, NONE, operator1);
     }
 
     /**
@@ -496,7 +507,7 @@ public final class QueryTree {
      * @return the occurrence of the given type
      */
     public int getTypeOccurrence(Operator.Type type) {
-        return getOperatorsAndLocationsOfType(type).size();
+        return getOperatorsAndLocationsOfType(type, PREORDER).size();
     }
 
     /**
@@ -505,8 +516,8 @@ public final class QueryTree {
      * @param typeToGet is the type of operator to get from the query tree
      * @return the first occurrence of the type supplied
      */
-    public Map.Entry<Operator, List<QueryTree.Traversal>> getFirstOccurrenceOfType(Operator.Type typeToGet) {
-        return getOperatorsAndLocationsOfType(typeToGet)
+    public Map.Entry<Operator, List<Traversal>> getFirstOccurrenceOfType(Operator.Type typeToGet) {
+        return getOperatorsAndLocationsOfType(typeToGet, PREORDER)
                 .entrySet()
                 .iterator()
                 .next();
@@ -516,9 +527,9 @@ public final class QueryTree {
      * @param typeToGet is the type of operator to get from the query tree
      * @return a list of operators from this query tree based on the type to get
      */
-    public Map<Operator, List<Traversal>> getOperatorsAndLocationsOfType(Operator.Type typeToGet) {
+    public Map<Operator, List<Traversal>> getOperatorsAndLocationsOfType(Operator.Type typeToGet, TreeTraversal treeTraversal) {
         Map<Operator, List<Traversal>> toGetOperatorsAndLocations = new LinkedHashMap<>();
-        getOperatorsAndLocations()
+        getOperatorsAndLocations(treeTraversal)
                 .entrySet()
                 .stream()
                 .filter(entry -> entry.getKey().getType() == typeToGet)
@@ -527,11 +538,11 @@ public final class QueryTree {
     }
 
     /**
-     * @return a map containing each operator and its location in a preorder traversal
+     * @return a map containing each operator and its location in the tree traversal supplied
      */
-    public Map<Operator, List<Traversal>> getOperatorsAndLocations() {
+    public Map<Operator, List<Traversal>> getOperatorsAndLocations(TreeTraversal treeTraversal) {
         Map<Operator, List<Traversal>> operatorsAndLocations = new LinkedHashMap<>();
-        getNodesAndLocations().forEach((k, v) -> operatorsAndLocations.put(k.getOperator(), v));
+        getNodesAndLocations(treeTraversal).forEach((k, v) -> operatorsAndLocations.put(k.getOperator(), v));
         return operatorsAndLocations;
     }
 
@@ -604,11 +615,11 @@ public final class QueryTree {
         Traversal pointersLocation = null;
 
         if (pointersParent.hasOnlyChild() && pointersParent.getOnlyChild() == pointer) {
-            pointersLocation = Traversal.DOWN;
+            pointersLocation = DOWN;
         } else if (pointersParent.hasLeftChild() && pointersParent.getLeftChild() == pointer) {
-            pointersLocation = Traversal.LEFT;
+            pointersLocation = LEFT;
         } else if (pointersParent.hasRightChild() && pointersParent.getRightChild() == pointer) {
-            pointersLocation = Traversal.RIGHT;
+            pointersLocation = RIGHT;
         }
 
         pointer.setParent(parentToAdd);
@@ -653,14 +664,14 @@ public final class QueryTree {
      */
     private Traversal getLocationWithRespectToParent(QueryTreeNode pointer, QueryTreeNode parent) {
         if (parent.hasOnlyChild() && parent.getOnlyChild() == pointer) {
-            return Traversal.DOWN;
+            return DOWN;
         } else if (parent.hasLeftChild() && parent.getLeftChild() == pointer) {
-            return Traversal.LEFT;
+            return LEFT;
         } else if (parent.hasRightChild() && parent.getRightChild() == pointer) {
-            return Traversal.RIGHT;
+            return RIGHT;
         } else {
             System.out.println("QueryTree.getLocationWithRespectToParent()");
-            return Traversal.NONE;
+            return NONE;
         }
     }
 
@@ -685,10 +696,20 @@ public final class QueryTree {
         return operators;
     }
 
+    public Map<QueryTreeNode, List<Traversal>> getNodesAndLocations(TreeTraversal treeTraversal) {
+        switch (treeTraversal) {
+            case PREORDER:
+                return preorderTraversal();
+            case POSTORDER:
+            default:
+                return postOrderTraversal();
+        }
+    }
+
     /**
      * @return a map containing each node contained in the query tree and its location in a preorder traversal
      */
-    private Map<QueryTreeNode, List<Traversal>> getNodesAndLocations() {
+    private Map<QueryTreeNode, List<Traversal>> preorderTraversal() {
 
         // using a linked hash map because the order of additions (preorder traversal) needs to be maintained
         Map<QueryTreeNode, List<Traversal>> nodesAndLocations = new LinkedHashMap<>();
@@ -710,7 +731,7 @@ public final class QueryTree {
                 pointer.setVisited(true);
                 nodesVisited++;
 
-                traversals.add(Traversal.DOWN);
+                traversals.add(DOWN);
                 nodesAndLocations.put(pointer, Traversal.copyTraversalList(traversals));
 
             // traverse to the left child
@@ -720,7 +741,7 @@ public final class QueryTree {
                 pointer.setVisited(true);
                 nodesVisited++;
 
-                traversals.add(Traversal.LEFT);
+                traversals.add(LEFT);
                 nodesAndLocations.put(pointer, Traversal.copyTraversalList(traversals));
 
             // traverse to the right child
@@ -730,7 +751,7 @@ public final class QueryTree {
                 pointer.setVisited(true);
                 nodesVisited++;
 
-                traversals.add(Traversal.RIGHT);
+                traversals.add(RIGHT);
                 nodesAndLocations.put(pointer, Traversal.copyTraversalList(traversals));
 
             // traverse up
@@ -750,28 +771,73 @@ public final class QueryTree {
     }
 
     /**
-     * @return a string representation of the query tree
+     * @return a map containing each node contained in the query tree and its location in a post order traversal
+     */
+    private Map<QueryTreeNode, List<Traversal>> postOrderTraversal() {
+
+        Map<QueryTreeNode, List<Traversal>> nodesAndLocations = new LinkedHashMap<>();
+        List<Traversal> traversals = new ArrayList<>();
+
+        QueryTreeNode pointer = root;
+        int nodesVisited = 0;
+
+        while (nodesVisited != size) {
+
+            if (pointer.hasLeftChild() && ! pointer.getLeftChild().isVisited()) {
+                pointer = pointer.getLeftChild();
+                traversals.add(LEFT);
+
+            } else if (pointer.hasOnlyChild() && ! pointer.getOnlyChild().isVisited()) {
+                pointer = pointer.getOnlyChild();
+                traversals.add(DOWN);
+
+            } else if (pointer.hasRightChild() && ! pointer.getRightChild().isVisited()) {
+                pointer = pointer.getRightChild();
+                traversals.add(RIGHT);
+
+            } else if (pointer.getParent() == null) {
+                nodesAndLocations.put(pointer, copyTraversalList(traversals));
+                pointer.setVisited(true);
+                nodesVisited++;
+
+            } else if (pointer.getLeftChild() == null && pointer.getRightChild() == null) { // leaf node
+                nodesAndLocations.put(pointer, copyTraversalList(traversals));
+                traversals.remove(traversals.size() - 1);
+                pointer.setVisited(true);
+                nodesVisited++;
+                pointer = pointer.getParent();
+
+            } else {
+                nodesAndLocations.put(pointer, copyTraversalList(traversals));
+                traversals.remove(traversals.size() - 1);
+                pointer.setVisited(true);
+                nodesVisited++;
+                pointer = pointer.getParent();
+            }
+        }
+
+        nodesAndLocations.keySet().forEach(e -> e.setVisited(false));
+
+        return nodesAndLocations;
+    }
+
+    /**
+     * @return a string representation of the query tree, done in a preorder fashion
      */
     @Override
     public String toString() {
 
         StringBuilder print = new StringBuilder();
         print.append("Query Tree Size: ").append(size).append("\n");
-
-        Map<Operator, List<Traversal>> operatorsAndLocations = getOperatorsAndLocations();
-
+        Map<Operator, List<Traversal>> operatorsAndLocations = getOperatorsAndLocations(PREORDER);
         for(Map.Entry<Operator, List<Traversal>> entry : operatorsAndLocations.entrySet()) {
-
             Operator operator = entry.getKey();
             List<Traversal> traversals = entry.getValue();
-
             print.append(operator.toString()).append("\n").append("Location: ");
             if (traversals.isEmpty()) {
                 print.append("Root");
-
             } else {
                 traversals.forEach(e -> print.append(e).append(", "));
-
                 // remove ", "
                 print.delete(print.length() - 2, print.length());
             }
