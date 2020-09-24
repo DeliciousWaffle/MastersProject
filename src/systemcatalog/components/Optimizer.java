@@ -9,7 +9,6 @@ import datastructures.trees.querytree.operator.types.*;
 import utilities.QueryCost;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,14 +57,14 @@ public class Optimizer {
          // TODO change back to afterRearrangingJoins
         List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
 
-        /*List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
+        List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
                 queryTree, afterCascadingSelections, afterPushingDownSelections, afterFormingJoins,
-                afterRearrangingJoins, afterPushingDownProjections
+                /*afterRearrangingJoins,*/ afterPushingDownProjections
         ));
 
-        queryTreeStates.addAll(afterPipeliningSubtrees);*/
+        queryTreeStates.addAll(afterPipeliningSubtrees);
 
-        return Arrays.asList();
+        return queryTreeStates;
     }
 
     /**
@@ -156,33 +155,33 @@ public class Optimizer {
         QueryTree queryTree = new QueryTree((Operator) null);
         List<QueryTree.Traversal> traversals = new ArrayList<>();
 
-        if(hasAggregateSelection) {
+        if (hasAggregateSelection) {
             queryTree.add(traversals, NONE, new AggregateSelection(
                     havingClauseAggregationTypes, havingClauseColumnNames, havingClauseSymbols, havingClauseValues
             ));
             traversals.add(QueryTree.Traversal.DOWN);
         }
 
-        if(hasAggregation) {
+        if (hasAggregation) {
             queryTree.add(traversals, NONE, new Aggregation(
                     selectClauseColumnNames, selectClauseAggregationTypes, selectClauseAggregatedColumnNames
             ));
             traversals.add(QueryTree.Traversal.DOWN);
         }
 
-        if(hasProjection) {
+        if (hasProjection) {
             queryTree.add(traversals, NONE, new Projection(selectClauseColumnNames));
             traversals.add(QueryTree.Traversal.DOWN);
         }
 
-        if(hasCompoundSelection) {
+        if (hasCompoundSelection) {
             queryTree.add(traversals, NONE, new CompoundSelection(
                     whereClauseColumnNames, whereClauseSymbols, whereClauseValues
             ));
             traversals.add(QueryTree.Traversal.DOWN);
         }
 
-        if(hasSimpleSelection) {
+        if (hasSimpleSelection) {
             queryTree.add(traversals, NONE, new SimpleSelection(
                     whereClauseColumnNames.get(0), whereClauseSymbols.get(0), whereClauseValues.get(0)
             ));
@@ -197,18 +196,18 @@ public class Optimizer {
                 .map(Relation::new)
                 .collect(Collectors.toList());
 
-        if(hasOneRelation) {
+        if (hasOneRelation) {
             queryTree.add(traversals, NONE, relations.get(0));
         }
 
-        if(hasOneCartesianProduct) {
+        if (hasOneCartesianProduct) {
             queryTree.add(traversals, NONE, cartesianProducts.get(0));
             queryTree.add(traversals, LEFT, relations.get(0));
             queryTree.add(traversals, RIGHT, relations.get(1));
         }
 
-        if(hasMultipleCartesianProducts) {
-            while(! cartesianProducts.isEmpty()) {
+        if (hasMultipleCartesianProducts) {
+            while (! cartesianProducts.isEmpty()) {
                 queryTree.add(traversals, NONE, cartesianProducts.remove(0));
                 int lastIndex = relations.size() - 1;
                 queryTree.add(traversals, RIGHT, relations.remove(lastIndex));
@@ -219,6 +218,9 @@ public class Optimizer {
 
         System.out.println("Initial Query Tree");
         queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
+
+        System.out.println("Naive relational algebra: ");
+        System.out.println(getNaiveRelationAlgebra(queryTree));
 
         return queryTree;
     }
@@ -695,7 +697,87 @@ public class Optimizer {
             System.out.println();
             pipelinedSubtree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
         });
-
+System.out.println("Optimized relational algebra:");
+System.out.println(this.getOptimizedRelationalAlgebra(pipelinedSubtrees));
         return pipelinedSubtrees;
+    }
+
+    /**
+     * After the user enters some form of input, this returns the equivalent relational algebra
+     * without making any kinds of optimization changes. Extracts this data from the query tree
+     * that is originally produced from the input.
+     * @param initialQueryTree is the query tree after creation
+     * @return the unoptimized relational algebra extracted from this query tree
+     */
+    public String getNaiveRelationAlgebra(QueryTree initialQueryTree) {
+
+        StringBuilder naiveRelationalAlgebra = new StringBuilder();
+        StringBuilder closingBrackets = new StringBuilder();
+
+        List<Operator> operators = new ArrayList<>(initialQueryTree.getOperatorsAndLocations(PREORDER).keySet());
+        List<Operator> relations =
+                new ArrayList<>(initialQueryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER).keySet());
+
+        for (Operator operator : operators) {
+            if (operator.getType() == CARTESIAN_PRODUCT) {
+                break;
+            }
+            naiveRelationalAlgebra.append(operator).append(" [");
+            closingBrackets.append("]");
+        }
+
+        // remove last " [" and "]" if they are not needed
+        if (relations.size() == 1) {
+            naiveRelationalAlgebra.delete(naiveRelationalAlgebra.length() - 2, naiveRelationalAlgebra.length());
+            closingBrackets.deleteCharAt(closingBrackets.length() - 1);
+        }
+
+        // add the relations and cartesian products manually
+        relations.forEach(relation -> naiveRelationalAlgebra.append(relation).append(" ✕ "));
+
+        // remove last " ✕ "
+        naiveRelationalAlgebra.delete(naiveRelationalAlgebra.length() - 3, naiveRelationalAlgebra.length());
+
+        // add closing brackets
+        naiveRelationalAlgebra.append(closingBrackets);
+
+        return naiveRelationalAlgebra.toString();
+    }
+
+    /**
+     * When the user enters input, this returns the equivalent optimized relational algebra.
+     * @param pipelinedQueryTrees is the very last query tree state produced from the optimization
+     * @return optimized relational algebra
+     */
+    public String getOptimizedRelationalAlgebra(List<QueryTree> pipelinedQueryTrees) {
+
+        StringBuilder optimizedRelationalAlgebra = new StringBuilder();
+
+        // for each pipelined query tree, add all pipelined expressions that appear to this list
+        List<PipelinedExpression> pipelinedExpressions = new ArrayList<>();
+
+        for (QueryTree pipelinedQueryTree : pipelinedQueryTrees) {
+            pipelinedExpressions.addAll(
+                    pipelinedQueryTree.getOperatorsAndLocationsOfType(PIPELINED_EXPRESSION, PREORDER)
+                            .keySet()
+                            .stream()
+                            .map(operator -> (PipelinedExpression) operator)
+                            .collect(Collectors.toList())
+            );
+        }
+
+        // remove duplicate pipelined expressions
+        pipelinedExpressions = pipelinedExpressions.stream()
+                .distinct()
+                .collect(Collectors.toList());
+
+        // appending to string builder
+        pipelinedExpressions.forEach(pipelinedExpression ->
+                optimizedRelationalAlgebra.append(pipelinedExpression.getRelationalAlgebra()).append("\n"));
+
+        // remove "\n"
+        optimizedRelationalAlgebra.deleteCharAt(optimizedRelationalAlgebra.length() - 1);
+
+        return optimizedRelationalAlgebra.toString();
     }
 }

@@ -66,7 +66,7 @@ public class AggregateSelection extends Operator {
     public String toString() {
         StringBuilder print = new StringBuilder();
 
-        print.append("σ [");
+        print.append("σ (");
 
         for(int i = 0; i < aggregateTypes.size(); i++) {
 
@@ -87,7 +87,7 @@ public class AggregateSelection extends Operator {
         print.deleteCharAt(print.length() - 1);
         print.deleteCharAt(print.length() - 1);
 
-        print.append("]");
+        print.append("))");
 
         return print.toString();
     }

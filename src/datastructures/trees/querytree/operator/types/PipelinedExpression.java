@@ -62,22 +62,52 @@ public class PipelinedExpression extends Operator {
         StringBuilder relationalAlgebra = new StringBuilder();
         relationalAlgebra.append(SYMBOL).append(subscript).append(" = ");
 
+        // if there is a join or cartesian product, will need to place between the correct relations,
+        // otherwise it will come out as join, relation1, relation2 instead of relation1, join, relation2
+        Operator joinOrCartesianProduct = null;
+
         for (Operator operator : pipelinedOperators) {
-            relationalAlgebra.append("[").append(operator.toString()).append(" ");
+            if (operator.getType() == Type.INNER_JOIN || operator.getType() == Type.CARTESIAN_PRODUCT) {
+                joinOrCartesianProduct = operator;
+                break;
+            }
+            relationalAlgebra.append(operator.toString()).append(" [");
         }
 
-        // remove " "
-        relationalAlgebra.deleteCharAt(relationalAlgebra.length() - 1);
+        // remove " ["
+        relationalAlgebra.delete(relationalAlgebra.length() - 2, relationalAlgebra.length());
 
-        // adding "]"
-        pipelinedOperators.forEach(e -> relationalAlgebra.append("]"));
+        boolean hasJoinOrCartesianProduct = joinOrCartesianProduct != null;
+
+        if (hasJoinOrCartesianProduct) {
+            Operator firstRelation = null, secondRelation = null;
+            for (Operator operator : pipelinedOperators) {
+                if (operator.getType() == Type.RELATION || operator.getType() == Type.PIPELINED_EXPRESSION) {
+                    if (firstRelation == null) {
+                        firstRelation = operator;
+                    } else {
+                        secondRelation = operator;
+                        break;
+                    }
+                }
+            }
+            assert firstRelation != null && secondRelation != null; // should never be thrown
+            relationalAlgebra.append(" [").append(firstRelation.toString()).append(" ")
+                    .append(joinOrCartesianProduct.toString())
+                    .append(" ").append(secondRelation.toString()).append("]");
+        } else {
+            // adding "]"
+            for (int i = 0; i < pipelinedOperators.size() - 1; i++) {
+                relationalAlgebra.append("]");
+            }
+        }
 
         return relationalAlgebra.toString();
     }
 
     @Override
     public Type getType() {
-        return Type.PIPELINED;
+        return Type.PIPELINED_EXPRESSION;
     }
 
     @Override

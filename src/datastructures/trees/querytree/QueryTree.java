@@ -696,7 +696,7 @@ public final class QueryTree {
         return operators;
     }
 
-    public Map<QueryTreeNode, List<Traversal>> getNodesAndLocations(TreeTraversal treeTraversal) {
+    private Map<QueryTreeNode, List<Traversal>> getNodesAndLocations(TreeTraversal treeTraversal) {
         switch (treeTraversal) {
             case PREORDER:
                 return preorderTraversal();
