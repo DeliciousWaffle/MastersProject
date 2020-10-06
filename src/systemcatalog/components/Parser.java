@@ -6,8 +6,9 @@ import utilities.enums.InputType;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct along with some other
- * basic error checking. Refer to the diagrams in "files/assets/helpscreen/diagrams" for information about
- * how the syntax is processed.
+ * basic error checking. Note that methods of the RuleGraph class do most of the heavy lifting when it comes to
+ * error checking. Refer to the diagrams in "files/assets/helpscreen/diagrams" for information about how the
+ * input is processed.
  */
 public class Parser {
 
@@ -22,6 +23,13 @@ public class Parser {
      */
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    /**
+     * Clears information present in the Parser, in this case, just the error message.
+     */
+    public void clear() {
+        errorMessage = "";
     }
 
     /**

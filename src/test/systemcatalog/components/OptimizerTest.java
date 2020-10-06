@@ -1,4 +1,4 @@
-package test.systemcatalog.component;
+package test.systemcatalog.components;
 
 import datastructures.relation.table.Table;
 import files.io.FileType;
@@ -13,7 +13,11 @@ import systemcatalog.components.Parser;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
+/**
+ * Test class for ensuring that the System Catalog's Optimizer is operating as it should be.
+ * This will focus on looking at whether the query trees are created correctly, the input's
+ * corresponding relational algebra is accurate, and the correct file structures are recommended.
+ */
 public class OptimizerTest {
 
     private static List<Table> tables;

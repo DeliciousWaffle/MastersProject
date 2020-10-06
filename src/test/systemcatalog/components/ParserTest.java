@@ -1,15 +1,29 @@
-package test.systemcatalog.component;
+package test.systemcatalog.components;
 
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import systemcatalog.components.Parser;
+import utilities.Utilities;
+import utilities.enums.InputType;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+/**
+ * Test class for ensuring that the System Catalog's Parser is operating as it should be.
+ * This will focus on whether the input is syntactically correct as well as other stuff.
+ */
 class ParserTest {
 
-    /*private static Parser parser;
+    private static Parser parser;
 
     @BeforeAll
     public static void init() {
         parser = new Parser();
     }
 
-    // queries ---------------------------------------------------------------------------------------------------------
+    // QUERY -----------------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "SELECT a FROM b",
@@ -49,13 +63,10 @@ class ParserTest {
             "select a from b where c = 1",
             "SeLecT A fRoM B WhERe c = 1"
     })
-    void testValidQueries(String validQuery) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(validQuery);
-        parser.setRuleGraph(new RuleGraphTypes().getQueryRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.QUERY, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidQueries(String query) {
+        String[] filtered = Utilities.filterInput(query);
+        assertTrue(parser.isValid(InputType.QUERY, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -90,16 +101,13 @@ class ParserTest {
             "SELECT a FROM b WHERE c < NotANumber",
             "SELECT a FROM b WHERE c >= NotANumber OR d <= NotANumber AND e < NotANumber"
     })
-    void testInvalidQueries(String invalidQuery) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidQuery);
-        parser.setRuleGraph(new RuleGraphTypes().getQueryRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.QUERY, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInvalidQueries(String query) {
+        String[] filtered = Utilities.filterInput(query);
+        assertFalse(parser.isValid(InputType.QUERY, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
-    // dml statements --------------------------------------------------------------------------------------------------
+    // CREATE TABLE command --------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "CREATE TABLE table1(col1 NUMBER(1))",
@@ -111,13 +119,10 @@ class ParserTest {
             "create table table1(col1 number(1))",
             "CreAtE TaBLE tAbLe1(CoL1 NUmbeR(1))"
     })
-    void testValidCreateTableStatements(String validCreateTableStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(validCreateTableStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getCreateTableRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.CREATE_TABLE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidCreateTableCommands(String createTable) {
+        String[] filtered = Utilities.filterInput(createTable);
+        assertTrue(parser.isValid(InputType.CREATE_TABLE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -135,15 +140,13 @@ class ParserTest {
             "CREATE TABLE table1()",
             "CREATE TABLE table1(col1 NUMBER(1), )"
     })
-    void testInvalidCreateTableStatements(String invalidCreateTableStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidCreateTableStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getCreateTableRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.CREATE_TABLE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInvalidCreateTableCommands(String createTable) {
+        String[] filtered = Utilities.filterInput(createTable);
+        assertFalse(parser.isValid(InputType.CREATE_TABLE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
+    // DROP TABLE command ----------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "DROP TABLE table1",
@@ -152,13 +155,10 @@ class ParserTest {
             "DroP \t\n taBLe table1",
             "\n\tdrop table table1"
     })
-    void testValidDropTableStatements(String validDropTableStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(validDropTableStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getDropTableRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.DROP_TABLE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidDropTableCommands(String dropTable) {
+        String[] filtered = Utilities.filterInput(dropTable);
+        assertTrue(parser.isValid(InputType.DROP_TABLE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -170,15 +170,34 @@ class ParserTest {
             "DROP TABLE ta\nble1",
             "DROP"
     })
-    void testInvalidDropTableStatements(String invalidDropTableStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidDropTableStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getDropTableRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.DROP_TABLE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInvalidDropTableCommands(String dropTable) {
+        String[] filtered = Utilities.filterInput(dropTable);
+        assertFalse(parser.isValid(InputType.DROP_TABLE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
+    // ALTER TABLE command ---------------------------------------------------------------------------------------------
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void testValidAlterTableCommand(String alterTable) {
+        String[] filtered = Utilities.filterInput(alterTable);
+        assertTrue(parser.isValid(InputType.ALTER_TABLE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void testInvalidAlterTableCommand(String alterTable) {
+        String[] filtered = Utilities.filterInput(alterTable);
+        assertFalse(parser.isValid(InputType.ALTER_TABLE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    // INSERT command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "INSERT INTO table1 VALUES(1)",
@@ -189,13 +208,10 @@ class ParserTest {
             "  INSERT    INTO table1 VALUES   (1  )",
             "\tINSERT INTO table1 VALUES\n(1)",
     })
-    void testValidInsertStatements(String insertStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(insertStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getInsertRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.INSERT, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidInsertCommands(String insert) {
+        String[] filtered = Utilities.filterInput(insert);
+        assertTrue(parser.isValid(InputType.INSERT, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -210,15 +226,13 @@ class ParserTest {
             "I\tNSERT INTO table1 VALUES(1)",
             "INSERT IN\nTO table1 VALUE(something)"
     })
-    void testInvalidInsertStatements(String invalidInsertStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidInsertStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getInsertRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.INSERT, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInvalidInsertCommands(String insert) {
+        String[] filtered = Utilities.filterInput(insert);
+        assertFalse(parser.isValid(InputType.INSERT, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
+    // DELETE command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "DELETE FROM table1 WHERE col1 = 1",
@@ -228,13 +242,10 @@ class ParserTest {
             "DELETE \tFROM table1\tWHERE col1 < 1",
             "DeLeTE FRoM TabLe1 WHeRe cOl1 = 1",
     })
-    void testValidDeleteStatements(String validDeleteStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(validDeleteStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getDeleteRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.DELETE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidDeleteCommands(String delete) {
+        String[] filtered = Utilities.filterInput(delete);
+        assertTrue(parser.isValid(InputType.DELETE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -247,15 +258,13 @@ class ParserTest {
             "DELETE FROM tab\tle1 WHERE col1 = 1",
             "DELETE FROM table1 WHERE col1 > NotANumber"
     })
-    void testInvalidDeleteStatements(String invalidDeleteStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidDeleteStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getDeleteRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.DELETE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInvalidDeleteCommands(String delete) {
+        String[] filtered = Utilities.filterInput(delete);
+        assertFalse(parser.isValid(InputType.DELETE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
+    // UPDATE command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "UPDATE table1 SET col1 = 1",
@@ -266,13 +275,10 @@ class ParserTest {
             "UPDATE \ntable1 SET \ncol1 = 1",
             "\tUPDATE table1\t SET col1 = 1 WHERE col2 = blah",
     })
-    void testValidUpdateStatements(String validUpdateStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(validUpdateStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getUpdateRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.UPDATE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidUpdateCommands(String update) {
+        String[] filtered = Utilities.filterInput(update);
+        assertTrue(parser.isValid(InputType.UPDATE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -285,16 +291,13 @@ class ParserTest {
             "UPDATE tabl\te1 SET col1 = 1 WHERE col2 = blah",
             "UPDATE table1 SE\nT col1 = 1 WHERE col2 = 1",
     })
-    void testInValidUpdateStatements(String invalidUpdateStatement) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidUpdateStatement);
-        parser.setRuleGraph(new RuleGraphTypes().getUpdateRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.UPDATE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInValidUpdateCommands(String update) {
+        String[] filtered = Utilities.filterInput(update);
+        assertFalse(parser.isValid(InputType.UPDATE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
-    // for testing grant/revoke commands -------------------------------------------------------------------------------
+    // GRANT command ---------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "GRANT ALTER ON table1 TO user1",
@@ -315,13 +318,10 @@ class ParserTest {
             "\tGRANT\tALTER ON table1 TO user1",
             "GRANT\n ALTER \nON table1 TO\tuser1"
     })
-    void testValidGrantCommand(String validGrantCommand) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(validGrantCommand);
-        parser.setRuleGraph(new RuleGraphTypes().getGrantRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.GRANT, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidGrantCommands(String grant) {
+        String[] filtered = Utilities.filterInput(grant);
+        assertTrue(parser.isValid(InputType.GRANT, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -339,15 +339,13 @@ class ParserTest {
             "GRANT DE\tLETE ON table1 TO user1",
             "GR\nANT ALTER ON table1 TO user1",
     })
-    void testInvalidGrantCommand(String invalidGrantCommand) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidGrantCommand);
-        parser.setRuleGraph(new RuleGraphTypes().getGrantRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.GRANT, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInvalidGrantCommands(String grant) {
+        String[] filtered = Utilities.filterInput(grant);
+        assertFalse(parser.isValid(InputType.GRANT, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
+    // REVOKE command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
             "REVOKE ALTER ON table1 FROM user1",
@@ -368,13 +366,10 @@ class ParserTest {
             "\tREVOKE\tALTER ON table1 FROM user1",
             "REVOKE\n ALTER \nON table1 FROM\tuser1"
     })
-    void testValidRevokeCommand(String validRevokeCommand) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(validRevokeCommand);
-        parser.setRuleGraph(new RuleGraphTypes().getRevokeRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertTrue(parser.isValid(InputType.REVOKE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testValidRevokeCommands(String revoke) {
+        String[] filtered = Utilities.filterInput(revoke);
+        assertTrue(parser.isValid(InputType.REVOKE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
@@ -393,18 +388,51 @@ class ParserTest {
             "REV\nOKE ALTER ON table1 FROM user1",
     })
 
-    void testInvalidRevokeCommand(String invalidRevokeCommand) {
-
-        String[] validQueryTokens = parser.formatAndTokenizeInput(invalidRevokeCommand);
-        parser.setRuleGraph(new RuleGraphTypes().getRevokeRuleGraph());
-        System.out.println(Arrays.toString(validQueryTokens));
-        assertFalse(parser.isValid(InputType.REVOKE, validQueryTokens));
-        System.out.println("------------------------------------------------");
+    void testInvalidRevokeCommands(String revoke) {
+        String[] filtered = Utilities.filterInput(revoke);
+        assertFalse(parser.isValid(InputType.REVOKE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
     }
 
-    // TODO add testing for ALTER and BUILD commands
-    // alter command ---------------------------------------------------------------------------------------------------
-    // build command ---------------------------------------------------------------------------------------------------
+    // BUILD FILE STRUCTURE command ------------------------------------------------------------------------------------
+    @ParameterizedTest
+    @ValueSource(strings = {
 
-     */
+    })
+    void testValidBuildFileStructureCommand(String buildFileStructure) {
+        String[] filtered = Utilities.filterInput(buildFileStructure);
+        assertTrue(parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void testInvalidBuildFileStructureCommand(String buildFileStructure) {
+        String[] filtered = Utilities.filterInput(buildFileStructure);
+        assertFalse(parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    // REMOVE FILE STRUCTURE command -----------------------------------------------------------------------------------
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void testValidRemoveFileStructureCommand(String removeFileStructure) {
+        String[] filtered = Utilities.filterInput(removeFileStructure);
+        assertTrue(parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void testInvalidRemoveFileStructureCommand(String removeFileStructure) {
+        String[] filtered = Utilities.filterInput(removeFileStructure);
+        assertFalse(parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered));
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
 }

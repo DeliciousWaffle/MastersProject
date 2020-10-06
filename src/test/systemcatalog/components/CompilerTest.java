@@ -1,7 +1,10 @@
-package test.systemcatalog.component;
+package test.systemcatalog.components;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
+/**
+ * Test class for ensuring that the System Catalog's Compiler is operating as it should be.
+ * This means that when input is executed, this makes sure that the output is correct.
+ */
 public class CompilerTest {
 /*
     private static Compiler compiler;

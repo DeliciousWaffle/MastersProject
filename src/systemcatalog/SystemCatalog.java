@@ -15,6 +15,7 @@ import systemcatalog.components.Parser;
 import systemcatalog.components.SecurityChecker;
 import systemcatalog.components.Verifier;
 import utilities.Utilities;
+import utilities.enums.InputType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,11 +31,11 @@ import java.util.List;
 public class SystemCatalog {
 
     // system catalog components
-    private Parser parser;
-    private Verifier verifier;
-    private SecurityChecker securityChecker;
-    private Optimizer optimizer;
-    private Compiler compiler;
+    private final Parser parser;
+    private final Verifier verifier;
+    private final SecurityChecker securityChecker;
+    private final Optimizer optimizer;
+    private final Compiler compiler;
 
     // system data
     private List<Table> tables;
@@ -45,7 +46,7 @@ public class SystemCatalog {
     private final List<RuleGraph> ruleGraphTypes;
 
     // type of input that was last executed
-    private RuleGraph.Type inputType;
+    private InputType inputType;
 
     // information about whether the input was successfully executed
     private boolean successfullyExecuted;
@@ -58,6 +59,7 @@ public class SystemCatalog {
 
     public SystemCatalog() {
 
+        // creating the system catalog components
         parser = new Parser();
         verifier = new Verifier();
         securityChecker = new SecurityChecker();
@@ -74,7 +76,7 @@ public class SystemCatalog {
         users.add(0, DBA);
 
         // create and add the rule graph types to use
-        ruleGraphTypes = Arrays.asList(
+        ruleGraphTypes = Arrays.asList( // TODO may remove this entirely
                 RuleGraphTypes.getQueryRuleGraph(),
                 RuleGraphTypes.getCreateTableRuleGraph(),
                 RuleGraphTypes.getAlterTableRuleGraph(),
@@ -89,7 +91,7 @@ public class SystemCatalog {
         );
 
         // setting the input type as unknown for now
-        inputType = RuleGraph.Type.UNKNOWN;
+        inputType = InputType.UNKNOWN;
 
         // setting input execution to empty
         successfullyExecuted = false;
@@ -104,7 +106,7 @@ public class SystemCatalog {
         costAnalysis = "";
     }
 
-    // execution related -----------------------------------------------------------------------------------------------
+    // execution -------------------------------------------------------------------------------------------------------
 
     /**
      * Given a raw string of input, executes it. Well there is more involved than that. Raw input is
@@ -119,7 +121,7 @@ public class SystemCatalog {
 
         successfullyExecuted = false; // assume the input is invalid until it passes all checks
 
-        // there may be an unknown error that I didn't account for, this prevents the app from crashing
+        // there may be an unknown error that I didn't account for, try catch prevents the app from crashing
         try {
 
             // filtering the input, splitting the input into tokens, and determining the rule graph type to use
@@ -127,16 +129,16 @@ public class SystemCatalog {
             inputType = Utilities.determineRuleGraphType(filteredInput);
 
             // couldn't determine a type, don't execute
-            if (inputType == RuleGraph.Type.UNKNOWN) {
+            if (inputType == InputType.UNKNOWN) {
                 executionMessage = "Could not determine the input type. Refer to the Syntax Diagrams " +
                         "located in the \"Help\" Screen section for more information.";
                 return;
             }
 
             // get the rule graph to use
-            RuleGraph ruleGraph = ruleGraphTypes.get(inputType.index());
+            RuleGraph ruleGraph = ruleGraphTypes.get(inputType.getIndex());
 
-            if (! parser.isValid(inputType, ruleGraph, filteredInput)) {
+            if (! parser.isValid(inputType, filteredInput)) {
                 executionMessage = parser.getErrorMessage();
                 return;
             }
