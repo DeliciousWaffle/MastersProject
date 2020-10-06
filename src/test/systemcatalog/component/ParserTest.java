@@ -1,15 +1,4 @@
-package ztest.systemcatalog.component;
-
-import datastructures.rulegraph.types.RuleGraphTypes;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-import systemcatalog.components.Parser;
-import utilities.enums.InputType;
-
-import java.util.Arrays;
-
-import static org.junit.jupiter.api.Assertions.*;
+package test.systemcatalog.component;
 
 class ParserTest {
 

@@ -1,8 +1,6 @@
-package ztest.systemcatalog.component;
+package test.systemcatalog.component;
 
 import datastructures.relation.table.Table;
-import datastructures.rulegraph.RuleGraph;
-import datastructures.rulegraph.types.RuleGraphTypes;
 import files.io.FileType;
 import files.io.IO;
 import files.io.Serialize;
@@ -10,13 +8,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Optimizer;
-import systemcatalog.components.OptimizerUtilities;
 import systemcatalog.components.Parser;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

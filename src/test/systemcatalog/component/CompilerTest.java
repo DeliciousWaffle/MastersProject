@@ -1,23 +1,4 @@
-package ztest.systemcatalog.component;
-
-import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
-import datastructures.relation.table.component.DataType;
-import datastructures.relation.table.component.TableData;
-import datastructures.rulegraph.RuleGraph;
-import datastructures.rulegraph.types.RuleGraphTypes;
-import datastructures.user.User;
-import datastructures.user.component.Privilege;
-import datastructures.user.component.TablePrivileges;
-import systemcatalog.components.Compiler;
-import systemcatalog.components.Parser;
-
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+package test.systemcatalog.component;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

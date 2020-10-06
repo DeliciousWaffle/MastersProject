@@ -266,23 +266,23 @@ public class RuleGraph {
 
     /**
      * Makes sure that an illegal comparison is not performed. This means that if ">", "<", ">=", "<=" is
-     * encountered, this method makes sure that the next value present is numeric.
+     * encountered, this method makes sure that the next value present is either a numeric value or a date.
      * Eg. SELECT col1 FROM tab1 WHERE col1 > "Steve" will return false because "Steve" is not
      * a numeric value while SELECT col1 FROM tab1 WHERE col1 > 17 will return true.
      * @param filteredInput is the input after being filtered
-     * @param numericValueId is the id of the numeric value to check (this id will come after comparisonIds)
-     * @param comparisonIds are the ids of comparison operators (these will come before numericValueId)
+     * @param numericOrDateId is the id of the numeric value to check (this id will come after comparisonIds)
+     * @param comparisonIds are the ids of comparison operators (these will come before numericOrDateId)
      * @return whether an illegal comparison is performed
      */
-    public boolean hasIllegalComparison(String[] filteredInput, int numericValueId, int... comparisonIds) {
-
-        boolean encounteredComparator = false;
+    public boolean hasIllegalComparison(String[] filteredInput, int numericOrDateId, int... comparisonIds) {
 
         RuleNode root = new RuleNode("ROOT", false, -1);
         root.setChildren(rules.get(0));
         RuleNode pointer = root;
 
         for (String token : filteredInput) {
+
+            boolean encounteredComparison = false;
 
             RuleNode[] pointersChildren = pointer.getChildren();
             boolean foundChild = false;
@@ -308,26 +308,22 @@ public class RuleGraph {
                 pointer = mutableChild;
             }
 
-            // will be used later
             for (int id : comparisonIds) {
                 if (id == pointer.getId()) {
-                    encounteredComparator = true;
+                    encounteredComparison = true;
                     break;
                 }
             }
 
-            // TODO need to make check for date value
+            boolean atDataTypeId = numericOrDateId == pointer.getId();
 
-            boolean atDataTypeId = numericValueId == pointer.getId();
-
-            if (atDataTypeId && encounteredComparator) {
+            if (atDataTypeId && encounteredComparison) {
 
                 boolean isNumeric = Utilities.isNumeric(token);
+                boolean hasDateFormat = Utilities.hasDateFormat(token);
 
-                if (isNumeric) {
-                    encounteredComparator = false;
-                } else {
-                    errorMessage = "Expected a numeric value, but found: " + token;
+                if (! isNumeric && ! hasDateFormat) {
+                    errorMessage = "Expected a numeric or date value, but found: " + token;
                     return true;
                 }
             }

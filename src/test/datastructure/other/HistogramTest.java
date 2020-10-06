@@ -1,4 +1,4 @@
-package ztest.datastructure.other;
+package test.datastructure.other;
 
 import datastructures.misc.Histogram;
 

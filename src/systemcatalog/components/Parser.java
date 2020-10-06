@@ -6,7 +6,7 @@ import utilities.enums.InputType;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct along with some other
- * basic error checking. Refer to the diagrams in "files/assets/helpscene/diagrams" for information about
+ * basic error checking. Refer to the diagrams in "files/assets/helpscreen/diagrams" for information about
  * how the syntax is processed.
  */
 public class Parser {
@@ -31,7 +31,7 @@ public class Parser {
      * @return whether the input is syntactically correct
      */
     public boolean isValid(InputType inputType, String[] filteredInput) {
-        switch(inputType) {
+        switch (inputType) {
             case QUERY:
                 return isValidQuery(filteredInput);
             case CREATE_TABLE:
@@ -60,7 +60,11 @@ public class Parser {
         }
     }
 
-    private boolean isValidQuery(String[] filteredInput) { // TOdo check for dates! in illegacomp
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid QUERY
+     */
+    private boolean isValidQuery(String[] filteredInput) {
 
         RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
 
@@ -76,14 +80,18 @@ public class Parser {
                 // column names referenced in group by clause must be unique
                 ! queryRuleGraph.hasDuplicatesAt(filteredInput, 43) &&
                 // >, <, >=, and <= can only be used with a numeric value/date for WHERE and HAVING clauses
-                ! queryRuleGraph.hasIllegalComparison(filteredInput, 37, 32, 33, 34, 35) &&
-                ! queryRuleGraph.hasIllegalComparison(filteredInput, 61, 56, 57, 58, 59);
+                ! queryRuleGraph.hasIllegalComparison(filteredInput, 38, 32, 33, 34, 35) &&
+                ! queryRuleGraph.hasIllegalComparison(filteredInput, 62, 56, 57, 58, 59);
 
-        errorMessage = queryRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Query:\n" + queryRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid CREATE TABLE command
+     */
     private boolean isValidCreateTable(String[] filteredInput) {
 
         RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
@@ -96,11 +104,16 @@ public class Parser {
                 // can't have duplicate column names
                 ! createTableRuleGraph.hasDuplicatesAt(filteredInput, 4);
 
-        errorMessage = createTableRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Create Table command:\n" +
+                createTableRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid DROP TABLE command
+     */
     private boolean isValidDropTable(String[] filteredInput) {
 
         RuleGraph dropTableRuleGraph = RuleGraphTypes.getDropTableRuleGraph();
@@ -109,11 +122,16 @@ public class Parser {
                 ! dropTableRuleGraph.hasIllegalKeyword(filteredInput) &&
                 ! dropTableRuleGraph.hasNumericAt(filteredInput, false, 2);
 
-        errorMessage = dropTableRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Drop Table command:\n" +
+                dropTableRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid ALTER TABLE command
+     */
     private boolean isValidAlterTable(String[] filteredInput) {
 
         RuleGraph alterTableRuleGraph = RuleGraphTypes.getAlterTableRuleGraph();
@@ -123,104 +141,145 @@ public class Parser {
                 ! alterTableRuleGraph.hasNumericAt(filteredInput, false, 2, 6, 16) &&
                 alterTableRuleGraph.hasNumericAt(filteredInput, true, 11);
 
-        errorMessage = alterTableRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Alter Table command:\n" +
+                alterTableRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid INSERT command
+     */
     private boolean isValidInsert(String[] filteredInput) {
 
         RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
 
         boolean isValid = insertRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! insertRuleGraph.hasIllegalKeyword(filteredInput) &&
-                ! insertRuleGraph.hasNumericAt(filteredInput, 2, 7); // LEFT off here TODO
+                ! insertRuleGraph.hasNumericAt(filteredInput, false, 2, 5);
 
-        errorMessage = insertRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Insert command:\n" +
+                insertRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid DELETE command
+     */
     private boolean isValidDelete(String[] filteredInput) {
 
         RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
 
         boolean isValid = deleteRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! deleteRuleGraph.hasIllegalKeyword(filteredInput) &&
-                ! deleteRuleGraph.hasNumericAt(filteredInput, 2, 4, 13) &&
-                // >, <, >=, and <= can only be used with a numeric value
-                ! deleteRuleGraph.hasIllegalComparison(filteredInput, 12, 7, 8, 9, 10);
+                ! deleteRuleGraph.hasNumericAt(filteredInput, false, 2, 4, 13) &&
+                deleteRuleGraph.hasNumericAt(filteredInput, false, 11) &&
+                ! deleteRuleGraph.hasIllegalComparison(filteredInput, 13, 7, 8, 9, 10);
 
-        errorMessage = deleteRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Delete command:\n" +
+                deleteRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid UPDATE command
+     */
     private boolean isValidUpdate(String[] filteredInput) {
 
         RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
 
         boolean isValid = updateRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! updateRuleGraph.hasIllegalKeyword(filteredInput) &&
-                ! updateRuleGraph.hasNumericAt(filteredInput, 1, 3, 7, 10, 14);
+                ! updateRuleGraph.hasNumericAt(filteredInput, false, 1, 3, 7, 10, 14) &&
+                updateRuleGraph.hasNumericAt(filteredInput, false, 5, 12);
 
-        errorMessage = updateRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Update command:\n" +
+                updateRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid GRANT command
+     */
     private boolean isValidGrant(String[] filteredInput) {
 
         RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
 
         boolean isValid = grantRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! grantRuleGraph.hasIllegalKeyword(filteredInput) &&
-                ! grantRuleGraph.hasNumericAt(filteredInput, 12, 16, 20, 22) &&
-                // can't grant the same privilege more than once, update and reference
-                // columns must be unique, and usernames must be unique
-                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 12, 16, 22);
+                ! grantRuleGraph.hasNumericAt(filteredInput, false, 12, 16, 20, 22) &&
+                // can't grant the same privilege more than once, update and reference columns must be unique,
+                // and usernames must be unique
+                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 12, 16, 22);
 
-        errorMessage = grantRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Grant command:\n" +
+                grantRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid REVOKE command
+     */
     private boolean isValidRevoke(String[] filteredInput) {
 
         RuleGraph revokeRuleGraph = RuleGraphTypes.getRevokeRuleGraph();
 
         boolean isValid = revokeRuleGraph.isSyntacticallyCorrect(filteredInput) &&
-                ! revokeRuleGraph.hasIllegalKeyword(filteredInput);
+                ! revokeRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! revokeRuleGraph.hasNumericAt(filteredInput, false, 12, 16, 20, 22) &&
+                // can't grant the same privilege more than once, update and reference columns must be unique,
+                // and usernames must be unique
+                ! revokeRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 12, 16, 22);
 
-        errorMessage = revokeRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Revoke command:\n" +
+                revokeRuleGraph.getErrorMessage();
 
         return false;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid BUILD FILE STRUCTURE command
+     */
     private boolean isValidBuildFileStructure(String[] filteredInput) {
 
         RuleGraph buildFileStructureRuleGraph = RuleGraphTypes.getBuildFileStructureRuleGraph();
 
         boolean isValid = buildFileStructureRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! buildFileStructureRuleGraph.hasIllegalKeyword(filteredInput) &&
-                ! buildFileStructureRuleGraph.hasNumericAt(filteredInput, 7, 9, 12, 14) &&
+                ! buildFileStructureRuleGraph.hasNumericAt(filteredInput, false, 7, 9, 12, 14) &&
                 // can't cluster a table with itself
                 ! buildFileStructureRuleGraph.hasDuplicatesAt(filteredInput,12, 14);
 
-        errorMessage = buildFileStructureRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Build File Structure command:\n" +
+                buildFileStructureRuleGraph.getErrorMessage();
 
         return isValid;
     }
 
+    /**
+     * @param filteredInput is the input after being filtered
+     * @return whether this is a valid REMOVE FILE STRUCTURE command
+     */
     private boolean isValidRemoveFileStructure(String[] filteredInput) {
 
         RuleGraph removeFileStructureRuleGraph = RuleGraphTypes.getRemoveFileStructureRuleGraph();
 
         boolean isValid = removeFileStructureRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! removeFileStructureRuleGraph.hasIllegalKeyword(filteredInput) &&
-                ! removeFileStructureRuleGraph.hasNumericAt(filteredInput, 4, 6);
+                ! removeFileStructureRuleGraph.hasNumericAt(filteredInput, false, 4, 6, 10);
 
-        errorMessage = removeFileStructureRuleGraph.getErrorMessage();
+        errorMessage = isValid ? "" : "Parser error when validating Remove File Structure command:\n" +
+                removeFileStructureRuleGraph.getErrorMessage();
 
         return isValid;
     }

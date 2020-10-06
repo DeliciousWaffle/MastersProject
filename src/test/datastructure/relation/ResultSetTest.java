@@ -1,17 +1,4 @@
-package ztest.datastructure.relation;
-
-import datastructures.relation.resultset.ResultSet;
-import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
-import files.io.IO;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import files.io.Serialize;
-import utilities.enums.Keyword;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+package test.datastructure.relation;
 
 /**
  * Currently using W3school's website for comparisons. Not perfect, will need to change later.

@@ -1,17 +1,4 @@
-package ztest.file.io;
-
-import datastructures.user.component.TablePrivileges;
-import datastructures.user.User;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import files.io.IO;
-import files.io.Serialize;
-import datastructures.user.component.Privilege;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+package test.file.io;
 
 /**
  * Tests the Serialize class and is currently hot garbage.

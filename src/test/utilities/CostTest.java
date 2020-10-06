@@ -1,13 +1,7 @@
-package ztest.utilities;
+package test.utilities;
 
-import datastructures.relation.table.Table;
-import datastructures.trees.querytree.QueryTree;
 import org.junit.jupiter.api.Test;
 import utilities.QueryCost;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 

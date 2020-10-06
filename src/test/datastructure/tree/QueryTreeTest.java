@@ -1,4 +1,4 @@
-package ztest.datastructure.tree;
+package test.datastructure.tree;
 
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;

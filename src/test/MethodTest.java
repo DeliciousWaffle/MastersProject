@@ -1,4 +1,4 @@
-package ztest;
+package test;
 
 import org.junit.jupiter.api.Test;
 import systemcatalog.components.OptimizerUtilities;

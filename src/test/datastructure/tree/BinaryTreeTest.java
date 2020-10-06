@@ -1,4 +1,4 @@
-package ztest.datastructure.tree;
+package test.datastructure.tree;
 
 import datastructures.trees.binarytree.BinaryTree;
 import org.junit.jupiter.api.BeforeEach;
