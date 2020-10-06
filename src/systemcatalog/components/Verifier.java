@@ -3,7 +3,9 @@ package systemcatalog.components;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
+import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
+import utilities.Utilities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,86 +18,63 @@ import java.util.List;
  */
 public class Verifier {
 
-    private RuleGraph.Type ruleGraphType;
-    private RuleGraph ruleGraphToUse;
-    private String[] tokenizedInput;
-    private List<Table> tables;
-    private List<User> users;
+    private String errorMessage;
     private boolean toggle;
 
     public Verifier() {
-        // by default, toggle the Verifier on
-        this.toggle = true;
+        errorMessage = "";
+        toggle = true; // toggle on by default
     }
 
-    // setters ---------------------------------------------------------------------------------------------------------
-
-    public void setRuleGraphType(RuleGraph.Type ruleGraphType) {
-        this.ruleGraphType = ruleGraphType;
-    }
-
-    public void setRuleGraphToUse(RuleGraph ruleGraphToUse) {
-        this.ruleGraphToUse = ruleGraphToUse;
-    }
-
-    public void setTokenizedInput(String[] tokenizedInput) {
-        this.tokenizedInput = tokenizedInput;
-    }
-
-    public void setTables(List<Table> tables) {
-        this.tables = tables;
-    }
-
-    public void setUsers(List<User> users) {
-        this.users = users;
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     public void toggle() {
         this.toggle = ! toggle;
     }
 
-    // validation ------------------------------------------------------------------------------------------------------
+    public boolean isValid(RuleGraph.Type inputType, String[] filteredInput, List<Table> tables, List<User> users) {
 
-    public boolean isValid() {
-
-        // return true if toggled off
-        if(! toggle) {
+        if (! toggle) {
             return true;
         }
 
-        switch(ruleGraphType) {
+        switch (inputType) {
             case QUERY:
-                return isValidQuery();
+                return isValidQuery(filteredInput, tables);
             case CREATE_TABLE:
-                return isValidCreateTable();
+                return isValidCreateTable(filteredInput, tables);
             case DROP_TABLE:
-                return isValidDropTable();
+                return isValidDropTable(filteredInput, tables);
             case ALTER_TABLE:
-                return isValidAlterTable();
+                return isValidAlterTable(filteredInput, tables);
             case INSERT:
-                return isValidInsert();
+                return isValidInsert(filteredInput, tables);
             case DELETE:
-                return isValidDelete();
+                return isValidDelete(filteredInput, tables);
             case UPDATE:
-                return isValidUpdate();
+                return isValidUpdate(filteredInput, tables);
             case GRANT:
-                return isValidGrant();
+                return isValidGrant(filteredInput, tables, users);
             case REVOKE:
-                return isValidRevoke();
+                return isValidRevoke(filteredInput, tables, users);
             case BUILD_FILE_STRUCTURE:
-                return isValidBuildFileStructure();
+                return isValidBuildFileStructure(filteredInput, tables);
             case REMOVE_FILE_STRUCTURE:
-                return isValidRemoveFileStructure();
+                return isValidRemoveFileStructure(filteredInput, tables);
             case UNKNOWN:
             default:
                 return false;
         }
     }
 
-    public boolean isValidQuery() {
+    public boolean isValidQuery(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
 
         // make sure all tables exist
-        List<String> candidateTables = ruleGraphToUse.getTokensAt(tokenizedInput, 14, 17);
+        List<String> candidateTables = queryRuleGraph.getTokensAt(filteredInput, 14, 17);
 
         for(Table currentTable : tables) {
 
@@ -114,7 +93,7 @@ public class Verifier {
         }
 
         // make sure all columns exist in the tables supplied
-        List<String> candidateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 2, 10, 20, 23, 35, 45);
+        List<String> candidateColumns = queryRuleGraph.getTokensAt(filteredInput, 2, 10, 20, 23, 35, 45);
 
         for(Table currentTable : tables) {
             for(String candidateColumn : candidateColumns) {
@@ -130,8 +109,8 @@ public class Verifier {
         // ensure that the columns used to join on in the using clause appear in the corresponding tables
         // Eg. if have t1 JOIN t2 USING(col1) JOIN t3 USING(col2)
         // t1 and t2 must have "col1" and t2 and t3 must have "col2" in their tables
-        List<String> tablesJoined  = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 17);
-        List<String> columnsJoined = ruleGraphToUse.getTokensAt(tokenizedInput, 20);
+        List<String> tablesJoined  = queryRuleGraph.getTokensAt(filteredInput, 13, 17);
+        List<String> columnsJoined = queryRuleGraph.getTokensAt(filteredInput, 20);
         HashMap<String, ArrayList<String>> columnTablePairs = new HashMap<>();
 
         for(int i = 0; i < columnsJoined.size(); i++) {
@@ -169,7 +148,7 @@ public class Verifier {
         }
 
         // only accept numeric columns if using MIN, MAX, AVG, COUNT, SUM
-        candidateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 10);
+        candidateColumns = queryRuleGraph.getTokensAt(filteredInput, 10);
         String candidateColumn = candidateColumns.isEmpty() ? "null" : candidateColumns.get(0);
 
         /*for(Table currentTable : tables) {
@@ -184,8 +163,8 @@ public class Verifier {
 
 
         // make sure that column name matches the data type of the constant in where clause
-        List<String> whereColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
-        List<String> constants = ruleGraphToUse.getTokensAt(tokenizedInput, 31);
+        List<String> whereColumns = queryRuleGraph.getTokensAt(filteredInput, 24);
+        List<String> constants = queryRuleGraph.getTokensAt(filteredInput, 31);
         int pairSize = whereColumns.size();
 
         for(int i = 0; i < pairSize; i++) {
@@ -203,7 +182,7 @@ public class Verifier {
 
                     if(column1.getColumnName().equalsIgnoreCase(column)) {
 
-                        boolean isNumericConstant = Parser.isNumeric(constant);
+                        boolean isNumericConstant = Utilities.isNumeric(constant);
 
                         // TODO
                         /*if(column1.isNumeric() && ! isNumericConstant) {
@@ -249,21 +228,23 @@ public class Verifier {
         return false;
     }*/
 
-    public boolean isValidCreateTable() {
+    public boolean isValidCreateTable(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
 
         // make sure that the table name is not numeric
-        String tableName  = tokenizedInput[2];
-        boolean isNumeric = Parser.isNumeric(tableName);
+        String tableName  = filteredInput[2];
+        boolean isNumeric = Utilities.isNumeric(tableName);
 
-        if(isNumeric) {
+        if (isNumeric) {
             return false;
         }
 
         // make sure that none of the column names are numeric
-        List<String> columns = ruleGraphToUse.getTokensAt(tokenizedInput, 4);
+        List<String> columns = createTableRuleGraph.getTokensAt(filteredInput, 4);
 
         for(String column : columns) {
-            isNumeric = Parser.isNumeric(column);
+            isNumeric = Utilities.isNumeric(column);
             if(isNumeric) {
                 return false;
             }
@@ -284,7 +265,7 @@ public class Verifier {
         }
 
         // make sure none of the columns' sizes are greater than 99
-        List<String> columnSizes = ruleGraphToUse.getTokensAt(tokenizedInput, 8);
+        List<String> columnSizes = createTableRuleGraph.getTokensAt(filteredInput, 8);
 
         for(String columnSize : columnSizes) {
             int size = Integer.parseInt(columnSize);
@@ -296,10 +277,10 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidDropTable() {
+    public boolean isValidDropTable(String[] filteredInput, List<Table> tables) {
 
         // make sure table name exists
-        String tableName = tokenizedInput[2];
+        String tableName = filteredInput[2];
         boolean foundTable = false;
 
         for(Table table : tables) {
@@ -312,10 +293,10 @@ public class Verifier {
         return foundTable;
     }
 
-    public boolean isValidAlterTable() {
+    public boolean isValidAlterTable(String[] filteredInput, List<Table> tables) {
 
         // make sure table name exists
-        String tableName = tokenizedInput[2];
+        String tableName = filteredInput[2];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -330,8 +311,8 @@ public class Verifier {
             return false;
         }
 
-        String type = tokenizedInput[3];
-        String columnName = tokenizedInput[6];
+        String type = filteredInput[3];
+        String columnName = filteredInput[6];
 
         // if using drop or modify, ensure columns exist with associated table
         if(type.equalsIgnoreCase("DROP") || type.equalsIgnoreCase("MODIFY")) {
@@ -351,7 +332,7 @@ public class Verifier {
 
         // if using add or modify, ensure size is not greater than 99
         if(type.equalsIgnoreCase("ADD") || type.equalsIgnoreCase("MODIFY")) {
-            int size = Integer.parseInt(tokenizedInput[7]);
+            int size = Integer.parseInt(filteredInput[7]);
             if(size > 99) {
                 return false;
             }
@@ -360,10 +341,12 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidInsert() {
+    public boolean isValidInsert(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
 
         // make sure table name exists
-        String tableName = tokenizedInput[2];
+        String tableName = filteredInput[2];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -380,15 +363,15 @@ public class Verifier {
         }
 
         // make sure that the number of values being inserted is not greater than the number of columns in the table
-        int numColsInTable  = referencedTable.getNumCols();
-        int numColsToInsert = ruleGraphToUse.getTokensAt(tokenizedInput, 5).size();
+        int numColsInTable = referencedTable.getNumCols();
+        int numColsToInsert = insertRuleGraph.getTokensAt(filteredInput, 5).size();
 
         if(numColsToInsert > numColsInTable) {
             return false;
         }
 
         // make sure that each new column's value matches the datatype in the corresponding table
-        List<String> valuesToInsert = ruleGraphToUse.getTokensAt(tokenizedInput, 5);
+        List<String> valuesToInsert = insertRuleGraph.getTokensAt(filteredInput, 5);
         List<Column> columns = referencedTable.getColumns();
 
         for(int i = 0; i < columns.size(); i++) {
@@ -405,10 +388,12 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidDelete() {
+    public boolean isValidDelete(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
 
         // make sure table name exists
-        String tableName = tokenizedInput[2];
+        String tableName = filteredInput[2];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -425,7 +410,7 @@ public class Verifier {
         }
 
         // make sure column exists for given table name
-        String columnName   = tokenizedInput[4];
+        String columnName = filteredInput[4];
         boolean foundColumn = referencedTable.hasColumn(columnName);
 
         if(! foundColumn) {
@@ -433,7 +418,7 @@ public class Verifier {
         }
 
         // make sure the column referenced matches the datatype of the value supplied
-        String value = tokenizedInput[11];
+        String value = filteredInput[11];
         // TODO
         /*boolean isNumericColumn = referencedTable.getColumn(columnName).isNumeric();
         boolean isNumericValue  = Parser.isNumeric(value);
@@ -445,10 +430,12 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidUpdate() {
+    public boolean isValidUpdate(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
 
         // make sure table name exists
-        String tableName = tokenizedInput[1];
+        String tableName = filteredInput[1];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -465,15 +452,15 @@ public class Verifier {
         }
 
         // make sure columns referenced actually belong to the table supplied
-        String setColumn   = tokenizedInput[3];
+        String setColumn   = filteredInput[3];
         if(! referencedTable.hasColumn(setColumn)) {
             return false;
         }
 
         // an UPDATE using the WHERE clause
-        if(tokenizedInput.length > 6) {
+        if(filteredInput.length > 6) {
 
-            String whereColumn = tokenizedInput[7];
+            String whereColumn = filteredInput[7];
 
             if(! referencedTable.hasColumn(whereColumn)) {
                 return false;
@@ -491,10 +478,12 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidGrant() {
+    public boolean isValidGrant(String[] filteredInput, List<Table> tables, List<User> users) {
+
+        RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
 
         // make sure table exists
-        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 20).get(0);
+        String tableName = grantRuleGraph.getTokensAt(filteredInput, 20).get(0);
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -510,7 +499,7 @@ public class Verifier {
         }
 
         // make sure that columns exist for corresponding table if using UPDATE or REFERENCES
-        List<String> updateAndReferencesCols = ruleGraphToUse.getTokensAt(tokenizedInput, 12, 16);
+        List<String> updateAndReferencesCols = grantRuleGraph.getTokensAt(filteredInput, 12, 16);
 
         for(String candidate : updateAndReferencesCols) {
             boolean hasCandidate = referencedTable.hasColumn(candidate);
@@ -520,7 +509,7 @@ public class Verifier {
         }
 
         // make sure user(s) exists
-        List<String> usersReferenced = ruleGraphToUse.getTokensAt(tokenizedInput, 22);
+        List<String> usersReferenced = grantRuleGraph.getTokensAt(filteredInput, 22);
 
         for(String candidate : usersReferenced) {
 
@@ -541,15 +530,14 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidRevoke() {
-
+    public boolean isValidRevoke(String[] filteredInput, List<Table> tables, List<User> users) {
         return false;
     }
 
-    public boolean isValidBuildFileStructure() {
+    public boolean isValidBuildFileStructure(String[] filteredInput, List<Table> tables) {
 
         // make sure table exists
-        String tableName = tokenizedInput[6];
+        String tableName = filteredInput[6];
         Table referencedTable = null;
         boolean foundTable = false;
 
@@ -564,7 +552,7 @@ public class Verifier {
             return false;
         }
 
-        String column = tokenizedInput[4];
+        String column = filteredInput[4];
 
         if(! referencedTable.hasColumn(column)) {
             return false;
@@ -573,7 +561,7 @@ public class Verifier {
         return true;
     }
 
-    public boolean isValidRemoveFileStructure() {
+    public boolean isValidRemoveFileStructure(String[] filteredInput, List<Table> tables) {
 
         return false;
     }

@@ -21,73 +21,36 @@ import systemcatalog.components.Parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class QueryTreeWindow extends Application { // change back to Stage
+public class QueryTreeWindow extends Stage { // change back to Stage
 
     private List<QueryTreeGUI> queryTreeGUIStates;
     private List<Button> optimizationInfoButtons;
     private int stateIndex;
     private Button rightButton, leftButton;
 
-    public static void main(String[] args) {launch(args);}
-
-    @Override public void start(Stage primaryStage) {
-
-        String query = "select col1, col2, col3 from tab1, tab2, tab3 where tab1.col1 = tab2.col1 and tab2.col1 = tab3.col1 and col3 = 7 and tab1.col1 = 3";
-        String[] tokens = Parser.formatAndTokenizeInput(query);
-        Optimizer optimizer = new Optimizer();
-        List<Table> tables = new ArrayList<>();/*(Arrays.asList(
-                new Table("tab1", Arrays.asList(
-                        new Column("col1", DataType.NUMBER, 1),
-                        new Column("col2", DataType.NUMBER, 1),
-                        new Column("col3", DataType.NUMBER, 1)),
-                        "col1", new ArrayList<>()),
-                new Table("tab2", Arrays.asList(
-                        new Column("col1", DataType.NUMBER, 1)),
-                        "col1", new ArrayList<>()
-                ),
-                new Table("tab3", Arrays.asList(
-                        new Column("col1", DataType.NUMBER, 1)),
-                        "col1", new ArrayList<>())
-                )
-        );*/
-        /*List<QueryTree> queryTreeStates = optimizer.getQueryTreeStates(tokens, tables);
-
-        //new QueryTreeWindow(queryTreeStates, primaryStage);
-    //}
-
-    //public QueryTreeWindow(List<QueryTree> queryTreeStates, Stage primaryStage) {
-
-
-        System.out.println(optimizer.getNaiveRelationalAlgebra(queryTreeStates.get(0)));
-
-for(QueryTree queryTree : queryTreeStates) {
-    System.out.println(queryTree.getTreeStructure());
-    System.out.println("==========================================================================");
-}
-*/
+    public QueryTreeWindow(List<QueryTree> queryTreeStates) {
 
         // root container to hold all of our junk, query tree states will be held above while buttons below
         BorderPane root = new BorderPane();
 
         // user will be able to click left or right buttons to switch between different states of the query tree
-        this.queryTreeGUIStates = new ArrayList<>();
-        this.stateIndex = 0;
-
-        //for(QueryTree queryTree : queryTreeStates) {
-        //    queryTreeGUIStates.add(new QueryTreeGUI(queryTree));
-        //}
+        queryTreeGUIStates = queryTreeStates.stream()
+                .map(QueryTreeGUI::new)
+                .collect(Collectors.toList());
+        stateIndex = 0;
 
         // labels mapped to the current query tree state that give info about the optimization taking place
         getOptimizationInfoLabels();
 
-        this.leftButton = new Button();
+        leftButton = new Button();
         leftButton.setText("Previous State");
         leftButton.setFont(new Font(25));
         leftButton.setVisible(false);
         leftButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
 
-        this.rightButton = new Button();
+        rightButton = new Button();
         rightButton.setText("Next State");
         rightButton.setFont(new Font(25));
         rightButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
@@ -128,14 +91,14 @@ for(QueryTree queryTree : queryTreeStates) {
         });
 
         // adjusting the area in which the query tree is displayed upon window resize
-        primaryStage.widthProperty().addListener((observable, oldValue, newValue) -> { // change back to this
+        this.widthProperty().addListener((observable, oldValue, newValue) -> { // change back to this
             double width = (Double) newValue;
             for(QueryTreeGUI queryTreeGUI : queryTreeGUIStates) {
                 queryTreeGUI.adjustWidth(width);
             }
         });
 
-        primaryStage.heightProperty().addListener((observable, oldValue, newValue) -> { // change back to this
+        this.heightProperty().addListener((observable, oldValue, newValue) -> { // change back to this
 
             double height = (Double) newValue;
 
@@ -147,9 +110,9 @@ for(QueryTree queryTree : queryTreeStates) {
         });
 
         // change back to this
-        primaryStage.setTitle("Query Tree States");
-        primaryStage.setScene(new Scene(root));
-        primaryStage.show();
+        this.setTitle("Query Tree States");
+        this.setScene(new Scene(root));
+        this.show();
     }
 
     // helper method for keeping the constructor somewhat clean

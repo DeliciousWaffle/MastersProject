@@ -1,19 +1,17 @@
 package systemcatalog.components;
 
+import datastructures.misc.Triple;
 import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
 import datastructures.trees.querytree.QueryTree;
 import datastructures.trees.querytree.operator.Operator;
 import datastructures.trees.querytree.operator.types.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import sun.awt.image.ImageWatched;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Class that offers additional functionality to the Optimizer class because that class
- * got very hairy and this keeps things somewhat clean.
+ * got polluted with too many helper methods and this keeps things somewhat clean.
  */
 public final class OptimizerUtilities {
 
@@ -37,8 +35,8 @@ public final class OptimizerUtilities {
      * @return the table referenced from the table name or null if not found
      */
     public static Table getReferencedTable(String tableName, List<Table> tables) {
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
+        for (Table table : tables) {
+            if (table.getTableName().equalsIgnoreCase(tableName)) {
                 return table;
             }
         }
@@ -51,27 +49,25 @@ public final class OptimizerUtilities {
      * If a "*" is not found in the provided list of column names, makes no changes and returns.
      * @param columnNames is a list of column names referenced in the SELECT clause, may contain a "*"
      * @param referencedTables are tables referenced in the FROM clause
-     * @return a list of all column names that belong to any tables referenced in the FROM clause if
-     * a "*" is present in columnNames
      */
     public static void getColumnNamesFromStar(List<String> columnNames, List<Table> referencedTables) {
 
         // return if there are not any column names to begin with
-        if(columnNames.isEmpty()) {
+        if (columnNames.isEmpty()) {
             return;
         }
 
         // also return if "*" doesn't exist
         boolean hasStar = columnNames.get(0).equalsIgnoreCase("*");
 
-        if(! hasStar) {
+        if (! hasStar) {
             return;
         }
 
         // otherwise remove the "*" and for each table, pull out it's column names and add them to the list to return
         columnNames.remove(0);
 
-        for(Table table : referencedTables) {
+        for (Table table : referencedTables) {
             List<String> referencedTablesColumnNames = table.getColumns().stream()
                     .map(e -> table.getTableName() + "." + e.getColumnName())
                     .collect(Collectors.toList());
@@ -85,7 +81,7 @@ public final class OptimizerUtilities {
      * @param tables are the tables in the system
      */
     public static void prefixColumnNamesWithTableNames(List<String> columnNames, List<Table> tables) {
-        for(int i = 0; i < columnNames.size(); i++) {
+        for (int i = 0; i < columnNames.size(); i++) {
             columnNames.set(i, prefixColumnNameWithTableName(columnNames.get(i), tables));
         }
     }
@@ -100,18 +96,18 @@ public final class OptimizerUtilities {
     public static String prefixColumnNameWithTableName(String columnName, List<Table> tables) {
 
         // don't need to prefix the table name if it's prefixed
-        if(hasPrefixedTableName(columnName)) {
+        if (hasPrefixedTableName(columnName)) {
             return columnName;
         }
 
         // also don't need to prefix "." with anything
-        if(columnName.equals(".")) {
+        if (columnName.equals(".")) {
             return columnName;
         }
 
         // otherwise prefix
-        for(Table table : tables) {
-            if(table.hasColumn(columnName)) {
+        for (Table table : tables) {
+            if (table.hasColumn(columnName)) {
                 columnName = table.getTableName() + "." + columnName;
                 break;
             }
@@ -146,11 +142,11 @@ public final class OptimizerUtilities {
      * @param values is the list of values to perform this operation on
      */
     public static void addQuotationsToStringValues(List<String> values) {
-        for(int i = 0; i < values.size(); i++) {
+        for (int i = 0; i < values.size(); i++) {
             String value = values.get(i);
             boolean isNumeric = Parser.isNumeric(value);
             boolean hasPrefixedTableName = hasPrefixedTableName(value); // don't wrap column names in quotes
-            if(! isNumeric && ! hasPrefixedTableName) {
+            if (! isNumeric && ! hasPrefixedTableName) {
                 values.set(i, "\"" + value + "\"");
             }
         }
@@ -162,11 +158,11 @@ public final class OptimizerUtilities {
      * @return given a list of lists, returns the list with the fewest elements
      */
     public static <T> List<T> getListOfFewestElements(List<List<T>> listOfLists) {
-        int indexOfSmallestList = 0, smallestSize = listOfLists.get(0).size();
-        for(int i = 0; i < listOfLists.size(); i++) {
+        int indexOfSmallestList = 0, smallestListSize = listOfLists.get(0).size();
+        for (int i = 0; i < listOfLists.size(); i++) {
             int listSize = listOfLists.get(i).size();
-            if(listSize < smallestSize) {
-                smallestSize = listSize;
+            if (listSize < smallestListSize) {
+                smallestListSize = listSize;
                 indexOfSmallestList = i;
             }
         }
@@ -180,9 +176,9 @@ public final class OptimizerUtilities {
      */
     public static <T> List<T> getListOfMostElements(List<List<T>> listOfLists) {
         int indexOfLargestList = 0, largestSize = listOfLists.get(0).size();
-        for(int i = 0; i < listOfLists.size(); i++) {
+        for (int i = 0; i < listOfLists.size(); i++) {
             int listSize = listOfLists.get(i).size();
-            if(listSize > largestSize) {
+            if (listSize > largestSize) {
                 largestSize = listSize;
                 indexOfLargestList = i;
             }
@@ -218,8 +214,8 @@ public final class OptimizerUtilities {
 
     /**
      * Given a list of stuff, performs Heap's algorithm in order to produce a list of lists
-     * which contains every permutation of the original list. When first calling, set i to
-     * the size of the list to permute and the permuted list should initially be empty.
+     * which contains every permutation of the original list. When first calling, set "i" to
+     * the size of "list" and "permutedList" should initially be empty.
      * Source: https://en.wikipedia.org/wiki/Heap%27s_algorithm
      * @param i is the initial size of the list before recursively calling itself
      * @param list is the list to permute
@@ -266,6 +262,7 @@ public final class OptimizerUtilities {
     }
 
     /**
+     * Basically converts the given set to a "stack" which takes the form of a deque.
      * @param set is the set to convert
      * @param <T> is a generic type
      * @return a deque
@@ -273,12 +270,19 @@ public final class OptimizerUtilities {
     public static <T> Deque<T> setToDeque(Set<T> set) {
         List<T> operators = new ArrayList<>(set);
         Deque<T> stack = new ArrayDeque<>();
-        while(! operators.isEmpty()) {
+        while (! operators.isEmpty()) {
             stack.addFirst(operators.remove(0));
         }
         return stack;
     }
 
+    /**
+     * Returns a list of column names that belong to the associated table name. Each column name
+     * is assumed to already by prefixed with it's associated table name. I forgot why I needed this.
+     * @param columnNames is a list of column names that are prefixed with the table names that they belong to
+     * @param tableName is the table name to whose column names we want
+     * @return a list of column names that belong to the given table name
+     */
     public static List<String> getColumnNamesWithRelationName(List<String> columnNames, String tableName) {
         return columnNames.stream()
                 .filter(columnName -> columnName.split("\\.")[0].equalsIgnoreCase(tableName))
@@ -287,6 +291,8 @@ public final class OptimizerUtilities {
     }
 
     /**
+     * Basically performs the set operation minus which means that the this method will return a list
+     * of elements that are in the first list, but not the second
      * @param list is the initial list
      * @param toSubtract is the list whose elements will not appear in the final product
      * @param <T> a generic type
@@ -302,7 +308,7 @@ public final class OptimizerUtilities {
                     break;
                 }
             }
-            if(! foundElementToSubtract) {
+            if (! foundElementToSubtract) {
                 toKeep.add(element);
             }
         }
@@ -310,6 +316,7 @@ public final class OptimizerUtilities {
     }
 
     /**
+     * Swaps the first and last elements of a given linked hash map.
      * @param original is the linked hash map whose first and last elements will be swapped
      * @param <K> a generic key of this map
      * @param <V> a generic value of this map
@@ -346,5 +353,55 @@ public final class OptimizerUtilities {
         Map.Entry<K, V> firstEntry = iterator.next();
         original.remove(firstEntry.getKey());
         original.put(firstEntry.getKey(), firstEntry.getValue());
+    }
+
+    /**
+     * Returns the location of the first instance of a file structure conflict. These conflicts occur when
+     * either a clustered b-tree or hash table is built on the same column of a table. In order to resolve,
+     * build a secondary b-tree instead.
+     * @param candidate is a triplet containing the table name, column name, and file structure in that order
+     * @param recommendedFileStructures is a list of triplets containing table name, column name, and file
+     * structure in that order
+     */
+    public static int hasFileStructureConflict(Triple<String, String, String> candidate, List<Triple<String, String, String>> recommendedFileStructures) {
+        String candidateTableName = candidate.getFirst();
+        String candidateColumnName = candidate.getSecond();
+        for (int i = 0; i < recommendedFileStructures.size(); i++) {
+            Triple<String, String, String> recommendation = recommendedFileStructures.get(i);
+            String tableName = recommendation.getFirst();
+            String columnName = recommendation.getSecond();
+            if (tableName.equalsIgnoreCase(candidateTableName) && columnName.equalsIgnoreCase(candidateColumnName)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Removes column names that are prefixed with a table name only if the removal doesn't produce
+     * an unambiguous result. For instance, an operator containing tab1.col1, tab2.col1, tab3.col2 will
+     * yield tab1.col1, tab2.col1, col2.
+     * @param prefixedColumnNames is a list of prefixed column names whose prefixes will attempted to be removed
+     * @return a list of unambiguous column names
+     */
+    public static List<String> removePrefixedColumnNames(List<String> prefixedColumnNames) {
+        return prefixedColumnNames.stream()
+                .map(prefixedColumnName -> isAmbiguousColumnName(prefixedColumnName, prefixedColumnNames)
+                        ? prefixedColumnName // don't remove the prefixed table name if not unique
+                        : prefixedColumnName.split("\\.")[1]) // remove the prefixed table name if unique
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * @param candidate is the prefixed column name to check
+     * @param prefixedColumnNames is the list of prefixed columns to check the prefixed column name against
+     * @return returns whether the prefixed column name would be ambiguous if it wasn't prefixed with the
+     * table name it belonged to
+     */
+    public static boolean isAmbiguousColumnName(String candidate, List<String> prefixedColumnNames) {
+        return prefixedColumnNames.stream()
+                .map(prefixedColumnName -> prefixedColumnName.split("\\.")[1])
+                .filter(columnName -> columnName.equalsIgnoreCase(candidate.split("\\.")[1]))
+                .count() >= 2;
     }
 }

@@ -1,323 +1,227 @@
 package systemcatalog.components;
 
-import utilities.enums.Keyword;
 import datastructures.rulegraph.RuleGraph;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import datastructures.rulegraph.types.RuleGraphTypes;
+import utilities.enums.InputType;
 
 /**
- * Responsible for checking the syntax of the input to ensure it is syntactically correct.
- * Also handles miscellaneous functions that involve parsing input.
- * Please refer to the diagrams in "files.assets.helpscene.diagrams" for information about
- * the syntax accepted.
+ * Responsible for checking the syntax of the input to ensure it is syntactically correct along with some other
+ * basic error checking. Refer to the diagrams in "files/assets/helpscene/diagrams" for information about
+ * how the syntax is processed.
  */
 public class Parser {
 
-    private RuleGraph.Type ruleGraphType;
-    private RuleGraph ruleGraphToUse;
-    private String[] tokenizedInput;
+    private String errorMessage;
 
-    public Parser() {}
-
-    // static utility methods ------------------------------------------------------------------------------------------
-
-    /**
-     * Cleans raw input so that it can be used by other methods without hassle.
-     * @param input is unformatted data
-     * @return formatted data
-     */
-    public static String[] formatAndTokenizeInput(String input) {
-
-        // remove spaces at the beginning and end of the input
-        input = input.trim();
-
-        // tokenize the input via spaces, removes redundant input too
-        String[] inputAsTokens = input.split("\\s+");
-        StringBuilder rebuildInput = new StringBuilder();
-
-        // capitalizing keywords
-        for(int i = 0; i < inputAsTokens.length; i++) {
-            inputAsTokens[i] = Keyword.toUppercase(inputAsTokens[i]);
-        }
-
-        // re-create the input, but with fixed spaces
-        for(String token : inputAsTokens) {
-            rebuildInput.append(token).append(" ");
-        }
-
-        // re-add ";" which is used for determining where the input will end later on
-        rebuildInput.append(";");
-
-        // adding spaces between ',', ')', '(', '"' too
-        for(int i = 1; i < rebuildInput.length() - 1; i++) {
-
-            char token = rebuildInput.charAt(i);
-
-            if(token == ',' || token == ')' || token == '(' || token == '"') {
-
-                // is a space needed before/after?
-                char beforeToken = rebuildInput.charAt(i - 1);
-                char afterToken = rebuildInput.charAt(i + 1);
-                int offset = 0;
-
-                if(beforeToken != ' ') {
-                    rebuildInput.insert(i, " ");
-                    offset = 1;
-                }
-
-                if(afterToken != ' ') {
-                    rebuildInput.insert(i + 1 + offset, " ");
-                }
-            }
-        }
-
-        // need to handle stuff that appears in double quotes which makes things difficult
-        inputAsTokens = rebuildInput.toString().split("\\s+");
-
-        // collecting strings that appear in double quotes
-        List<String> stringInDoubleQuotesList = new ArrayList<>();
-        StringBuilder stringInDoubleQuotes = new StringBuilder();
-
-        char[] inputAsChars = input.toCharArray();
-        int count = 0;
-
-        for(int i = 0; i < inputAsChars.length; i++) {
-
-            char currentChar = inputAsChars[i];
-
-            // keep moving forward in the array until the second '"' is found
-            if(currentChar == '"') {
-                for(int j = i + 1; j < inputAsChars.length; j++) { // j = i + 1 skips over current '"'
-                    currentChar = inputAsChars[j];
-
-                    if(currentChar == '"') {
-                        i = j; // set to the closing '"' for now then i will increment to next token in outer loop
-                        break; // found second '"', we're done
-                    }
-
-                    stringInDoubleQuotes.append(currentChar);
-                }
-
-                stringInDoubleQuotesList.add(stringInDoubleQuotes.toString()); // add the contents of what's in ""
-                stringInDoubleQuotes = new StringBuilder();
-            }
-
-        }
-
-        // combining what we currently have with the stuff in double quotes
-        List<String> handleDoubleQuotes = new ArrayList<>();
-
-        for(int i = 0; i < inputAsTokens.length; i++) {
-
-            String currentToken = inputAsTokens[i];
-
-            // similar process to what we did with the characters, skip everything in the middle of ""
-            if(currentToken.equalsIgnoreCase("\"")) {
-                handleDoubleQuotes.add(currentToken); // add the first "
-
-                for(int j = i + 1; j < inputAsTokens.length; j++) {
-                    currentToken = inputAsTokens[j];
-
-                    if(currentToken.equalsIgnoreCase("\"")) {
-                        i = j;
-                        break;
-                    }
-                }
-
-                handleDoubleQuotes.add(stringInDoubleQuotesList.remove(0)); // add the item in between ""
-                handleDoubleQuotes.add(currentToken); // add the last "
-
-            // just normal formatted input, just add it
-            } else {
-                handleDoubleQuotes.add(currentToken);
-            }
-        }
-
-        // populate the stuff to return with the correct input
-        String[] formattedInput = new String[handleDoubleQuotes.size()];
-
-        for(int i = 0; i < handleDoubleQuotes.size(); i++) {
-            formattedInput[i] = handleDoubleQuotes.get(i);
-        }
-
-        return formattedInput;
+    public Parser() {
+        errorMessage = "";
     }
 
     /**
-     * Given a tokenized command, returns the type that it is or UNKNOWN.
-     * @param tokenizedInput tokenized command
-     * @return the input type
+     * @return the error message if an error occurred while parsing the input
      */
-    public static RuleGraph.Type determineRuleGraphType(String[] tokenizedInput) {
-
-        String firstToken = tokenizedInput[0];
-
-        switch(firstToken) {
-            case "SELECT":
-                return RuleGraph.Type.QUERY;
-            case "CREATE":
-                return RuleGraph.Type.CREATE_TABLE;
-            case "DROP":
-                return RuleGraph.Type.DROP_TABLE;
-            case "ALTER":
-                return RuleGraph.Type.ALTER_TABLE;
-            case "INSERT":
-                return RuleGraph.Type.INSERT;
-            case "DELETE":
-                return RuleGraph.Type.DELETE;
-            case "UPDATE":
-                return RuleGraph.Type.UPDATE;
-            case "GRANT":
-                return RuleGraph.Type.GRANT;
-            case "REVOKE":
-                return RuleGraph.Type.REVOKE;
-            case "BUILD":
-                return RuleGraph.Type.BUILD_FILE_STRUCTURE;
-            case "REMOVE":
-                return RuleGraph.Type.REMOVE_FILE_STRUCTURE;
-            default:
-                return RuleGraph.Type.UNKNOWN;
-        }
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
     /**
-     * @param candidate the string to test
-     * @return whether the given candidate is numeric
+     * Returns whether the syntax of the input is syntactically correct along with some other basic error checking.
+     * @param inputType is the type of input
+     * @param filteredInput is input that has already been filtered for use
+     * @return whether the input is syntactically correct
      */
-    public static boolean isNumeric(String candidate) {
-
-        try {
-            Double.parseDouble(candidate);
-        } catch(NumberFormatException e) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // setters ---------------------------------------------------------------------------------------------------------
-
-    public void setRuleGraphType(RuleGraph.Type ruleGraphType) {
-        this.ruleGraphType = ruleGraphType;
-    }
-
-    public void setRuleGraphToUse(RuleGraph ruleGraphToUse) {
-        this.ruleGraphToUse = ruleGraphToUse;
-    }
-
-    public void setTokenizedInput(String[] tokenizedInput) {
-        this.tokenizedInput = tokenizedInput;
-    }
-
-    // validation ------------------------------------------------------------------------------------------------------
-
-    /**
-     * @return whether the given input is syntactically correct with respect to
-     * the tokenized input and rule graph that have been set
-     */
-    public boolean isValid() {
-
-        // check if the input is syntactically correct and contains no illegal keywords
-        boolean isValid = (ruleGraphToUse.isSyntacticallyCorrect(tokenizedInput)) &&
-                ! ruleGraphToUse.hasIllegalKeyword(tokenizedInput);
-
-        if(! isValid) {
-            return false;
-        }
-
-        switch(ruleGraphType) {
+    public boolean isValid(InputType inputType, String[] filteredInput) {
+        switch(inputType) {
             case QUERY:
-                return isValidQuery();
+                return isValidQuery(filteredInput);
             case CREATE_TABLE:
-                return isValidCreateTable();
+                return isValidCreateTable(filteredInput);
             case DROP_TABLE:
-                return isValidDropTable();
+                return isValidDropTable(filteredInput);
             case ALTER_TABLE:
-                return isValidAlterTable();
+                return isValidAlterTable(filteredInput);
             case INSERT:
-                return isValidInsert();
+                return isValidInsert(filteredInput);
             case DELETE:
-                return isValidDelete();
+                return isValidDelete(filteredInput);
             case UPDATE:
-                return isValidUpdate();
+                return isValidUpdate(filteredInput);
             case GRANT:
-                return isValidGrant();
+                return isValidGrant(filteredInput);
             case REVOKE:
-                return isValidRevoke();
+                return isValidRevoke(filteredInput);
             case BUILD_FILE_STRUCTURE:
-                return isValidBuildFileStructure();
+                return isValidBuildFileStructure(filteredInput);
             case REMOVE_FILE_STRUCTURE:
-                return isValidRemoveFileStructure();
+                return isValidRemoveFileStructure(filteredInput);
             case UNKNOWN:
             default:
                 return false;
         }
     }
 
-    public boolean isValidQuery() {
-        return ! ruleGraphToUse.hasNumericAt(tokenizedInput,2, 9, 13, 15, 18, 20, 27, 29, 38, 43, 52, 62) &&
-                // table names referenced in from clause must be unique
-                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 13, 15, 18) &&
+    private boolean isValidQuery(String[] filteredInput) { // TOdo check for dates! in illegacomp
+
+        RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
+
+        boolean isValid = queryRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! queryRuleGraph.hasIllegalKeyword(filteredInput) &&
+                // column names, table names, completely numeric values encased in quotes like "123"
+                // ("blah123" is fine) should not be numeric at all
+                ! queryRuleGraph.hasNumericAt(filteredInput, false, 2, 9, 13, 15, 18, 20, 27, 29, 38, 43, 52, 62) &&
+                // column names referenced in SELECT clause must be unique
+                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 2, 9) &&
+                // table names referenced in FROM clause must be unique
+                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 13, 15, 18) &&
                 // column names referenced in group by clause must be unique
-                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 43) &&
-                // >, <, >=, and <= can only be used with a numeric value
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 37, 32, 33, 34, 35) &&
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 61, 56, 57, 58, 59);
+                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 43) &&
+                // >, <, >=, and <= can only be used with a numeric value/date for WHERE and HAVING clauses
+                ! queryRuleGraph.hasIllegalComparison(filteredInput, 37, 32, 33, 34, 35) &&
+                ! queryRuleGraph.hasIllegalComparison(filteredInput, 61, 56, 57, 58, 59);
+
+        errorMessage = queryRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidCreateTable() {
-        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 4) &&
+    private boolean isValidCreateTable(String[] filteredInput) {
+
+        RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
+
+        boolean isValid = createTableRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! createTableRuleGraph.hasIllegalKeyword(filteredInput) &&
+                // don't want numeric values for table name and column names, want numeric values for the sizes though
+                ! createTableRuleGraph.hasNumericAt(filteredInput, false, 2, 4) &&
+                createTableRuleGraph.hasNumericAt(filteredInput, true, 9, 11) &&
                 // can't have duplicate column names
-                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 4) &&
-                // size of the column can only be numeric
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 8);
+                ! createTableRuleGraph.hasDuplicatesAt(filteredInput, 4);
+
+        errorMessage = createTableRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidDropTable() {
-        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2);
+    private boolean isValidDropTable(String[] filteredInput) {
+
+        RuleGraph dropTableRuleGraph = RuleGraphTypes.getDropTableRuleGraph();
+
+        boolean isValid = dropTableRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! dropTableRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! dropTableRuleGraph.hasNumericAt(filteredInput, false, 2);
+
+        errorMessage = dropTableRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidAlterTable() {
-        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 6, 15) &&
-                // size can only be numeric
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 10);
+    private boolean isValidAlterTable(String[] filteredInput) {
+
+        RuleGraph alterTableRuleGraph = RuleGraphTypes.getAlterTableRuleGraph();
+
+        boolean isValid = alterTableRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! alterTableRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! alterTableRuleGraph.hasNumericAt(filteredInput, false, 2, 6, 16) &&
+                alterTableRuleGraph.hasNumericAt(filteredInput, true, 11);
+
+        errorMessage = alterTableRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidInsert() {
-        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 7);
+    private boolean isValidInsert(String[] filteredInput) {
+
+        RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
+
+        boolean isValid = insertRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! insertRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! insertRuleGraph.hasNumericAt(filteredInput, 2, 7); // LEFT off here TODO
+
+        errorMessage = insertRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidDelete() {
-        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 2, 4, 13) &&
+    private boolean isValidDelete(String[] filteredInput) {
+
+        RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
+
+        boolean isValid = deleteRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! deleteRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! deleteRuleGraph.hasNumericAt(filteredInput, 2, 4, 13) &&
                 // >, <, >=, and <= can only be used with a numeric value
-                ! ruleGraphToUse.hasIllegalValue(tokenizedInput, 12, 7, 8, 9, 10);
+                ! deleteRuleGraph.hasIllegalComparison(filteredInput, 12, 7, 8, 9, 10);
+
+        errorMessage = deleteRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidUpdate() {
-        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 1, 3, 7, 10, 14);
+    private boolean isValidUpdate(String[] filteredInput) {
+
+        RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
+
+        boolean isValid = updateRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! updateRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! updateRuleGraph.hasNumericAt(filteredInput, 1, 3, 7, 10, 14);
+
+        errorMessage = updateRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidGrant() {
-        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 12, 16, 20, 22) &&
+    private boolean isValidGrant(String[] filteredInput) {
+
+        RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
+
+        boolean isValid = grantRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! grantRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! grantRuleGraph.hasNumericAt(filteredInput, 12, 16, 20, 22) &&
                 // can't grant the same privilege more than once, update and reference
                 // columns must be unique, and usernames must be unique
-                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput, 1, 2, 3, 4, 5, 6, 12, 16, 22);
+                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 12, 16, 22);
+
+        errorMessage = grantRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidRevoke() {
-        // grant command is similar enough in structure to do this
-        return isValidGrant();
+    private boolean isValidRevoke(String[] filteredInput) {
+
+        RuleGraph revokeRuleGraph = RuleGraphTypes.getRevokeRuleGraph();
+
+        boolean isValid = revokeRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! revokeRuleGraph.hasIllegalKeyword(filteredInput);
+
+        errorMessage = revokeRuleGraph.getErrorMessage();
+
+        return false;
     }
 
-    public boolean isValidBuildFileStructure() {
-        return  ! ruleGraphToUse.hasNumericAt(tokenizedInput, 7, 9, 12, 14) &&
+    private boolean isValidBuildFileStructure(String[] filteredInput) {
+
+        RuleGraph buildFileStructureRuleGraph = RuleGraphTypes.getBuildFileStructureRuleGraph();
+
+        boolean isValid = buildFileStructureRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! buildFileStructureRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! buildFileStructureRuleGraph.hasNumericAt(filteredInput, 7, 9, 12, 14) &&
                 // can't cluster a table with itself
-                ! ruleGraphToUse.hasDuplicatesAt(tokenizedInput,12, 14);
+                ! buildFileStructureRuleGraph.hasDuplicatesAt(filteredInput,12, 14);
+
+        errorMessage = buildFileStructureRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 
-    public boolean isValidRemoveFileStructure() {
-        return ! ruleGraphToUse.hasNumericAt(tokenizedInput, 4, 6);
+    private boolean isValidRemoveFileStructure(String[] filteredInput) {
+
+        RuleGraph removeFileStructureRuleGraph = RuleGraphTypes.getRemoveFileStructureRuleGraph();
+
+        boolean isValid = removeFileStructureRuleGraph.isSyntacticallyCorrect(filteredInput) &&
+                ! removeFileStructureRuleGraph.hasIllegalKeyword(filteredInput) &&
+                ! removeFileStructureRuleGraph.hasNumericAt(filteredInput, 4, 6);
+
+        errorMessage = removeFileStructureRuleGraph.getErrorMessage();
+
+        return isValid;
     }
 }

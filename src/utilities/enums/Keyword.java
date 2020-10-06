@@ -8,7 +8,7 @@ public enum Keyword {
 
     /**
      * Basically takes and returns a string in uppercase if it's a keyword, else,
-     * just returns the string.
+     * just returns the String.
      * @param toUppercase is the string to convert to uppercase
      * @return the string in uppercase if it's a keyword, else, the string provided
      */

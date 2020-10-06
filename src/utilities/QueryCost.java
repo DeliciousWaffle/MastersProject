@@ -24,12 +24,12 @@ import java.util.List;
  * l          (levels)                number of levels in a b-tree
  * m          (degree)                degree of the tree
  * bl         (terminalLevelNodes)    number of nodes at the terminal level of a b-tree
- * Each formula has an associated "to string" method that is used for displaying
- * how calculations are performed. Also used for debugging purposes.
+ * Each formula has an associated "to string" method located in QueryCostToString that is used for
+ * displaying how calculations are performed. Also used for debugging purposes.
  */
 public final class QueryCost {
 
-    private static final int BLOCK_SIZE = 1024;
+    public static final int BLOCK_SIZE = 1024;
 
     // can't instantiate me!
     private QueryCost() {}
@@ -41,10 +41,6 @@ public final class QueryCost {
         return table.getNumRecords();
     }
 
-    public static String numberRecordsToString(Table table) {
-        return "r = " + numberRecords(table);
-    }
-
     // |r| - record size
     public static int recordSize(List<Column> columns) {
         return columns.stream()
@@ -52,30 +48,14 @@ public final class QueryCost {
                 .reduce(0, Integer::sum);
     }
 
-    public static String recordSizeToString(List<Column> columns) {
-        return "|r| = " + recordSize(columns);
-    }
-
     // bf - blocking factor
     public static int blockingFactor(int recordSize) {
         return (int) Math.floor((double) BLOCK_SIZE / recordSize);
     }
 
-    public static String blockingFactorToString(int recordSize) {
-        return "bf = ⌊BlockSize / |r|⌋\n" +
-                "bf = ⌊" + BLOCK_SIZE + " / |" + recordSize + "|⌋\n" +
-                "bf = " + blockingFactor(recordSize);
-    }
-
     // b - blocks
     public static int blocks(int numRecords, int blockingFactor) {
         return (int) Math.ceil((double) numRecords / blockingFactor);
-    }
-
-    public static String blocksToString(int numRecords, int blockingFactor) {
-        return "b = ⌈r / bf⌉\n" +
-                "b = ⌈" + numRecords + " / " + blockingFactor + " ⌉\n" +
-                "b = " + blocks(numRecords, blockingFactor);
     }
 
     /**
@@ -84,19 +64,15 @@ public final class QueryCost {
      * @return the number of distinct values that appear in the column provided
      */
     public static int distinctValues(Table table, Column column) {
-
         List<Column> columns = table.getColumns();
         int colLocation = -1;
-
-        for(int i = 0; i < columns.size(); i++) {
-            if(columns.get(i).getColumnName().equalsIgnoreCase(column.getColumnName())) {
+        for (int i = 0; i < columns.size(); i++) {
+            if (columns.get(i).getColumnName().equalsIgnoreCase(column.getColumnName())) {
                 colLocation = i;
                 break;
             }
         }
-
         List<String> rowsOfColumn = table.getTableData().getRowsAt(colLocation);
-
         return (int) rowsOfColumn.stream()
                 .distinct()
                 .count();
@@ -107,23 +83,11 @@ public final class QueryCost {
         return (int) Math.ceil((double) numRecords / distinctValues);
     }
 
-    public static String selectivityToString(int numRecords, int distinctValues) {
-        return "s = r/d\n" +
-                "s = " + numRecords + "/" + distinctValues + "\n" +
-                "s = " + selectivity(numRecords, distinctValues);
-    }
-
     // b-tree specific calculations ------------------------------------------------------------------------------------
 
     // m - b-tree degree
     public static int degree(int keySize) {
         return (int) Math.floor((double) (BLOCK_SIZE + 4 + keySize) / (keySize + 8));
-    }
-
-    public static String degreeToString(int keySize) {
-        return "m = ⌊(BlockSize + 4 + KeySize) / (KeySize + 8)⌋\n" +
-                "m = ⌊(" + BLOCK_SIZE + " + 4 + " + keySize + ") / (" + keySize + " + 8)⌋\n" +
-                "m = " + degree(keySize);
     }
 
     // l - b-tree levels
@@ -133,33 +97,14 @@ public final class QueryCost {
         return (int) (log(temp1) / log(temp2) + 1);
     }
 
-    public static String levelsToString(int numRecords, int degree) {
-        return "l = (log(r + (1 / 2)) / log(m / 2) + 1)\n" +
-                "l = (log(" + numRecords + " + (1 / 2)) / log(" + degree + " / 2) + 1)\n" +
-                "l = " + levels(numRecords, degree);
-    }
-
     // bl - number nodes at b-tree terminal level
     public static int terminalLevelNodes(int numRecords, int degree) {
         return (int) Math.floor(numRecords / (Math.ceil(degree / 2.0) - 1));
     }
 
-    public static String terminalLevelNodesToString(int numRecords, int degree) {
-        return "bl = ⌊r / (⌈m / 2⌉ - 1)⌋ \n" +
-                "bl = ⌊" + numRecords + " / (⌈" + degree + " / 2⌉ - 1)⌋ \n" +
-                "bl = " + terminalLevelNodes(numRecords, degree);
-
-    }
-
     // fs - estimate of the number of foreign keys to primary keys
     public static int foreignKeySelectivity(int tableWithPrimaryKeyNumRecs, int tableWithForeignKeyNumRecs) {
         return (int) Math.ceil((double) tableWithForeignKeyNumRecs / tableWithPrimaryKeyNumRecs);
-    }
-
-    public static String foreignKeySelectivityToString(int tableWithPrimaryKeyNumRows, int tableWithForeignKeyNumRows) {
-        return "fs = ⌈t2.r / t1.r⌉ \n" +
-                "fs = ⌈" + tableWithForeignKeyNumRows + " / " + tableWithPrimaryKeyNumRows + "⌉ \n" +
-                "fs = " + foreignKeySelectivity(tableWithPrimaryKeyNumRows, tableWithForeignKeyNumRows);
     }
 
     // unsorted file costs ---------------------------------------------------------------------------------------------
@@ -168,46 +113,20 @@ public final class QueryCost {
         return blocks;
     }
 
-    public static String unsortedUniqueToString(int blocks) {
-        return "CUu = b\n" +
-                "CUu = " + blocks;
-    }
-
     public static int unsortedNonUnique(int blocks) {
         return blocks;
-    }
-
-    public static String unsortedNonUniqueToString(int blocks) {
-        return "CUn = b\n" +
-                "CUn = " + blocks;
     }
 
     public static int unsortedRange(int blocks) {
         return blocks;
     }
 
-    public static String unsortedRangeToString(int blocks) {
-        return "CUr = b\n" +
-                "CUr = " + blocks;
-    }
-
     public static int unsortedPrintUnsorted(int blocks) {
         return blocks;
     }
 
-    public static String unsortedPrintUnsortedToString(int blocks) {
-        return "CUpu = b\n" +
-                "CUpu = " + blocks;
-    }
-
     public static int unsortedPrintSorted(int blocks) {
         return ((int) (blocks * log(blocks))) + blocks;
-    }
-
-    public static String unsortedPrintSortedToString(int blocks) {
-        return "CUps = b * log(b) + b\n" +
-                "CUps = " + blocks + " log(" + blocks + ") + " + blocks + "\n" +
-                "CUps = " + unsortedPrintSorted(blocks);
     }
 
     // sorted file costs -----------------------------------------------------------------------------------------------
@@ -216,48 +135,20 @@ public final class QueryCost {
         return (int) log(blocks);
     }
 
-    public static String sortedUniqueToString(int blocks) {
-        return "CSu = log(b)\n" +
-                "CSu = " + "log(" + blocks + ")\n" +
-                "CSu = " + sortedUnique(blocks);
-    }
-
     public static int sortedNonUnique(int blocks, double selectivity, int blockingFactor) {
         return (int) (log(blocks) + Math.ceil(selectivity / blockingFactor) - 1);
-    }
-
-    public static String sortedNonUniqueToString(int blocks, double selectivity, int blockingFactor) {
-        return "CSn = log(b) + ⌈s / bf⌉ - 1\n" +
-                "CSn = log(" + blocks + ") + ⌈" + selectivity + "/" + blockingFactor + "⌉ - 1\n" +
-                "CSn = " + sortedNonUnique(blocks, selectivity, blockingFactor);
     }
 
     public static int sortedRange(int blocks) {
         return (int) log(blocks) + (blocks / 2);
     }
 
-    public static String sortedRangeToString(int blocks) {
-        return "CSr = log(b) + b/2\n" +
-                "CSr = log(" + blocks + ") + " + blocks + "/2\n" +
-                "CSr = " + sortedRange(blocks);
-    }
-
     public static int sortedPrintUnsorted(int blocks) {
         return blocks;
     }
 
-    public static String sortedPrintUnsortedToString(int blocks) {
-        return "CSpu = b\n" +
-                "CSpu = " + blocks;
-    }
-
     public static int sortedPrintSorted(int blocks) {
         return blocks;
-    }
-
-    public static String sortedPrintSortedToString(int blocks) {
-        return "CSps = b\n" +
-                "CSps = " + blocks;
     }
 
     // secondary b-tree costs ------------------------------------------------------------------------------------------
@@ -266,21 +157,9 @@ public final class QueryCost {
         return levels + 1;
     }
 
-    public static String secondaryBTreeUniqueToString(int levels) {
-        return "CBu = L + 1\n" +
-                "CBu = " + levels + " + 1\n" +
-                "CBu = " + secondaryBTreeUnique(levels);
-    }
-
     // degree = m
     public static int secondaryBTreeNonUnique(int levels, int degree, double selectivity) {
         return (int) ((levels + Math.ceil(selectivity / (Math.ceil(degree / 2.0) - 1)) - 1) + selectivity);
-    }
-
-    public static String secondaryBTreeNonUniqueToString(int levels, int degree, double selectivity) {
-        return "CBn = L + (⌈s / (⌈m / 2⌉ - 1)⌉ - 1) + s\n" +
-                "CBn = " + levels + " + (⌈" + selectivity + " / (⌈" + degree + " / 2⌉ - 1)⌉ - 1) + " + selectivity +"\n" +
-                "CBn = " + secondaryBTreeNonUnique(levels, degree, selectivity);
     }
 
     // terminal level nodes = bL
@@ -288,30 +167,12 @@ public final class QueryCost {
         return (int) (levels + (terminalLevelNodes / 2.0) + (numRecords / 2.0));
     }
 
-    public static String secondaryBTreeRangeToString(int levels, int terminalLevelNodes, int numRecords) {
-        return "CBr = L + bL/2 + r/2\n" +
-                "CBr = " + levels + " + " + terminalLevelNodes + "/2 + " + numRecords + "/2\n" +
-                "CBr = " + secondaryBTreeRange(levels, terminalLevelNodes, numRecords);
-    }
-
     public static int secondaryBTreePrintUnsorted(int levels, int terminalLevelNodes, int numRecords) {
         return levels + terminalLevelNodes + numRecords;
     }
 
-    public static String secondaryBTreePrintUnsortedToString(int levels, int terminalLevelNodes, int numRecords) {
-        return "CBpu = L + bL + r\n" +
-                "CBpu = " + levels + " + " + terminalLevelNodes + " + " + numRecords + "\n" +
-                "CBpu = " + secondaryBTreePrintUnsorted(levels, terminalLevelNodes, numRecords);
-    }
-
     public static int secondaryBTreePrintSorted(int levels, int terminalLevelNodes, int numRecords) {
         return levels + terminalLevelNodes + numRecords;
-    }
-
-    public static String secondaryBTreePrintSortedToString(int levels, int terminalLevelNodes, int numRecords) {
-        return "CBps = L + bL + r\n" +
-                "CBps = " + levels + " + " + terminalLevelNodes + " + " + numRecords + "\n" +
-                "CBps = " + secondaryBTreePrintUnsorted(levels, terminalLevelNodes, numRecords);
     }
 
     // clustered b-tree costs ------------------------------------------------------------------------------------------
@@ -320,49 +181,20 @@ public final class QueryCost {
         return levels;
     }
 
-    public static String clusteredBTreeUniqueToString(int levels) {
-        return "CBPu = L\n" +
-                "CBPu = " + levels;
-    }
-
     public static int clusteredBTreeNonUnique(int levels, double selectivity, int degree) {
         return (int) (levels + Math.ceil(selectivity / (degree - 1)) - 1);
-    }
-
-    public static String clusteredBTReeNonUniqueToString(int levels, double selectivity, int degree) {
-        return "CBPn = L + (⌈s / (⌈m / 2⌉ - 1⌉ - 1)\n" +
-                "CBPn = " + levels + " + (⌈" + selectivity + " / (⌈" + degree + " / 2⌉ - 1⌉ - 1)\n" +
-                "CBPn = " + clusteredBTreeNonUnique(levels, selectivity, degree);
     }
 
     public static int clusteredBTreeRange(int levels, int terminalLevelNodes) {
         return (int) (levels + (terminalLevelNodes / 2.0));
     }
 
-    public static String clusteredBTreeRangeToString(int levels, int terminalLevelNodes) {
-        return "CBPr = L + bL/2" +
-                "CBPr = " + levels + " + " + terminalLevelNodes + "/2\n" +
-                "CBPr = " + clusteredBTreeRange(levels, terminalLevelNodes);
-    }
-
     public static int clusteredBTreePrintUnsorted(int levels, int terminalLevelNodes) {
         return levels + terminalLevelNodes;
     }
 
-    public static String clusteredBTreePrintUnsortedToString(int levels, int terminalLevelNodes) {
-        return "CBPpu = L + bL\n" +
-                "CBPu = " + levels + " + " + terminalLevelNodes + "\n" +
-                "CBPu = " + clusteredBTreePrintUnsorted(levels, terminalLevelNodes);
-    }
-
     public static int clusteredBTreePrintSorted(int levels, int terminalLevelNodes) {
         return levels + terminalLevelNodes;
-    }
-
-    public static String clusteredBTreePrintSortedToString(int levels, int terminalLevelNodes) {
-        return "CBPps = L + bL\n" +
-                "CBPps = " + levels + " + " + terminalLevelNodes + "\n" +
-                "CBPps = " + clusteredBTreePrintSorted(levels, terminalLevelNodes);
     }
 
     // hash table costs ------------------------------------------------------------------------------------------------
@@ -371,18 +203,8 @@ public final class QueryCost {
         return 1 + 1;
     }
 
-    public static String hashTableUniqueToString() {
-        return "CHu = 1 + 1";
-    }
-
     public static int hashTableNonUnique(int selectivity) {
         return 1 + selectivity;
-    }
-
-    public static String hashTableNonUniqueToString(int selectivity) {
-        return "CHn = 1 + " + selectivity + "\n" +
-                "CHn = 1 + " + selectivity + "\n" +
-                "CHn = " + hashTableNonUnique(selectivity);
     }
 
     // can't do ranged queries with hash tables!
@@ -390,27 +212,13 @@ public final class QueryCost {
         return Integer.MIN_VALUE;
     }
 
-    public static String hashTableRangeToString() {
-        return "CHr = N/A";
-    }
-
     public static int hashTablePrintUnsorted(int numBins, int numRecords) {
         return numBins + numRecords;
-    }
-
-    public static String hashTablePrintUnsortedToString(int numBins, int numRecords) {
-        return "CHpu = #bins + r\n" +
-                "CHpu = " + numBins + " + " + numRecords + "\n" +
-                "CHpu = " + hashTablePrintUnsorted(numBins, numRecords);
     }
 
     // can't print sorted with hash tables!
     public static int hashTablePrintSorted() {
         return Integer.MIN_VALUE;
-    }
-
-    public static String hashTablePrintSortedToString() {
-        return "CHps = N/A";
     }
 
     // clustered file costs --------------------------------------------------------------------------------------------
@@ -419,50 +227,20 @@ public final class QueryCost {
         return (int) log(table1Blocks + table2Blocks);
     }
 
-    public static String clusteredFileUniqueToString(int table1Blocks, int table2Blocks) {
-        return "CCu = log(bR + bS)\n" +
-                "CCu = log(" + table1Blocks + " + " + table2Blocks + ")\n" +
-                "CCu = " + clusteredFileUnique(table1Blocks, table2Blocks);
-    }
-
     public static int clusteredFileNonUnique(int table1Blocks, int table2Blocks, double selectivity, int blockingFactor) {
         return (int) (log(table1Blocks + table2Blocks) + Math.ceil(selectivity / blockingFactor) - 1);
-    }
-
-    public static String clusteredFileNonUniqueToString(int table1Blocks, int table2Blocks, double selectivity, int blockingFactor) {
-        return "CCn = log(bR + bS) + ⌈s / bf⌉ - 1\n" +
-                "CCn = log(" + table1Blocks + " + " + table2Blocks + ") + ⌈" + selectivity + " / " + blockingFactor + "⌉ - 1\n" +
-                "CCn = " + clusteredFileNonUnique(table1Blocks, table2Blocks, selectivity, blockingFactor);
     }
 
     public static int clusteredFileRange(int table1Blocks, int table2Blocks) {
         return (int) (log(table1Blocks + table2Blocks) + (table1Blocks + table2Blocks) / 2.0);
     }
 
-    public static String clusteredFileRangeToString(int table1Blocks, int table2Blocks) {
-        return "CCr = log(bR + bS) + (bR + bS) / 2\n" +
-                "CCr = log(" + table1Blocks + " + " + table2Blocks + ") + (" + table1Blocks + " + " + table2Blocks + ") / 2\n" +
-                "CCr = " + clusteredFileRange(table1Blocks, table2Blocks);
-    }
-
     public static int clusteredFilePrintUnsorted(int table1Blocks, int table2Blocks) {
         return table1Blocks + table2Blocks;
     }
 
-    public static String clusteredFilePrintUnsortedToString(int table1Blocks, int table2Blocks) {
-        return "CCpu = bR + bS\n" +
-                "CCpu = " + table1Blocks + " + " + table2Blocks + "\n" +
-                "CCpu = " + clusteredFilePrintUnsorted(table1Blocks, table2Blocks);
-    }
-
     public static int clusteredFilePrintSorted(int table1Blocks, int table2Blocks) {
         return table1Blocks + table2Blocks;
-    }
-
-    public static String clusteredFilePrintToString(int table1Blocks, int table2Blocks) {
-        return "CCps = bR + bS\n" +
-                "CCps = " + table1Blocks + " + " + table2Blocks + "\n" +
-                "CCps = " + clusteredFilePrintUnsorted(table1Blocks, table2Blocks);
     }
 
     // join costs ------------------------------------------------------------------------------------------------------
@@ -472,36 +250,12 @@ public final class QueryCost {
                 table2Blocks + (table2Blocks * table1Blocks);
     }
 
-    public static String nestedLoopJoinToString(int table1Blocks, int table2Blocks) {
-
-        String tableOrdering = table1Blocks < table2Blocks ?
-                table1Blocks + " + (" + table1Blocks + " * " + table2Blocks + ")" :
-                table2Blocks + " + (" + table2Blocks + " * " + table1Blocks + ")";
-
-        return "CJ1 = bR + bR * bS\n" +
-                "CJ1 = " + tableOrdering + "\n" +
-                "CJ1 = " + nestedLoopJoin(table1Blocks, table2Blocks);
-
-    }
-
     public static int bTreeJoin(int table2Blocks, int table2NumRecs, int table1IndColLevels, int table2IndColSelectivity) {
         return table2Blocks + table2NumRecs * (table1IndColLevels + table2IndColSelectivity);
     }
 
-    public static String bTreeJoinToString(int table2Blocks, int table2NumRecs, int table1IndColLevels, int table2IndColSelectivity) {
-        return "CJ2 = T2.b + T2.r * (T1.IndCol.l + T1.Ind.s)\n" +
-                "CJ2 = " + table2Blocks + " + " + table2NumRecs + " * (" + table1IndColLevels + " + " + table2IndColSelectivity + ")\n" +
-                "CJ2 = " + bTreeJoin(table2Blocks, table2NumRecs, table1IndColLevels, table2IndColSelectivity);
-    }
-
     public static int clusteredJoin(int table1Blocks, int table2Blocks) {
         return table1Blocks + table2Blocks;
-    }
-
-    public static String clusteredJoinToString(int table1Blocks, int table2Blocks) {
-        return "CJ3 = bR + bS\n" +
-                "CJ3 = " + table1Blocks + " + " + table2Blocks +
-                "CJ3 = " + clusteredJoin(table1Blocks, table2Blocks);
     }
 
     // other calculations ----------------------------------------------------------------------------------------------

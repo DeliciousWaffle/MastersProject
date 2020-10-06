@@ -1,6 +1,7 @@
 package gui.screens.terminal;
 
 import datastructures.rulegraph.RuleGraph;
+import exceptions.MissingSemicolonException;
 import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
@@ -105,21 +106,14 @@ public class TerminalScreen extends Screen {
 
         // tell the system catalog to execute the input
         executeButton.setOnAction(e -> {
-
-            // clear what's in the output area first
             output.clear();
-
-            // get the content on the text area up until the first semicolon is reached
             String input = terminal.getText();
-
-            // pass to the system catalog to execute
-            if(input.contains(";")) {
-
+            // get the content on the text area up until the first semicolon is reached
+            if (! input.contains(";")) {
+                output.setText("Input must end with a semicolon");
+            } else {
                 input = input.split(";")[0];
                 systemCatalog.executeInput(input);
-
-            } else {
-                output.setText("Error! Input must end with a semicolon!");
             }
         });
 
@@ -143,6 +137,7 @@ public class TerminalScreen extends Screen {
         // launch a new window displaying the relational algebra
         relationalAlgebraButton.setOnAction(e -> {
             if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+                // TODO
             }
         });
 
@@ -165,7 +160,7 @@ public class TerminalScreen extends Screen {
         // launch a new window displaying the query tree states
         queryTreeStatesButton.setOnAction(e -> {
             if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
-                //new QueryTreeWindow(systemCatalog.getQueryTreeStates());
+                new QueryTreeWindow(systemCatalog.getQueryTreeStates());
             }
         });
 
@@ -187,7 +182,8 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the query cost
         queryCostButton.setOnAction(e -> {
-            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+            if (systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+                // TODO
             }
         });
 
@@ -209,7 +205,8 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the recommended file structures
         recommendedFileStructuresButton.setOnAction(e -> {
-            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+            if (systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
+                // TODO
             }
         });
 
@@ -217,10 +214,8 @@ public class TerminalScreen extends Screen {
         tooltip.setFont(new Font(20));
         recommendedFileStructuresButton.setTooltip(tooltip);
 
-        rightColumnButtonLayout.getChildren().addAll(
-                executeButton, relationalAlgebraButton, queryTreeStatesButton,
-                queryCostButton, recommendedFileStructuresButton
-        );
+        rightColumnButtonLayout.getChildren().addAll(executeButton, relationalAlgebraButton, queryTreeStatesButton,
+                queryCostButton, recommendedFileStructuresButton);
 
         VBox.setMargin(executeButton, new Insets(10, 10, 0, 10));
         VBox.setMargin(relationalAlgebraButton, new Insets(0, 10, 0, 10));

@@ -3,9 +3,7 @@ package ztest;
 import org.junit.jupiter.api.Test;
 import systemcatalog.components.OptimizerUtilities;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Class used for testing methods.
@@ -13,14 +11,11 @@ import java.util.Map;
 public class MethodTest {
     @Test
     public void blah() {
-        Map<Integer, String> blah = new LinkedHashMap<>();
-        blah.put(0, "a");
-        blah.put(1, "b");
-        blah.put(2, "c");
-        blah.put(3, "d");
+        List<String> blah = Arrays.asList(
+                "tab1.col1", "tab1.col2", "tab2.col2", "tab3.col3", "tab4.col4"
+        );
 
-        OptimizerUtilities.putFirstElementLastOfLinkedHashMap(blah);
-        System.out.println(blah);
+        System.out.println(OptimizerUtilities.removePrefixedColumnNames(blah));
     }
 
 }

@@ -1,5 +1,6 @@
 package systemcatalog.components;
 
+import datastructures.misc.Triple;
 import datastructures.relation.table.Table;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 import static datastructures.trees.querytree.QueryTree.TreeTraversal.*;
 import static datastructures.trees.querytree.QueryTree.Traversal.*;
 import static datastructures.trees.querytree.operator.Operator.Type.*;
+import static systemcatalog.components.OptimizerUtilities.*;
 
 /**
  * Responsible for determining the execution strategy of a query. This involves converting the user's input
@@ -30,7 +32,8 @@ import static datastructures.trees.querytree.operator.Operator.Type.*;
  * Step 6: Identify subtrees that can be pipelined
  * This class is also responsible for producing naive and optimized relational algebra expressions which help
  * show the user how their query can be further optimized. Additionally, recommendations for file structures
- * will also be generated based on the query.
+ * will also be generated based on the query. Note: All methods that don't belong to this class and are not
+ * prefixed with a class name will belong to the OptimizerUtilities class.
  */
 public class Optimizer {
 
@@ -53,16 +56,20 @@ public class Optimizer {
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
         QueryTree afterPushingDownProjections   = pushDownProjections(new QueryTree(afterFormingJoins));
-        //QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), input, tables);
-         // TODO change back to afterRearrangingJoins
+        QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), input, tables);
         List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
 
         List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
                 queryTree, afterCascadingSelections, afterPushingDownSelections, afterFormingJoins,
-                /*afterRearrangingJoins,*/ afterPushingDownProjections
+                afterRearrangingJoins, afterPushingDownProjections
         ));
 
         queryTreeStates.addAll(afterPipeliningSubtrees);
+
+        // remove prefixed column names from each query tree state
+        queryTreeStates.forEach(e -> e.getOperatorsAndLocations(PREORDER)
+                .keySet()
+                .forEach(operator -> removePrefixedColumnNames(operator.getReferencedColumnNames())));
 
         return queryTreeStates;
     }
@@ -216,12 +223,6 @@ public class Optimizer {
             queryTree.add(traversals, NONE, relations.remove(0));
         }
 
-        System.out.println("Initial Query Tree");
-        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
-
-        System.out.println("Naive relational algebra: ");
-        System.out.println(getNaiveRelationAlgebra(queryTree));
-
         return queryTree;
     }
 
@@ -259,9 +260,6 @@ public class Optimizer {
             Operator simpleSelection = new SimpleSelection(columnNames.get(i), symbols.get(i), values.get(i));
             queryTree.add(compoundSelectionsLocation, NONE, simpleSelection);
         }
-
-        System.out.println("\nCascade Selections:");
-        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
 
         return queryTree;
     }
@@ -365,9 +363,6 @@ public class Optimizer {
             }
         }
 
-        System.out.println("\nPush Down Selections:");
-        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
-
         return queryTree;
     }
 
@@ -427,9 +422,6 @@ public class Optimizer {
                 finishedJoining = true;
             }
         }
-
-        System.out.println("\nForm Joins");
-        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
 
         return  queryTree;
     }
@@ -546,9 +538,6 @@ public class Optimizer {
             }
         }
 
-        System.out.println("\nPush Down Projections");
-        queryTree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
-
         return queryTree;
     }
 
@@ -563,8 +552,9 @@ public class Optimizer {
      * of executing a particular subtree and whether a leaf node will need to be rearranged
      * @return the query tree after the leaf nodes have been rearranged
      */
-    public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) { // TODO maybe allow for cartesian products
+    public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) {
 
+        // TODO remove this
         if(true) {
             return queryTree;
         }
@@ -594,7 +584,7 @@ public class Optimizer {
         }
 
         // filter out query tree permutations that contain cartesian products, these will be inherently worse
-        permutedQueryTrees = OptimizerUtilities.removeQueryTreesWithOperatorsOfType(permutedQueryTrees, CARTESIAN_PRODUCT); // TODO maybe get rid of
+        permutedQueryTrees = removeQueryTreesWithOperatorsOfType(permutedQueryTrees, CARTESIAN_PRODUCT);
 
         // for each query tree permutation, calculate the cost it will take to execute each one with respect
         // to selections encountered and file structures already built
@@ -649,8 +639,6 @@ public class Optimizer {
             // calculate the cost and add it to running cost
         }
 
-        System.out.println("rearranged joins");
-
         return queryTree;
     }
 
@@ -692,13 +680,6 @@ public class Optimizer {
             pipelinedSubtrees.add(new QueryTree(queryTree));
         }
 
-        System.out.println("\nPipelined Expressions");
-        pipelinedSubtrees.forEach(pipelinedSubtree -> {
-            System.out.println();
-            pipelinedSubtree.getOperatorsAndLocations(PREORDER).forEach((k, v) -> System.out.println(k + " " + v));
-        });
-System.out.println("Optimized relational algebra:");
-System.out.println(this.getOptimizedRelationalAlgebra(pipelinedSubtrees));
         return pipelinedSubtrees;
     }
 
@@ -779,5 +760,67 @@ System.out.println(this.getOptimizedRelationalAlgebra(pipelinedSubtrees));
         optimizedRelationalAlgebra.deleteCharAt(optimizedRelationalAlgebra.length() - 1);
 
         return optimizedRelationalAlgebra.toString();
+    }
+
+    /**
+     * After execution of a query, recommends possible file structures that can be built on columns in
+     * tables in order to reduce query costs. These file structures include secondary b-trees,
+     * clustered b-trees, hash tables, and clustered files. Secondary b-trees are a jack of all trades and
+     * are used if there is a conflict between a clustered b-tree and hash table. Clustered b-trees
+     * perform best for range queries while hash tables are best for simple selections. Clustered files
+     * are typically used to speed up joins, but incur a high storage cost and can only be built on tables.
+     * They also prevent the other file structures from being built within these tables.
+     * @param queryTreeAfterPushingDownProjections is the query tree after pushing down projections
+     * @return a recommendation of file structures to build for a particular query
+     */
+    public String getRecommendedFileStructures(QueryTree queryTreeAfterPushingDownProjections) {
+
+        // the triplet is composed of column name, table name, and the file structure to use
+        List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>();
+
+        // will build file structures on columns in tables first
+        List<SimpleSelection> simpleSelections =
+                queryTreeAfterPushingDownProjections.getOperatorsAndLocationsOfType(SIMPLE_SELECTION, PREORDER)
+                        .keySet()
+                        .stream()
+                        .map(operator -> (SimpleSelection) operator)
+                        .collect(Collectors.toList());
+
+        for (SimpleSelection simpleSelection : simpleSelections) {
+
+            String[] tokens = simpleSelection.getColumnName().split("\\."); // will be prefixed with a table name
+            String tableName = tokens[0];
+            String columnName = tokens[1];
+            String fileStructure = "";
+            String symbol = simpleSelection.getSymbol();
+            if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
+                fileStructure = "Hash Table";
+            } else { // >, <, >=, <=
+                fileStructure = "Clustered B-Tree";
+            }
+
+            Triple<String, String, String> recommendedFileStructure =
+                    new Triple<>(tableName, columnName, fileStructure);
+
+            // if there's a conflict, don't add, but instead replace the existing recommendation with a secondary b-tree
+            int replaceIndex = hasFileStructureConflict(recommendedFileStructure, recommendedFileStructures);
+            boolean hasConflict = replaceIndex != -1;
+            if (hasConflict) {
+                recommendedFileStructure = new Triple<>(tableName, columnName, "Secondary B-Tree");
+                recommendedFileStructures.set(replaceIndex, recommendedFileStructure);
+            } else {
+                recommendedFileStructures.add(recommendedFileStructure);
+            }
+        }
+
+        // suggest file structures to build on for joins
+
+        // if a clustered b-tree and hash table are recommended for the same column, change to secondary b-tree
+
+        // if a clustered file is recommended for a join, remove any file structures that were built on columns
+        // belonging to the tables being joined together
+
+
+        return "";
     }
 }

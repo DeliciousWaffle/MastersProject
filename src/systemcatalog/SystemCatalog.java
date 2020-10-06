@@ -1,7 +1,5 @@
 package systemcatalog;
 
-import datastructures.misc.Log;
-import datastructures.misc.Logger;
 import datastructures.relation.resultset.ResultSet;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
@@ -9,15 +7,17 @@ import datastructures.trees.querytree.QueryTree;
 import files.io.FileType;
 import files.io.IO;
 import files.io.Serialize;
-import systemcatalog.components.Parser;
 import datastructures.user.User;
-import systemcatalog.components.Verifier;
 import datastructures.relation.table.Table;
-import systemcatalog.components.SecurityChecker;
-import systemcatalog.components.Optimizer;
 import systemcatalog.components.Compiler;
+import systemcatalog.components.Optimizer;
+import systemcatalog.components.Parser;
+import systemcatalog.components.SecurityChecker;
+import systemcatalog.components.Verifier;
+import utilities.Utilities;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class SystemCatalog {
 
-    // system catalog components that work together to make this application work
+    // system catalog components
     private Parser parser;
     private Verifier verifier;
     private SecurityChecker securityChecker;
@@ -41,63 +41,67 @@ public class SystemCatalog {
     private List<User> users;
     private User currentUser;
 
-    // used for logging messages
-    private final Logger logger;
-
     // a list of rule graph types that each component will use to extract data from user input
     private final List<RuleGraph> ruleGraphTypes;
 
     // type of input that was last executed
-    RuleGraph.Type inputType;
+    private RuleGraph.Type inputType;
+
+    // information about whether the input was successfully executed
+    private boolean successfullyExecuted;
+    private String executionMessage;
 
     // following will only be used if the input is a query and it's successfully executed
     private ResultSet resultSet;
     private List<QueryTree> queryTreeStates;
-    private String naiveRelationalAlgebra, optimizedRelationalAlgebra, recommendedFileStructures;
+    private String naiveRelationalAlgebra, optimizedRelationalAlgebra, recommendedFileStructures, costAnalysis;
 
     public SystemCatalog() {
 
-        // create the system catalog components
-        this.parser = new Parser();
-        this.verifier = new Verifier();
-        this.securityChecker = new SecurityChecker();
-        this.optimizer = new Optimizer();
-        this.compiler = new Compiler();
-
-        // create the logger
-        this.logger = new Logger();
-
-        // create and add the rule graph types to use
-        this.ruleGraphTypes  = new ArrayList<>();
-
-        ruleGraphTypes.add(RuleGraphTypes.getQueryRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getCreateTableRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getAlterTableRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getDropTableRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getInsertRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getDeleteRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getUpdateRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getGrantRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getRevokeRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getBuildFileStructureRuleGraph());
-        ruleGraphTypes.add(RuleGraphTypes.getRemoveFileStructureRuleGraph());
+        parser = new Parser();
+        verifier = new Verifier();
+        securityChecker = new SecurityChecker();
+        optimizer = new Optimizer();
+        compiler = new Compiler();
 
         // loading table and user data
-        this.tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
-        this.users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
+        tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
+        users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
 
         // set the current user as the DBA who has all privileges on every table
         User DBA = User.DatabaseAdministrator(tables);
         setCurrentUser(DBA);
         users.add(0, DBA);
 
+        // create and add the rule graph types to use
+        ruleGraphTypes = Arrays.asList(
+                RuleGraphTypes.getQueryRuleGraph(),
+                RuleGraphTypes.getCreateTableRuleGraph(),
+                RuleGraphTypes.getAlterTableRuleGraph(),
+                RuleGraphTypes.getDropTableRuleGraph(),
+                RuleGraphTypes.getInsertRuleGraph(),
+                RuleGraphTypes.getDeleteRuleGraph(),
+                RuleGraphTypes.getUpdateRuleGraph(),
+                RuleGraphTypes.getGrantRuleGraph(),
+                RuleGraphTypes.getRevokeRuleGraph(),
+                RuleGraphTypes.getBuildFileStructureRuleGraph(),
+                RuleGraphTypes.getRemoveFileStructureRuleGraph()
+        );
+
         // setting the input type as unknown for now
-        this.inputType = RuleGraph.Type.UNKNOWN;
+        inputType = RuleGraph.Type.UNKNOWN;
+
+        // setting input execution to empty
+        successfullyExecuted = false;
+        executionMessage = "";
 
         // creating query-specific data, initially empty
-        this.resultSet = new ResultSet();
-        this.queryTreeStates = new ArrayList<>();
-        this.recommendedFileStructures = "";
+        resultSet = new ResultSet();
+        queryTreeStates = new ArrayList<>();
+        naiveRelationalAlgebra = "";
+        optimizedRelationalAlgebra = "";
+        recommendedFileStructures = "";
+        costAnalysis = "";
     }
 
     // execution related -----------------------------------------------------------------------------------------------
@@ -113,58 +117,48 @@ public class SystemCatalog {
      */
     public void executeInput(String input) {
 
-        System.out.println("Execute Input");
+        successfullyExecuted = false; // assume the input is invalid until it passes all checks
 
-        // used for logging what happened during the execution and whether it was successful
-        logger.clear();
-
-        // there may be some unknown bugs that I haven't taken care of yet, prevent the app from crashing
+        // there may be an unknown error that I didn't account for, this prevents the app from crashing
         try {
 
             // filtering the input, splitting the input into tokens, and determining the rule graph type to use
-            String[] tokenizedInput = Parser.formatAndTokenizeInput(input);
-            this.inputType = Parser.determineRuleGraphType(tokenizedInput);
+            String[] filteredInput = Utilities.filterInput(input);
+            inputType = Utilities.determineRuleGraphType(filteredInput);
 
             // couldn't determine a type, don't execute
             if (inputType == RuleGraph.Type.UNKNOWN) {
-                logger.log(new Log(Log.Type.SIMPLE, "Error! Couldn't determine input type!"));
+                executionMessage = "Could not determine the input type. Refer to the Syntax Diagrams " +
+                        "located in the \"Help\" Screen section for more information.";
                 return;
             }
 
             // get the rule graph to use
-            RuleGraph ruleGraphToUse = ruleGraphTypes.get(inputType.index());
+            RuleGraph ruleGraph = ruleGraphTypes.get(inputType.index());
 
-            // parser stuff
-            parser.setRuleGraphType(inputType);
-            parser.setRuleGraphToUse(ruleGraphToUse);
-            parser.setTokenizedInput(tokenizedInput);
-            if (! parser.isValid()) {
+            if (! parser.isValid(inputType, ruleGraph, filteredInput)) {
+                executionMessage = parser.getErrorMessage();
                 return;
             }
 
-            // verifier stuff
-            verifier.setRuleGraphType(inputType);
-            verifier.setRuleGraphToUse(ruleGraphToUse);
-            verifier.setTokenizedInput(tokenizedInput);
-            verifier.setTables(tables);
-            verifier.setUsers(users);
-            if (! verifier.isValid()) {
+            if (! verifier.isValid(inputType, filteredInput, tables, users)) {
+                executionMessage = verifier.getExecutionMessage();
                 return;
             }
 
             // security checker stuff
             securityChecker.setRuleGraphType(inputType);
-            securityChecker.setRuleGraphToUse(ruleGraphToUse);
-            securityChecker.setTokenizedInput(tokenizedInput);
+            securityChecker.setRuleGraphToUse(ruleGraph);
+            securityChecker.setTokenizedInput(filteredInput);
             securityChecker.setCurrentUser(currentUser);
             securityChecker.setTables(tables);
-            if (! securityChecker.isValid()) {
+            if (!securityChecker.isValid()) {
                 return;
             }
 
             // optimizer stuff, if the input is a query, get the query tree states, otherwise skip
             if (inputType == RuleGraph.Type.QUERY) {
-                this.queryTreeStates = optimizer.getQueryTreeStates(tokenizedInput, tables);
+                this.queryTreeStates = optimizer.getQueryTreeStates(filteredInput, tables);
                 //this.naiveRelationalAlgebra = optimizer.getNaiveRelationalAlgebra();
                 //this.optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra();
                 //this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
@@ -175,8 +169,8 @@ public class SystemCatalog {
 
             // compiler stuff, if the input is a query, get the result set, otherwise make the changes to the system
             compiler.setRuleGraphType(inputType);
-            compiler.setRuleGraphToUse(ruleGraphToUse);
-            compiler.setTokenizedInput(tokenizedInput);
+            compiler.setRuleGraphToUse(ruleGraph);
+            compiler.setTokenizedInput(filteredInput);
             compiler.setTables(tables);
             compiler.setUsers(users);
             if (inputType == RuleGraph.Type.QUERY) {
@@ -190,7 +184,7 @@ public class SystemCatalog {
             logger.setSuccessfullyExecuted(true);
 
         } catch(Exception e) {
-            System.out.println("Some unknown error occurred in SystemCatalog.execute()");
+
             e.printStackTrace();
         }
     }
@@ -198,10 +192,17 @@ public class SystemCatalog {
     // input related ---------------------------------------------------------------------------------------------------
 
     /**
-     * @return the logger which gives information about what happened during execution
+     * @return whether the input was successfully executed
      */
-    public Logger getLogger() {
-        return logger;
+    public boolean wasSuccessfullyExecuted() {
+        return successfullyExecuted;
+    }
+
+    /**
+     * @return contains a message about what happened during execution
+     */
+    public String getExecutionMessage() {
+        return executionMessage;
     }
 
     /**
@@ -245,7 +246,7 @@ public class SystemCatalog {
      * @return result set of a successful execution or an empty result set
      */
     public ResultSet getResultSet() {
-        return resultSet == null ? new ResultSet() : resultSet;
+        return resultSet;
     }
 
     /**
@@ -255,7 +256,15 @@ public class SystemCatalog {
      * or an empty list
      */
     public List<QueryTree> getQueryTreeStates() {
-        return queryTreeStates == null ? new ArrayList<>() : queryTreeStates;
+        return queryTreeStates;
+    }
+
+    public String getNaiveRelationalAlgebra() {
+        return naiveRelationalAlgebra;
+    }
+
+    public String getOptimizedRelationalAlgebra() {
+        return optimizedRelationalAlgebra;
     }
 
     /**
@@ -264,7 +273,11 @@ public class SystemCatalog {
      * @return a list of recommended file structures for a query or an empty list
      */
     public String getRecommendedFileStructures() {
-        return recommendedFileStructures == null ? "" : recommendedFileStructures;
+        return recommendedFileStructures;
+    }
+
+    public String getCostAnalysis() {
+        return costAnalysis;
     }
 
     // Options related -------------------------------------------------------------------------------------------------
@@ -290,12 +303,6 @@ public class SystemCatalog {
      * their defaults.
      */
     public void restoreDatabase() {
-
-        parser = new Parser();
-        verifier = new Verifier();
-        securityChecker = new SecurityChecker();
-        optimizer = new Optimizer();
-        compiler = new Compiler();
 
         logger.clear();
 
