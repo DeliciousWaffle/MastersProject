@@ -1,15 +1,18 @@
 package test.datastructure.tree;
 
-import datastructures.trees.querytree.QueryTree;
-import datastructures.trees.querytree.operator.Operator;
-import datastructures.trees.querytree.operator.types.*;
+import datastructures.querytree.QueryTree;
+import datastructures.querytree.operator.Operator;
+import datastructures.querytree.operator.types.CartesianProduct;
+import datastructures.querytree.operator.types.Projection;
+import datastructures.querytree.operator.types.Relation;
+import datastructures.querytree.operator.types.SimpleSelection;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static datastructures.trees.querytree.QueryTree.Traversal.*;
+import static datastructures.querytree.QueryTree.Traversal.*;
 
 public class QueryTreeTest {
 

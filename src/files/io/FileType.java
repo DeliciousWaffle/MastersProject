@@ -112,7 +112,7 @@ public final class FileType {
         private final String path;
 
         Asset(String path) {
-            this.path = "files/assets/" + path;
+            this.path = "files/images/" + path;
         }
 
         public String getPath() {

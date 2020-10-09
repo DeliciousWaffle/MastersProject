@@ -2,137 +2,178 @@ package systemcatalog.components;
 
 import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
+import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
-import datastructures.user.component.Privilege;
+import enums.InputType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
  * Responsible for ensuring that the current user has the correct privileges before
- * executing a statement.
+ * executing a statement. Has options for toggling on or off as well.
  */
 public class SecurityChecker {
 
-    private RuleGraph.Type ruleGraphType;
-    private RuleGraph ruleGraphToUse;
-    private String[] tokenizedInput;
-    private User currentUser;
-    private List<Table> tables;
-    private boolean toggle;
+    private String errorMessage;
+    private boolean isOn;
 
     public SecurityChecker() {
-        // by default, toggle the Security Checker on
-        this.toggle = true;
+        errorMessage = "";
+        isOn = true;
     }
 
-    // setters ---------------------------------------------------------------------------------------------------------
-
-    public void setRuleGraphType(RuleGraph.Type ruleGraphType) {
-        this.ruleGraphType = ruleGraphType;
+    /**
+     * @return the error message if an error occurred
+     */
+    public String getErrorMessage() {
+        return errorMessage;
     }
 
-    public void setRuleGraphToUse(RuleGraph ruleGraphToUse) {
-        this.ruleGraphToUse = ruleGraphToUse;
+    /**
+     * Resets the error message.
+     */
+    public void resetErrorMessage() {
+        errorMessage = "";
     }
 
-    public void setTokenizedInput(String[] tokenizedInput) {
-        this.tokenizedInput = tokenizedInput;
+    /**
+     * Turns the Verifier on.
+     */
+    public void turnOn() {
+        isOn = true;
     }
 
-    public void setCurrentUser(User currentUser) {
-        this.currentUser = currentUser;
+    /**
+     * Turns the Verifier off.
+     */
+    public void turnOff() {
+        isOn = false;
     }
 
-    public void setTables(List<Table> tables) {
-        this.tables = tables;
-    }
+    /**
+     * Returns whether the following input is valid with respect to the current user's privileges.
+     * @param inputType is the type of input
+     * @param filteredInput is the input after being filtered
+     * @param currentUser is the current user of the system
+     * @param tables are the tables of the system
+     * @return whether the input is valid with respect to what's found on the system
+     */
+    public boolean isValid(InputType inputType, String[] filteredInput, User currentUser, List<Table> tables) {
 
-    public void setToggle(boolean toggle) {
-        this.toggle = toggle;
-    }
-
-    // validation ------------------------------------------------------------------------------------------------------
-
-    public boolean isValid() {
-
-        // return true if the Security Checker is toggled off
-        if(! toggle) {
+        if (!isOn) {
             return true;
         }
 
-        switch(ruleGraphType) {
+        switch(inputType) {
             case QUERY:
-                return isValidQuery();
+                return isValidQuery(filteredInput, currentUser, tables);
             case CREATE_TABLE:
-                return isValidCreateTable();
+                return isValidCreateTable(filteredInput, currentUser);
             case DROP_TABLE:
-                return isValidDropTable();
+                return isValidDropTable(filteredInput, currentUser);
             case ALTER_TABLE:
-                return isValidAlterTable();
+                return isValidAlterTable(filteredInput, currentUser);
             case INSERT:
-                return isValidInsert();
+                return isValidInsert(filteredInput, currentUser);
             case DELETE:
-                return isValidDelete();
+                return isValidDelete(filteredInput, currentUser);
             case UPDATE:
-                return isValidUpdate();
+                return isValidUpdate(filteredInput, currentUser);
             case GRANT:
-                isValidGrant();
+                return isValidGrant(filteredInput, currentUser, tables);
             case REVOKE:
-                isValidRevoke();
+                return isValidRevoke(filteredInput, currentUser, tables);
             case BUILD_FILE_STRUCTURE:
-                isValidBuildFileStructure();
+                return isValidBuildFileStructure(filteredInput, currentUser);
             case REMOVE_FILE_STRUCTURE:
-                return isValidRemoveFileStructure();
+                return isValidRemoveFileStructure(filteredInput, currentUser);
             case UNKNOWN:
             default:
                 return false;
         }
     }
 
-    public boolean isValidQuery() {
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @param tables are the tables of the system
+     * @return whether the current user has the correct table privileges for the QUERY
+     */
+    public boolean isValidQuery(String[] filteredInput, User currentUser, List<Table> tables) {
 
-        List<String> referencedTableNames = ruleGraphToUse.getTokensAt(tokenizedInput, 13, 15, 17);
-        //ArrayList<String> referencedColumnNames = ruleGraph.getTokensAt(input, );
-        HashMap<String, ArrayList<String>> tableColumnPairs = new HashMap<>();
-        return true;
-    }
-
-    public boolean isValidCreateTable() {
-
-        //String primaryKey = ruleGraph.getTokensAt(create, -1).get(0);
-        //ArrayList<String> foreignKeys = ruleGraph.getTokensAt(create, -1);
-
-        // TODO
+        RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
 
         return true;
     }
 
-    public boolean isValidDropTable() {
-        String tableName = tokenizedInput[2];
-        return currentUser.hasTablePrivilege(tableName, Privilege.ALTER);
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the CREATE TABLE command
+     */
+    public boolean isValidCreateTable(String[] filteredInput, User currentUser) {
+
+        RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
+
+        return true;
     }
 
-    public boolean isValidAlterTable() {
-        String tableName = tokenizedInput[2];
-        return currentUser.hasTablePrivilege(tableName, Privilege.ALTER);
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the DROP TABLE command
+     */
+    public boolean isValidDropTable(String[] filteredInput, User currentUser) {
+
+        RuleGraph dropTableRuleGraph = RuleGraphTypes.getDropTableRuleGraph();
+
+        return true;
     }
 
-    public boolean isValidInsert() {
-        String tableName = tokenizedInput[2];
-        return currentUser.hasTablePrivilege(tableName, Privilege.INSERT);
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the ALTER TABLE command
+     */
+    public boolean isValidAlterTable(String[] filteredInput, User currentUser) {
+
+        RuleGraph alterTableRuleGraph = RuleGraphTypes.getAlterTableRuleGraph();
+
+        return true;
     }
 
-    public boolean isValidDelete() {
-        String tableName = tokenizedInput[2];
-        return currentUser.hasTablePrivilege(tableName, Privilege.DELETE);
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the INSERT command
+     */
+    public boolean isValidInsert(String[] filteredInput, User currentUser) {
+
+        RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
+
+        return true;
     }
 
-    public boolean isValidUpdate() {
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the DELETE command
+     */
+    public boolean isValidDelete(String[] filteredInput, User currentUser) {
 
-        String tableName = tokenizedInput[2];
+        RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
+
+        return true;
+    }
+
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the UPDATE command
+     */
+    public boolean isValidUpdate(String[] filteredInput, User currentUser) {
+
+        /*String tableName = tokenizedInput[2];
         ArrayList<String> columnNames = new ArrayList<>();
 
         for(Table table : tables) {
@@ -145,59 +186,58 @@ public class SecurityChecker {
         }
 
         return currentUser.hasTablePrivilege(tableName, Privilege.UPDATE, columnNames);
-    }
-
-    public boolean isValidPrivilegeCommand() {
-
-        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 20).get(0);
-
-        // if WITH GRANT OPTION is used, make sure the user is allowed to pass on privileges to others
-        List<String> withToken = ruleGraphToUse.getTokensAt(tokenizedInput, 24);
-        boolean grantOptionUsed = ! withToken.isEmpty();
-
-        if(grantOptionUsed) {
-
-            List<String> updateToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
-            List<String> referencesToken = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
-
-            boolean isPassingUpdatePrivilege = ! updateToken.isEmpty();
-            boolean isPassingReferencesPrivilege = ! referencesToken.isEmpty();
-
-            if(isPassingUpdatePrivilege) {
-                List<String> passedUpdateColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 12);
-                return currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedUpdateColumns);
-            }
-
-            if(isPassingReferencesPrivilege) {
-                List<String> passedReferencesColumns = ruleGraphToUse.getTokensAt(tokenizedInput, 16);
-                return currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, passedReferencesColumns);
-            }
-        }
+         */
+        RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
 
         return true;
     }
 
-    public boolean isValidBuildFileStructure() {
-        String tableName = tokenizedInput[6];
-        return currentUser.hasTablePrivilege(tableName, Privilege.INDEX);
-    }
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the GRANT command
+     */
+    public boolean isValidGrant(String[] filteredInput, User currentUser, List<Table> tables) {
 
-    public boolean isValidClusteredFile() {
-        String tableName1 = tokenizedInput[4];
-        String tableName2 = tokenizedInput[6];
-        return currentUser.hasTablePrivilege(tableName1, Privilege.INDEX) &&
-                currentUser.hasTablePrivilege(tableName2, Privilege.INDEX);
-    }
+        RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
 
-    public boolean isValidGrant() {
         return false;
     }
 
-    public boolean isValidRevoke() {
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the REVOKE command
+     */
+    public boolean isValidRevoke(String[] filteredInput, User currentUser, List<Table> tables) {
+
+        RuleGraph revokeRuleGraph = RuleGraphTypes.getRevokeRuleGraph();
+
         return false;
     }
 
-    public boolean isValidRemoveFileStructure() {
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the BUILD FILE STRUCTURE command
+     */
+    public boolean isValidBuildFileStructure(String[] filteredInput, User currentUser) {
+        /*String tableName = tokenizedInput[6];
+        return currentUser.hasTablePrivilege(tableName, Privilege.INDEX);*/
+        RuleGraph buildFileStructureRuleGraph = RuleGraphTypes.getBuildFileStructureRuleGraph();
+
+        return true;
+    }
+
+    /**
+     * @param filteredInput is the filtered input
+     * @param currentUser is the current user of the system
+     * @return whether the current user has the correct table privileges for the REMOVE FILE STRUCTURE command
+     */
+    public boolean isValidRemoveFileStructure(String[] filteredInput, User currentUser) {
+
+        RuleGraph removeFileStructureRuleGraph = RuleGraphTypes.getRemoveFileStructureRuleGraph();
+
         return false;
     }
 }

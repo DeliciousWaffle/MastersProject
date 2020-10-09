@@ -1,14 +1,14 @@
 package datastructures.relation.resultset;
 
-import datastructures.trees.conditiontree.component.Condition;
-import datastructures.trees.conditiontree.ConditionExpression;
+import misc.conditiontree.component.Condition;
+import misc.conditiontree.ConditionExpression;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.TableData;
 import datastructures.relation.table.Table;
-import systemcatalog.components.Parser;
 import datastructures.relation.table.component.DataType;
-import utilities.enums.Keyword;
-import utilities.enums.Symbol;
+import enums.Keyword;
+import enums.Symbol;
+import utilities.Utilities;
 
 import java.util.*;
 
@@ -697,7 +697,7 @@ public class ResultSet {
         }
 
         // if cell is a string, sort lexicographically, otherwise just do things normally
-        boolean isNumeric = Parser.isNumeric(orderedByData.get(0).get(columnIndex));
+        boolean isNumeric = Utilities.isNumeric(orderedByData.get(0).get(columnIndex));
 
         // just doing a simple bubble sort, not efficient but am lazy
         for(int i = 0; i < orderedByData.size() - 1; i++) {

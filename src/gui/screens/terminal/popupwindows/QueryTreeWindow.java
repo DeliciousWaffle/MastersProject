@@ -1,12 +1,10 @@
 package gui.screens.terminal.popupwindows;
 
-import datastructures.relation.table.Table;
-import datastructures.trees.querytree.QueryTree;
+import datastructures.querytree.QueryTree;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.terminal.popupwindows.querytreegui.QueryTreeGUI;
 import gui.screens.terminal.popupwindows.querytreegui.popupwindows.QueryTreeOptimizationHeuristicWindows;
-import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -15,8 +13,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import systemcatalog.components.Optimizer;
-import systemcatalog.components.Parser;
 
 import java.util.ArrayList;
 import java.util.Arrays;

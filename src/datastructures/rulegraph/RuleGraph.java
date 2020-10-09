@@ -2,8 +2,6 @@ package datastructures.rulegraph;
 
 import datastructures.rulegraph.component.RuleNode;
 import utilities.Utilities;
-import utilities.enums.Keyword;
-import utilities.enums.Symbol;
 
 import java.util.ArrayList;
 import java.util.List;

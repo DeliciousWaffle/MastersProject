@@ -105,22 +105,22 @@ public class ColumnPane {
 
         switch(keyType) {
             case "Primary":
-                image = new Image("files/assets/tablesscreen/PrimaryKey.png",
+                image = new Image("files/images/tablesscreen/PrimaryKey.png",
                         75, 45, false, true);
                 tooltip.setText("Primary Key");
                 break;
             case "Foreign":
-                image = new Image("files/assets/tablesscreen/ForeignKey.png",
+                image = new Image("files/images/tablesscreen/ForeignKey.png",
                         75, 45, false, true);
                 tooltip.setText("Foreign Key");
                 break;
             case "None":
-                image = new Image("files/assets/tablesscreen/NoKey.png",
+                image = new Image("files/images/tablesscreen/NoKey.png",
                         75, 45, false, true);
                 tooltip.setText("No Key");
                 break;
             default:
-                image = new Image("files/assets/tablesscreen/NoKey.png",
+                image = new Image("files/images/tablesscreen/NoKey.png",
                         75, 45, false, true);
                 break;
         }

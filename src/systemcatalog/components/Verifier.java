@@ -5,38 +5,72 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
+import utilities.OptimizerUtilities;
 import utilities.Utilities;
+import enums.InputType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * Responsible for making sure any parts of the input that make references to something within
- * the system are correct. This can take several forms such as checking whether tables
- * and their associated columns exists or that data types match.
+ * Responsible for making sure any parts of the input that make references to something within the system
+ * are correct. This can take several forms such as checking whether tables and their associated columns
+ * exists or that data types match. Also has an option for turning on or off. When off, the user can input
+ * any data without the worry about whether their input makes sense with respect to the system data. Also,
+ * input is assumed to have already been passed through the Parser.
  */
 public class Verifier {
 
     private String errorMessage;
-    private boolean toggle;
+    private boolean isOn;
 
     public Verifier() {
         errorMessage = "";
-        toggle = true; // toggle on by default
+        isOn = true;
     }
 
+    /**
+     * @return the error message if an error occurred
+     */
     public String getErrorMessage() {
         return errorMessage;
     }
 
-    public void toggle() {
-        this.toggle = ! toggle;
+    /**
+     * Clears the data within the Verifier. Error message gets reset and toggle is set to true.
+     */
+    public void resetErrorMessage() {
+        errorMessage = "";
     }
 
-    public boolean isValid(RuleGraph.Type inputType, String[] filteredInput, List<Table> tables, List<User> users) {
+    /**
+     * Turns the Verifier on.
+     */
+    public void turnOn() {
+        isOn = true;
+    }
 
-        if (! toggle) {
+    /**
+     * Turns the Verifier off.
+     */
+    public void turnOff() {
+        isOn = false;
+    }
+
+    /**
+     * Determines whether the input is valid with respect to the data on the system. This involves checking
+     * that tables/users exist in the system if they are referenced. Making sure that the columns of tables exist
+     * and that their data type is correct. Handles other details as well.
+     * @param filteredInput is the filtered input
+     * @param inputType is the type of input
+     * @param tables are the tables in the system
+     * @param users are the users in the system
+     * @return whether the input is valid with respect to the data on the system
+     */
+    public boolean isValid(InputType inputType, String[] filteredInput, List<Table> tables, List<User> users) {
+
+        if (! isOn) {
             return true;
         }
 
@@ -69,42 +103,54 @@ public class Verifier {
         }
     }
 
+    /**
+     * Returns whether the data referenced in the QUERY makes sense with respect to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the QUERY is valid
+     */
     public boolean isValidQuery(String[] filteredInput, List<Table> tables) {
 
         RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
+        String queryError = "Verifier error when validating Query:\n";
 
-        // make sure all tables exist
-        List<String> candidateTables = queryRuleGraph.getTokensAt(filteredInput, 14, 17);
+        // check that tables referenced exist in the system
+        List<String> tableNames = queryRuleGraph.getTokensAt(filteredInput, 13, 15, 18);
 
-        for(Table currentTable : tables) {
-
-            String tableName = currentTable.getTableName();
-            boolean foundTable = false;
-
-            for(String candidateTable : candidateTables) {
-                if(candidateTable.equalsIgnoreCase(tableName)) {
-                    foundTable = true;
-                }
-            }
-
-            if(! foundTable) {
+        for (String tableName : tableNames) {
+            boolean tableExists = Utilities.getReferencedTable(tableName, tables) != null;
+            if (! tableExists) {
+                errorMessage = queryError + "The table: " + tableName + " does not exist";
                 return false;
             }
         }
 
-        // make sure all columns exist in the tables supplied
-        List<String> candidateColumns = queryRuleGraph.getTokensAt(filteredInput, 2, 10, 20, 23, 35, 45);
+        // check that all columns exist within the tables referenced (all column name nodes except for inner join ones)
+        List<String> columnNames = queryRuleGraph.getTokensAt(filteredInput, 2, 10, 20, 23, 35, 45);
 
-        for(Table currentTable : tables) {
-            for(String candidateColumn : candidateColumns) {
-                if(! currentTable.hasColumn(candidateColumn)) {
+        for (Table table : tables) {
+            for (String columnName : columnNames) {
+                // remove any column names that are prefixed with a table name
+                columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
+                if (! table.hasColumn(columnName)) {
+                    errorMessage = queryError + "\"" + columnName + "\" does not exist in " + table;
                     return false;
                 }
             }
         }
 
         // if joining tables, ensure that the column names exist in the corresponding tables
+        boolean isJoiningTables = ! queryRuleGraph.getTokensAt(filteredInput, 16).isEmpty();
 
+        if (isJoiningTables) {
+            List<String> joinOnTableNames = queryRuleGraph.getTokensAt(filteredInput, 13, 18);
+            List<String> joinOnColumnNames = queryRuleGraph.getTokensAt(filteredInput, 20, 27);
+            for (Table table : tables) {
+
+            }
+        }
+
+        // check correct data types
 
         // ensure that the columns used to join on in the using clause appear in the corresponding tables
         // Eg. if have t1 JOIN t2 USING(col1) JOIN t3 USING(col2)
@@ -148,8 +194,8 @@ public class Verifier {
         }
 
         // only accept numeric columns if using MIN, MAX, AVG, COUNT, SUM
-        candidateColumns = queryRuleGraph.getTokensAt(filteredInput, 10);
-        String candidateColumn = candidateColumns.isEmpty() ? "null" : candidateColumns.get(0);
+        columnNames = queryRuleGraph.getTokensAt(filteredInput, 10);
+        String candidateColumn = columnNames.isEmpty() ? "null" : columnNames.get(0);
 
         /*for(Table currentTable : tables) {
             for(Column currentColumn : currentTable.getColumns()) {
@@ -197,37 +243,12 @@ public class Verifier {
     }
 
     /**
-     * Returns whether a column name that is not prefixed belongs to more than
-     * one table. Not making this check will cause inconsistent output.
-     * Eg. SELECT * FROM tab1, tab2 where col1 > 5 AND col1 = 10;
-     * will return true assuming col1 belongs to both tab1 and tab2.
+     * Returns whether the data referenced in the CREATE TABLE command makes sense with respect to
+     * the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the CREATE TABLE command is valid
      */
-    /*public boolean isAmbiguousColumnName() {
-
-        int occurrences = 0;
-        List<String> tableNamesWithSameColumnName = new ArrayList<>();
-
-        for(Table table : tables) {
-            if(table.hasColumn(columnName)) {
-                tableNamesWithSameColumnName.add(table.getTableName());
-                occurrences++;
-            }
-        }
-
-        boolean isAmbiguousColumnName = occurrences > 1;
-
-        if(isAmbiguousColumnName) {
-            System.out.println("In Optimizer.isAmbiguousColumnName()");
-            System.out.println("Column Name: " + columnName + " is present in tables: ");
-            for(String tableName : tableNamesWithSameColumnName) {
-                System.out.print(tableName + " ");
-            }
-            return true;
-        }
-
-        return false;
-    }*/
-
     public boolean isValidCreateTable(String[] filteredInput, List<Table> tables) {
 
         RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
@@ -277,6 +298,13 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether the data referenced in the DROP TABLE command makes sense with respect
+     * to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the DROP TABLE command is valid
+     */
     public boolean isValidDropTable(String[] filteredInput, List<Table> tables) {
 
         // make sure table name exists
@@ -293,6 +321,13 @@ public class Verifier {
         return foundTable;
     }
 
+    /**
+     * Returns whether the data referenced in the ALTER TABLE command makes sense with respect
+     * to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the ALTER TABLE command is valid
+     */
     public boolean isValidAlterTable(String[] filteredInput, List<Table> tables) {
 
         // make sure table name exists
@@ -341,6 +376,12 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether the data referenced in the INSERT command makes sense with respect to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the INSERT command is valid
+     */
     public boolean isValidInsert(String[] filteredInput, List<Table> tables) {
 
         RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
@@ -388,6 +429,12 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether the data referenced in the DELETE command makes sense with respect to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the DELETE is valid
+     */
     public boolean isValidDelete(String[] filteredInput, List<Table> tables) {
 
         RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
@@ -430,6 +477,12 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether the data referenced in the UPDATE command makes sense with respect to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the UPDATE command is valid
+     */
     public boolean isValidUpdate(String[] filteredInput, List<Table> tables) {
 
         RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
@@ -478,6 +531,12 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether the data referenced in the GRANT command makes sense with respect to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the GRANT command is valid
+     */
     public boolean isValidGrant(String[] filteredInput, List<Table> tables, List<User> users) {
 
         RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
@@ -530,10 +589,23 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether the data referenced in the REVOKE command makes sense with respect to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the REVOKE command is valid
+     */
     public boolean isValidRevoke(String[] filteredInput, List<Table> tables, List<User> users) {
         return false;
     }
 
+    /**
+     * Returns whether the data referenced in the BUILD FILE STRUCTURE command makes sense with respect
+     * to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the BUILD FILE STRUCTURE command is valid
+     */
     public boolean isValidBuildFileStructure(String[] filteredInput, List<Table> tables) {
 
         // make sure table exists
@@ -561,6 +633,13 @@ public class Verifier {
         return true;
     }
 
+    /**
+     * Returns whether the data referenced in the REMOVE FILE STRUCTURE command makes sense with respect
+     * to the data on the system.
+     * @param filteredInput is the filtered input
+     * @param tables are the tables of the system
+     * @return whether the REMOVE FILE STRUCTURE command is valid
+     */
     public boolean isValidRemoveFileStructure(String[] filteredInput, List<Table> tables) {
 
         return false;

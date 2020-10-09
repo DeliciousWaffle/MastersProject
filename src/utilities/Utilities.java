@@ -1,19 +1,22 @@
 package utilities;
 
-import datastructures.rulegraph.RuleGraph;
-import exceptions.UnknownInputTypeException;
-import utilities.enums.InputType;
-import utilities.enums.Keyword;
-import utilities.enums.Symbol;
+import datastructures.relation.table.Table;
+import datastructures.user.User;
+import enums.InputType;
+import enums.Keyword;
+import enums.Symbol;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- * Class containing random stuff that doesn't necessarily belong to any other class.
+ * Class containing random utility stuff that doesn't necessarily belong to any other class.
  */
 public final class Utilities {
 
+    // can't instantiate me!
     private Utilities() {}
 
     /**
@@ -22,11 +25,13 @@ public final class Utilities {
      * @return whether the given candidate is numeric
      */
     public static boolean isNumeric(String candidate) {
+
         try {
             Double.parseDouble(candidate);
         } catch(NumberFormatException e) {
             return false;
         }
+
         return true;
     }
 
@@ -96,8 +101,11 @@ public final class Utilities {
 
             // keep moving forward in the array until the second '"' is found
             if (currentChar == '"') {
+
                 for (int j = i + 1; j < inputAsChars.length; j++) { // j = i + 1 skips over current '"'
+
                     currentChar = inputAsChars[j];
+
                     if (currentChar == '"') {
                         i = j; // set to the closing '"' for now then i will increment to next token in outer loop
                         break; // found second '"', we're done
@@ -120,9 +128,13 @@ public final class Utilities {
 
             // similar process to what we did with the characters, skip everything in the middle of ""
             if (currentToken.equalsIgnoreCase("\"")) {
+
                 handleDoubleQuotes.add(currentToken); // add the first "
+
                 for (int j = i + 1; j < inputAsTokens.length; j++) {
+
                     currentToken = inputAsTokens[j];
+
                     if (currentToken.equalsIgnoreCase("\"")) {
                         i = j;
                         break;
@@ -153,7 +165,7 @@ public final class Utilities {
      * @param filteredInput is the input after being filtered
      * @return the type of input that this is
      */
-    public static InputType determineRuleGraphType(String[] filteredInput) {
+    public static InputType determineInputType(String[] filteredInput) {
 
         String firstToken = filteredInput[0];
 
@@ -234,5 +246,65 @@ public final class Utilities {
         boolean hasNumericYear = isNumeric(monthDayYear[2]);
 
         return hasNumericMonth && hasNumericDay && hasNumericYear;
+    }
+
+    /**
+     * Given a list of table names and a list of tables from the system, returns the tables referenced.
+     * @param tableNames is a list of table names referenced
+     * @param tables is a list of tables of the system
+     * @return a list of tables referenced from the given table names
+     */
+    public static List<Table> getReferencedTables(List<String> tableNames, List<Table> tables) {
+        return tableNames.stream()
+                .map(tableName -> getReferencedTable(tableName, tables))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Given a table name and a list of tables from the system, returns the table referenced.
+     * @param tableName is the table name of the table referenced
+     * @param tables is a list of tables in the system
+     * @return the table referenced from the table name or null if not found
+     */
+    public static Table getReferencedTable(String tableName, List<Table> tables) {
+
+        for (Table table : tables) {
+            if (table.getTableName().equalsIgnoreCase(tableName)) {
+                return table;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Given a list of usernames and a list of users from the system, returns the users referenced.
+     * @param usernames is a list of usernames referenced
+     * @param users is a list of users of the system
+     * @return a list of users referenced from the given usernames
+     */
+    public static List<User> getReferencedUsers(List<String> usernames, List<User> users) {
+        return usernames.stream()
+                .map(username -> getReferencedUser(username, users))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Given a username and a list of users from the system, returns the user referenced.
+     * @param username is the username of the user referenced
+     * @param users is a list of users in the system
+     * @return the user referenced from the username or null if not found
+     */
+    public static User getReferencedUser(String username, List<User> users) {
+
+        for (User user : users) {
+            if (user.getUsername().equalsIgnoreCase(username)) {
+                return user;
+            }
+        }
+
+        return null;
     }
 }

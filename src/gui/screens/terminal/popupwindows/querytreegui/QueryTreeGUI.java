@@ -1,6 +1,6 @@
 package gui.screens.terminal.popupwindows.querytreegui;
 
-import datastructures.trees.querytree.QueryTree;
+import datastructures.querytree.QueryTree;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.terminal.popupwindows.querytreegui.components.NodeGUI;

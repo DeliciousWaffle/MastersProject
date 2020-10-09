@@ -3,7 +3,7 @@ package gui.screens.tables;
 import datastructures.relation.table.Table;
 import files.io.FileType;
 import files.io.IO;
-import files.io.Serialize;
+import files.io.Serializer;
 import gui.ScreenController;
 import gui.screens.Screen;
 import gui.screens.tables.components.TablePane;
@@ -11,7 +11,6 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import systemcatalog.SystemCatalog;
 
 import java.util.ArrayList;
@@ -33,7 +32,7 @@ public class TablesScreen extends Screen {
 
         // convert the tables that we have in system to a gui representation
         String blah = IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES);
-        List<Table> tables = Serialize.unSerializeTables(blah);
+        List<Table> tables = Serializer.unSerializeTables(blah);
 
         this.tablePaneList = new ArrayList<>();
 

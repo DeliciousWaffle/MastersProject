@@ -2,13 +2,13 @@ package systemcatalog.components;
 
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
-import utilities.enums.InputType;
+import enums.InputType;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct along with some other
  * basic error checking. Note that methods of the RuleGraph class do most of the heavy lifting when it comes to
  * error checking. Refer to the diagrams in "files/assets/helpscreen/diagrams" for information about how the
- * input is processed.
+ * input is processed. Data is assumed to have already been passed through the Utilities.filterInput() method.
  */
 public class Parser {
 
@@ -28,7 +28,7 @@ public class Parser {
     /**
      * Clears information present in the Parser, in this case, just the error message.
      */
-    public void clear() {
+    public void resetErrorMessage() {
         errorMessage = "";
     }
 

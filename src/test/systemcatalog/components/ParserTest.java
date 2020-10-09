@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Parser;
 import utilities.Utilities;
-import utilities.enums.InputType;
+import enums.InputType;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Test class for ensuring that the System Catalog's Parser is operating as it should be.
  * This will focus on whether the input is syntactically correct as well as other stuff.
+ * Note that none of the commands end with a ";", this gets automatically removed when retrieving
+ * input from the terminal and is unnecessary here.
  */
 class ParserTest {
 
@@ -26,27 +28,30 @@ class ParserTest {
     // QUERY -----------------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "SELECT a FROM b",
-            "SELECT * FROM b",
-            "SELECT MIN(a) FROM b",
-            "SELECT MAX(a) FROM b",
-            "SELECT AVG(a) FROM b",
-            "SELECT COUNT(a) FROM b",
-            "SELECT SUM(a) FROM b",
-            "SELECT a, b FROM c",
-            "SELECT a, b, c FROM d",
-            "SELECT a FROM b, c, d, e",
-            "SELECT a FROM b JOIN c USING(d)",
-            "SELECT a FROM b JOIN c USING(d) JOIN e USING(f) JOIN g USING(h)",
-            "SELECT a FROM b JOIN c USING(d) JOIN e USING(d)",
-            "SELECT a FROM b WHERE c = 1",
-            "SELECT a FROM b WHERE c != 1",
-            "SELECT a FROM b WHERE c > 1",
-            "SELECT a FROM b WHERE c < 1",
-            "SELECT a FROM b WHERE c >= 1",
-            "SELECT a FROM b WHERE c <= 1",
-            "SELECT a FROM b WHERE c = 1 AND d > 2",
-            "SELECT a FROM b WHERE c = 1 OR d <= 2",
+            "SELECT Col1 FROM Tab1",
+            "SELECT * FROM Tab1",
+            "SELECT MIN(Col1) FROM Tab1",
+            "SELECT MAX(Col1) FROM Tab1",
+            "SELECT AVG(Col1) FROM Tab1",
+            "SELECT COUNT(Col1) FROM Tab1",
+            "SELECT SUM(Col1) FROM Tab1",
+            "SELECT Col1, MIN(Col2), MAX(Col3) FROM Tab1",
+            "SELECT Col1, Col2 FROM Tab1",
+            "SELECT Col1, Col2, Col3 FROM Tab1",
+            "SELECT Col1 FROM Tab1, Tab2",
+            "SELECT Col1 FROM Tab1, Tab2, Tab3",
+            "SELECT Col1 FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 = Tab2.Col1",
+            "SELECT Col1 FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 = Tab2.Col1 INNER JOIN Tab3 ON Tab2.Col2 = Tab3.Col2",
+            "SELECT Col1 FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 != Tab2.Col1 INNER JOIN Tab3 ON Tab2.Col2 > Tab3.Col2 INNER JOIN Tab4 ON Tab3.Col3 = Tab4.Col3",
+            "SELECT Col1 FROM Tab1 WHERE Col1 = 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 = \"Blah\"",
+            "SELECT Col1 FROM Tab1 WHERE Col1 != 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 > 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 < 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 >= 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 <= 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 = 1 AND Col2 > 2",
+            "SELECT Col1 FROM Tab1 WHERE Col1 = 1 AND Col2 > 2 AND Col3 = \"Blah\"",
             "SELECT a FROM b, c WHERE d = 1",
             "SELECT a FROM b, c WHERE d = 1 AND d != 2",
             "SELECT a FROM b JOIN c USING(d) WHERE e = 1",

@@ -5,6 +5,9 @@ import utilities.QueryCost;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test to make sure that the cost utilities class produces the correct results.
+ */
 class CostTest {
 
     @Test

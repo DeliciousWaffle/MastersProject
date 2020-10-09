@@ -14,7 +14,7 @@ public class QueryDiagram extends Stage {
         double windowWidth = 1280.0, windowHeight = 720.0;
 
         // setting the image in the center of the screen
-        Image image = new Image("files/assets/helpscreen/QueryDiagram.png");
+        Image image = new Image("files/images/helpscreen/QueryDiagram.png");
         ImageView imageView = new ImageView(image);
         imageView.setPreserveRatio(true);
 

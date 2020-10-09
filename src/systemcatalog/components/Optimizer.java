@@ -1,22 +1,24 @@
 package systemcatalog.components;
 
 import datastructures.misc.Triple;
+import datastructures.querytree.operator.types.*;
 import datastructures.relation.table.Table;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
-import datastructures.trees.querytree.QueryTree;
-import datastructures.trees.querytree.operator.Operator;
-import datastructures.trees.querytree.operator.types.*;
+import datastructures.querytree.QueryTree;
+import datastructures.querytree.operator.Operator;
+import utilities.OptimizerUtilities;
 import utilities.QueryCost;
+import utilities.Utilities;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static datastructures.trees.querytree.QueryTree.TreeTraversal.*;
-import static datastructures.trees.querytree.QueryTree.Traversal.*;
-import static datastructures.trees.querytree.operator.Operator.Type.*;
-import static systemcatalog.components.OptimizerUtilities.*;
+import static datastructures.querytree.operator.Operator.Type.*;
+import static datastructures.querytree.QueryTree.TreeTraversal.*;
+import static datastructures.querytree.QueryTree.Traversal.*;
+import static utilities.OptimizerUtilities.*;
 
 /**
  * Responsible for determining the execution strategy of a query. This involves converting the user's input
@@ -38,31 +40,41 @@ import static systemcatalog.components.OptimizerUtilities.*;
 public class Optimizer {
 
     private final RuleGraph queryRuleGraph;
-    private boolean toggleRearrangeLeafNodes;
+    private boolean joinOptimizationIsOn;
 
     public Optimizer() {
-        this.queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
-        this.toggleRearrangeLeafNodes = true;
+        queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
+        joinOptimizationIsOn = true;
     }
 
-    public void toggleRearrangeLeafNodes() {
-        this.toggleRearrangeLeafNodes = ! toggleRearrangeLeafNodes;
+    /**
+     * Turns the join rearrangement on.
+     */
+    public void turnOnJoinOptimization() {
+        joinOptimizationIsOn = true;
     }
 
-    public List<QueryTree> getQueryTreeStates(String[] input, List<Table> tables) {
+    /**
+     * Turns the join rearrangement off.
+     */
+    public void turnOffJoinOptimization() {
+        joinOptimizationIsOn = false;
+    }
 
-        QueryTree queryTree                     = createQueryTree(input, tables, new ArrayList<>());
+    public List<QueryTree> getQueryTreeStates(String[] filteredInput, List<Table> tables) {
+
+        QueryTree queryTree                     = createQueryTree(filteredInput, tables, new ArrayList<>());
         QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
         QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
         QueryTree afterPushingDownProjections   = pushDownProjections(new QueryTree(afterFormingJoins));
-        QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), input, tables);
+        QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), filteredInput, tables);
         List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
 
-        List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
+        List<QueryTree> queryTreeStates = Arrays.asList(
                 queryTree, afterCascadingSelections, afterPushingDownSelections, afterFormingJoins,
                 afterRearrangingJoins, afterPushingDownProjections
-        ));
+        );
 
         queryTreeStates.addAll(afterPipeliningSubtrees);
 
@@ -120,7 +132,7 @@ public class Optimizer {
 
         // the following is just some data cleaning
 
-        List<Table> referencedTables = OptimizerUtilities.getReferencedTables(tableNames, tables);
+        List<Table> referencedTables = Utilities.getReferencedTables(tableNames, tables);
 
         // extract all column names if a "*" is used
         OptimizerUtilities.getColumnNamesFromStar(selectClauseColumnNames, referencedTables);
@@ -554,9 +566,8 @@ public class Optimizer {
      */
     public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) {
 
-        // TODO remove this
-        if(true) {
-            return queryTree;
+        if (joinOptimizationIsOn) {
+            return new QueryTree(queryTree);
         }
 
         // don't bother if we only have a single table or have 1 or 0 joins
@@ -603,7 +614,7 @@ public class Optimizer {
                 switch(operator.getType()) {
                     case RELATION: {
                         Relation relation = (Relation) operator;
-                        Table table = OptimizerUtilities.getReferencedTable(relation.getTableName(), tables);
+                        Table table = Utilities.getReferencedTable(relation.getTableName(), tables);
                         assert table != null;
                         int recordSize = table.getRecordSize();
                         int numRecords = table.getNumRecords();
@@ -646,11 +657,11 @@ public class Optimizer {
      * Performs the last step in the optimization process which is to pipeline subtrees. These are operations
      * that can be executed all in one step without writing anything out to disk. This may be executed multiple
      * times, thus, multiple query trees can be returned.
-     * TODO not sure if entirely correct
      * @param queryTree is the query tree to pipeline
      * @return a list of pipelined query trees
      */
     public List<QueryTree> pipelineSubtrees(QueryTree queryTree) {
+
         List<QueryTree> pipelinedSubtrees = new ArrayList<>();
 
         // when a projection is encountered, remove that subtree and set a pipelined expression operator in its place
@@ -662,10 +673,13 @@ public class Optimizer {
         int numSubscripts = 0; // used to keep track of the pipelined expressions
 
         for (Map.Entry<Operator, List<QueryTree.Traversal>> entry : projectionsAndLocations.entrySet()) {
+
             List<QueryTree.Traversal> projectionLocation = entry.getValue();
             List<Operator> pipelinedOperators = queryTree.removeSubtree(projectionLocation);
+
             Operator pipelinedExpression = new PipelinedExpression(pipelinedOperators, numSubscripts);
             numSubscripts++;
+
             queryTree.add(projectionLocation, NONE, pipelinedExpression);
             pipelinedSubtrees.add(new QueryTree(queryTree));
         }
@@ -687,10 +701,12 @@ public class Optimizer {
      * After the user enters some form of input, this returns the equivalent relational algebra
      * without making any kinds of optimization changes. Extracts this data from the query tree
      * that is originally produced from the input.
-     * @param initialQueryTree is the query tree after creation
+     * @param queryTreeStates is a list of query tree states produced after the optimization process
      * @return the unoptimized relational algebra extracted from this query tree
      */
-    public String getNaiveRelationAlgebra(QueryTree initialQueryTree) {
+    public String getNaiveRelationAlgebra(List<QueryTree> queryTreeStates) {
+
+        QueryTree initialQueryTree = queryTreeStates.get(0);
 
         StringBuilder naiveRelationalAlgebra = new StringBuilder();
         StringBuilder closingBrackets = new StringBuilder();
@@ -727,10 +743,12 @@ public class Optimizer {
 
     /**
      * When the user enters input, this returns the equivalent optimized relational algebra.
-     * @param pipelinedQueryTrees is the very last query tree state produced from the optimization
+     * @param queryTreeStates is a list of query tree states produced after the optimization process
      * @return optimized relational algebra
      */
-    public String getOptimizedRelationalAlgebra(List<QueryTree> pipelinedQueryTrees) {
+    public String getOptimizedRelationalAlgebra(List<QueryTree> queryTreeStates) {
+
+        List<QueryTree> pipelinedQueryTrees = queryTreeStates.subList(6, queryTreeStates.size());
 
         StringBuilder optimizedRelationalAlgebra = new StringBuilder();
 
@@ -770,17 +788,19 @@ public class Optimizer {
      * perform best for range queries while hash tables are best for simple selections. Clustered files
      * are typically used to speed up joins, but incur a high storage cost and can only be built on tables.
      * They also prevent the other file structures from being built within these tables.
-     * @param queryTreeAfterPushingDownProjections is the query tree after pushing down projections
+     * @param queryTreeStates is a list of query tree states produced after the optimization process
      * @return a recommendation of file structures to build for a particular query
      */
-    public String getRecommendedFileStructures(QueryTree queryTreeAfterPushingDownProjections) {
+    public String getRecommendedFileStructures(List<QueryTree> queryTreeStates) {
+
+        QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
         // the triplet is composed of column name, table name, and the file structure to use
         List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>();
 
         // will build file structures on columns in tables first
         List<SimpleSelection> simpleSelections =
-                queryTreeAfterPushingDownProjections.getOperatorsAndLocationsOfType(SIMPLE_SELECTION, PREORDER)
+                queryTreeBeforePipelining.getOperatorsAndLocationsOfType(SIMPLE_SELECTION, PREORDER)
                         .keySet()
                         .stream()
                         .map(operator -> (SimpleSelection) operator)
@@ -793,6 +813,7 @@ public class Optimizer {
             String columnName = tokens[1];
             String fileStructure = "";
             String symbol = simpleSelection.getSymbol();
+
             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                 fileStructure = "Hash Table";
             } else { // >, <, >=, <=
@@ -804,7 +825,9 @@ public class Optimizer {
 
             // if there's a conflict, don't add, but instead replace the existing recommendation with a secondary b-tree
             int replaceIndex = hasFileStructureConflict(recommendedFileStructure, recommendedFileStructures);
+
             boolean hasConflict = replaceIndex != -1;
+
             if (hasConflict) {
                 recommendedFileStructure = new Triple<>(tableName, columnName, "Secondary B-Tree");
                 recommendedFileStructures.set(replaceIndex, recommendedFileStructure);
@@ -822,5 +845,18 @@ public class Optimizer {
 
 
         return "";
+    }
+
+    /**
+     * @param queryTreeStates is a list of query tree states produced after the optimization process
+     * @return returns a mini spreadsheet outlining how query cost was produced
+     */
+    public String getCostAnalysis(List<QueryTree> queryTreeStates) {
+
+        QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
+
+        StringBuilder costAnalysis = new StringBuilder();
+
+        return costAnalysis.toString();
     }
 }

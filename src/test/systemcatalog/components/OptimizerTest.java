@@ -3,7 +3,7 @@ package test.systemcatalog.components;
 import datastructures.relation.table.Table;
 import files.io.FileType;
 import files.io.IO;
-import files.io.Serialize;
+import files.io.Serializer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -24,7 +24,7 @@ public class OptimizerTest {
 
     @BeforeAll
     public static void create() {
-        tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
+        tables = Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
     }
 
     @ParameterizedTest
@@ -61,7 +61,7 @@ public class OptimizerTest {
         System.out.println(input + "\n");
         String[] tokens = Parser.formatAndTokenizeInput(input);
 
-        List<Table> tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
         Optimizer optimizer = new Optimizer();
         optimizer.getQueryTreeStates(tokens, tables);
         System.out.println("=========================================================================================");

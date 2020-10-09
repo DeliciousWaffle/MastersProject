@@ -140,7 +140,7 @@ public class OptionsScreen extends Screen {
         joinOptimizationToggleButton.setPrefSize(120, 80);
         joinOptimizationToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         joinOptimizationToggleButton.setOnAction(e -> {
-            systemCatalog.toggleJoinOptimization();
+            systemCatalog.turnOnJoinOptimization();
             joinOptimizationToggleButton.setText(joinOptimizationToggleButton
                     .getText().equalsIgnoreCase("On") ? "Off" : "On");
         });

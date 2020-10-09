@@ -3,10 +3,10 @@ package systemcatalog;
 import datastructures.relation.resultset.ResultSet;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
-import datastructures.trees.querytree.QueryTree;
+import datastructures.querytree.QueryTree;
 import files.io.FileType;
 import files.io.IO;
-import files.io.Serialize;
+import files.io.Serializer;
 import datastructures.user.User;
 import datastructures.relation.table.Table;
 import systemcatalog.components.Compiler;
@@ -15,7 +15,7 @@ import systemcatalog.components.Parser;
 import systemcatalog.components.SecurityChecker;
 import systemcatalog.components.Verifier;
 import utilities.Utilities;
-import utilities.enums.InputType;
+import enums.InputType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,8 +67,8 @@ public class SystemCatalog {
         compiler = new Compiler();
 
         // loading table and user data
-        tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
-        users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
+        tables = Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
+        users = Serializer.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
 
         // set the current user as the DBA who has all privileges on every table
         User DBA = User.DatabaseAdministrator(tables);
@@ -76,7 +76,7 @@ public class SystemCatalog {
         users.add(0, DBA);
 
         // create and add the rule graph types to use
-        ruleGraphTypes = Arrays.asList( // TODO may remove this entirely
+        ruleGraphTypes = Arrays.asList(
                 RuleGraphTypes.getQueryRuleGraph(),
                 RuleGraphTypes.getCreateTableRuleGraph(),
                 RuleGraphTypes.getAlterTableRuleGraph(),
@@ -119,14 +119,14 @@ public class SystemCatalog {
      */
     public void executeInput(String input) {
 
-        successfullyExecuted = false; // assume the input is invalid until it passes all checks
+        reset();
 
         // there may be an unknown error that I didn't account for, try catch prevents the app from crashing
         try {
 
             // filtering the input, splitting the input into tokens, and determining the rule graph type to use
             String[] filteredInput = Utilities.filterInput(input);
-            inputType = Utilities.determineRuleGraphType(filteredInput);
+            inputType = Utilities.determineInputType(filteredInput);
 
             // couldn't determine a type, don't execute
             if (inputType == InputType.UNKNOWN) {
@@ -144,49 +144,37 @@ public class SystemCatalog {
             }
 
             if (! verifier.isValid(inputType, filteredInput, tables, users)) {
-                executionMessage = verifier.getExecutionMessage();
+                executionMessage = verifier.getErrorMessage();
                 return;
             }
 
-            // security checker stuff
-            securityChecker.setRuleGraphType(inputType);
-            securityChecker.setRuleGraphToUse(ruleGraph);
-            securityChecker.setTokenizedInput(filteredInput);
-            securityChecker.setCurrentUser(currentUser);
-            securityChecker.setTables(tables);
-            if (!securityChecker.isValid()) {
+            if (! securityChecker.isValid(inputType, filteredInput, currentUser, tables)) {
+                executionMessage = securityChecker.getErrorMessage();
                 return;
             }
 
-            // optimizer stuff, if the input is a query, get the query tree states, otherwise skip
-            if (inputType == RuleGraph.Type.QUERY) {
-                this.queryTreeStates = optimizer.getQueryTreeStates(filteredInput, tables);
-                //this.naiveRelationalAlgebra = optimizer.getNaiveRelationalAlgebra();
-                //this.optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra();
-                //this.recommendedFileStructures = optimizer.getRecommendedFileStructures();
-            } else {
-                this.queryTreeStates = new ArrayList<>();
-                this.recommendedFileStructures = "";
+            // extract information from Optimizer if the input type is a QUERY
+            if (inputType == InputType.QUERY) {
+                queryTreeStates = optimizer.getQueryTreeStates(filteredInput, tables);
+                naiveRelationalAlgebra = optimizer.getNaiveRelationAlgebra(queryTreeStates);
+                optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra(queryTreeStates);
+                recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates);
+                costAnalysis = optimizer.getCostAnalysis(queryTreeStates);
             }
 
-            // compiler stuff, if the input is a query, get the result set, otherwise make the changes to the system
-            compiler.setRuleGraphType(inputType);
-            compiler.setRuleGraphToUse(ruleGraph);
-            compiler.setTokenizedInput(filteredInput);
-            compiler.setTables(tables);
-            compiler.setUsers(users);
-            if (inputType == RuleGraph.Type.QUERY) {
-                compiler.setQueryTreeStates(queryTreeStates);
-                this.resultSet = compiler.executeQuery();
-            } else {
-                compiler.executeDML();
-            }
+            // at this point, the query/DML statement was successfully executed
+            successfullyExecuted = true;
 
-            // made it through everything, successful execution
-            logger.setSuccessfullyExecuted(true);
+            if (inputType == InputType.QUERY) {
+                resultSet = compiler.executeQuery(queryTreeStates);
+                executionMessage = "QUERY was successfully executed!";
+            } else {
+                compiler.executeDML(inputType, filteredInput, tables, users);
+                executionMessage = "DML statement was successfully executed!";
+            }
 
         } catch(Exception e) {
-
+            executionMessage = "Unknown Error Occurred, I screwed up somewhere!";
             e.printStackTrace();
         }
     }
@@ -210,7 +198,7 @@ public class SystemCatalog {
     /**
      * @return the type of input that was last executed.
      */
-    public RuleGraph.Type getInputType() {
+    public InputType getInputType() {
         return inputType;
     }
 
@@ -240,90 +228,137 @@ public class SystemCatalog {
         return tables;
     }
 
-    // query related ---------------------------------------------------------------------------------------------------
+    // QUERY related ---------------------------------------------------------------------------------------------------
 
     /**
-     * If a query was performed and successfully executed, returns the result set of that execution.
-     * Otherwise, an empty result set is returned;
-     * @return result set of a successful execution or an empty result set
+     * @return result set of the last successfully executed QUERY
      */
     public ResultSet getResultSet() {
         return resultSet;
     }
 
     /**
-     * If a query was performed and successfully executed, returns a list of states that the query tree
-     * took on during the optimization process. Otherwise, an empty list is returned.
-     * @return a list of query tree states that the query tree took on during the optimization process
-     * or an empty list
+     * @return a list of query tree states for the last successfully executed QUERY
      */
     public List<QueryTree> getQueryTreeStates() {
         return queryTreeStates;
     }
 
+    /**
+     * @return naive relational algebra for the last successfully executed QUERY
+     */
     public String getNaiveRelationalAlgebra() {
         return naiveRelationalAlgebra;
     }
 
+    /**
+     * @return optimized relational algebra for the last successfully executed QUERY
+     */
     public String getOptimizedRelationalAlgebra() {
         return optimizedRelationalAlgebra;
     }
 
     /**
-     * If a query was performed and successfully executed, returns a list of recommended file structures
-     * for that query. Otherwise, an empty list is returned.
-     * @return a list of recommended file structures for a query or an empty list
+     * @return recommended file structures to build for the last successfully executed QUERY
      */
     public String getRecommendedFileStructures() {
         return recommendedFileStructures;
     }
 
+    /**
+     * @return the cost analysis of the last successfully executed QUERY
+     */
     public String getCostAnalysis() {
         return costAnalysis;
     }
 
-    // Options related -------------------------------------------------------------------------------------------------
+    // options related -------------------------------------------------------------------------------------------------
 
     /**
-     * Toggles whether the system catalog should use the Verifier component to make referential
-     * checks with the data located on the system.
+     * Turns the Verifier on.
      */
-    public void toggleVerifier() {
-        verifier.toggle();
+    public void turnOnVerifier() {
+        verifier.turnOn();
     }
 
     /**
-     * Toggles whether the system catalog optimizes the ordering of joins. This has an impact on
-     * what the query tree will look like along with query costs.
+     * Turns the Verifier off.
      */
-    public void toggleJoinOptimization() {
-        optimizer.toggleRearrangeLeafNodes();
+    public void turnOffVerifier() {
+        verifier.turnOff();
     }
 
     /**
-     * Restores the database. This means that data such as users and tables will be restored back to
-     * their defaults.
+     * Turns on the Security Checker component of the system catalog.
+     */
+    public void turnOnSecurityChecker() {
+        securityChecker.turnOn();
+    }
+
+    /**
+     * Turns off the Security Checker component of the system catalog.
+     */
+    public void turnOffSecurityChecker() {
+        securityChecker.turnOff();
+    }
+
+    /**
+     * Turns join optimization on which has a large impact on query tree structure and query cost.
+     */
+    public void turnOnJoinOptimization() {
+        optimizer.turnOnJoinOptimization();
+    }
+
+    /**
+     * Turns off join optimization.
+     */
+    public void turnOffJoinOptimization() {
+        optimizer.turnOffJoinOptimization();
+    }
+
+    /**
+     * Restores the database. This means that data such as users and tables will be set back to their default values.
      */
     public void restoreDatabase() {
-
-        logger.clear();
 
         // load the original data
         //tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.OriginalData.ORIGINAL_TABLES));
         //users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
 
+        // write the original data out as the current data
+        //Serializer.serializeUsers(users);
+        //Serializer.serializeTables(tables);
+
         User DBA = User.DatabaseAdministrator(tables);
-        setCurrentUser(DBA);
         users.add(0, DBA);
+        currentUser = DBA;
 
-        this.inputType = RuleGraph.Type.UNKNOWN;
+        reset();
 
-        this.resultSet = new ResultSet();
-        this.queryTreeStates = new ArrayList<>();
-        this.recommendedFileStructures = "";
+        turnOnVerifier();
+        turnOnSecurityChecker();
+        turnOnJoinOptimization();
+    }
 
-        // writing out the original table and user data
+    /**
+     * Resets most of the values within the system catalog as well as its components. Called when the user clears
+     * the input and output sections within the terminal area or when the system catalog is executing some input.
+     */
+    public void reset() {
 
+        parser.resetErrorMessage();
+        verifier.resetErrorMessage();
+        securityChecker.resetErrorMessage();
+
+        successfullyExecuted = false;
+        executionMessage = "";
+
+        resultSet = new ResultSet();
+        queryTreeStates = new ArrayList<>();
+        naiveRelationalAlgebra = "";
+        optimizedRelationalAlgebra = "";
+        recommendedFileStructures = "";
+        costAnalysis = "";
     }
 
     // IO related ------------------------------------------------------------------------------------------------------
@@ -332,13 +367,15 @@ public class SystemCatalog {
      * Stores the tables and their states in files. Called when the system closes.
      */
     public void writeOutTables() {
-        IO.writeCurrentData(Serialize.serializeTables(tables), FileType.CurrentData.CURRENT_TABLES);
+        IO.writeCurrentData(Serializer.serializeTables(tables), FileType.CurrentData.CURRENT_TABLES);
     }
 
     /**
      * Stores the users and their states in files. Called when the system closes.
      */
     public void writeOutUsers() {
-        IO.writeCurrentData(Serialize.serializedUsers(users), FileType.CurrentData.CURRENT_USERS);
+        // don't write out the DBA!
+        users.remove(0);
+        IO.writeCurrentData(Serializer.serializeUsers(users), FileType.CurrentData.CURRENT_USERS);
     }
 }

@@ -5,14 +5,16 @@ import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
 import datastructures.relation.table.component.FileStructure;
 import datastructures.relation.table.component.TableData;
-import datastructures.trees.querytree.QueryTree;
-import datastructures.trees.querytree.operator.types.Relation;
+import datastructures.querytree.QueryTree;
+import datastructures.querytree.operator.types.Relation;
+import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.component.Privilege;
 import datastructures.user.component.TablePrivileges;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
 import datastructures.user.User;
-import utilities.enums.Symbol;
+import enums.InputType;
+import enums.Symbol;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,107 +25,77 @@ import java.util.List;
  */
 public class Compiler {
 
-    private RuleGraph.Type ruleGraphType;
-    private RuleGraph ruleGraphToUse;
-    private String[] tokenizedInput;
-    private List<Table> tables;
-    private List<User> users;
-    private List<QueryTree> queryTreeStates;
-
-    public Compiler() {
-        queryTreeStates = new ArrayList<>();
-    }
-
-    // setters ---------------------------------------------------------------------------------------------------------
-
-    public void setRuleGraphType(RuleGraph.Type ruleGraphType) {
-        this.ruleGraphType = ruleGraphType;
-    }
-
-    public void setRuleGraphToUse(RuleGraph ruleGraphToUse) {
-        this.ruleGraphToUse = ruleGraphToUse;
-    }
-
-    public void setTokenizedInput(String[] tokenizedInput) {
-        this.tokenizedInput = tokenizedInput;
-    }
-
-    public void setTables(List<Table> tables) {
-        this.tables = tables;
-    }
-
-    public void setUsers(List<User> users) {
-        this.users = users;
-    }
-
-    public void setQueryTreeStates(List<QueryTree> queryTreeStates) {
-        this.queryTreeStates = queryTreeStates;
-    }
-
-    // private utility methods -----------------------------------------------------------------------------------------
-
-    private Table relationToTable(Relation relation, List<Table> tables) {
-        for(Table table : tables) {
-            if(relation.getTableName().equalsIgnoreCase(table.getTableName())) {
-                return table;
-            }
-        }
+    /**
+     * Executes the given query which produces a result set. Requires the query tree produced right before
+     * pipelining in order to create the result set. This query tree state contains all the necessary information
+     * in order to produce a result set. Each node of the query contains an operator that applies
+     * a transformation to previous nodes.
+     * @param queryTreeStates are the states of the query tree after being run through the Optimizer
+     * @return the result set of executing the query
+     */
+    public ResultSet executeQuery(List<QueryTree> queryTreeStates) {
+        QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
         return null;
     }
 
-    // query execution -------------------------------------------------------------------------------------------------
-
-    public ResultSet executeQuery() {
-        return null;
-    }
-
-    // DML execution ---------------------------------------------------------------------------------------------------
-
-    public void executeDML() {
-        switch(ruleGraphType) {
+    /**
+     * Executes a data manipulation language (DML) statement. Essentially, a command that makes changes to the
+     * system's data in some shape or form. Input is assumed to have already passed through the Parser, Verifier,
+     * and Security Checker to ensure that the it's syntactically and logically correct.
+     * @param dmlInputType is the type dml statement
+     * @param filteredInput is the filtered input
+     * @param tables is a list of the system tables
+     * @param users is a list of users of the system
+     */
+    public void executeDML(InputType dmlInputType, String[] filteredInput, List<Table> tables, List<User> users) {
+        switch(dmlInputType) {
             case CREATE_TABLE:
-                createTable();
+                createTable(filteredInput, tables);
                 break;
             case DROP_TABLE:
-                dropTable();
+                dropTable(filteredInput, tables);
                 break;
             case ALTER_TABLE:
-                alterTable();
+                alterTable(filteredInput, tables);
                 break;
             case INSERT:
-                insert();
+                insert(filteredInput, tables);
                 break;
             case DELETE:
-                delete();
+                delete(filteredInput, tables);
                 break;
             case UPDATE:
-                update();
+                update(filteredInput, tables);
                 break;
             case BUILD_FILE_STRUCTURE:
-                buildFileStructure();
+                buildFileStructure(filteredInput, tables);
                 break;
             case REMOVE_FILE_STRUCTURE:
-                removeFileStructure();
+                removeFileStructure(filteredInput, tables);
                 break;
             case GRANT:
-                grant();
+                grant(filteredInput, users, tables);
                 break;
             case REVOKE:
-                revoke();
-                break;
-            case UNKNOWN:
-            default:
+                revoke(filteredInput, users);
                 break;
         }
     }
 
-    public void createTable() {
+    /**
+     * Executes the CREATE TABLE command, adding a new table to the system tables.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void createTable(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
 
         // getting the table data
-        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 2).get(0);
-        List<String> columnNames = ruleGraphToUse.getTokensAt(tokenizedInput, 4);
-        List<String> dataTypeNames = ruleGraphToUse.getTokensAt(tokenizedInput, 5, 6);
-        List<String> sizeNames = ruleGraphToUse.getTokensAt(tokenizedInput, 8);
+        String tableName = createTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
+        List<String> columnNames = createTableRuleGraph.getTokensAt(filteredInput, 4);
+        List<String> dataTypeNames = createTableRuleGraph.getTokensAt(filteredInput, 5, 6);
+        List<String> sizeNames = createTableRuleGraph.getTokensAt(filteredInput, 8);
 
         // convert the input into a table along with its column data
         Table table = new Table(tableName);
@@ -146,10 +118,17 @@ public class Compiler {
         tables.add(table);
     }
 
-    public void dropTable() {
+    /**
+     * Executes the DROP TABLE command, removing a table from the system tables.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void dropTable(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph dropTableRuleGraph = RuleGraphTypes.getDropTableRuleGraph();
 
         // getting the table name to remove
-        String tableNameToRemove = ruleGraphToUse.getTokensAt(tokenizedInput, 2).get(0);
+        String tableNameToRemove = dropTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
 
         // remove the table
         for (int i = 0; i < tables.size(); i++) {
@@ -161,17 +140,24 @@ public class Compiler {
         }
     }
 
-    public void alterTable() {
+    /**
+     * Executes the ALTER TABLE command, making changes to the specified table.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void alterTable(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph alterTableRuleGraph = RuleGraphTypes.getAlterTableRuleGraph();
 
         // getting the table, column data, and what to do
-        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 2).get(0);
-        String alterType = ruleGraphToUse.getTokensAt(tokenizedInput, 3, 4, 5).get(0);
+        String tableName = alterTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
+        String alterType = alterTableRuleGraph.getTokensAt(filteredInput, 3, 4, 5).get(0);
 
         if (alterType.equalsIgnoreCase("modify")) {
 
-            String columnName = ruleGraphToUse.getTokensAt(tokenizedInput, 6).get(0);
-            String dataTypeName = ruleGraphToUse.getTokensAt(tokenizedInput, 7, 8).get(0);
-            String sizeName = ruleGraphToUse.getTokensAt(tokenizedInput, 10).get(0);
+            String columnName = alterTableRuleGraph.getTokensAt(filteredInput, 6).get(0);
+            String dataTypeName = alterTableRuleGraph.getTokensAt(filteredInput, 7, 8).get(0);
+            String sizeName = alterTableRuleGraph.getTokensAt(filteredInput, 10).get(0);
 
             DataType dataType = DataType.convertToDataType(dataTypeName);
             int size = Integer.parseInt(sizeName);
@@ -191,13 +177,13 @@ public class Compiler {
 
         } else if (alterType.equalsIgnoreCase("add")) {
 
-            boolean isAddingKey = !ruleGraphToUse.getTokensAt(tokenizedInput, 14).isEmpty();
+            boolean isAddingKey = ! alterTableRuleGraph.getTokensAt(filteredInput, 14).isEmpty();
 
             // we're adding a key to the table
             if (isAddingKey) {
 
-                String keyTypeName = ruleGraphToUse.getTokensAt(tokenizedInput, 12, 13).get(0);
-                String columnName = ruleGraphToUse.getTokensAt(tokenizedInput, 15).get(0);
+                String keyTypeName = alterTableRuleGraph.getTokensAt(filteredInput, 12, 13).get(0);
+                String columnName = alterTableRuleGraph.getTokensAt(filteredInput, 15).get(0);
 
                 /*if (keyTypeName.equalsIgnoreCase("foreign")) {
                     for (Table table : tables) {
@@ -219,9 +205,9 @@ public class Compiler {
                 // just adding a new column to the table
             } else {
 
-                String columnName = ruleGraphToUse.getTokensAt(tokenizedInput, 6).get(0);
-                String dataTypeName = ruleGraphToUse.getTokensAt(tokenizedInput, 7, 8).get(0);
-                String sizeName = ruleGraphToUse.getTokensAt(tokenizedInput, 10).get(0);
+                String columnName = alterTableRuleGraph.getTokensAt(filteredInput, 6).get(0);
+                String dataTypeName = alterTableRuleGraph.getTokensAt(filteredInput, 7, 8).get(0);
+                String sizeName = alterTableRuleGraph.getTokensAt(filteredInput, 10).get(0);
 
                 DataType dataType = DataType.convertToDataType(dataTypeName);
                 int size = Integer.parseInt(sizeName);
@@ -238,7 +224,7 @@ public class Compiler {
 
         } else if (alterType.equalsIgnoreCase("drop")) {
 
-            String columnName = ruleGraphToUse.getTokensAt(tokenizedInput, 15).get(0);
+            String columnName = alterTableRuleGraph.getTokensAt(filteredInput, 15).get(0);
 
             for (Table table : tables) {
                 if (table.getTableName().equalsIgnoreCase(tableName)) {
@@ -249,19 +235,24 @@ public class Compiler {
         }
     }
 
-    public void insert() {
+    /**
+     * Executes the ALTER TABLE command, making changes to the specified table.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void insert(String[] filteredInput, List<Table> tables) {
 
-        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 2).get(0);
-        List<String> valueNames = ruleGraphToUse.getTokensAt(tokenizedInput, 5);
+        RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
+
+        String tableName = insertRuleGraph.getTokensAt(filteredInput, 2).get(0);
+        List<String> valueNames = insertRuleGraph.getTokensAt(filteredInput, 5);
 
         for (Table table : tables) {
             if (table.getTableName().equalsIgnoreCase(tableName)) {
-
                 // if there are less values than what's stored in the table, add nulls
                 while (valueNames.size() < table.getNumCols()) {
                     valueNames.add("null");
                 }
-
                 // add the new row
                 table.addRow(valueNames);
                 break;
@@ -269,17 +260,23 @@ public class Compiler {
         }
     }
 
-    public void delete() {
+    /**
+     * Executes the ALTER TABLE command, deleting rows from the supplied table that meets the predicate.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void delete(String[] filteredInput, List<Table> tables) {
 
-        String tableName = ruleGraphToUse.getTokensAt(tokenizedInput, 2).get(0);
-        String columnName = ruleGraphToUse.getTokensAt(tokenizedInput, 4).get(0);
-        String symbolName = ruleGraphToUse.getTokensAt(tokenizedInput, 5, 6, 7, 8, 9, 10).get(0);
+        RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
+
+        String tableName = deleteRuleGraph.getTokensAt(filteredInput, 2).get(0);
+        String columnName = deleteRuleGraph.getTokensAt(filteredInput, 4).get(0);
+        String symbolName = deleteRuleGraph.getTokensAt(filteredInput, 5, 6, 7, 8, 9, 10).get(0);
         Symbol symbol = Symbol.convertToSymbol(symbolName);
-        String constantName = ruleGraphToUse.getTokensAt(tokenizedInput, 11).get(0);
+        String constantName = deleteRuleGraph.getTokensAt(filteredInput, 11).get(0);
 
         for (Table table : tables) {
             if (table.getTableName().equalsIgnoreCase(tableName)) {
-
                 // get the table data
                 TableData tableData = table.getTableData();
 
@@ -369,14 +366,21 @@ public class Compiler {
         } // end loop through tables
     }
 
-    public void update() {
+    /**
+     * Executes the UPDATE command, making an update to the specified table.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void update(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
 
         // get input
-        String tableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 1).get(0);
-        String setColumnInput = ruleGraphToUse.getTokensAt(tokenizedInput, 3).get(0);
-        String updateToValueInput = ruleGraphToUse.getTokensAt(tokenizedInput, 5).get(0);
+        String tableInput = updateRuleGraph.getTokensAt(filteredInput, 1).get(0);
+        String setColumnInput = updateRuleGraph.getTokensAt(filteredInput, 3).get(0);
+        String updateToValueInput = updateRuleGraph.getTokensAt(filteredInput, 5).get(0);
 
-        boolean updatingWholeColumn = ruleGraphToUse.getTokensAt(tokenizedInput, 6).isEmpty();
+        boolean updatingWholeColumn = updateRuleGraph.getTokensAt(filteredInput, 6).isEmpty();
 
         // search for the table
         for (Table table : tables) {
@@ -400,8 +404,8 @@ public class Compiler {
                     // updating values to the new value
                 } else {
 
-                    String whereColumnInput = ruleGraphToUse.getTokensAt(tokenizedInput, 7).get(0);
-                    String equalsValueInput = ruleGraphToUse.getTokensAt(tokenizedInput, 9).get(0);
+                    String whereColumnInput = updateRuleGraph.getTokensAt(filteredInput, 7).get(0);
+                    String equalsValueInput = updateRuleGraph.getTokensAt(filteredInput, 9).get(0);
 
                     // find what column the where column is mapped to
                     int whereMappedColInd = -1;
@@ -425,18 +429,25 @@ public class Compiler {
         }
     }
 
-    public void buildFileStructure() {
+    /**
+     * Executes the BUILD FILE STRUCTURE command, making changes to the file structure built on the supplied column.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void buildFileStructure(String[] filteredInput, List<Table> tables) {
+
+        RuleGraph buildFileStructureRuleGraph = RuleGraphTypes.getBuildFileStructureRuleGraph();
 
         // getting input
-        List<String> fileStructureInput = ruleGraphToUse.getTokensAt(tokenizedInput, 1, 2, 3, 4, 5, 10);
+        List<String> fileStructureInput = buildFileStructureRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5, 10);
         String formatted = fileStructureInput.get(0) + " " + fileStructureInput.get(1);
         FileStructure fileStructure = FileStructure.convertToFileStructure(formatted);
 
         // hash tables, secondary b-trees, and clustered b-trees have similar input locations
         if (fileStructure != FileStructure.CLUSTERED_FILE) {
 
-            String columnInput = ruleGraphToUse.getTokensAt(tokenizedInput, 7).get(0);
-            String tableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 9).get(0);
+            String columnInput = buildFileStructureRuleGraph.getTokensAt(filteredInput, 7).get(0);
+            String tableInput = buildFileStructureRuleGraph.getTokensAt(filteredInput, 9).get(0);
 
             for (Table table : tables) {
                 String tableName = table.getTableName();
@@ -461,11 +472,11 @@ public class Compiler {
                 }
             }
 
-            // clustering files
+        // clustering files
         } else {
 
-            String firstTableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 12).get(0);
-            String secondTableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 14).get(0);
+            String firstTableInput = buildFileStructureRuleGraph.getTokensAt(filteredInput, 12).get(0);
+            String secondTableInput = buildFileStructureRuleGraph.getTokensAt(filteredInput, 14).get(0);
 
             for (Table table : tables) {
                 String tableName = table.getTableName();
@@ -489,19 +500,27 @@ public class Compiler {
         }
     }
 
-    public void removeFileStructure() {
+    /**
+     * Executes the REMOVE FILE STRUCTURE command, removing the file structure on the supplied column
+     * or removing the clustering on two tables if one exists.
+     * @param filteredInput is the filtered input
+     * @param tables is a list of system tables
+     */
+    public void removeFileStructure(String[] filteredInput, List<Table> tables) {
 
-        boolean removingClusteredFile = ! ruleGraphToUse.getTokensAt(tokenizedInput, 7).isEmpty();
+        RuleGraph removeFileStructure = RuleGraphTypes.getRemoveFileStructureRuleGraph();
+
+        boolean removingClusteredFile = ! removeFileStructure.getTokensAt(filteredInput, 7).isEmpty();
 
         if (removingClusteredFile) {
 
-            String firstClusteredTableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 10).get(0);
-            String secondClusteredTableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 6).get(0);
+            String firstClusteredTableInput = removeFileStructure.getTokensAt(filteredInput, 10).get(0);
+            String secondClusteredTableInput = removeFileStructure.getTokensAt(filteredInput, 6).get(0);
 
             // search though the list of tables, checking if it's what we're looking for
-            for(Table table : tables) {
+            for (Table table : tables) {
                 String tableName = table.getTableName();
-                if(tableName.equalsIgnoreCase(firstClusteredTableInput) ||
+                if (tableName.equalsIgnoreCase(firstClusteredTableInput) ||
                         tableName.equalsIgnoreCase(secondClusteredTableInput)) {
                     table.setClusteredWith("none");
                 }
@@ -510,8 +529,8 @@ public class Compiler {
         // just remove the file structure
         } else {
 
-            String tableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 6).get(0);
-            String columnInput = ruleGraphToUse.getTokensAt(tokenizedInput, 4).get(0);
+            String tableInput = removeFileStructure.getTokensAt(filteredInput, 6).get(0);
+            String columnInput = removeFileStructure.getTokensAt(filteredInput, 4).get(0);
 
             for (Table table : tables) {
                 String tableName = table.getTableName();
@@ -524,29 +543,37 @@ public class Compiler {
         }
     }
 
-    public void grant() {
+    /**
+     * Executes the GRANT command, granting privileges to the specified users on the given table.
+     * @param filteredInput is the filtered input
+     * @param users is a list of system users
+     * @param tables is a list of system tables
+     */
+    public void grant(String[] filteredInput, List<User> users, List<Table> tables) {
+
+        RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
 
         // getting what to grant
-        List<String> privilegesInput = ruleGraphToUse.getTokensAt(tokenizedInput, 1, 2, 3, 4, 5, 6, 7, 8);
-        List<String> updateColumnsInput = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
-        List<String> referenceColumnsInput = ruleGraphToUse.getTokensAt(tokenizedInput, 7);
-        String tableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 20).get(0);
-        List<String> userNamesInput = ruleGraphToUse.getTokensAt(tokenizedInput, 22);
+        List<String> privilegesInput = grantRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 8);
+        List<String> updateColumnsInput = grantRuleGraph.getTokensAt(filteredInput, 6);
+        List<String> referenceColumnsInput = grantRuleGraph.getTokensAt(filteredInput, 7);
+        String tableInput = grantRuleGraph.getTokensAt(filteredInput, 20).get(0);
+        List<String> userNamesInput = grantRuleGraph.getTokensAt(filteredInput, 22);
 
         // check if using grant option
-        boolean hasWithGrantOption = ! ruleGraphToUse.getTokensAt(tokenizedInput, 25).isEmpty();
+        boolean hasWithGrantOption = ! grantRuleGraph.getTokensAt(filteredInput, 25).isEmpty();
 
         // create the privileges from privilege input
         List<Privilege> privileges = new ArrayList<>();
 
         // if granting all privileges, well, do that
-        if((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
+        if ((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
             privileges = Privilege.getAllPrivileges();
             // figure out what column names are within the given table in order to set the update and reference columns
-            for(Table table : tables) {
+            for (Table table : tables) {
                 String tableName = table.getTableName();
-                if(tableName.equalsIgnoreCase(tableInput)) {
-                    for(Column column : table.getColumns()) {
+                if (tableName.equalsIgnoreCase(tableInput)) {
+                    for (Column column : table.getColumns()) {
                         String columnName = column.getColumnName();
                         updateColumnsInput.add(columnName);
                         referenceColumnsInput.add(columnName);
@@ -568,12 +595,12 @@ public class Compiler {
         TablePrivileges passableTablePrivileges = new TablePrivileges(tablePrivileges);
 
         // for each user to be granted table privileges, grant the table privileges
-        for(User user : users) {
+        for (User user : users) {
             String userName = user.getUsername();
-            for(String userNameInput : userNamesInput) {
-                if(userName.equalsIgnoreCase(userNameInput)) {
+            for (String userNameInput : userNamesInput) {
+                if (userName.equalsIgnoreCase(userNameInput)) {
                     user.addTablePrivileges(tablePrivileges);
-                    if(hasWithGrantOption) {
+                    if (hasWithGrantOption) {
                         user.addPassableTablePrivileges(passableTablePrivileges);
                     }
                     break;
@@ -582,21 +609,28 @@ public class Compiler {
         }
     }
 
-    public void revoke() {
+    /**
+     * Executes the REVOKE command, revoking privileges from the supplied users on a given table.
+     * @param filteredInput is the filtered input
+     * @param users is a list of the system users
+     */
+    public void revoke(String[] filteredInput, List<User> users) {
+
+        RuleGraph revokeRuleGraph = RuleGraphTypes.getRevokeRuleGraph();
 
         // getting what to revoke
-        List<String> privilegesInput = ruleGraphToUse.getTokensAt(tokenizedInput, 1, 2, 3, 4, 5, 6, 7, 8);
-        List<String> updateColumnsInput = ruleGraphToUse.getTokensAt(tokenizedInput, 6);
-        List<String> referenceColumnsInput = ruleGraphToUse.getTokensAt(tokenizedInput, 7);
-        String tableInput = ruleGraphToUse.getTokensAt(tokenizedInput, 20).get(0);
-        List<String> usernamesInput = ruleGraphToUse.getTokensAt(tokenizedInput, 22);
+        List<String> privilegesInput = revokeRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 8);
+        List<String> updateColumnsInput = revokeRuleGraph.getTokensAt(filteredInput, 6);
+        List<String> referenceColumnsInput = revokeRuleGraph.getTokensAt(filteredInput, 7);
+        String tableInput = revokeRuleGraph.getTokensAt(filteredInput, 20).get(0);
+        List<String> usernamesInput = revokeRuleGraph.getTokensAt(filteredInput, 22);
 
         // check if revoking all privileges
-        if((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
-            for(User user : users) {
+        if ((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
+            for (User user : users) {
                 String username = user.getUsername();
-                for(String usernameInput : usernamesInput) {
-                    if(usernameInput.equalsIgnoreCase(username)) {
+                for (String usernameInput : usernamesInput) {
+                    if (usernameInput.equalsIgnoreCase(username)) {
                         user.revokeAllTablePrivileges(tableInput);
                         break;
                     }

@@ -34,7 +34,7 @@ public class Diagram extends Stage {
         centerText.setCenter(text);
 
         // setting the image in the center of the screen
-        Image image = new Image("files/assets/helpscreen/" + diagramFilename);
+        Image image = new Image("files/images/helpscreen/" + diagramFilename);
         ImageView imageView = new ImageView(image);
         imageView.setPreserveRatio(true);
 

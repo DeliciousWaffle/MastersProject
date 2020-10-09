@@ -1,12 +1,13 @@
 package datastructures.misc;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class Histogram {
 
-    private ArrayList<String> rawData;
+    private List<String> rawData;
 
     // string is the element, integer represents the number of occurrences of that element
     private TreeMap<String, Integer> barGraph;
@@ -26,20 +27,20 @@ public class Histogram {
         this.barGraph = new TreeMap<>();
 
         // adding elements and their frequencies
-        for(String data : rawData) {
+        for (String data : rawData) {
 
             // make sure adding a unique element
             boolean foundElement = false;
 
-            for(String element : barGraph.keySet()) {
-                if(data.equals(element)) {
+            for (String element : barGraph.keySet()) {
+                if (data.equals(element)) {
                     barGraph.replace(data, barGraph.get(data) + 1);
                     foundElement = true;
                     break;
                 }
             }
 
-            if(! foundElement) {
+            if (! foundElement) {
                 barGraph.put(data, 1);
             }
         }
@@ -59,13 +60,13 @@ public class Histogram {
 
         numBars *= 2;
 
-        if(numBars >= barGraph.size()) {
+        if (numBars >= barGraph.size()) {
             numBars = barGraph.size();
         }
 
         bucketSize /= 2;
 
-        if(bucketSize <= 1) {
+        if (bucketSize <= 1) {
             bucketSize = 1;
         }
 
@@ -81,13 +82,13 @@ public class Histogram {
 
         numBars /= 2;
 
-        if(numBars <= 1) {
+        if (numBars <= 1) {
             numBars = 1;
         }
 
         bucketSize *= 2;
 
-        if(bucketSize >= barGraph.size()) {
+        if (bucketSize >= barGraph.size()) {
             bucketSize = barGraph.size();
         }
 
@@ -107,16 +108,15 @@ public class Histogram {
         int cumulativeFrequencies = 0;
 
         // case 1: bucket size is 1 (basically a bar graph), don't do anything, we're done
-        if(bucketSize == 1) {
-
+        if (bucketSize == 1) {
             histogram = barGraph;
             return;
         }
 
         // case 2: bucket size is equal to the size of the bar graph (just 1 big bar)
-        if(bucketSize == barGraph.size()) {
+        if (bucketSize == barGraph.size()) {
 
-            for(Map.Entry<String, Integer> entry : barGraph.entrySet()) {
+            for (Map.Entry<String, Integer> entry : barGraph.entrySet()) {
                 cumulativeFrequencies += entry.getValue();
             }
 
@@ -132,7 +132,7 @@ public class Histogram {
             int elementsToAdd = bucketSize - 1;
             int numLeftovers = 0;
 
-            for(Map.Entry<String, Integer> entry : barGraph.entrySet()) {
+            for (Map.Entry<String, Integer> entry : barGraph.entrySet()) {
 
                 String data = entry.getKey();
                 int frequency = entry.getValue();
@@ -143,12 +143,12 @@ public class Histogram {
                 cumulativeFrequencies += frequency;
 
                 // first element to add to the bucket
-                if(firstToAdd) {
+                if (firstToAdd) {
                     rangedDataString.append(data).append("-");
                 }
 
                 // last element to add to the bucket
-                else if(lastToAdd) {
+                else if (lastToAdd) {
 
                     rangedDataString.append(data);
                     histogram.put(rangedDataString.toString(), cumulativeFrequencies);
@@ -168,12 +168,12 @@ public class Histogram {
             boolean hasLeftOverElements = numLeftovers > 0;
 
             // store the leftover data in the rightmost bar of the histogram
-            if(hasLeftOverElements) {
+            if (hasLeftOverElements) {
 
                 boolean onlyOneLeft = numLeftovers == 1;
 
                 // case 1: just a single data entry leftover
-                if(onlyOneLeft) {
+                if (onlyOneLeft) {
 
                     // removing "-", cumulative frequencies and ranged data string contain the last element still
                     rangedDataString.deleteCharAt(rangedDataString.length() - 1);
@@ -201,14 +201,14 @@ public class Histogram {
         // get the largest item in the histogram
         int largestValue = 0;
 
-        for(int value : histogram.values()) {
-            if(value >= largestValue) {
+        for (int value : histogram.values()) {
+            if (value >= largestValue) {
                 largestValue = value;
             }
         }
 
         // find the next value that divides evenly by 5
-        while(! (largestValue % 5 == 0)) {
+        while (! (largestValue % 5 == 0)) {
             largestValue++;
         }
 
@@ -216,16 +216,11 @@ public class Histogram {
         int blah = largestValue / 5;
 
         // include 0 in point
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             verticalValues[i] = blah * i;
         }
 
         return verticalValues;
-    }
-
-    // TODO remove
-    public TreeMap<String, Integer> getHistogram() {
-        return histogram;
     }
 
     public void printRawData() {
@@ -249,7 +244,7 @@ public class Histogram {
         StringBuilder print = new StringBuilder();
         print.append("Bar Graph (Sorted):\n");
 
-        for(Map.Entry<String, Integer> entry : barGraph.entrySet()) {
+        for (Map.Entry<String, Integer> entry : barGraph.entrySet()) {
             print.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
         }
 
