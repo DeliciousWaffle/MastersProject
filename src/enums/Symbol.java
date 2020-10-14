@@ -16,6 +16,10 @@ public enum Symbol {
         return this.symbol;
     }
 
+    /**
+     * @param toConvert is the string to convert
+     * @return an enum representation of the string to convert
+     */
     public static Symbol convertToSymbol(String toConvert) {
         switch(toConvert) {
             case "=":
@@ -42,5 +46,14 @@ public enum Symbol {
             default:
                 return SEMICOLON;
         }
+    }
+
+    /**
+     * @param symbol is the symbol to check
+     * @return whether the symbol is either a >, <, >=, or <=
+     */
+    public static boolean isRangeSymbol(String symbol) {
+        return symbol.equalsIgnoreCase(">") || symbol.equalsIgnoreCase("<") ||
+                symbol.equalsIgnoreCase(">=") || symbol.equalsIgnoreCase("<=");
     }
 }

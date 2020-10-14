@@ -9,6 +9,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Optimizer;
 import systemcatalog.components.Parser;
+import utilities.Utilities;
 
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class OptimizerTest {
 
         Parser parser = new Parser();
         System.out.println(input + "\n");
-        String[] tokens = Parser.formatAndTokenizeInput(input);
+        String[] tokens = Utilities.filterInput(input);
 
         List<Table> tables = Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
         Optimizer optimizer = new Optimizer();

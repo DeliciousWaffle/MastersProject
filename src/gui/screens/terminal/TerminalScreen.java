@@ -1,7 +1,6 @@
 package gui.screens.terminal;
 
 import datastructures.rulegraph.RuleGraph;
-import exceptions.MissingSemicolonException;
 import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
@@ -136,9 +135,7 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the relational algebra
         relationalAlgebraButton.setOnAction(e -> {
-            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
-                // TODO
-            }
+
         });
 
         tooltip = new Tooltip("View Corresponding Relational Algebra");
@@ -159,9 +156,7 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the query tree states
         queryTreeStatesButton.setOnAction(e -> {
-            if(systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
-                new QueryTreeWindow(systemCatalog.getQueryTreeStates());
-            }
+
         });
 
         tooltip = new Tooltip("View Query Tree States");
@@ -182,9 +177,7 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the query cost
         queryCostButton.setOnAction(e -> {
-            if (systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
-                // TODO
-            }
+
         });
 
         tooltip = new Tooltip("View Query Cost");
@@ -205,9 +198,7 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the recommended file structures
         recommendedFileStructuresButton.setOnAction(e -> {
-            if (systemCatalog.getInputType() == RuleGraph.Type.QUERY && systemCatalog.getLogger().wasSuccessfullyExecuted()) {
-                // TODO
-            }
+
         });
 
         tooltip = new Tooltip("View Recommended File Structures");

@@ -87,9 +87,9 @@ public class Parser {
                 ! queryRuleGraph.hasDuplicatesAt(filteredInput, 13, 15, 18) &&
                 // column names referenced in group by clause must be unique
                 ! queryRuleGraph.hasDuplicatesAt(filteredInput, 43) &&
-                // >, <, >=, and <= can only be used with a numeric value/date for WHERE and HAVING clauses
-                ! queryRuleGraph.hasIllegalComparison(filteredInput, 38, 32, 33, 34, 35) &&
-                ! queryRuleGraph.hasIllegalComparison(filteredInput, 62, 56, 57, 58, 59);
+                // >, <, >=, and <= can only be used with a date value for WHERE and HAVING clauses
+                ! queryRuleGraph.hasIllegalDate(filteredInput, new int[] {30, 31, 32, 33, 34, 35}, new int[] {36, 38}) &&
+                ! queryRuleGraph.hasIllegalDate(filteredInput, new int[] {54, 55, 56, 57, 58, 59}, new int[] {60, 62});
 
         errorMessage = isValid ? "" : "Parser error when validating Query:\n" + queryRuleGraph.getErrorMessage();
 
@@ -185,7 +185,7 @@ public class Parser {
                 ! deleteRuleGraph.hasIllegalKeyword(filteredInput) &&
                 ! deleteRuleGraph.hasNumericAt(filteredInput, false, 2, 4, 13) &&
                 deleteRuleGraph.hasNumericAt(filteredInput, false, 11) &&
-                ! deleteRuleGraph.hasIllegalComparison(filteredInput, 13, 7, 8, 9, 10);
+                ! deleteRuleGraph.hasIllegalDate(filteredInput, new int[] {5, 6, 7, 8, 9, 10}, new int[] {11, 13});
 
         errorMessage = isValid ? "" : "Parser error when validating Delete command:\n" +
                 deleteRuleGraph.getErrorMessage();

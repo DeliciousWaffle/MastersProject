@@ -95,7 +95,7 @@ public class OptionsScreen extends Screen {
         verifierToggleButton.setPrefSize(120, 80);
         verifierToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         verifierToggleButton.setOnAction(e -> {
-            systemCatalog.toggleVerifier();
+            //systemCatalog.toggleVerifier();
             verifierToggleButton.setText(verifierToggleButton.getText()
                     .equalsIgnoreCase("On") ? "Off" : "On");
         });

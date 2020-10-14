@@ -51,6 +51,10 @@ public class Histogram {
         histogram = barGraph;
     }
 
+    public Map<String, Integer> getHistogram() {
+        return histogram;
+    }
+
     /**
      * Doubles the total number of bars in the histogram. This has the effect of decreasing
      * the range of data associated with a single bar (bucket size). If this produces an odd

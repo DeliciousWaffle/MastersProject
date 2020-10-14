@@ -1,6 +1,7 @@
 package datastructures.rulegraph;
 
 import datastructures.rulegraph.component.RuleNode;
+import enums.Symbol;
 import utilities.Utilities;
 
 import java.util.ArrayList;
@@ -25,14 +26,6 @@ public class RuleGraph {
         rules.add(new RuleNode(rule, mutable, id));
     }
 
-    public String getRule(int id) {
-        return rules.get(id).getData();
-    }
-
-    public boolean isMutable(int id) {
-        return rules.get(id).isMutable();
-    }
-
     /**
      * Sets the current node's children. The children will represent the valid state transitions that
      * the current id can take when traversing. Assumes that all children have already been added.
@@ -54,14 +47,6 @@ public class RuleGraph {
 
     public RuleNode[] getChildren(RuleNode current) {
         return current.getChildren();
-    }
-
-    public RuleNode getChild(RuleNode current, int index) {
-        return current.getChild(index);
-    }
-
-    public boolean hasChildren(RuleNode current) {
-        return current.hasChildren();
     }
 
     public String getErrorMessage() {
@@ -177,7 +162,7 @@ public class RuleGraph {
             boolean isMutable = pointer.isMutable();
 
             if (isReservedWord && isMutable) {
-                errorMessage = "Unexpected keyword/symbol: " + token + " was found";
+                errorMessage = "Found unexpected Keyword or Symbol: \"" + token + "\"";
                 return true;
             }
         }
@@ -263,65 +248,29 @@ public class RuleGraph {
     }
 
     /**
-     * Makes sure that an illegal comparison is not performed. This means that if ">", "<", ">=", "<=" is
-     * encountered, this method makes sure that the next value present is either a numeric value or a date.
+     * Makes sure that an illegal comparison is not performed on a string value. This means that if
+     * >, <, >=, <= is encountered, this method makes sure that the next string value present is a date.
      * Eg. SELECT col1 FROM tab1 WHERE col1 > "Steve" will return false because "Steve" is not
-     * a numeric value while SELECT col1 FROM tab1 WHERE col1 > 17 will return true.
+     * a date value while SELECT col1 FROM tab1 WHERE col1 > "10-12-2020" will return true.
      * @param filteredInput is the input after being filtered
-     * @param numericOrDateId is the id of the numeric value to check (this id will come after comparisonIds)
-     * @param comparisonIds are the ids of comparison operators (these will come before numericOrDateId)
-     * @return whether an illegal comparison is performed
+     * @param comparisonIds are ids containing >, <, >=, <=
+     * @param valueIds are ids containing values
      */
-    public boolean hasIllegalComparison(String[] filteredInput, int numericOrDateId, int... comparisonIds) {
+    public boolean hasIllegalDate(String[] filteredInput, int[] comparisonIds, int[] valueIds) {
 
-        RuleNode root = new RuleNode("ROOT", false, -1);
-        root.setChildren(rules.get(0));
-        RuleNode pointer = root;
+        // the comparisons and values are mapped
+        List<String> comparisons = getTokensAt(filteredInput, comparisonIds); // =, !=, >, <, >=, <=
+        List<String> values = getTokensAt(filteredInput, valueIds);
 
-        for (String token : filteredInput) {
+        for (int i = 0; i < comparisons.size(); i++) {
 
-            boolean encounteredComparison = false;
+            boolean isRangeSymbol = Symbol.isRangeSymbol(comparisons.get(i));
+            boolean hasDateFormat = Utilities.hasDateFormat(values.get(i));
+            boolean isNumeric = Utilities.isNumeric(values.get(i));
 
-            RuleNode[] pointersChildren = pointer.getChildren();
-            boolean foundChild = false;
-            RuleNode mutableChild = null;
-
-            for (RuleNode child : pointersChildren) {
-
-                String rule = child.getData();
-                boolean isMutable = child.isMutable();
-
-                if (isMutable) {
-                    mutableChild = child;
-                }
-
-                if (rule.equalsIgnoreCase(token) && ! isMutable) {
-                    pointer = child;
-                    foundChild = true;
-                    break;
-                }
-            }
-
-            if (! foundChild && mutableChild != null) {
-                pointer = mutableChild;
-            }
-
-            for (int id : comparisonIds) {
-                if (id == pointer.getId()) {
-                    encounteredComparison = true;
-                    break;
-                }
-            }
-
-            boolean atDataTypeId = numericOrDateId == pointer.getId();
-
-            if (atDataTypeId && encounteredComparison) {
-
-                boolean isNumeric = Utilities.isNumeric(token);
-                boolean hasDateFormat = Utilities.hasDateFormat(token);
-
-                if (! isNumeric && ! hasDateFormat) {
-                    errorMessage = "Expected a numeric or date value, but found: " + token;
+            if (! isNumeric) { // ignore values that are numeric (these are fine)
+                if (isRangeSymbol && ! hasDateFormat) {
+                    errorMessage = "Expected a Date value (MM-DD-YYYY), but found: \"" + values.get(i) + "\"";
                     return true;
                 }
             }
@@ -387,9 +336,9 @@ public class RuleGraph {
                 boolean isInteger = ! token.contains("\\.");
 
                 if (! isInteger && checkingForIntegerToo) {
-                    errorMessage = "Expected a whole number, but found: " + token;
+                    errorMessage = "Expected a whole number, but found: \"" + token + "\"";
                 } else {
-                    errorMessage = "Found unexpected numeric value at: " + token;
+                    errorMessage = "Found unexpected numeric value at: " + token + "\"";
                 }
 
                 return true;
