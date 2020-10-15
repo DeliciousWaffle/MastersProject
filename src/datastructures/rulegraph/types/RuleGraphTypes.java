@@ -432,6 +432,7 @@ public final class RuleGraphTypes {
         grantRuleGraph.setChildren(24, 25);
         grantRuleGraph.setChildren(25, 26);
         grantRuleGraph.setChildren(26, 27);
+        grantRuleGraph.setChildren(27);
 
         return grantRuleGraph;
     }
@@ -490,6 +491,7 @@ public final class RuleGraphTypes {
         revokeRuleGraph.setChildren(21, 22);
         revokeRuleGraph.setChildren(22, 23, 24);
         revokeRuleGraph.setChildren(23, 22);
+        revokeRuleGraph.setChildren(24);
 
         return revokeRuleGraph;
     }

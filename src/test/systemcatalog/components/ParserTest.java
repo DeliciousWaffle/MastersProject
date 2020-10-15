@@ -1,5 +1,6 @@
 package test.systemcatalog.components;
 
+import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -7,6 +8,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Parser;
 import utilities.Utilities;
 import enums.InputType;
+
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,8 +35,8 @@ class ParserTest {
         System.out.println(RuleGraphTypes.getDeleteRuleGraph());
         System.out.println(RuleGraphTypes.getUpdateRuleGraph());
         System.out.println(RuleGraphTypes.getGrantRuleGraph());
-        System.out.println(RuleGraphTypes.getRevokeRuleGraph());
-        System.out.println(RuleGraphTypes.getBuildFileStructureRuleGraph());
+        */System.out.println(RuleGraphTypes.getRevokeRuleGraph());
+        /*System.out.println(RuleGraphTypes.getBuildFileStructureRuleGraph());
         System.out.println(RuleGraphTypes.getRemoveFileStructureRuleGraph());*/
     }
 
@@ -301,7 +304,7 @@ class ParserTest {
             "DELETE FROM Tab1 WHERE Col1 = 1", // simple delete statements
             "DELETE FROM Tab1 WHERE Col1 != \"Blah\"",
             "DELETE FROM Tab1 WHERE Col1 > \"10-22-2020\"",
-            "DELETE FROM Tab1 WHERE Col1 < ",
+            "DELETE FROM Tab1 WHERE Col1 < 1",
             "DELETE FROM Tab1 WHERE Col1 >= 1",
             "DELETE FROM Tab1 WHERE Col1 <= 1",
     })
@@ -310,10 +313,10 @@ class ParserTest {
         String[] filtered = Utilities.filterInput(delete);
         boolean isValid = parser.isValid(InputType.DELETE, filtered);
         System.out.println("Error Code: " + parser.getErrorMessage());
-        assertFalse(isValid);
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
-// TODO working on this
+
     @ParameterizedTest
     @ValueSource(strings = {
             "DELETE", // missing a lot
@@ -322,183 +325,215 @@ class ParserTest {
             "DELETE FROM Tab1 WHERE Col1 = \"1\"", // should be non numeric
             "DELETE FROM table1 WHE\nRE col1 = 1",
             "DELETE FROM tab\tle1 WHERE col1 = 1",
-            "DELETE FROM table1 WHERE col1 > NotANumber"
     })
     void testInvalidDeleteCommands(String delete) {
+        System.out.println(delete);
         String[] filtered = Utilities.filterInput(delete);
-        assertFalse(parser.isValid(InputType.DELETE, filtered));
+        boolean isValid = parser.isValid(InputType.DELETE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
-/*
+
     // UPDATE command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "UPDATE table1 SET col1 = 1",
-            "UPDATE table1 SET col1 = 1 WHERE col2 = 2",
-            "UPDATE table1 SET col1 = blah WHERE col2 = blah",
-            "update table1 set col1 = 1 where col2 = 2",
-            "  upDAte  TaBle1 SeT cOL1 = 1 WhERE coL2 = blah",
-            "UPDATE \ntable1 SET \ncol1 = 1",
-            "\tUPDATE table1\t SET col1 = 1 WHERE col2 = blah",
+            "UPDATE Tab1 SET Col1 = 1 WHERE Col2 = \"Blah\"",
+            "UPDATE Tab1 SET Col1 = \"Blah\" WHERE Col2 = 1",
+            "UPDATE Tab1 SET Col1 = \"10-01-2019\" WHERE Col2 = 1.02",
     })
     void testValidUpdateCommands(String update) {
+        System.out.println(update);
         String[] filtered = Utilities.filterInput(update);
-        assertTrue(parser.isValid(InputType.UPDATE, filtered));
+        boolean isValid = parser.isValid(InputType.UPDATE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "UPDATE",
-            "UPDATE table1 SWET col1 = 1",
-            "UPDATE table1 SET col1 = 1 WHERE col2 = GRANT",
-            "UPDATE TABLE SET col1 = 1",
-            "UPDATE table1 SET col 1 = 1",
-            "UPDATE tabl\te1 SET col1 = 1 WHERE col2 = blah",
-            "UPDATE table1 SE\nT col1 = 1 WHERE col2 = 1",
+            "UPDATE", // missing a lot of stuff
+            "UPDATE Tab1 SWET Col1 = 1", // misspelling
+            "UPDATE Tab1 SET Col1 = 1", // missing where predicate
+            "UPDATE Tab1 SET Col1 = 1 WHERE Col2 = GRANT", // reserved word
+            "UPDATE T ab1 SET Col1 = 1",
+            "UPDATE Tab\t1 SET Col1 = 1 WHERE Col2 = \"Blah\"",
+            "UPDATE Tab1 SE\nT Col1 = 1 WHERE Col2 = 1",
+            "UPDATE Tab1 SET Col1 = \"1\" WHERE Col2 = 1",
+            "UPDATE Tab1 SET Col1 = Blah WHERE Col2 = 1"
     })
     void testInValidUpdateCommands(String update) {
+        System.out.println(update);
         String[] filtered = Utilities.filterInput(update);
-        assertFalse(parser.isValid(InputType.UPDATE, filtered));
+        boolean isValid = parser.isValid(InputType.UPDATE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // GRANT command ---------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "GRANT ALTER ON table1 TO user1",
-            "GRANT DELETE ON table1 TO user1",
-            "GRANT INDEX ON table1 TO user1",
-            "GRANT INSERT ON table1 TO user1",
-            "GRANT SELECT ON table1 TO user1",
-            "GRANT UPDATE(col1) ON table1 TO user1",
-            "GRANT REFERENCES(col1) ON table1 TO user1",
-            "GRANT ALTER, DELETE ON table1 TO user1",
-            "GRANT ALTER, DELETE, INDEX, INSERT, SELECT, UPDATE(col1), REFERENCES(col1) ON table1 TO user1",
-            "GRANT ALTER ON table1 TO user1, user2",
-            "GRANT ALTER, DELETE ON table1 TO user1, user2",
-            "GRANT UPDATE(col1), REFERENCES(col1, col2, col3) ON table1 TO user1, user2",
-            "GRANT UPDATE(col1, col2, col3), REFERENCES(col1, col2, col3) ON table1 to user1",
-            "  GRANT    ALTER ON  table1 TO   user1",
-            "GrANt   AltER oN TaBLe1 To USer1",
-            "\tGRANT\tALTER ON table1 TO user1",
-            "GRANT\n ALTER \nON table1 TO\tuser1"
+            "GRANT ALTER ON Tab1 TO User1", // simple grants
+            "GRANT DELETE ON Tab1 TO User1",
+            "GRANT INDEX ON Tab1 TO User1",
+            "GRANT INSERT ON Tab1 TO User1",
+            "GRANT SELECT ON Tab1 TO User1",
+            "GRANT UPDATE(Col1) ON Tab1 TO User1",
+            "GRANT REFERENCES(Col1) ON Tab1 TO User1",
+            "GRANT ALL PRIVILEGES ON Tab1 TO User1",
+            "GRANT ALTER ON Tab1 TO User1 WITH GRANT OPTION", // using with grant command
+            "GRANT UPDATE(Col1, Col2, Col3) ON Tab1 TO User1", // multiple updates and references
+            "GRANT REFERENCES(Col1, Col2, Col3) ON Tab1 TO User1",
+            "GRANT ALTER, DELETE ON Tab1 TO User1", // multiple grants
+            "GRANT ALTER ON Tab1 TO User1, User2", // grant to multiple users
+            "GRANT ALTER, DELETE ON Tab1 TO User1, User2", // combo of the above two
+            "GRANT ALTER, DELETE, INDEX, INSERT, SELECT, UPDATE(Col1, Col2), REFERENCES(Col1, Col2, Col3) ON Tab1 TO User1, User2, User3 WITH GRANT OPTION" // complex
     })
     void testValidGrantCommands(String grant) {
+        System.out.println(grant);
         String[] filtered = Utilities.filterInput(grant);
-        assertTrue(parser.isValid(InputType.GRANT, filtered));
+        boolean isValid = parser.isValid(InputType.GRANT, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "GRANT",
-            "GRANT ALTR ON table1 TO user1",
-            "GRANT ALTER ON TABLE TO user1",
-            "GRANT ALTER, ALTER ON table1 TO user1",
-            "GRANT ALTER, DELETE, ALTER ON table1 TO user1",
-            "GRANT ALTER ON table1 TO user1, user1",
-            "GRANT UPDATE(col1, col1) ON table1 TO user1",
-            "GRANT REFERENCES(col1, col1) ON table1 TO user1",
-            "GRANT UPDATE(col1), REFERENCES(col1), UPDATE(col1) ON table1 TO user1",
-            "GRANT DELETE, ON table1 TO user1",
-            "GRANT DE\tLETE ON table1 TO user1",
-            "GR\nANT ALTER ON table1 TO user1",
+            "GRANT", // missing a lot
+            "GRANT ALTR ON Tab1 TO User1", // misspelling
+            "GRANT ALTER ON Table TO user1", // reserved word table in place of table name
+            "GRANT ALTER, ALTER ON Tab1 TO User1", // duplicate privileges
+            "GRANT ALTER, DELETE, ALTER ON Tab1 TO User1",
+            "GRANT ALTER ON Tab1 TO user1, user1",
+            "GRANT UPDATE(Col1, Col1) ON Tab1 TO User1",
+            "GRANT REFERENCES(Col1, Col1) ON Tab1 TO User1",
+            "GRANT ALL PRIVILEGES, ALTER ON Tab1 TO User1", // grant all privileges with other privileges
+            "GRANT ALTER ON Tab1, Tab1 TO User1", // multiple tables
+            "GRANT 1 ON Tab1 TO User1" // numbers where they shouldn't be
     })
     void testInvalidGrantCommands(String grant) {
+        System.out.println(grant);
         String[] filtered = Utilities.filterInput(grant);
-        assertFalse(parser.isValid(InputType.GRANT, filtered));
+        boolean isValid = parser.isValid(InputType.GRANT, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // REVOKE command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "REVOKE ALTER ON table1 FROM user1",
-            "REVOKE DELETE ON table1 FROM user1",
-            "REVOKE INDEX ON table1 FROM user1",
-            "REVOKE INSERT ON table1 FROM user1",
-            "REVOKE SELECT ON table1 FROM user1",
-            "REVOKE UPDATE(col1) ON table1 FROM user1",
-            "REVOKE REFERENCES(col1) ON table1 FROM user1",
-            "REVOKE ALTER, DELETE ON table1 FROM user1",
-            "REVOKE ALTER, DELETE, INDEX, INSERT, SELECT, UPDATE(col1), REFERENCES(col1) ON table1 FROM user1",
-            "REVOKE ALTER ON table1 FROM user1, user2",
-            "REVOKE ALTER, DELETE ON table1 FROM user1, user2",
-            "REVOKE UPDATE(col1), REFERENCES(col1, col2, col3) ON table1 FROM user1, user2",
-            "REVOKE UPDATE(col1, col2, col3), REFERENCES(col1, col2, col3) ON table1 from user1",
-            "  REVOKE    ALTER ON  table1 FROM   user1",
-            "RevOKE   AltER oN TaBLe1 FRoM USer1",
-            "\tREVOKE\tALTER ON table1 FROM user1",
-            "REVOKE\n ALTER \nON table1 FROM\tuser1"
+            "REVOKE ALTER ON Tab1 FROM User1", // simple grants
+            "REVOKE DELETE ON Tab1 FROM User1",
+            "REVOKE INDEX ON Tab1 FROM User1",
+            "REVOKE INSERT ON Tab1 FROM User1",
+            "REVOKE SELECT ON Tab1 FROM User1",
+            "REVOKE UPDATE(Col1) ON Tab1 FROM User1",
+            "REVOKE REFERENCES(Col1) ON Tab1 FROM User1",
+            "REVOKE ALL PRIVILEGES ON Tab1 FROM User1",
+            "REVOKE UPDATE(Col1, Col2, Col3) ON Tab1 FROM User1", // multiple updates and references
+            "REVOKE REFERENCES(Col1, Col2, Col3) ON Tab1 FROM User1",
+            "REVOKE ALTER, DELETE ON Tab1 FROM User1", // multiple grants
+            "REVOKE ALTER ON Tab1 FROM User1, User2", // grant to multiple users
+            "REVOKE ALTER, DELETE ON Tab1 FROM User1, User2", // combo of the above two
+            "REVOKE ALTER, DELETE, INDEX, INSERT, SELECT, UPDATE(Col1, Col2), REFERENCES(Col1, Col2, Col3) ON Tab1 FROM User1, User2, User3" // complex
     })
     void testValidRevokeCommands(String revoke) {
+        System.out.println(revoke);
         String[] filtered = Utilities.filterInput(revoke);
-        assertTrue(parser.isValid(InputType.REVOKE, filtered));
+        boolean isValid = parser.isValid(InputType.REVOKE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "REVOKE",
-            "REVOKE ALTR ON table1 FROM user1",
-            "REVOKE ALTER ON TABLE FROM user1",
-            "REVOKE ALTER, ALTER ON table1 FROM user1",
-            "REVOKE ALTER, DELETE, ALTER ON table1 FROM user1",
-            "REVOKE ALTER ON table1 FROM user1, user1",
-            "REVOKE UPDATE(col1, col1) ON table1 FROM user1",
-            "REVOKE REFERENCES(col1, col1) ON table1 FROM user1",
-            "REVOKE UPDATE(col1), REFERENCES(col1), UPDATE(col1) ON table1 FROM user1",
-            "REVOKE DELETE, ON table1 FROM user1",
-            "REVOKE DE\tLETE ON table1 FROM user1",
-            "REV\nOKE ALTER ON table1 FROM user1",
+            "REVOKE", // missing a lot
+            "REVOKE ALTR ON Tab1 FROM User1", // misspelling
+            "REVOKE ALTER ON Table FROM user1", // reserved word table in place of table name
+            "REVOKE ALTER, ALTER ON Tab1 FROM User1", // duplicate privileges
+            "REVOKE ALTER, DELETE, ALTER ON Tab1 FROM User1",
+            "REVOKE ALTER ON Tab1 FROM user1, user1",
+            "REVOKE UPDATE(Col1, Col1) ON Tab1 FROM User1",
+            "REVOKE REFERENCES(Col1, Col1) ON Tab1 FROM User1",
+            "REVOKE ALL PRIVILEGES, ALTER ON Tab1 FROM User1", // grant all privileges with other privileges
+            "REVOKE ALTER ON Tab1, Tab1 FROM User1", // multiple tables
+            "REVOKE 1 ON Tab1 FROM User1" // numbers where they shouldn't be
     })
 
     void testInvalidRevokeCommands(String revoke) {
+        System.out.println(revoke);
         String[] filtered = Utilities.filterInput(revoke);
-        assertFalse(parser.isValid(InputType.REVOKE, filtered));
+        boolean isValid = parser.isValid(InputType.REVOKE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // BUILD FILE STRUCTURE command ------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "BUILD HASH TABLE ON Col1 IN Tab1", // simple
+            "BUILD SECONDARY BTREE ON Col1 IN Tab1",
+            "BUILD CLUSTERED BTREE ON Col1 IN Tab1",
+            "BUILD CLUSTERED FILE ON Tab1 AND Tab2",
     })
     void testValidBuildFileStructureCommand(String buildFileStructure) {
+        System.out.println(buildFileStructure);
         String[] filtered = Utilities.filterInput(buildFileStructure);
-        assertTrue(parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered));
+        boolean isValid = parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "BUILD HASH TABE ON Col1 IN Tab1", // misspelling
+            "BUILD SECONDARY HASH TABLE ON Col1 IN Tab1", // wrong
+            "BUILD HASH TABLE ON Col1 IN Table", // reserved word bad
+            "BUILD HASH TABLE ON Col1 IN 3", // number in bad spot
     })
     void testInvalidBuildFileStructureCommand(String buildFileStructure) {
+        System.out.println(buildFileStructure);
         String[] filtered = Utilities.filterInput(buildFileStructure);
-        assertFalse(parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered));
+        boolean isValid = parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // REMOVE FILE STRUCTURE command -----------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REMOVE FILE STRUCTURE ON Col1 IN Tab1", // simple
+            "REMOVE CLUSTERED FILE ON Tab1 AND Tab2"
     })
     void testValidRemoveFileStructureCommand(String removeFileStructure) {
+        System.out.println(removeFileStructure);
         String[] filtered = Utilities.filterInput(removeFileStructure);
-        assertTrue(parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered));
+        boolean isValid = parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REMOVE FLI STRUCTURE ON Col1 IN Tab1", // misspelling
+            "REMOVE FILE STRUCTURE ON Col1 IN Table", // reserved word placement
+            "REMOVE CLUSTERED FILE ON 1 AND 2" // number where one is not supposed to be
     })
     void testInvalidRemoveFileStructureCommand(String removeFileStructure) {
+        System.out.println(removeFileStructure);
         String[] filtered = Utilities.filterInput(removeFileStructure);
-        assertFalse(parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered));
+        boolean isValid = parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
-    }*/
+    }
 }

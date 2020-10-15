@@ -212,7 +212,7 @@ public class Parser {
 
         boolean isValid = updateRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! updateRuleGraph.hasIllegalReservedWord(filteredInput, 1, 3, 5, 7, 10, 12, 14) &&
-                ! updateRuleGraph.hasNumericAt(filteredInput, 1, 3, 7, 10, 14) &&
+                updateRuleGraph.hasNonNumericAt(filteredInput, 1, 3, 7, 10, 14) &&
                 updateRuleGraph.hasNumericAt(filteredInput, 5, 12);
 
         errorMessage = isValid ? "" : "Parser error when validating Update command:\n" +
@@ -231,10 +231,15 @@ public class Parser {
 
         boolean isValid = grantRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! grantRuleGraph.hasIllegalReservedWord(filteredInput, 12, 16, 20, 22) &&
-                ! grantRuleGraph.hasNumericAt(filteredInput, 12, 16, 20, 22) &&
-                // can't grant the same privilege more than once, update and reference columns must be unique,
-                // and usernames must be unique
-                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 12, 16, 22);
+                grantRuleGraph.hasNonNumericAt(filteredInput, 12, 16, 20, 22) &&
+                // can't grant duplicate privileges
+                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 7) &&
+                // can't have duplicate update columns
+                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 12) &&
+                // can't have duplicate reference columns
+                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 16) &&
+                // can't have duplicate users
+                ! grantRuleGraph.hasDuplicatesAt(filteredInput, 22);
 
         errorMessage = isValid ? "" : "Parser error when validating Grant command:\n" +
                 grantRuleGraph.getErrorMessage();
@@ -252,15 +257,20 @@ public class Parser {
 
         boolean isValid = revokeRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! revokeRuleGraph.hasIllegalReservedWord(filteredInput, 12, 16, 20, 22) &&
-                ! revokeRuleGraph.hasNumericAt(filteredInput, 12, 16, 20, 22) &&
-                // can't grant the same privilege more than once, update and reference columns must be unique,
-                // and usernames must be unique
-                ! revokeRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 12, 16, 22);
+                revokeRuleGraph.hasNonNumericAt(filteredInput, 12, 16, 20, 22) &&
+                // can't grant duplicate privileges
+                ! revokeRuleGraph.hasDuplicatesAt(filteredInput, 1, 2, 3, 4, 5, 6, 7) &&
+                // can't have duplicate update columns
+                ! revokeRuleGraph.hasDuplicatesAt(filteredInput, 12) &&
+                // can't have duplicate reference columns
+                ! revokeRuleGraph.hasDuplicatesAt(filteredInput, 16) &&
+                // can't have duplicate users
+                ! revokeRuleGraph.hasDuplicatesAt(filteredInput, 22);
 
         errorMessage = isValid ? "" : "Parser error when validating Revoke command:\n" +
                 revokeRuleGraph.getErrorMessage();
 
-        return false;
+        return isValid;
     }
 
     /**
@@ -273,7 +283,7 @@ public class Parser {
 
         boolean isValid = buildFileStructureRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! buildFileStructureRuleGraph.hasIllegalReservedWord(filteredInput, 7, 9, 12, 14) &&
-                ! buildFileStructureRuleGraph.hasNumericAt(filteredInput, 7, 9, 12, 14) &&
+                buildFileStructureRuleGraph.hasNonNumericAt(filteredInput, 7, 9, 12, 14) &&
                 // can't cluster a table with itself
                 ! buildFileStructureRuleGraph.hasDuplicatesAt(filteredInput,12, 14);
 
@@ -293,7 +303,7 @@ public class Parser {
 
         boolean isValid = removeFileStructureRuleGraph.isSyntacticallyCorrect(filteredInput) &&
                 ! removeFileStructureRuleGraph.hasIllegalReservedWord(filteredInput, 4, 6, 10) &&
-                ! removeFileStructureRuleGraph.hasNumericAt(filteredInput, 4, 6, 10) &&
+                removeFileStructureRuleGraph.hasNonNumericAt(filteredInput, 4, 6, 10) &&
                 ! removeFileStructureRuleGraph.hasDuplicatesAt(filteredInput, 6, 10);
 
         errorMessage = isValid ? "" : "Parser error when validating Remove File Structure command:\n" +
