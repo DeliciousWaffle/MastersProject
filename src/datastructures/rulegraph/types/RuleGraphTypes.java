@@ -277,11 +277,11 @@ public final class RuleGraphTypes {
         insertRuleGraph.setChildren(2,  3);
         insertRuleGraph.setChildren(3,  4);
         insertRuleGraph.setChildren(4,  5, 6);
-        insertRuleGraph.setChildren(5,  9);
+        insertRuleGraph.setChildren(5,  9, 10);
         insertRuleGraph.setChildren(6,  7);
         insertRuleGraph.setChildren(7,  8);
-        insertRuleGraph.setChildren(8,  9);
-        insertRuleGraph.setChildren(9,  5, 6, 10);
+        insertRuleGraph.setChildren(8,  9, 10);
+        insertRuleGraph.setChildren(9,  5, 6);
         insertRuleGraph.setChildren(10, 11);
         insertRuleGraph.setChildren(11);
 

@@ -66,6 +66,8 @@ class ParserTest {
             "SELECT Col1 FROM Tab1 WHERE Col1 < 1",
             "SELECT Col1 FROM Tab1 WHERE Col1 >= 1",
             "SELECT Col1 FROM Tab1 WHERE Col1 <= 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 = -1", // negative number in predicate
+            "SELECT Col1 FROM Tab1 WHERE Col1 = 1.23", // not a whole number
             "SELECT Col1 FROM Tab1 WHERE Col1 = 1 AND Col2 > 2", // multiple predicates
             "SELECT Col1 FROM Tab1 WHERE Col1 = 1 AND Col2 > 2 AND Col3 = \"Blah\"",
             "SELECT Col1 FROM Tab1 WHERE Tab1.Col1 = \"Blah\"", // prefixed predicate
@@ -100,6 +102,8 @@ class ParserTest {
             "SE\tLECT Col1 FROM Tab1",
             "SE\nLECT Col1 FROM Tab1",
             "SELECT Col1\nCol2 FROM Tab1",
+            "SELECT 1, 2, 3 FROM Tab1", // having a number in place of a column
+            "SELECT JOIN FROM Tab1", // having a reserved word in place of a column
             "SELECT Col1 FROM", // missing table
             "SELECT Col1", // missing from clause
             "SELECT Col1 Col2 FROM Tab1", // missing commas in select clause
@@ -122,10 +126,12 @@ class ParserTest {
             "SELECT Col1 FROM Tab1 WHERE Col1 ! = 1", // bad space in where clause
             "SELECT Col1 FROM Tab1 WHERE Col1 =! 1", // mistakes in WHERE clause
             "SELECT Col1 FROM Tab1 WHERE Col1 => 1",
+            "SELECT Col1 FROM Tab1 WHERE Col1 = \"1\"", // having a number in predicate as a string
+            "SELECT Col1 FROM Tab1 WHERE Col1 = \"1.23\"",
             "SELECT Col1 FROM Tab1 WHERE Col1 < \"NotANumber\"", // not using a number for a comparison
             "SELECT Col1 FROM Tab1 WHERE Col1 > \"10-2-2019\"", // date is not formatted correctly
+            "SELECT Col1 FROM Tab1 WHERE Col1 = abc", // having a string value as a numeric
             "SELECT COUNT(Col1) FROM Tab1 GROUP BY Col1 HAVING Col1 > 5", // forgetting aggregation type in having clause
-            "",
     })
     void testInvalidQueries(String query) {
         System.out.println(query);
@@ -135,154 +141,185 @@ class ParserTest {
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
-/*
+
     // CREATE TABLE command --------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "CREATE TABLE table1(col1 NUMBER(1))",
-            "CREATE TABLE table1(col1 NUMBER(1), col2 CHAR(1), col3 CHAR(1), col4 NUMBER(1))",
-            "   CREATE TABLE    table1(  col1 NUMBER(1), col2   CHAR(1))",
-            "\tCREATE TABLE\n    table1( \n col1 NUMBER(1), col2   CHAR(1))",
-            "CREATE\n TABLE table1(col1 \nNUMBER(1), col2 \tCHAR(1))",
-            "CREATE TABLE table1(col1 CHAR(1), col2 CHAR(1), col3 NUMBER(1))",
-            "create table table1(col1 number(1))",
-            "CreAtE TaBLE tAbLe1(CoL1 NUmbeR(1))"
+            "CREATE TABLE Tab1(Col1 NUMBER(1))", // simple
+            "CREATE TABLE Tab1(Col1 NUMBER(3, 4))", // contains a decimal
+            "CREATE TABLE Tab1(Col1 NUMBER(1), Col2 CHAR(1), Col3 DATE, Col4 NUMBER(1, 2))", // longer
     })
     void testValidCreateTableCommands(String createTable) {
+        System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        assertTrue(parser.isValid(InputType.CREATE_TABLE, filtered));
+        boolean isValid = parser.isValid(InputType.CREATE_TABLE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "CREATE TABLE TABLE(col1 NUMBER(1))",
-            "CREATE TABLE table1(col1 CHAR(NUMBER))",
-            "CREATE",
-            "CREA TE TABLE table1(col1 CHAR(1))",
-            "CREATE TABLE table1(col1 CHAR(NotAChar))",
-            "CREATE TABLE ta ble1(col1 CHAR(1))",
-            "CREATE TABLE table1(col1, col2, col3)",
-            "CREATE TABLE table1(col1 CHAR(1), col1 CHAR(1))",
-            "CREAT\tE TABLE table1(col1 CHAR(1))",
+            "CREATE TABLE TABLE(Col1 NUMBER(1))", // using reserved word table for table name
+            "CREATE TABLE Tab1(Col1 CHAR(NUMBER))", // invalid number in size
+            "CREATE", // missing a bunch of stuff
+            "CREATE TABLE Tab1(Col1 DATE(3))", // putting a size for the date
+            "CREATE TABLE Tab1(Col1 NUMBER(-1))", // putting a negative for size
+            "CREATE TABLE Tab1(Col1 NUMBER(1), Col1 NUMBER(1))", // duplicate column names
+            "CREATE TABLE Tab1(Col1 CHAR(StringValue))", // size is not numeric
+            "CREATE TABLE Ta b1(Col1 CHAR(1))",
+            "CREATE TABLE Tab1(Col1, Col2, Col3)", // forgetting data types
+            "CREAT\tE TABLE table1(col1 CHAR(1))", // junk where it's not supposed to be
             "CREAT\nE TABLE table1(col1 CHAR(1))",
-            "CREATE TABLE table1()",
-            "CREATE TABLE table1(col1 NUMBER(1), )"
+            "CREATE TABLE Tab1()", // missing column data
+            "CREATE TABLE Tab1(Col1 NUMBER(1), )",
+            "CREATE TABLE Tab1(Col1 CHAR(1.3))", // decimal value
+            "CREATE TABLE Tab1(Col1 CHAR(1, 1.3))"
     })
     void testInvalidCreateTableCommands(String createTable) {
+        System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        assertFalse(parser.isValid(InputType.CREATE_TABLE, filtered));
+        boolean isValid = parser.isValid(InputType.CREATE_TABLE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // DROP TABLE command ----------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "DROP TABLE table1",
-            "DROP table table1",
-            "DROP   table    table1",
-            "DroP \t\n taBLe table1",
-            "\n\tdrop table table1"
+            "DROP TABLE Tab1", // very simple
     })
     void testValidDropTableCommands(String dropTable) {
+        System.out.println(dropTable);
         String[] filtered = Utilities.filterInput(dropTable);
-        assertTrue(parser.isValid(InputType.DROP_TABLE, filtered));
+        boolean isValid = parser.isValid(InputType.DROP_TABLE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "DROP TABLE table",
-            "DROP TABLE",
-            "DR OP TABLE table1",
+            "DROP TABLE Table", // reserved word in place of table name
+            "DROP TABLE", // missing table name
+            "DR OP TABLE table1", // junk in between stuff
             "D\tROP TABLE table1",
             "DROP TABLE ta\nble1",
-            "DROP"
+            "DROP",
+            "DROP TABLE 1" // number in place of table name
     })
     void testInvalidDropTableCommands(String dropTable) {
+        System.out.println(dropTable);
         String[] filtered = Utilities.filterInput(dropTable);
-        assertFalse(parser.isValid(InputType.DROP_TABLE, filtered));
+        boolean isValid = parser.isValid(InputType.DROP_TABLE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // ALTER TABLE command ---------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "ALTER TABLE Tab1 MODIFY Col1 NUMBER(5)",
+            "ALTER TABLE Tab1 MODIFY Col1 CHAR(5)",
+            "ALTER TABLE Tab1 MODIFY Col1 DATE",
+            "ALTER TABLE Tab1 ADD Col1 NUMBER(5)",
+            "ALTER TABLE Tab1 ADD Col1 CHAR(5)",
+            "ALTER TABLE Tab1 ADD Col1 DATE",
+            "ALTER TABLE Tab1 ADD PRIMARY KEY Col1",
+            "ALTER TABLE Tab1 ADD FOREIGN KEY Col1",
+            "ALTER TABLE Tab1 DROP Col1",
+            "ALTER TABLE Tab1 DROP PRIMARY KEY Col1",
+            "ALTER TABLE Tab1 DROP FOREIGN KEY Col1"
     })
     void testValidAlterTableCommand(String alterTable) {
+        System.out.println(alterTable);
         String[] filtered = Utilities.filterInput(alterTable);
-        assertTrue(parser.isValid(InputType.ALTER_TABLE, filtered));
+        boolean isValid = parser.isValid(InputType.ALTER_TABLE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "ALTER TABLE Table MODIFY Col1 NUMBER(5)", // using table for a table name
+            "ALTER TABLE Tab1 MODIFY Col1 DATE(5)", // size for date
+            "ALTER TABLE Tab1 MODIFY PRIMARY KEY Col1", // modifying a key
+            "ALTER TABLE Tab1 ADD Col1 CHAR(-5)", // negative size
+            "ALTER TABLE Tab1 ADD Col1 CHAR(1.3)", // non integer size
+            "ALTER TABLE Tab1 ADD 1 CHAR(1)", // numeric column name
+            "ALTER TABLE Tab1 DROP PRIMARY Col1" // forgot key
     })
     void testInvalidAlterTableCommand(String alterTable) {
+        System.out.println(alterTable);
         String[] filtered = Utilities.filterInput(alterTable);
-        assertFalse(parser.isValid(InputType.ALTER_TABLE, filtered));
+        boolean isValid = parser.isValid(InputType.ALTER_TABLE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // INSERT command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "INSERT INTO table1 VALUES(1)",
-            "INSERT INTO table1 VALUES(1, 2, 3, something)",
-            "INSERT INTO table1 VALUES(something, 1, 2, 3)",
-            "INSERT INTO table1 VALUES(1, something, 1, something)",
-            "inSErT iNto tabLE1 VaLUes(1, 2, 3)",
-            "  INSERT    INTO table1 VALUES   (1  )",
-            "\tINSERT INTO table1 VALUES\n(1)",
+            "INSERT INTO Tab1 VALUES(1)", // simple
+            "INSERT INTO Tab1 VALUES(1, -2, 3.1, \"Blah\", \"10-02-2020\")" // complex
     })
     void testValidInsertCommands(String insert) {
+        System.out.println(insert);
         String[] filtered = Utilities.filterInput(insert);
-        assertTrue(parser.isValid(InputType.INSERT, filtered));
+        boolean isValid = parser.isValid(InputType.INSERT, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "INSER INTO table1 VALUES(1)",
-            "INSERT INTO INSERT VALUES(1)",
-            "INSERT INTO table1 VALVES(1, 3)",
-            "INSERT IN TO table1 VALUES(1)",
-            "INSERT INTO TABLE VALUES(1)",
-            "INSERT INTO table1 VALUES(MIN)",
-            "IN SERT INTO table1 VALUES(1)",
-            "I\tNSERT INTO table1 VALUES(1)",
-            "INSERT IN\nTO table1 VALUE(something)"
+            "INSER INTO Tab1 VALUES(1)", // misspelling
+            "INSERT INTO Table VALUES(1)", // reserved word misplacement
+            "INSERT INTO Tab1 VALUES(\"1\")", // string value numeric
+            "INSERT INTO Tab1 VALUES(Blah)", // numeric value string
+            "IN SERT INTO Tab1 VALUES(1)", // random stuff in between stuff
+            "I\tNSERT INTO Tab1 VALUES(1)",
+            "INSERT IN\nTO Tab1 VALUES(1)"
     })
     void testInvalidInsertCommands(String insert) {
+        System.out.println(insert);
         String[] filtered = Utilities.filterInput(insert);
-        assertFalse(parser.isValid(InputType.INSERT, filtered));
+        boolean isValid = parser.isValid(InputType.INSERT, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
 
     // DELETE command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {
-            "DELETE FROM table1 WHERE col1 = 1",
-            "DELETE FROM table1 WHERE col1 != something",
-            "DELETE   FROM  table1   WHERE col1   >= 1",
-            "\nDELETE FROM table1 \nWHERE col1 > 1",
-            "DELETE \tFROM table1\tWHERE col1 < 1",
-            "DeLeTE FRoM TabLe1 WHeRe cOl1 = 1",
+            "DELETE FROM Tab1 WHERE Col1 = 1", // simple delete statements
+            "DELETE FROM Tab1 WHERE Col1 != \"Blah\"",
+            "DELETE FROM Tab1 WHERE Col1 > \"10-22-2020\"",
+            "DELETE FROM Tab1 WHERE Col1 < ",
+            "DELETE FROM Tab1 WHERE Col1 >= 1",
+            "DELETE FROM Tab1 WHERE Col1 <= 1",
     })
     void testValidDeleteCommands(String delete) {
+        System.out.println(delete);
         String[] filtered = Utilities.filterInput(delete);
-        assertTrue(parser.isValid(InputType.DELETE, filtered));
+        boolean isValid = parser.isValid(InputType.DELETE, filtered);
+        System.out.println("Error Code: " + parser.getErrorMessage());
+        assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
-
+// TODO working on this
     @ParameterizedTest
     @ValueSource(strings = {
-            "DELETE",
-            "DELTE FROM table1 WHERE col1 = 1",
-            "DELETE FROM TABLE WHERE col1 = 1",
-            "DELETE FROM table1 WHERE MAX = 1",
+            "DELETE", // missing a lot
+            "DELETE FROM Tab1 WHERE Col1 > \"Blah\"", // should be a date
+            "DELETE FROM Tab1 WHERE Col1 = Blah", // should be numeric
+            "DELETE FROM Tab1 WHERE Col1 = \"1\"", // should be non numeric
             "DELETE FROM table1 WHE\nRE col1 = 1",
             "DELETE FROM tab\tle1 WHERE col1 = 1",
             "DELETE FROM table1 WHERE col1 > NotANumber"
@@ -292,7 +329,7 @@ class ParserTest {
         assertFalse(parser.isValid(InputType.DELETE, filtered));
         System.out.println("-----------------------------------------------------------------------------------------");
     }
-
+/*
     // UPDATE command --------------------------------------------------------------------------------------------------
     @ParameterizedTest
     @ValueSource(strings = {

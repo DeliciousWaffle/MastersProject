@@ -5,6 +5,7 @@ import enums.Symbol;
 import utilities.Utilities;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -122,233 +123,8 @@ public class RuleGraph {
     }
 
     /**
-     * @param filteredInput is the input after being filtered
-     * @return whether illegal keywords are contained in this input
-     */
-    public boolean hasIllegalKeyword(String[] filteredInput) {
-
-        RuleNode root = new RuleNode("ROOT", false, -1);
-        root.setChildren(rules.get(0));
-        RuleNode pointer = root;
-
-        for (String token : filteredInput) {
-
-            RuleNode[] pointersChildren = pointer.getChildren();
-            boolean foundChild = false;
-            RuleNode mutableChild = null;
-
-            for (RuleNode child : pointersChildren) {
-
-                String rule = child.getData();
-                boolean isMutable = child.isMutable();
-
-                if (isMutable) {
-                    mutableChild = child;
-                }
-
-                if (rule.equalsIgnoreCase(token) && ! isMutable) {
-                    pointer = child;
-                    foundChild = true;
-                    break;
-                }
-            }
-
-            if (! foundChild && mutableChild != null) {
-                pointer = mutableChild;
-            }
-
-            // determine if the input contains a keyword, no want
-            boolean isReservedWord = Utilities.isReservedWord(token);
-            boolean isMutable = pointer.isMutable();
-
-            if (isReservedWord && isMutable) {
-                errorMessage = "Found unexpected Keyword or Symbol: \"" + token + "\"";
-                return true;
-            }
-        }
-
-        return false;
-    }
-    
-    /**
-     * Given one or more rule IDs, finds whether duplicate values occur within that list.
-     * The IDs must be mutable or this method makes no sense.
-     * Eg. SELECT A, A FROM TableName is a taste for what we're searching for
-     * @param filteredInput is a query filtered from previous methods that has no major errors
-     * @param ids are rules to check
-     * @return whether there are duplicate values for one or more rules
-     */
-    public boolean hasDuplicatesAt(String[] filteredInput, int... ids) {
-
-        List<String> occurrences = new ArrayList<>();
-
-        RuleNode root = new RuleNode("ROOT", false, -1);
-        root.setChildren(rules.get(0));
-        RuleNode pointer = root;
-
-        for (String token : filteredInput) {
-
-            RuleNode[] pointersChildren = pointer.getChildren();
-            boolean foundChild = false;
-            RuleNode mutableChild = null;
-
-            for (RuleNode child : pointersChildren) {
-
-                String rule = child.getData();
-                boolean isMutable = child.isMutable();
-
-                if (isMutable) {
-                    mutableChild = child;
-                }
-
-                if (rule.equalsIgnoreCase(token) && ! isMutable) {
-                    pointer = child;
-                    foundChild = true;
-                    break;
-                }
-            }
-
-            if (! foundChild && mutableChild != null) {
-                pointer = mutableChild;
-            }
-
-            // does the current token have any one of the IDs we're searching for?
-            for (int id : ids) {
-                if (pointer.getId() == id) {
-                     occurrences.add(token);
-                }
-            }
-        }
-
-        // checking for duplicates at the particular node
-        for (int i = 0; i < occurrences.size() - 1; i++) {
-
-            String current = occurrences.get(i);
-
-            for (int j = i + 1; j < occurrences.size(); j++) {
-
-                if (current.equals(occurrences.get(j))) {
-                    StringBuilder debugOccurrences = new StringBuilder();
-                    debugOccurrences.append("Duplicate Value: ").append(current).append("\n");
-                    debugOccurrences.append("Stored Content:  ");
-
-                    for (String occurrence : occurrences) {
-                        debugOccurrences.append("\"").append(occurrence).append("\", ");
-                    }
-
-                    debugOccurrences.delete(debugOccurrences.length() - 2, debugOccurrences.length() - 1);
-                    errorMessage = debugOccurrences.toString();
-
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Makes sure that an illegal comparison is not performed on a string value. This means that if
-     * >, <, >=, <= is encountered, this method makes sure that the next string value present is a date.
-     * Eg. SELECT col1 FROM tab1 WHERE col1 > "Steve" will return false because "Steve" is not
-     * a date value while SELECT col1 FROM tab1 WHERE col1 > "10-12-2020" will return true.
-     * @param filteredInput is the input after being filtered
-     * @param comparisonIds are ids containing >, <, >=, <=
-     * @param valueIds are ids containing values
-     */
-    public boolean hasIllegalDate(String[] filteredInput, int[] comparisonIds, int[] valueIds) {
-
-        // the comparisons and values are mapped
-        List<String> comparisons = getTokensAt(filteredInput, comparisonIds); // =, !=, >, <, >=, <=
-        List<String> values = getTokensAt(filteredInput, valueIds);
-
-        for (int i = 0; i < comparisons.size(); i++) {
-
-            boolean isRangeSymbol = Symbol.isRangeSymbol(comparisons.get(i));
-            boolean hasDateFormat = Utilities.hasDateFormat(values.get(i));
-            boolean isNumeric = Utilities.isNumeric(values.get(i));
-
-            if (! isNumeric) { // ignore values that are numeric (these are fine)
-                if (isRangeSymbol && ! hasDateFormat) {
-                    errorMessage = "Expected a Date value (MM-DD-YYYY), but found: \"" + values.get(i) + "\"";
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Checks whether or not the token encountered at the supplied id is numeric. Also has
-     * an option for checking that the value is an integer as well.
-     * @param filteredInput is the input after being filtered
-     * @param checkingForIntegerToo true if checking to make sure the value is an integer as well, false otherwise
-     * @param targetIds are the ids to check
-     * @return whether the input contains numeric values at the supplied target ids
-     */
-    public boolean hasNumericAt(String[] filteredInput, boolean checkingForIntegerToo, int... targetIds) {
-
-        RuleNode root = new RuleNode("ROOT", false, -1);
-        root.setChildren(rules.get(0));
-        RuleNode pointer = root;
-
-        for (String token : filteredInput) {
-
-            boolean encounteredTarget = false;
-
-            RuleNode[] pointersChildren = pointer.getChildren();
-            boolean foundChild = false;
-            RuleNode mutableChild = null;
-
-            for (RuleNode child : pointersChildren) {
-
-                String rule = child.getData();
-                boolean isMutable = child.isMutable();
-
-                if (isMutable) {
-                    mutableChild = child;
-                }
-
-                if (rule.equalsIgnoreCase(token) && ! isMutable) {
-                    pointer = child;
-                    foundChild = true;
-                    break;
-                }
-            }
-
-            if (! foundChild && mutableChild != null) {
-                pointer = mutableChild;
-            }
-
-            for (int id : targetIds) {
-                if (id == pointer.getId()) {
-                    encounteredTarget = true;
-                    break;
-                }
-            }
-
-            boolean isNumeric = Utilities.isNumeric(token);
-
-            // found a numeric value, don't care if it's an integer or not
-            if (encounteredTarget && isNumeric) {
-
-                boolean isInteger = ! token.contains("\\.");
-
-                if (! isInteger && checkingForIntegerToo) {
-                    errorMessage = "Expected a whole number, but found: \"" + token + "\"";
-                } else {
-                    errorMessage = "Found unexpected numeric value at: " + token + "\"";
-                }
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
+     * After ensuring that the user's input is correct from calling isSyntacticallyCorrect() , this returns a list
+     * of tokens encountered at the supplied ids.
      * @param filteredInput is the input after being filtered
      * @param ids are the ids to extract input from
      * @return returns the tokens encountered at the supplied ids
@@ -399,6 +175,175 @@ public class RuleGraph {
         }
 
         return tokensToGet;
+    }
+
+    /**
+     * Returns whether an illegal reserved word is encountered where one shouldn't be. This would
+     * check for mutable nodes that contain reserved words like FROM, WHERE, etc.
+     * @param filteredInput is the input after being filtered
+     * @return whether illegal keywords are contained in this input
+     */
+    public boolean hasIllegalReservedWord(String[] filteredInput, int... mutableNodeIds) {
+
+        List<String> tokens = getTokensAt(filteredInput, mutableNodeIds);
+
+        for (String token : tokens) {
+            boolean isReservedWord = Utilities.isReservedWord(token);
+            if (isReservedWord) {
+                errorMessage = "Found unexpected Keyword or Symbol: \"" + token + "\"";
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    /**
+     * Given one or more rule IDs, finds whether duplicate values occur within that list.
+     * Will completely ignore the case of the tokens found at the ids supplied.
+     * Eg. SELECT A, a FROM TableName is a taste for what we're searching for.
+     * @param filteredInput is a query filtered from previous methods that has no major errors
+     * @param ids are rules to check
+     * @return whether there are duplicate values for one or more rules
+     */
+    public boolean hasDuplicatesAt(String[] filteredInput, int... ids) {
+
+        List<String> tokens = getTokensAt(filteredInput, ids);
+        List<String> occurrences = new ArrayList<>();
+
+        for (String token : tokens) {
+            for (String occurrence : occurrences) {
+                if (token.equalsIgnoreCase(occurrence)) {
+                    errorMessage = "Duplicate values are not allowed, found: \"" + token + "\"";
+                    return true;
+                }
+            }
+            occurrences.add(token); // didn't find a duplicate value, add the token
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether the numbers encountered at the supplied ids are numeric values. Assumed to
+     * have called isNumeric() method first. All ids supplied must be numeric for true to be returned.
+     * @param filteredInput is the input after being filtered
+     * @param ids are the ids to check
+     * @return whether the values encountered are all numeric
+     */
+    public boolean hasNumericAt(String[] filteredInput, int... ids) {
+
+        List<String> tokens = getTokensAt(filteredInput, ids);
+
+        for (String token : tokens) {
+            boolean isNumeric = Utilities.isNumeric(token);
+            if (! isNumeric) {
+                errorMessage = "Expected a numeric value, but found: " + token + "\"";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns whether the numbers encountered at the supplied ids are integer values. Assumed to
+     * have called isNumeric() method first. All ids supplied must be numeric for true to be returned.
+     * @param filteredInput is the input after being filtered
+     * @param ids are the ids to check
+     * @return whether all numbers accounted are integers
+     */
+    public boolean hasIntegerAt(String[] filteredInput, int... ids) {
+
+        List<String> tokens = getTokensAt(filteredInput, ids);
+
+        for (String token : tokens) {
+            boolean isInteger = ! token.contains(".");
+            System.out.println(token + " " + isInteger);
+            if (! isInteger) {
+                errorMessage = "Expected an integer value, but found: \"" + token + "\"";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns whether the numbers encountered at the supplied ids are positive numbers. Assumed to
+     * have called isNumeric() method first. All ids supplied must be numeric for true to be returned.
+     * @param filteredInput is the input after being filtered
+     * @param ids are the ids to check
+     * @return whether all numbers encountered are positive values
+     */
+    public boolean hasPositiveNumberAt(String[] filteredInput, int... ids) {
+
+        List<String> tokens = getTokensAt(filteredInput, ids);
+
+        for (String token : tokens) {
+            double value = Double.parseDouble(token);
+            boolean isNegative = value < 0;
+            if (isNegative) {
+                errorMessage = "Expected a non-negative numeric value, but found: \"" + token + "\"";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns whether the values encountered at the supplied ids are string values.
+     * All ids supplied must be strings for true to be returned.
+     * @param filteredInput is the input after being filtered
+     * @param ids are the ids to check
+     * @return whether the values encountered are all string values
+     */
+    public boolean hasNonNumericAt(String[] filteredInput, int... ids) {
+
+        List<String> tokens = getTokensAt(filteredInput, ids);
+
+        for (String token : tokens) {
+            boolean isNumeric = Utilities.isNumeric(token);
+            if (isNumeric) {
+                errorMessage = "Expected a string value, but found: \"" + token + "\"";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Makes sure that an illegal comparison is not performed on a string value. This means that if
+     * >, <, >=, <= is encountered, this method makes sure that the next string value present is a date.
+     * Eg. SELECT col1 FROM tab1 WHERE col1 > "Steve" will return false because "Steve" is not
+     * a date value while SELECT col1 FROM tab1 WHERE col1 > "10-12-2020" will return true.
+     * @param filteredInput is the input after being filtered
+     * @param comparisonIds are ids containing >, <, >=, <=
+     * @param valueIds are ids containing values
+     */
+    public boolean hasIllegalDateAt(String[] filteredInput, int[] comparisonIds, int[] valueIds) {
+
+        // the comparisons and values are mapped
+        List<String> comparisons = getTokensAt(filteredInput, comparisonIds); // =, !=, >, <, >=, <=
+        List<String> values = getTokensAt(filteredInput, valueIds);
+
+        for (int i = 0; i < comparisons.size(); i++) {
+
+            boolean isRangeSymbol = Symbol.isRangeSymbol(comparisons.get(i));
+            boolean hasDateFormat = Utilities.hasDateFormat(values.get(i));
+            boolean isNumeric = Utilities.isNumeric(values.get(i));
+
+            if (! isNumeric) { // ignore values that are numeric (these are fine)
+                if (isRangeSymbol && ! hasDateFormat) {
+                    errorMessage = "Expected a Date value (MM-DD-YYYY), but found: \"" + values.get(i) + "\"";
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -464,7 +409,7 @@ public class RuleGraph {
     }
 
     /**
-     * @return a String representation of the RuleGraph object, basically an adjacency list
+     * @return a String representation of the RuleGraph object, basically just an adjacency list
      */
     @Override
     public String toString() {
