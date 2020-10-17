@@ -1,6 +1,7 @@
 package utilities;
 
 import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
 import datastructures.user.User;
 import enums.InputType;
 import enums.Keyword;
@@ -264,12 +265,12 @@ public final class Utilities {
     /**
      * Given a table name and a list of tables from the system, returns the table referenced.
      * @param tableName is the table name of the table referenced
-     * @param tables is a list of tables in the system
+     * @param systemTables is a list of tables in the system
      * @return the table referenced from the table name or null if not found
      */
-    public static Table getReferencedTable(String tableName, List<Table> tables) {
+    public static Table getReferencedTable(String tableName, List<Table> systemTables) {
 
-        for (Table table : tables) {
+        for (Table table : systemTables) {
             if (table.getTableName().equalsIgnoreCase(tableName)) {
                 return table;
             }
@@ -306,5 +307,29 @@ public final class Utilities {
         }
 
         return null;
+    }
+
+    public static boolean isAmbiguousColumn(String columnName, List<Table> referencedTables) {
+        int occurrences = 0;
+        for (Table table : referencedTables) {
+            if (table.hasColumn(columnName)) {
+                occurrences++;
+            }
+        }
+        return occurrences > 1;
+    }
+
+    public static List<Column> getReferencedColumns(List<String> columnNames, List<Table> tables) {
+        OptimizerUtilities.prefixColumnNamesWithTableNames(columnNames, tables);
+        return columnNames.stream()
+                .map(prefixedColumnName ->  {
+                    String[] tokens = prefixedColumnName.split("\\.");
+                    String tableName = tokens[0];
+                    String columnName = tokens[1];
+                    Table referencedTable = getReferencedTable(tableName, tables);
+                    assert referencedTable != null;
+                    return referencedTable.getColumn(columnName);
+                })
+                .collect(Collectors.toList());
     }
 }

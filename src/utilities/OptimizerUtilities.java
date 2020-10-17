@@ -21,9 +21,9 @@ public final class OptimizerUtilities {
      * referenced in the FROM clause. This also prefixes each column name with its respected table name.
      * If a "*" is not found in the provided list of column names, makes no changes and returns.
      * @param columnNames is a list of column names referenced in the SELECT clause, may contain a "*"
-     * @param referencedTables are tables referenced in the FROM clause
+     * @param tables are tables referenced in the FROM clause
      */
-    public static void getColumnNamesFromStar(List<String> columnNames, List<Table> referencedTables) {
+    public static void getColumnNamesFromStar(List<String> columnNames, List<Table> tables) {
 
         // return if there are not any column names to begin with
         if (columnNames.isEmpty()) {
@@ -40,7 +40,7 @@ public final class OptimizerUtilities {
         // otherwise remove the "*" and for each table, pull out it's column names and add them to the list to return
         columnNames.remove(0);
 
-        for (Table table : referencedTables) {
+        for (Table table : tables) {
             List<String> referencedTablesColumnNames = table.getColumns().stream()
                     .map(e -> table.getTableName() + "." + e.getColumnName())
                     .collect(Collectors.toList());
@@ -63,7 +63,7 @@ public final class OptimizerUtilities {
      * Prefixes a column name to a table name. Involves looking through all the tables available
      * and determining which one that column belongs to.
      * @param columnName is the column name to prefix
-     * @param tables are all the tables in the database
+     * @param tables are all the tables in the system
      * @return column name prefixed with the table name
      */
     public static String prefixColumnNameWithTableName(String columnName, List<Table> tables) {

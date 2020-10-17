@@ -1,5 +1,6 @@
 package systemcatalog.components;
 
+import datastructures.relation.table.component.DataType;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
@@ -16,9 +17,10 @@ import java.util.List;
 /**
  * Responsible for making sure any parts of the input that make references to something within the system
  * are correct. This can take several forms such as checking whether tables and their associated columns
- * exists or that data types match. Also has an option for turning on or off. When off, the user can input
- * any data without the worry about whether their input makes sense with respect to the system data. Also,
- * input is assumed to have already been passed through the Parser.
+ * exist or that data types match. Also has an option for turning it on or off. When off, the user can input
+ * any data without the worry about whether their input makes sense with respect to the system data. When on,
+ * the Verifier will check the system tables and users to make sure the input makes sense. Also, input is
+ * assumed to have passed through the Parser and is syntactically correct.
  */
 public class Verifier {
 
@@ -106,136 +108,68 @@ public class Verifier {
     /**
      * Returns whether the data referenced in the QUERY makes sense with respect to the data on the system.
      * @param filteredInput is the filtered input
-     * @param tables are the tables of the system
+     * @param systemTables are the systemTables of the system
      * @return whether the QUERY is valid
      */
-    public boolean isValidQuery(String[] filteredInput, List<Table> tables) {
+    public boolean isValidQuery(String[] filteredInput, List<Table> systemTables) {
 
         RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
         String queryError = "Verifier error when validating Query:\n";
 
-        // check that tables referenced exist in the system
+        // check that systemTables referenced exist in the system
         List<String> tableNames = queryRuleGraph.getTokensAt(filteredInput, 13, 15, 18);
 
         for (String tableName : tableNames) {
-            boolean tableExists = Utilities.getReferencedTable(tableName, tables) != null;
+            boolean tableExists = Utilities.getReferencedTable(tableName, systemTables) != null;
             if (! tableExists) {
-                errorMessage = queryError + "The table: " + tableName + " does not exist";
+                errorMessage = queryError + "Table: \"" + tableName + "\" does not exist in the system";
                 return false;
             }
         }
 
-        // check that all columns exist within the tables referenced (all column name nodes except for inner join ones)
-        List<String> columnNames = queryRuleGraph.getTokensAt(filteredInput, 2, 10, 20, 23, 35, 45);
 
-        for (Table table : tables) {
-            for (String columnName : columnNames) {
-                // remove any column names that are prefixed with a table name
-                columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
-                if (! table.hasColumn(columnName)) {
-                    errorMessage = queryError + "\"" + columnName + "\" does not exist in " + table;
-                    return false;
+        // check that all columns exist within the systemTables referenced
+        List<Table> referencedTables = Utilities.getReferencedTables(tableNames, systemTables);
+        List<String> columnNames = queryRuleGraph.getTokensAt(filteredInput, 2, 9, 20, 27, 29, 43, 52);
+        OptimizerUtilities.getColumnNamesFromStar(columnNames, referencedTables);
+
+        for (String columnName : columnNames) {
+
+            columnName = OptimizerUtilities.removePrefixedColumnName(columnName); // remove any prefixing
+            boolean foundTable = false;
+
+            for (Table table : referencedTables) {
+                if (table.hasColumn(columnName)) {
+                    foundTable = true;
+                    break;
                 }
+            }
+
+            if (! foundTable) {
+                errorMessage = queryError + "The column \"" + columnName + "\" does not exist in any tables";
+                return false;
             }
         }
 
-        // if joining tables, ensure that the column names exist in the corresponding tables
-        boolean isJoiningTables = ! queryRuleGraph.getTokensAt(filteredInput, 16).isEmpty();
 
-        if (isJoiningTables) {
-            List<String> joinOnTableNames = queryRuleGraph.getTokensAt(filteredInput, 13, 18);
-            List<String> joinOnColumnNames = queryRuleGraph.getTokensAt(filteredInput, 20, 27);
-            for (Table table : tables) {
-
+        // check for ambiguous column names which are those that appear in one or more tables
+        for (String columnName : columnNames) {
+            boolean isAmbiguousColumn = Utilities.isAmbiguousColumn(columnName, referencedTables);
+            if (isAmbiguousColumn) {
+                errorMessage = queryError + "The column \"" + columnName + "\" is ambiguous\n" +
+                "The column should be prefixed with the table name like this \"<TableName>.<ColumnName>\"";
+                return false;
             }
         }
 
-        // check correct data types
 
-        // ensure that the columns used to join on in the using clause appear in the corresponding tables
-        // Eg. if have t1 JOIN t2 USING(col1) JOIN t3 USING(col2)
-        // t1 and t2 must have "col1" and t2 and t3 must have "col2" in their tables
-        List<String> tablesJoined  = queryRuleGraph.getTokensAt(filteredInput, 13, 17);
-        List<String> columnsJoined = queryRuleGraph.getTokensAt(filteredInput, 20);
-        HashMap<String, ArrayList<String>> columnTablePairs = new HashMap<>();
+        // TODO get cols in select clause agg node
+        // if using an aggregate function (except COUNT) make sure the column is numeric
+        List<Column> referencedColumns = Utilities.getReferencedColumns(columnNames, referencedTables);
 
-        for(int i = 0; i < columnsJoined.size(); i++) {
-
-            ArrayList<String> marriedTables = new ArrayList<>();
-            marriedTables.add(tablesJoined.get(i));
-            marriedTables.add(tablesJoined.get(i + 1));
-
-            columnTablePairs.put(columnsJoined.get(i), marriedTables);
-        }
-
-        for(String joinColumn : columnTablePairs.keySet()) {
-
-            boolean foundFirstColumn  = false;
-            boolean foundSecondColumn = false;
-
-            for(String joinTable : columnTablePairs.get(joinColumn)) {
-
-                for(Table table : tables) {
-
-                    if(joinTable.equalsIgnoreCase(table.getTableName()) && table.hasColumn(joinColumn)) {
-
-                        if(foundFirstColumn) {
-                            foundSecondColumn = true;
-                        } else {
-                            foundFirstColumn  = true;
-                        }
-                    }
-                }
-
-                if(! (foundFirstColumn || foundSecondColumn)) {
-                    return false;
-                }
-            }
-        }
-
-        // only accept numeric columns if using MIN, MAX, AVG, COUNT, SUM
-        columnNames = queryRuleGraph.getTokensAt(filteredInput, 10);
-        String candidateColumn = columnNames.isEmpty() ? "null" : columnNames.get(0);
-
-        /*for(Table currentTable : tables) {
-            for(Column currentColumn : currentTable.getColumns()) {
-                String columnName = currentColumn.getName();
-                if(candidateColumn.equalsIgnoreCase(columnName) && ! currentColumn.isNumeric()) {
-                    return false;
-                }
-            }
-        }*/
-
-
-
-        // make sure that column name matches the data type of the constant in where clause
-        List<String> whereColumns = queryRuleGraph.getTokensAt(filteredInput, 24);
-        List<String> constants = queryRuleGraph.getTokensAt(filteredInput, 31);
-        int pairSize = whereColumns.size();
-
-        for(int i = 0; i < pairSize; i++) {
-
-            String column = whereColumns.get(i);
-            String constant = constants.get(i);
-
-            for(Table table : tables) {
-
-                if(! table.hasColumn(column)) {
-                    continue;
-                }
-
-                for(Column column1 : table.getColumns()) {
-
-                    if(column1.getColumnName().equalsIgnoreCase(column)) {
-
-                        boolean isNumericConstant = Utilities.isNumeric(constant);
-
-                        // TODO
-                        /*if(column1.isNumeric() && ! isNumericConstant) {
-                            return false;
-                        }*/
-                    }
-                }
+        for (Column column : referencedColumns) {
+            if (column.getDataType() == DataType.NUMBER) {
+                errorMessage = queryError + ""
             }
         }
 

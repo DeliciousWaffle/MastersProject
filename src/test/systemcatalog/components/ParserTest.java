@@ -9,8 +9,6 @@ import systemcatalog.components.Parser;
 import utilities.Utilities;
 import enums.InputType;
 
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,8 +33,8 @@ class ParserTest {
         System.out.println(RuleGraphTypes.getDeleteRuleGraph());
         System.out.println(RuleGraphTypes.getUpdateRuleGraph());
         System.out.println(RuleGraphTypes.getGrantRuleGraph());
-        */System.out.println(RuleGraphTypes.getRevokeRuleGraph());
-        /*System.out.println(RuleGraphTypes.getBuildFileStructureRuleGraph());
+        System.out.println(RuleGraphTypes.getRevokeRuleGraph());
+        System.out.println(RuleGraphTypes.getBuildFileStructureRuleGraph());
         System.out.println(RuleGraphTypes.getRemoveFileStructureRuleGraph());*/
     }
 
@@ -141,6 +139,7 @@ class ParserTest {
         String[] filtered = Utilities.filterInput(query);
         boolean isValid = parser.isValid(InputType.QUERY, filtered);
         System.out.println("Error Code: " + parser.getErrorMessage());
+        parser.resetErrorMessage();
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
