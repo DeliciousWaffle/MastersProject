@@ -7,8 +7,7 @@ public enum Keyword {
     SET, GRANT, ALTER, INDEX, REFERENCES, ALL, PRIVILEGES, TO, REVOKE, ON;
 
     /**
-     * Basically takes and returns a string in uppercase if it's a keyword, else,
-     * just returns the String.
+     * Basically takes and returns a string in uppercase if it's a keyword, else, just returns the String.
      * @param toUppercase is the string to convert to uppercase
      * @return the string in uppercase if it's a keyword, else, the string provided
      */
@@ -19,6 +18,14 @@ public enum Keyword {
             }
         }
         return toUppercase;
+    }
+
+    /**
+     * @param value is the value to convert
+     * @return the value as a keyword, ignoring case
+     */
+    public static Keyword toKeyword(String value) {
+        return valueOf(value.toUpperCase());
     }
 
     public static boolean isAggregateFunction(Keyword candidate) {

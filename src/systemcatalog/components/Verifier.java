@@ -6,6 +6,8 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
+import enums.Keyword;
+import enums.Symbol;
 import utilities.OptimizerUtilities;
 import utilities.Utilities;
 import enums.InputType;
@@ -120,9 +122,11 @@ public class Verifier {
         List<String> tableNames = queryRuleGraph.getTokensAt(filteredInput, 13, 15, 18);
 
         for (String tableName : tableNames) {
+
             boolean tableExists = Utilities.getReferencedTable(tableName, systemTables) != null;
+
             if (! tableExists) {
-                errorMessage = queryError + "Table: \"" + tableName + "\" does not exist in the system";
+                errorMessage = queryError + "Table \"" + tableName + "\" does not exist";
                 return false;
             }
         }
@@ -146,15 +150,38 @@ public class Verifier {
             }
 
             if (! foundTable) {
-                errorMessage = queryError + "The column \"" + columnName + "\" does not exist in any tables";
+                errorMessage = queryError + "The column \"" + columnName + "\" does not exist";
                 return false;
+            }
+        }
+
+
+        // check that prefixed columns exist
+        for (String columnName : columnNames) {
+
+            boolean isPrefixed = OptimizerUtilities.hasPrefixedTableName(columnName);
+
+            if (isPrefixed) {
+
+                String tableName = columnName.split("\\.")[0];
+
+                // check if the table exists
+                Table table = Utilities.getReferencedTable(tableName, systemTables);
+                boolean tableExists = table != null;
+
+                if (! tableExists) {
+                    errorMessage = queryError + "The column \"" + columnName + "\" does not exist";
+                    return false;
+                }
             }
         }
 
 
         // check for ambiguous column names which are those that appear in one or more tables
         for (String columnName : columnNames) {
+
             boolean isAmbiguousColumn = Utilities.isAmbiguousColumn(columnName, referencedTables);
+
             if (isAmbiguousColumn) {
                 errorMessage = queryError + "The column \"" + columnName + "\" is ambiguous\n" +
                 "The column should be prefixed with the table name like this \"<TableName>.<ColumnName>\"";
@@ -163,15 +190,86 @@ public class Verifier {
         }
 
 
-        // TODO get cols in select clause agg node
-        // if using an aggregate function (except COUNT) make sure the column is numeric
-        List<Column> referencedColumns = Utilities.getReferencedColumns(columnNames, referencedTables);
+        // if using an aggregate function (except COUNT) make sure the column is numeric or a date value
+        List<String> aggregatedColumnNames = queryRuleGraph.getTokensAt(filteredInput, 9, 52);
+        List<String> aggregationTypes =
+                queryRuleGraph.getTokensAt(filteredInput, 3, 4, 5, 6, 7, 46, 47, 48, 49, 50);
 
-        for (Column column : referencedColumns) {
-            if (column.getDataType() == DataType.NUMBER) {
-                errorMessage = queryError + ""
+        // removing columns that are mapped with COUNT
+        boolean doneRemovingColumns = false;
+
+        while (! doneRemovingColumns) {
+
+            boolean madeChanges = false;
+
+            for (int i = 0; i < aggregatedColumnNames.size(); i++) {
+
+                Keyword aggregationType = Keyword.toKeyword(aggregationTypes.get(i));
+
+                if (aggregationType == Keyword.COUNT) { // remove the associate column and type
+                    aggregatedColumnNames.remove(i);
+                    aggregationTypes.remove(i);
+                    madeChanges = true;
+                    break;
+                }
+            }
+
+            if (! madeChanges) {
+                doneRemovingColumns = true;
             }
         }
+
+        List<Column> referencedColumns = Utilities.getReferencedColumns(aggregatedColumnNames, referencedTables);
+
+        for (int i = 0; i < referencedColumns.size(); i++) {
+            if (referencedColumns.get(i).getDataType() == DataType.CHAR) {
+                errorMessage = queryError + "The function \"" + aggregationTypes.get(i) + "\" can only be used with " +
+                        "numeric values\nor dates, but the column \"" + referencedColumns.get(i).getColumnName() +
+                        "\" is of type \"CHAR\"";
+                return false;
+            }
+        }
+
+
+        // make sure the columns being joined are of the correct datatype
+        List<String> joinColumns = queryRuleGraph.getTokensAt(filteredInput, 20, 27);
+        referencedColumns = Utilities.getReferencedColumns(joinColumns, referencedTables);
+        List<String> joinSymbols = queryRuleGraph.getTokensAt(filteredInput, 21, 22, 23, 24, 25, 26);
+
+        for (int i = 0, j = 0, k = 1; i < referencedColumns.size(); i += 2, j++, k += 2) {
+
+            Column firstColumn = referencedColumns.get(i);
+            String joinSymbol = joinSymbols.get(j);
+            Column secondColumn = referencedColumns.get(k);
+
+            boolean hasMatchingDataTypes = firstColumn.getDataType() == secondColumn.getDataType();
+
+            if (! hasMatchingDataTypes) {
+                errorMessage = queryError + "The column \"" + firstColumn.getColumnName() + "\" has a datatype of \"" +
+                        firstColumn.getDataType() + "\" which does not\n" + "match the column \"" +
+                        secondColumn.getColumnName() + "\" which has a datatype of \"" +
+                        secondColumn.getDataType() + "\"";
+                return false;
+
+            } else { // data types match
+
+                // if >, <, >=, <= are used, make sure the data types are numeric or dates
+                boolean isRangeSymbol = Symbol.isRangeSymbol(joinSymbol);
+                boolean isChar = firstColumn.getDataType() == DataType.CHAR;
+
+                if (isRangeSymbol && isChar) {
+                    errorMessage = queryError + "Both \"" + firstColumn.getColumnName() + "\" and \"" +
+                            secondColumn.getColumnName() + "\" have a datatype of type CHAR which can't be used with \"" +
+                            joinSymbol + "\"";
+                    return false;
+                }
+            }
+        }
+
+        // make sure data types match values used in where clause
+        columnNames = queryRuleGraph.getTokensAt(filteredInput, );
+
+        // make sure data types match values used in having clause
 
         return true;
     }

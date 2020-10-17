@@ -70,14 +70,19 @@ public class VerifierTest {
             "SELECT CustomerID FROM Customers WHERE CustomerID = 1 AND Blah = \"Blah\"",
             "SELECT CustomerID FROM Customers GROUP BY Blah", // in group by clause
             "SELECT CustomerID FROM Customers GROUP BY CustomerID HAVING COUNT(Blah) > 1", // in having clause
+
+            "SELECT Customers.Blah FROM Customers", // prefixing a table that exists with a column that doesn't exist
+            "SELECT CustomerID, Customers.Blah FROM Customers",
+            "SELECT Blah.CustomerID FROM Customers", // column that exists but prefixed with a table that doesn't exist
             "SELECT CustomerID FROM Customers, CustomerPurchaseDetails", // ambiguous columns (columns that exist in multiple tables that are not prefixed)
             "SELECT CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.Blah", // column does not exist in join criteria (1st and 2nd table)
             "SELECT CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.Blah = CustomerPurchaseDetails.CustomerID",
-            "SELECT SUM(FirstName) FROM Customers", // only accept numeric values for aggregations, excluding count() in select clause
-            "SELECT CustomerID FROM Customers GROUP BY CustomerID HAVING SUM(CustomerID) > 5", // having clause
-            "SELECT CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerName = CustomerPurchaseDetails.CustomerID", // make sure data types of columns match in join criteria
-            "SELECT CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON CustomerPurchaseDetails.CustomerName = Customers.CustomerID",
-            "SELECT CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.FirstName > CustomerPurchaseDetails.PaymentMethod", // if data types match, make sure that if >, <, >=, <= is used, that the values are numeric or dates
+            "SELECT SUM(FirstName) FROM Customers", // only accept numeric values for aggregations, excluding count() in select/having clauses
+            "SELECT COUNT(CustomerID), SUM(FirstName) FROM Customers",
+            "SELECT COUNT(CustomerID) FROM Customers GROUP BY FirstName HAVING AVG(FirstName) > 1",
+            "SELECT Customers.CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.FirstName = CustomerPurchaseDetails.CustomerID", // make sure data types of columns match in join criteria
+            "SELECT Customers.CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON CustomerPurchaseDetails.PaymentMethod = Customers.CustomerID",
+            "SELECT Customers.CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.FirstName > CustomerPurchaseDetails.PaymentMethod", // if data types match, make sure that if >, <, >=, <= is used, that the values are numeric or dates
             "SELECT CustomerID FROM Customers WHERE CustomerID = \"Blah\"", // make sure data types of columns match in where clause
             "SELECT CustomerID FROM Customers WHERE FirstName = 1",
             "SELECT CustomerID FROM Customers WHERE CustomerID = \"10-10-2020\"",
@@ -91,6 +96,7 @@ public class VerifierTest {
         boolean isValid = verifier.isValid(InputType.QUERY, filtered, tables, users);
         System.out.println("Error Code: " + verifier.getErrorMessage());
         verifier.resetErrorMessage();
+        System.out.println(new Parser().isValid(InputType.QUERY, filtered));
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
