@@ -87,8 +87,7 @@ public class VerifierTest {
             "SELECT CustomerID FROM Customers WHERE FirstName = 1",
             "SELECT CustomerID FROM Customers WHERE CustomerID = \"10-10-2020\"",
             "SELECT COUNT(CustomerID) FROM Customers GROUP BY CustomerID HAVING SUM(FirstName) > 1", // make sure data types of columns match in having clause
-            "SELECT CustomerID, COUNT(FirstName) FROM Customers", // missing appropriate group by clause
-            "SELECT CustomerID, FirstName, COUNT(LastName) FROM Customers GROUP BY CustomerID", // missing FirstName
+            // invalid dates for where and having clause TODO
     })
     void testInvalidQuery(String query) {
         System.out.println(query);

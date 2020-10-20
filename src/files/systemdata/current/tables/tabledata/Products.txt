@@ -1,182 +1,182 @@
 ProductID ProductName               Price 
 --------- ------------------------- ----- 
-1         Chicken Chowder           3     
-2         Navy Beans                3     
-3         Prawns                    9     
-4         Sherry                    6     
-5         Nectarines                1     
-6         Condensed Milk            7     
-7         White Chocolate           6     
-8         Baguette                  8     
-9         Rice Vinegar              9     
-10        Turtle                    8     
-11        Grouper                   9     
-12        Pheasants                 5     
-13        Geese                     2     
-14        Vanilla Bean              4     
-15        Water Chestnuts           6     
-16        Spaghetti Squash          7     
-17        Carrots                   4     
-18        Red Beans                 4     
-19        Cookies                   4     
-20        Succotash                 9     
-21        Lamb                      1     
-22        Potato Chips              1     
-23        Jicama                    2     
-24        Pepper                    1     
-25        Potatoes                  6     
-26        Allspice                  6     
-27        Pork                      4     
-28        Herring                   7     
-29        Borscht                   2     
-30        Watermelons               2     
-31        Beef                      4     
-32        Halibut                   1     
-33        Squash                    7     
-34        Tomatoes                  2     
-35        Ricotta Cheese            8     
-36        Tarragon                  7     
-37        Havarti Cheese            9     
-38        Sugar                     5     
-39        Plantains                 1     
-40        Coconut Milk              6     
-41        Soymilk                   5     
-42        Tonic Water               5     
-43        Pomegranates              7     
-44        Romano Cheese             7     
-45        Molasses                  4     
-46        Broccoli                  2     
-47        Ketchup                   6     
-48        Colby Cheese              7     
-49        Peaches                   9     
-50        Cabbage                   7     
-51        Bruschetta                8     
-52        Kahlua                    4     
-53        Split Peas                5     
-54        Buckwheat                 6     
-55        Chard                     3     
-56        Chili Powder              8     
-57        Bagels                    2     
-58        Summer Squash             2     
-59        Wine                      6     
-60        Pumpkins                  1     
-61        Cinnamon                  5     
-62        Bard                      2     
-63        Hot Sauce                 8     
-64        Cream Of Tartar           9     
-65        Goji Berry                2     
-66        Andouille Sausage         8     
-67        Bananas                   7     
-68        Granola                   1     
-69        Jelly Beans               4     
-70        Orange Peels              8     
-71        Eel                       5     
-72        Soybeans                  3     
-73        Cloves                    2     
-74        Spearmint                 7     
-75        Barley Sugar              5     
-76        Wine Vinegar              1     
-77        Lima Beans                8     
-78        Bay Leaves                5     
-79        Snap Peas                 4     
-80        Vinegar                   2     
-81        Green Beans               2     
-82        Remoulade                 4     
-83        Avocados                  6     
-84        Raspberries               9     
-85        Snow Peas                 1     
-86        Lobsters                  5     
-87        Feta Cheese               7     
-88        Cumin                     8     
-89        Kidney Beans              5     
-90        Dill                      2     
-91        Fish Sauce                2     
-92        Rhubarb                   3     
-93        Tomato Sauce              6     
-94        Sausages                  2     
-95        Quail                     8     
-96        Acorn Squash              9     
-97        Melons                    7     
-98        Rose Water                5     
-99        Sweet Chili Sauce         7     
-100       Vanilla                   9     
-101       Gorgonzola                5     
-102       Anchovies                 2     
-103       Cannellini Beans          2     
-104       Corn Flour                1     
-105       Corn                      5     
-106       Crabs                     4     
-107       Raw Sugar                 1     
-108       Romaine Lettuce           3     
-109       Date Sugar                6     
-110       Cream                     9     
-111       Red Snapper               8     
-112       Lemon Juice               8     
-113       Wild Rice                 3     
-114       Aioli                     7     
-115       Brazil Nuts               6     
-116       Cooking Wine              8     
-117       Red Pepper Flakes         3     
-118       Lemon Grass               5     
-119       Pistachios                8     
-120       Broth                     2     
-121       Coconuts                  7     
-122       Tomato Paste              7     
-123       Mustard Seeds             3     
-124       Marshmallows              1     
-125       Plum Tomatoes             9     
-126       Chutney                   8     
-127       Amaretto                  4     
-128       Tea                       4     
-129       Chipotle Peppers          7     
-130       Cornstarch                2     
-131       Pico De Gallo             4     
-132       Bean Sauce                7     
-133       Red Cabbage               6     
-134       Cod                       9     
-135       Angelica                  5     
-136       Salsa                     6     
-137       Raisins                   2     
-138       Alfredo Sauce             3     
-139       Bass                      7     
-140       Turnips                   1     
-141       Cactus                    9     
-142       Mint                      8     
-143       Shitakes                  2     
-144       Lentils                   6     
-145       Peas                      3     
-146       Bourbon                   7     
-147       Milk                      7     
-148       Liver                     2     
-149       Breadcrumbs               6     
-150       Maraschino Cherries       4     
-151       Salmon                    9     
-152       Hoisin Sauce              2     
-153       Mascarpone                4     
-154       Hash Browns               6     
-155       Won Ton Skins             1     
-156       Mackerel                  6     
-157       Apple Pie Spice           2     
-158       Kiwi                      3     
-159       Rabbits                   7     
-160       Sauerkraut                5     
-161       Sweet Potatoes            4     
-162       Bean Sprouts              2     
-163       Asiago Cheese             9     
-164       Walnuts                   6     
-165       Broccoli Raab             1     
-166       Shallots                  9     
-167       Almond Butter             6     
-168       Celery                    2     
-169       Fennel Seeds              8     
-170       Creme Fraiche             4     
-171       Swordfish                 7     
-172       Almond Extract            8     
-173       Chives                    2     
-174       Pancetta                  3     
-175       Berries                   9     
-176       Tuna                      1     
-177       Irish Cream Liqueur       9     
-178       Vegemite                  3     
-179       Shrimp                    7     
-180       Horseradish               8     
+1         Chicken Chowder           4.76  
+2         Navy Beans                0.2   
+3         Prawns                    1.64  
+4         Sherry                    7.94  
+5         Nectarines                4.66  
+6         Condensed Milk            9.49  
+7         White Chocolate           9.54  
+8         Baguette                  0.15  
+9         Rice Vinegar              4.58  
+10        Turtle                    5.46  
+11        Grouper                   9.05  
+12        Pheasants                 0.86  
+13        Geese                     1.69  
+14        Vanilla Bean              4.99  
+15        Water Chestnuts           7.24  
+16        Spaghetti Squash          2.52  
+17        Carrots                   4.89  
+18        Red Beans                 2.25  
+19        Cookies                   6.17  
+20        Succotash                 6.21  
+21        Lamb                      3.67  
+22        Potato Chips              1.98  
+23        Jicama                    1.74  
+24        Pepper                    5.61  
+25        Potatoes                  1.3   
+26        Allspice                  8.49  
+27        Pork                      6.16  
+28        Herring                   0.49  
+29        Borscht                   6.24  
+30        Watermelons               0.74  
+31        Beef                      4.45  
+32        Halibut                   0.34  
+33        Squash                    0.66  
+34        Tomatoes                  8.94  
+35        Ricotta Cheese            5.27  
+36        Tarragon                  4.36  
+37        Havarti Cheese            2.54  
+38        Sugar                     7.78  
+39        Plantains                 4.53  
+40        Coconut Milk              0.7   
+41        Soymilk                   8.26  
+42        Tonic Water               6.63  
+43        Pomegranates              5.5   
+44        Romano Cheese             4.24  
+45        Molasses                  6.0   
+46        Broccoli                  7.77  
+47        Ketchup                   2.82  
+48        Colby Cheese              9.35  
+49        Peaches                   6.28  
+50        Cabbage                   9.42  
+51        Bruschetta                8.9   
+52        Kahlua                    1.25  
+53        Split Peas                4.9   
+54        Buckwheat                 1.61  
+55        Chard                     0.6   
+56        Chili Powder              7.13  
+57        Bagels                    5.24  
+58        Summer Squash             9.46  
+59        Wine                      0.37  
+60        Pumpkins                  6.3   
+61        Cinnamon                  1.59  
+62        Bard                      0.08  
+63        Hot Sauce                 1.51  
+64        Cream Of Tartar           6.55  
+65        Goji Berry                2.24  
+66        Andouille Sausage         6.59  
+67        Bananas                   8.92  
+68        Granola                   2.65  
+69        Jelly Beans               1.57  
+70        Orange Peels              5.12  
+71        Eel                       7.67  
+72        Soybeans                  1.79  
+73        Cloves                    2.94  
+74        Spearmint                 8.47  
+75        Barley Sugar              9.51  
+76        Wine Vinegar              9.61  
+77        Lima Beans                0.51  
+78        Bay Leaves                2.92  
+79        Snap Peas                 3.45  
+80        Vinegar                   0.32  
+81        Green Beans               6.11  
+82        Remoulade                 3.46  
+83        Avocados                  0.32  
+84        Raspberries               3.88  
+85        Snow Peas                 9.31  
+86        Lobsters                  5.96  
+87        Feta Cheese               2.92  
+88        Cumin                     3.52  
+89        Kidney Beans              2.5   
+90        Dill                      4.14  
+91        Fish Sauce                2.44  
+92        Rhubarb                   7.09  
+93        Tomato Sauce              0.29  
+94        Sausages                  3.28  
+95        Quail                     9.39  
+96        Acorn Squash              6.55  
+97        Melons                    2.1   
+98        Rose Water                2.31  
+99        Sweet Chili Sauce         2.01  
+100       Vanilla                   0.98  
+101       Gorgonzola                9.64  
+102       Anchovies                 0.94  
+103       Cannellini Beans          8.08  
+104       Corn Flour                9.74  
+105       Corn                      6.34  
+106       Crabs                     8.5   
+107       Raw Sugar                 6.76  
+108       Romaine Lettuce           3.96  
+109       Date Sugar                4.18  
+110       Cream                     7.05  
+111       Red Snapper               5.28  
+112       Lemon Juice               6.88  
+113       Wild Rice                 4.42  
+114       Aioli                     1.77  
+115       Brazil Nuts               1.88  
+116       Cooking Wine              5.32  
+117       Red Pepper Flakes         2.64  
+118       Lemon Grass               8.34  
+119       Pistachios                0.19  
+120       Broth                     7.62  
+121       Coconuts                  5.29  
+122       Tomato Paste              7.91  
+123       Mustard Seeds             2.34  
+124       Marshmallows              5.94  
+125       Plum Tomatoes             4.37  
+126       Chutney                   7.67  
+127       Amaretto                  7.66  
+128       Tea                       4.23  
+129       Chipotle Peppers          9.42  
+130       Cornstarch                6.67  
+131       Pico De Gallo             1.37  
+132       Bean Sauce                6.69  
+133       Red Cabbage               0.86  
+134       Cod                       4.3   
+135       Angelica                  3.02  
+136       Salsa                     5.18  
+137       Raisins                   7.01  
+138       Alfredo Sauce             1.28  
+139       Bass                      7.46  
+140       Turnips                   8.47  
+141       Cactus                    7.79  
+142       Mint                      1.5   
+143       Shitakes                  2.33  
+144       Lentils                   0.56  
+145       Peas                      1.56  
+146       Bourbon                   5.82  
+147       Milk                      4.41  
+148       Liver                     9.92  
+149       Breadcrumbs               8.21  
+150       Maraschino Cherries       8.28  
+151       Salmon                    4.14  
+152       Hoisin Sauce              6.95  
+153       Mascarpone                0.7   
+154       Hash Browns               8.64  
+155       Won Ton Skins             1.83  
+156       Mackerel                  1.92  
+157       Apple Pie Spice           9.38  
+158       Kiwi                      4.7   
+159       Rabbits                   1.13  
+160       Sauerkraut                1.77  
+161       Sweet Potatoes            8.08  
+162       Bean Sprouts              2.57  
+163       Asiago Cheese             5.75  
+164       Walnuts                   9.88  
+165       Broccoli Raab             8.93  
+166       Shallots                  2.69  
+167       Almond Butter             2.7   
+168       Celery                    9.48  
+169       Fennel Seeds              3.09  
+170       Creme Fraiche             4.97  
+171       Swordfish                 1.51  
+172       Almond Extract            7.75  
+173       Chives                    7.96  
+174       Pancetta                  6.76  
+175       Berries                   1.89  
+176       Tuna                      4.98  
+177       Irish Cream Liqueur       7.54  
+178       Vegemite                  3.3   
+179       Shrimp                    3.78  
+180       Horseradish               0.05  

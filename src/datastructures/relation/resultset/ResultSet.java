@@ -604,7 +604,7 @@ public class ResultSet {
             String groupByColumnName = keyword + "(" + columnName + ")";
 
             // the size will be set later based on the length of the value returned from the aggregate function
-            Column groupByColumn = new Column(groupByColumnName, DataType.NUMBER, 0);
+            Column groupByColumn = new Column(groupByColumnName, DataType.NUMBER, 0, 0);
             columnsToReturn.add(groupByColumn);
         }
 

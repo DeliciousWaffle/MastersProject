@@ -82,6 +82,7 @@ public class Serializer {
                     break;
                 // lines that don't contain "DONE" have some form of data to add
                 default: {
+
                     String[] tokens = currentLine.split(": ");
                     String type = tokens[0];
                     String data = tokens[1];
@@ -316,6 +317,7 @@ public class Serializer {
                     break;
                 // lines that don't contain "DONE" have some form of data to add
                 default: {
+
                     String[] tokens = currentLine.split(": ");
                     String type = tokens[0];
                     String data = tokens[1];
@@ -331,8 +333,9 @@ public class Serializer {
                             String columnName = columnTokens[0];
                             DataType dataType = DataType.convertToDataType(columnTokens[1]);
                             int size = Integer.parseInt(columnTokens[2]);
-                            FileStructure fileStructure = FileStructure.convertToFileStructure(columnTokens[3]);
-                            column = new Column(columnName, dataType, size, fileStructure);
+                            int decimalSize = Integer.parseInt(columnTokens[3]);
+                            FileStructure fileStructure = FileStructure.convertToFileStructure(columnTokens[4]);
+                            column = new Column(columnName, dataType, size, decimalSize, fileStructure);
                             break;
                         case "PrimaryKeyList":
                             String[] primaryKeyTokens = data.split("\\s+");
@@ -398,9 +401,11 @@ public class Serializer {
                     String columnName = column.getColumnName();
                     String dataType = column.getDataType().toString();
                     String size = Integer.toString(column.size());
+                    String decimalSize = Integer.toString(column.getDecimalSize());
                     String fileStructure = column.getFileStructure().toString();
                     toSerialize.append("\t\t").append("Column: ").append(columnName).append(" ").append(dataType).
-                            append(" ").append(size).append(" ").append(fileStructure).append("\n");
+                            append(" ").append(size).append(" ").append(decimalSize).append(" ").append(fileStructure).
+                            append("\n");
                     toSerialize.append("\t\t").append("COLUMN DONE").append("\n");
                 }
 
@@ -484,6 +489,11 @@ public class Serializer {
             int columnNameLength = column.getColumnName().length();
             int maxNumSpaces = column.size();
 
+            // if this column has decimal spaces account for those and the "." too
+            if (column.getDecimalSize() > 0) {
+                maxNumSpaces += (column.getDecimalSize() + 1);
+            }
+
             if(columnNameLength > maxNumSpaces) {
                 paddingAmountList.add(columnNameLength);
             } else {
@@ -564,6 +574,12 @@ public class Serializer {
             StringBuilder spaces = new StringBuilder();
             int columnNameLength = columnName.length();
             int maxNumSpaces = column.size();
+
+            // if this column has a decimal, add that along with "."
+            if (column.getDecimalSize() > 0) {
+                maxNumSpaces += (column.getDecimalSize() + 1);
+            }
+
             int numSpacesToPad = maxNumSpaces - columnNameLength;
             int numDashes = Math.max(maxNumSpaces, columnNameLength);
 

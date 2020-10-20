@@ -24,7 +24,7 @@ import java.util.List;
  * will be produced. If the input is a DML statement, then the change will be carried out here.
  */
 public class Compiler {
-
+// TODO change -1 for column date to something that makes sense
     /**
      * Executes the given query which produces a result set. Requires the query tree produced right before
      * pipelining in order to create the result set. This query tree state contains all the necessary information
@@ -110,7 +110,7 @@ public class Compiler {
             DataType dataType = DataType.convertToDataType(dataTypeName);
             int size = Integer.parseInt(sizeName);
 
-            Column column = new Column(columnName, dataType, size);
+            Column column = new Column(columnName, dataType, -1, size);
             columns.add(column);
         }
 
@@ -212,7 +212,7 @@ public class Compiler {
                 DataType dataType = DataType.convertToDataType(dataTypeName);
                 int size = Integer.parseInt(sizeName);
 
-                Column column = new Column(columnName, dataType, size);
+                Column column = new Column(columnName, dataType, -1, size);
 
                 for (Table table : tables) {
                     if (table.getTableName().equalsIgnoreCase(tableName)) {

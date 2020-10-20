@@ -266,8 +266,41 @@ public class Verifier {
             }
         }
 
-        // make sure data types match values used in where clause
-        columnNames = queryRuleGraph.getTokensAt(filteredInput, );
+
+        // make sure data types are valid in where clause
+        /*columnNames = queryRuleGraph.getTokensAt(filteredInput, 29);
+        referencedColumns = Utilities.getReferencedColumns(columnNames, referencedTables);
+        List<String> symbols = queryRuleGraph.getTokensAt(filteredInput, 30, 31, 32, 33, 34, 35);
+        List<String> values = queryRuleGraph.getTokensAt(filteredInput, 36, 38);
+
+        for (int i = 0; i < columnNames.size(); i++) {
+
+            // make sure that the format of a date is correct first
+            if (Utilities.hasDateFormat(values.get(i)) && ! Utilities.isValidDate(values.get(i))) {
+                errorMessage = queryError + "\"" + values.get(i) + "\" is an invalid date";
+                return false;
+            }
+
+            DataType columnDataType = referencedColumns.get(i).getDataType();
+            DataType valueDataType = Utilities.getDataType(columnNames.get(i));
+
+            if (columnDataType != valueDataType) {
+                errorMessage = queryError + "Column \"" + referencedColumns.get(i).getColumnName() +
+                        "\" has a datatype of \"" + columnDataType + "\" which doesn't match \"" + values.get(i) +
+                        "\" which has a data type of \"" + valueDataType + "\"";
+                return false;
+            }
+
+            // if using >, <, >=, <= make sure value is not of type CHAR
+            boolean isRangeSymbol = Symbol.isRangeSymbol(symbols.get(i));
+            boolean isChar = valueDataType == DataType.CHAR;
+
+            if (isRangeSymbol && isChar) {
+                errorMessage = queryError + "Can't use \"" + symbols.get(i) + "\" with CHAR values";
+                return false;
+            }
+        }*/
+
 
         // make sure data types match values used in having clause
 

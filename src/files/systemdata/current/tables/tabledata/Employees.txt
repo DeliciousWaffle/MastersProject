@@ -1,42 +1,42 @@
-EmployeeID FirstName       LastName        PhoneNumber  Address                        City                      State Salary 
----------- --------------- --------------- ------------ ------------------------------ ------------------------- ----- ------ 
-1          Margarita       Rodgers         475-976-4932 7054 Goldcrest Down            Waru                      NC    9929   
-2          Geoffrey        Francis         878-452-7088 1212 N All Saints' Villas Road Qingfa                    OK    83336  
-3          Lauren          Pearson         637-215-2895 5081 Ellesmere Mount           Valença do Douro          IA    99514  
-4          Wayne           Bryant          942-499-0423 9773 Oakham Mount              Chengji                   MD    66416  
-5          Nathan          Scott           888-829-5040 816 N Great Flatt              Glagahdowo                FL    39489  
-6          Justin          Henderson       201-255-6458 2597 W Bowness Woods           Si Satchanalai            GA    25935  
-7          Sally           Thornton        211-416-7793 3928 S Gloucester By-Pass      Kuala Lumpur              KS    10526  
-8          Wilma           Tyler           879-424-9951 6396 S Brackley Mews           Tingzhou                  MI    38639  
-9          Hubert          Garcia          572-405-6749 8185 Sandown Dell              Huangdu                   ID    40351  
-10         Carole          Ingram          737-352-4334 1958 E Whitamore Row           Melchor de Mencos         MI    78584  
-11         Johanna         Morgan          683-272-9329 7107 S Dudley Strand           Şūrān                     AK    99192  
-12         Mattie          Gardner         741-272-2549 1009 N Stanmore Bridge         Chelgard                  AZ    54803  
-13         Martin          Boone           693-896-2042 134 E White Horse Cedars       Kuzovatovo                AK    91020  
-14         Alejandro       Washington      430-305-1829 1426 Netherton Springs         Psychikó                  CT    3787   
-15         Jo              Wade            672-868-8318 5226 W Linnet Paddocks         Moravská Třebová          ND    58819  
-16         Darrin          Dixon           762-879-4790 4236 Wickham Hawthorns         Springfield               NH    75639  
-17         Ronnie          Carpenter       258-857-8421 5502 W Archer Las              Kudowa-Zdrój              IN    3661   
-18         Sean            Morales         929-236-5542 7541 N Kentmere Furlong        Paris                     NY    70657  
-19         Carlos          Simpson         669-871-9570 2227 N Colham Green Road       Ḩāfiz Moghul              CT    55313  
-20         Walter          Abbott          404-311-5286 8193 N Thistle Nook            Karangboyo                UT    4176   
-21         Roman           Barker          747-741-7619 3796 E Poplar Town             Zielonka                  VT    4944   
-22         Cornelius       Norris          706-313-8188 394 N Newtown Alley            São Miguel dos Campos     VT    65300  
-23         Patrick         Cooper          584-609-2210 3434 N Braemar Valley          Kaduy                     MI    22826  
-24         Julio           Mitchell        275-858-5361 7286 Duff Terrace              Laguna                    NV    41999  
-25         Teresa          Rice            783-426-1622 300 Summerhill Cottages        Hannover                  AR    92178  
-26         Leonard         Barker          585-491-4594 7970 N Stanmore Newydd         San Jose                  CA    77548  
-27         Aaron           Cook            368-767-7731 11 N Hartley Parkway           Xibin                     KY    27371  
-28         Micheal         Tate            301-630-0706 6310 N Higham Wharf            Şānūr                     CO    6886   
-29         Angel           Jones           442-572-4555 1130 N Heron Court             Cezi                      CT    45063  
-30         Rose            Malone          948-251-3350 3739 E Cuckoo Street           Turija                    AR    65952  
-31         Grady           Sanchez         404-448-2915 6775 N Falkland Woods          Matara                    TX    81513  
-32         Shelly          Rose            416-894-9239 2506 N Royal Loke              Kim Sơn                   CT    30952  
-33         Levi            Reyes           393-736-7988 5223 W Barrack Crescent        Rathnew                   TN    10928  
-34         Dewey           Bryan           478-678-5602 9490 S Stafford Villas         De Mayo                   HI    682    
-35         Gretchen        Austin          807-392-4524 1740 E Glencoe Glebe           Wenxian Chengguanzhen     AL    7350   
-36         Eula            Howard          956-793-0865 6114 N Witham Willows          Tubarão                   IA    95278  
-37         Oscar           Carroll         846-988-1480 3915 W Tudor Nook              Las Tejerías              TX    97099  
-38         Darrel          Love            615-547-6676 7850 W Oakham Promenade        Jishigang                 OH    84895  
-39         Albert          Fuller          723-754-5741 5979 S Bloxwich Lane           Lianglin                  UT    87341  
-40         Lorenzo         Warner          666-280-8847 1255 E Herdings Court          Lemban                    OH    46909  
+EmployeeID FirstName       LastName        PhoneNumber  Address                        City                      State Salary    
+---------- --------------- --------------- ------------ ------------------------------ ------------------------- ----- --------- 
+1          Margarita       Rodgers         475-976-4932 7054 Goldcrest Down            Waru                      NC    96550.73   
+2          Geoffrey        Francis         878-452-7088 1212 N All Saints' Villas Road Qingfa                    OK    12010.6  
+3          Lauren          Pearson         637-215-2895 5081 Ellesmere Mount           Valença do Douro          IA    94533.88   
+4          Wayne           Bryant          942-499-0423 9773 Oakham Mount              Chengji                   MD    93801.33   
+5          Nathan          Scott           888-829-5040 816 N Great Flatt              Glagahdowo                FL    26923.9  
+6          Justin          Henderson       201-255-6458 2597 W Bowness Woods           Si Satchanalai            GA    81804.98   
+7          Sally           Thornton        211-416-7793 3928 S Gloucester By-Pass      Kuala Lumpur              KS    29485.81   
+8          Wilma           Tyler           879-424-9951 6396 S Brackley Mews           Tingzhou                  MI    93631.16   
+9          Hubert          Garcia          572-405-6749 8185 Sandown Dell              Huangdu                   ID    52872.15   
+10         Carole          Ingram          737-352-4334 1958 E Whitamore Row           Melchor de Mencos         MI    57918.57   
+11         Johanna         Morgan          683-272-9329 7107 S Dudley Strand           Şūrān                     AK    90828.27   
+12         Mattie          Gardner         741-272-2549 1009 N Stanmore Bridge         Chelgard                  AZ    94472.58   
+13         Martin          Boone           693-896-2042 134 E White Horse Cedars       Kuzovatovo                AK    20775.04   
+14         Alejandro       Washington      430-305-1829 1426 Netherton Springs         Psychikó                  CT    39757.09   
+15         Jo              Wade            672-868-8318 5226 W Linnet Paddocks         Moravská Třebová          ND    48125.04   
+16         Darrin          Dixon           762-879-4790 4236 Wickham Hawthorns         Springfield               NH    31267.2  
+17         Ronnie          Carpenter       258-857-8421 5502 W Archer Las              Kudowa-Zdrój              IN    52103.21   
+18         Sean            Morales         929-236-5542 7541 N Kentmere Furlong        Paris                     NY    60753.98   
+19         Carlos          Simpson         669-871-9570 2227 N Colham Green Road       Ḩāfiz Moghul              CT    56990.86   
+20         Walter          Abbott          404-311-5286 8193 N Thistle Nook            Karangboyo                UT    90272.92   
+21         Roman           Barker          747-741-7619 3796 E Poplar Town             Zielonka                  VT    12752.87   
+22         Cornelius       Norris          706-313-8188 394 N Newtown Alley            São Miguel dos Campos     VT    33398.86   
+23         Patrick         Cooper          584-609-2210 3434 N Braemar Valley          Kaduy                     MI    78663.52   
+24         Julio           Mitchell        275-858-5361 7286 Duff Terrace              Laguna                    NV    37571.73   
+25         Teresa          Rice            783-426-1622 300 Summerhill Cottages        Hannover                  AR    5103.72  
+26         Leonard         Barker          585-491-4594 7970 N Stanmore Newydd         San Jose                  CA    52350.95   
+27         Aaron           Cook            368-767-7731 11 N Hartley Parkway           Xibin                     KY    96007.1  
+28         Micheal         Tate            301-630-0706 6310 N Higham Wharf            Şānūr                     CO    36364.71   
+29         Angel           Jones           442-572-4555 1130 N Heron Court             Cezi                      CT    77896.14   
+30         Rose            Malone          948-251-3350 3739 E Cuckoo Street           Turija                    AR    86011.62   
+31         Grady           Sanchez         404-448-2915 6775 N Falkland Woods          Matara                    TX    73044.01   
+32         Shelly          Rose            416-894-9239 2506 N Royal Loke              Kim Sơn                   CT    68633.38   
+33         Levi            Reyes           393-736-7988 5223 W Barrack Crescent        Rathnew                   TN    72558.75   
+34         Dewey           Bryan           478-678-5602 9490 S Stafford Villas         De Mayo                   HI    8121.5 
+35         Gretchen        Austin          807-392-4524 1740 E Glencoe Glebe           Wenxian Chengguanzhen     AL    80211.29   
+36         Eula            Howard          956-793-0865 6114 N Witham Willows          Tubarão                   IA    12000.63   
+37         Oscar           Carroll         846-988-1480 3915 W Tudor Nook              Las Tejerías              TX    76277.35   
+38         Darrel          Love            615-547-6676 7850 W Oakham Promenade        Jishigang                 OH    95264.39   
+39         Albert          Fuller          723-754-5741 5979 S Bloxwich Lane           Lianglin                  UT    60759.36   
+40         Lorenzo         Warner          666-280-8847 1255 E Herdings Court          Lemban                    OH    61003.18   

@@ -1,162 +1,162 @@
-CustomerID ProductID Quantity PaymentMethod        
----------- --------- -------- -------------------- 
-1          90        13       American Express     
-2          176       6        Visa                 
-2          140       1        Capital One          
-2          172       11       Check                
-3          11        15       Chase                
-3          149       3        Visa                 
-3          130       14       Visa                 
-3          75        4        Check                
-4          86        7        Discover             
-4          109       1        Chase                
-4          128       14       American Express     
-4          5         19       Visa                 
-5          74        16       Discover             
-5          76        4        Capital One          
-6          33        16       Visa                 
-7          113       18       Visa                 
-7          5         18       Chase                
-8          43        1        Chase                
-8          20        14       Visa                 
-9          144       4        Chase                
-9          128       4        American Express     
-9          85        20       Check                
-9          76        13       Master Card          
-10         157       7        Visa                 
-10         174       20       American Express     
-10         112       16       American Express     
-11         165       4        Visa                 
-11         152       1        Discover             
-12         27        15       Discover             
-12         41        7        Master Card          
-13         129       15       Cash                 
-13         55        12       Chase                
-13         67        17       American Express     
-13         30        3        Master Card          
-13         169       1        Master Card          
-14         125       7        Cash                 
-14         78        13       Cash                 
-15         44        11       Capital One          
-15         131       6        Visa                 
-15         144       15       Cash                 
-15         154       9        Visa                 
-16         143       5        Cash                 
-16         20        12       American Express     
-16         161       5        Cash                 
-17         29        20       Cash                 
-17         158       3        Check                
-17         33        8        Check                
-18         57        6        Master Card          
-19         40        13       Discover             
-19         129       13       Cash                 
-19         153       11       Capital One          
-20         10        14       Chase                
-20         65        18       American Express     
-20         135       8        Chase                
-20         33        10       Capital One          
-21         54        3        American Express     
-22         172       4        Cash                 
-23         147       6        Check                
-23         102       8        Chase                
-24         110       19       Discover             
-24         119       15       Check                
-25         175       12       Visa                 
-25         41        15       Check                
-25         9         6        American Express     
-26         54        3        Master Card          
-26         73        15       American Express     
-26         99        7        Visa                 
-26         38        17       Cash                 
-27         177       15       American Express     
-28         9         13       Visa                 
-28         64        1        Master Card          
-28         166       17       Master Card          
-28         156       13       Discover             
-28         110       15       Master Card          
-29         151       6        Capital One          
-29         167       1        Master Card          
-29         157       1        Chase                
-30         142       8        Cash                 
-30         32        16       Capital One          
-30         165       8        Chase                
-30         3         11       Visa                 
-30         125       1        Chase                
-31         148       19       Chase                
-31         139       4        American Express     
-31         140       2        Cash                 
-32         122       9        Capital One          
-32         97        8        Chase                
-33         5         15       Master Card          
-34         80        18       Master Card          
-34         167       5        Chase                
-34         103       14       Check                
-34         25        14       Chase                
-35         170       8        Capital One          
-36         95        3        American Express     
-37         25        19       Check                
-37         50        14       Cash                 
-38         142       15       Discover             
-39         174       12       Discover             
-40         51        5        Check                
-40         29        6        Discover             
-40         119       17       Master Card          
-40         59        15       Capital One          
-41         71        19       Master Card          
-41         81        1        Visa                 
-41         19        20       Capital One          
-42         144       10       American Express     
-42         49        18       Chase                
-43         35        3        Discover             
-43         11        4        Discover             
-44         108       9        Capital One          
-44         48        11       Visa                 
-45         162       8        Chase                
-46         99        9        Discover             
-46         112       4        American Express     
-46         62        8        Chase                
-46         141       17       American Express     
-47         138       6        Capital One          
-47         141       4        Cash                 
-47         172       4        Discover             
-47         163       18       American Express     
-48         119       16       Visa                 
-48         69        1        Visa                 
-48         109       16       Capital One          
-48         166       9        Chase                
-48         1         9        American Express     
-49         60        5        Capital One          
-49         110       18       Discover             
-49         89        11       Check                
-49         178       18       Check                
-49         131       15       Capital One          
-50         170       18       Chase                
-50         73        10       Cash                 
-51         3         17       American Express     
-51         107       4        Chase                
-51         88        4        Discover             
-52         130       17       Visa                 
-52         10        19       Visa                 
-53         107       2        Discover             
-53         132       14       American Express     
-53         113       19       Visa                 
-54         157       5        Chase                
-54         125       13       Check                
-54         28        17       Visa                 
-55         136       17       Chase                
-56         162       8        Cash                 
-56         143       18       Master Card          
-56         104       11       Visa                 
-56         23        1        Chase                
-56         7         2        Check                
-57         166       10       Check                
-57         137       6        Check                
-58         61        17       Visa                 
-58         98        14       Visa                 
-58         27        20       Cash                 
-58         14        10       Master Card          
-59         115       17       Check                
-59         54        18       Discover             
-59         78        4        Visa                 
-60         76        2        Cash                 
-60         77        13       Chase                
+CustomerID ProductID Quantity PaymentMethod        DatePurchased 
+---------- --------- -------- -------------------- ------------- 
+1          90        13       American Express     2020-04-04    
+2          176       6        Visa                 2018-10-08    
+2          140       1        Capital One          2021-10-25    
+2          172       11       Check                2018-08-16    
+3          11        15       Chase                2020-02-24    
+3          149       3        Visa                 2018-06-06    
+3          130       14       Visa                 2019-03-17    
+3          75        4        Check                2021-04-28    
+4          86        7        Discover             2020-07-05    
+4          109       1        Chase                2021-11-03    
+4          128       14       American Express     2018-10-10    
+4          5         19       Visa                 2018-03-30    
+5          74        16       Discover             2021-07-06    
+5          76        4        Capital One          2020-12-16    
+6          33        16       Visa                 2021-03-16    
+7          113       18       Visa                 2021-03-23    
+7          5         18       Chase                2021-05-21    
+8          43        1        Chase                2019-03-09    
+8          20        14       Visa                 2019-04-24    
+9          144       4        Chase                2018-09-25    
+9          128       4        American Express     2021-12-07    
+9          85        20       Check                2018-06-16    
+9          76        13       Master Card          2019-06-01    
+10         157       7        Visa                 2021-06-25    
+10         174       20       American Express     2020-03-21    
+10         112       16       American Express     2019-07-28    
+11         165       4        Visa                 2019-02-12    
+11         152       1        Discover             2019-06-21    
+12         27        15       Discover             2019-09-13    
+12         41        7        Master Card          2021-12-06    
+13         129       15       Cash                 2019-03-08    
+13         55        12       Chase                2021-10-31    
+13         67        17       American Express     2021-12-22    
+13         30        3        Master Card          2019-01-19    
+13         169       1        Master Card          2019-11-07    
+14         125       7        Cash                 2019-10-29    
+14         78        13       Cash                 2021-10-22    
+15         44        11       Capital One          2021-10-02    
+15         131       6        Visa                 2021-03-11    
+15         144       15       Cash                 2021-10-25    
+15         154       9        Visa                 2021-06-19    
+16         143       5        Cash                 2018-07-19    
+16         20        12       American Express     2021-07-03    
+16         161       5        Cash                 2018-12-15    
+17         29        20       Cash                 2019-04-08    
+17         158       3        Check                2020-11-23    
+17         33        8        Check                2018-10-29    
+18         57        6        Master Card          2019-03-16    
+19         40        13       Discover             2019-05-31    
+19         129       13       Cash                 2019-12-17    
+19         153       11       Capital One          2021-05-11    
+20         10        14       Chase                2021-05-27    
+20         65        18       American Express     2018-02-01    
+20         135       8        Chase                2021-01-12    
+20         33        10       Capital One          2021-08-04    
+21         54        3        American Express     2020-12-21    
+22         172       4        Cash                 2018-10-08    
+23         147       6        Check                2019-09-09    
+23         102       8        Chase                2020-01-30    
+24         110       19       Discover             2018-10-22    
+24         119       15       Check                2020-11-07    
+25         175       12       Visa                 2019-06-25    
+25         41        15       Check                2020-05-03    
+25         9         6        American Express     2019-04-21    
+26         54        3        Master Card          2020-07-13    
+26         73        15       American Express     2021-10-07    
+26         99        7        Visa                 2020-05-21    
+26         38        17       Cash                 2018-08-06    
+27         177       15       American Express     2019-08-27    
+28         9         13       Visa                 2020-10-27    
+28         64        1        Master Card          2021-12-12    
+28         166       17       Master Card          2021-07-13    
+28         156       13       Discover             2018-10-21    
+28         110       15       Master Card          2019-04-17    
+29         151       6        Capital One          2019-09-13    
+29         167       1        Master Card          2018-05-04    
+29         157       1        Chase                2021-12-06    
+30         142       8        Cash                 2018-02-15    
+30         32        16       Capital One          2019-08-19    
+30         165       8        Chase                2019-08-06    
+30         3         11       Visa                 2020-11-07    
+30         125       1        Chase                2019-04-06    
+31         148       19       Chase                2021-08-03    
+31         139       4        American Express     2018-04-14    
+31         140       2        Cash                 2020-04-07    
+32         122       9        Capital One          2018-01-23    
+32         97        8        Chase                2019-05-01    
+33         5         15       Master Card          2021-10-02    
+34         80        18       Master Card          2019-09-24    
+34         167       5        Chase                2021-03-02    
+34         103       14       Check                2019-07-30    
+34         25        14       Chase                2020-04-05    
+35         170       8        Capital One          2019-07-21    
+36         95        3        American Express     2019-06-14    
+37         25        19       Check                2019-08-04    
+37         50        14       Cash                 2018-01-08    
+38         142       15       Discover             2020-09-27    
+39         174       12       Discover             2020-09-14    
+40         51        5        Check                2019-08-12    
+40         29        6        Discover             2018-09-22    
+40         119       17       Master Card          2021-06-15    
+40         59        15       Capital One          2020-04-22    
+41         71        19       Master Card          2021-04-07    
+41         81        1        Visa                 2018-04-29    
+41         19        20       Capital One          2019-02-26    
+42         144       10       American Express     2020-07-03    
+42         49        18       Chase                2020-12-12    
+43         35        3        Discover             2021-09-30    
+43         11        4        Discover             2019-05-25    
+44         108       9        Capital One          2021-10-31    
+44         48        11       Visa                 2020-05-15    
+45         162       8        Chase                2021-03-09    
+46         99        9        Discover             2020-02-24    
+46         112       4        American Express     2018-09-30    
+46         62        8        Chase                2018-05-02    
+46         141       17       American Express     2021-01-13    
+47         138       6        Capital One          2020-06-06    
+47         141       4        Cash                 2019-07-08    
+47         172       4        Discover             2019-06-04    
+47         163       18       American Express     2018-02-20    
+48         119       16       Visa                 2020-02-23    
+48         69        1        Visa                 2018-12-27    
+48         109       16       Capital One          2018-10-23    
+48         166       9        Chase                2020-01-14    
+48         1         9        American Express     2019-11-30    
+49         60        5        Capital One          2019-06-14    
+49         110       18       Discover             2018-08-01    
+49         89        11       Check                2018-11-04    
+49         178       18       Check                2018-02-16    
+49         131       15       Capital One          2021-11-24    
+50         170       18       Chase                2018-05-20    
+50         73        10       Cash                 2020-03-02    
+51         3         17       American Express     2021-05-30    
+51         107       4        Chase                2019-03-02    
+51         88        4        Discover             2019-08-08    
+52         130       17       Visa                 2020-09-09    
+52         10        19       Visa                 2020-02-05    
+53         107       2        Discover             2019-02-25    
+53         132       14       American Express     2018-11-23    
+53         113       19       Visa                 2018-02-21    
+54         157       5        Chase                2021-04-09    
+54         125       13       Check                2020-10-11    
+54         28        17       Visa                 2019-12-07    
+55         136       17       Chase                2020-08-08    
+56         162       8        Cash                 2018-06-07    
+56         143       18       Master Card          2019-05-07    
+56         104       11       Visa                 2018-01-27    
+56         23        1        Chase                2019-11-11    
+56         7         2        Check                2019-03-22    
+57         166       10       Check                2018-04-07    
+57         137       6        Check                2021-01-22    
+58         61        17       Visa                 2018-04-26    
+58         98        14       Visa                 2019-11-28    
+58         27        20       Cash                 2019-04-25    
+58         14        10       Master Card          2019-05-31    
+59         115       17       Check                2020-10-03    
+59         54        18       Discover             2018-10-25    
+59         78        4        Visa                 2021-02-27    
+60         76        2        Cash                 2021-08-19    
+60         77        13       Chase                2018-02-05    

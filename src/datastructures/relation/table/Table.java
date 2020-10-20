@@ -27,7 +27,6 @@ public class Table {
      * Should not be used for any other purpose
      */
     public Table() {
-
         this.tableName = "none";
         this.columns = new ArrayList<>();
         this.primaryKeys = new ArrayList<>();
@@ -42,7 +41,6 @@ public class Table {
      * @param tableName is the name of the table
      */
     public Table(String tableName) {
-
         this.tableName = tableName;
         this.columns = new ArrayList<>();
         this.primaryKeys = new ArrayList<>();
@@ -59,7 +57,6 @@ public class Table {
      * @param foreignKeys are foreign keys of this table
      */
     public Table(String tableName, List<Column> columns, List<String> primaryKeys, Map<String, String> foreignKeys) {
-
         this(tableName);
         this.columns = columns;
         this.primaryKeys = primaryKeys;
@@ -250,7 +247,7 @@ public class Table {
         }
 
         // didn't find what was asked, just return empty column
-        return new Column("null", DataType.CHAR, 0);
+        return new Column("null", DataType.CHAR, 0, 0);
     }
 
     /**
@@ -406,6 +403,9 @@ public class Table {
             StringBuilder spaces = new StringBuilder();
             int columnNameLength = columnName.length();
             int maxNumSpaces = column.size();
+            if (column.getDecimalSize() > 0) {
+                maxNumSpaces += (column.getDecimalSize() + 1); // + 1 to account for the "."
+            }
             int numSpacesToPad = maxNumSpaces - columnNameLength;
 
             boolean needsPadding = numSpacesToPad > 0;
@@ -425,6 +425,9 @@ public class Table {
         for(Column column : columns) {
 
             int maxColumnNameLength = column.size();
+            if (column.getDecimalSize() > 0) {
+                maxColumnNameLength += (column.getDecimalSize() + 1); // + 1 to account for the ".";
+            }
             int columnNameLength = column.getColumnName().length();
             int numDashes = Math.max(maxColumnNameLength, columnNameLength);
 

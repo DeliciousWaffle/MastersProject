@@ -1,10 +1,10 @@
 Table: Customers
 	ColumnList: NOT EMPTY
-		Column: CustomerID NUMBER 5 NONE
+		Column: CustomerID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: FirstName CHAR 15 NONE
+		Column: FirstName CHAR 15 0 NONE
 		COLUMN DONE
-		Column: LastName CHAR 15 NONE
+		Column: LastName CHAR 15 0 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: CustomerID
@@ -16,11 +16,11 @@ Table: Customers
 TABLE DONE
 Table: Products
 	ColumnList: NOT EMPTY
-		Column: ProductID NUMBER 5 NONE
+		Column: ProductID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: ProductName CHAR 25 NONE
+		Column: ProductName CHAR 25 0 NONE
 		COLUMN DONE
-		Column: Price NUMBER 1 NONE
+		Column: Price NUMBER 1 2 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: ProductID
@@ -32,21 +32,21 @@ Table: Products
 TABLE DONE
 Table: Employees
 	ColumnList: NOT EMPTY
-		Column: EmployeeID NUMBER 5 NONE
+		Column: EmployeeID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: FirstName CHAR 15 NONE
+		Column: FirstName CHAR 15 0 NONE
 		COLUMN DONE
-		Column: LastName CHAR 15 NONE
+		Column: LastName CHAR 15 0 NONE
 		COLUMN DONE
-		Column: PhoneNumber CHAR 12 NONE
+		Column: PhoneNumber CHAR 12 0 NONE
 		COLUMN DONE
-		Column: Address CHAR 30 NONE
+		Column: Address CHAR 30 0 NONE
 		COLUMN DONE
-		Column: City CHAR 25 NONE
+		Column: City CHAR 25 0 NONE
 		COLUMN DONE
-		Column: State CHAR 2 NONE
+		Column: State CHAR 2 0 NONE
 		COLUMN DONE
-		Column: Salary NUMBER 6 NONE
+		Column: Salary NUMBER 6 2 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: EmployeeID
@@ -58,17 +58,17 @@ Table: Employees
 TABLE DONE
 Table: Stores
 	ColumnList: NOT EMPTY
-		Column: StoreID NUMBER 5 NONE
+		Column: StoreID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: StoreName CHAR 25 NONE
+		Column: StoreName CHAR 25 0 NONE
 		COLUMN DONE
-		Column: Address CHAR 30 NONE
+		Column: Address CHAR 30 0 NONE
 		COLUMN DONE
-		Column: City CHAR 25 NONE
+		Column: City CHAR 25 0 NONE
 		COLUMN DONE
-		Column: State CHAR 2 NONE
+		Column: State CHAR 2 0 NONE
 		COLUMN DONE
-		Column: ManagerID NUMBER 5 NONE
+		Column: ManagerID NUMBER 5 0 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: StoreID
@@ -80,17 +80,17 @@ Table: Stores
 TABLE DONE
 Table: Suppliers
 	ColumnList: NOT EMPTY
-		Column: SupplierID NUMBER 5 NONE
+		Column: SupplierID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: SupplierName CHAR 25 NONE
+		Column: SupplierName CHAR 25 0 NONE
 		COLUMN DONE
-		Column: PhoneNumber CHAR 12 NONE
+		Column: PhoneNumber CHAR 12 0 NONE
 		COLUMN DONE
-		Column: Address CHAR 30 NONE
+		Column: Address CHAR 30 0 NONE
 		COLUMN DONE
-		Column: City CHAR 15 NONE
+		Column: City CHAR 15 0 NONE
 		COLUMN DONE
-		Column: State CHAR 2 NONE
+		Column: State CHAR 2 0 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: SupplierID
@@ -102,13 +102,15 @@ Table: Suppliers
 TABLE DONE
 Table: CustomerPurchaseDetails
 	ColumnList: NOT EMPTY
-		Column: CustomerID NUMBER 5 NONE
+		Column: CustomerID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: ProductID NUMBER 5 NONE
+		Column: ProductID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: Quantity NUMBER 2 NONE
+		Column: Quantity NUMBER 2 0 NONE
 		COLUMN DONE
-		Column: PaymentMethod CHAR 20 NONE
+		Column: PaymentMethod CHAR 20 0 NONE
+		COLUMN DONE
+		Column: DatePurchased DATE 10 0 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: CustomerID ProductID
@@ -120,15 +122,17 @@ Table: CustomerPurchaseDetails
 TABLE DONE
 Table: EmployeePurchaseDetails
 	ColumnList: NOT EMPTY
-		Column: EmployeeID NUMBER 5 NONE
+		Column: EmployeeID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: ProductID NUMBER 5 NONE
+		Column: ProductID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: Quantity NUMBER 2 NONE
+		Column: Quantity NUMBER 2 0 NONE
 		COLUMN DONE
-		Column: PaymentMethod CHAR 20 NONE
+		Column: PaymentMethod CHAR 20 0 NONE
 		COLUMN DONE
-		Column: DiscountAmount NUMBER 5 NONE
+		Column: DiscountAmount NUMBER 1 2 NONE
+		COLUMN DONE
+		Column: DatePurchased DATE 10 0 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: EmployeeID ProductID
@@ -140,17 +144,17 @@ Table: EmployeePurchaseDetails
 TABLE DONE
 Table: ShippingDetails
 	ColumnList: NOT EMPTY
-		Column: SupplierID NUMBER 5 NONE
+		Column: SupplierID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: StoreID NUMBER 5 NONE
+		Column: StoreID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: ProductID NUMBER 5 NONE
+		Column: ProductID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: Quantity NUMBER 4 NONE
+		Column: Quantity NUMBER 4 0 NONE
 		COLUMN DONE
-		Column: DateShipped CHAR 10 NONE
+		Column: DateShipped DATE 10 0 NONE
 		COLUMN DONE
-		Column: DateArrived CHAR 10 NONE
+		Column: DateArrived DATE 10 0 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: SupplierID StoreID ProductID
@@ -162,11 +166,11 @@ Table: ShippingDetails
 TABLE DONE
 Table: InventoryDetails
 	ColumnList: NOT EMPTY
-		Column: StoreID NUMBER 5 NONE
+		Column: StoreID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: ProductID NUMBER 5 NONE
+		Column: ProductID NUMBER 5 0 NONE
 		COLUMN DONE
-		Column: Quantity NUMBER 4 NONE
+		Column: Quantity NUMBER 4 0 NONE
 		COLUMN DONE
 	COLUMN LIST DONE
 	PrimaryKeyList: StoreID ProductID

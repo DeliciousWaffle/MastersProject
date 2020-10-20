@@ -23,15 +23,10 @@ public class TableData {
      */
     public TableData(TableData toCopy) {
         this.paddingAmountList = new ArrayList<>();
-        for(Integer paddingAmount : toCopy.paddingAmountList) {
-            this.paddingAmountList.add(paddingAmount);
-        }
+        this.paddingAmountList.addAll(toCopy.paddingAmountList);
         this.tableData = new ArrayList<>();
         for(List<String> rows : toCopy.tableData) {
-            List<String> rowsToAdd = new ArrayList<>();
-            for(String cols : rows) {
-                rowsToAdd.add(cols);
-            }
+            List<String> rowsToAdd = new ArrayList<>(rows);
             this.tableData.add(rowsToAdd);
         }
     }
@@ -255,6 +250,7 @@ public class TableData {
         if(print.length() != 0) {
             print.deleteCharAt(print.length() - 1);
         }
+
         return print.toString();
     }
 }

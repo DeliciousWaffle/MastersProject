@@ -318,7 +318,7 @@ public class RuleGraph {
      * Makes sure that an illegal comparison is not performed on a string value. This means that if
      * >, <, >=, <= is encountered, this method makes sure that the next string value present is a date.
      * Eg. SELECT col1 FROM tab1 WHERE col1 > "Steve" will return false because "Steve" is not
-     * a date value while SELECT col1 FROM tab1 WHERE col1 > "10-12-2020" will return true.
+     * a date value while SELECT col1 FROM tab1 WHERE col1 > "2020-10-12" will return true.
      * @param filteredInput is the input after being filtered
      * @param comparisonIds are ids containing >, <, >=, <=
      * @param valueIds are ids containing values
@@ -337,7 +337,7 @@ public class RuleGraph {
 
             if (! isNumeric) { // ignore values that are numeric (these are fine)
                 if (isRangeSymbol && ! hasDateFormat) {
-                    errorMessage = "Expected a Date value (MM-DD-YYYY), but found: \"" + values.get(i) + "\"";
+                    errorMessage = "Expected a Date value (YYYY-MM-DD), but found: \"" + values.get(i) + "\"";
                     return true;
                 }
             }

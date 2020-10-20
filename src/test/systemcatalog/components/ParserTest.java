@@ -61,7 +61,7 @@ class ParserTest {
             "SELECT Col1 FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 != Tab2.Col1 INNER JOIN Tab3 ON Tab2.Col2 > Tab3.Col2 INNER JOIN Tab4 ON Tab3.Col3 = Tab4.Col3",
             "SELECT Col1 FROM Tab1 WHERE Col1 = 1", // where clauses
             "SELECT Col1 FROM Tab1 WHERE Col1 = \"Blah\"", // where clause with a string in the predicate
-            "SELECT Col1 FROM Tab1 WHERE Col1 = \"12-03-2019\"", // where clause with date value in predicate
+            "SELECT Col1 FROM Tab1 WHERE Col1 = \"2019-02-12\"", // where clause with date value in predicate
             "SELECT Col1 FROM Tab1 WHERE Col1 != 1",
             "SELECT Col1 FROM Tab1 WHERE Col1 > 1",
             "SELECT Col1 FROM Tab1 WHERE Col1 < 1",
@@ -85,7 +85,7 @@ class ParserTest {
             "SELECT Col1, Col2, SUM(Col3) FROM Tab1 GROUP BY Col1, Col2 HAVING MIN(Col1) != 1",
             "SELECT Col1, SUM(Col2) FROM Tab1, Tab2, Tab3 GROUP BY Col1 HAVING MAX(Col1) = 1", // having clauses mixed with other stuff
             "SELECT Col1, SUM(Col2) FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 != Tab2.Col1 INNER JOIN Tab3 ON Tab2.Col2 > Tab3.Col2 INNER JOIN Tab4 ON Tab3.Col3 = Tab4.Col3 GROUP BY Col1 HAVING AVG(Col1) = 1",
-            "SELECT Col1, SUM(Col2) FROM Tab1 WHERE Col1 = \"Blah\" GROUP BY Col1 HAVING SUM(Col1) = 1"
+            "SELECT Col1, SUM(Col2) FROM Tab1 WHERE Col1 = \"Blah\" GROUP BY Col1 HAVING SUM(Col1) = 1",
     })
     void testValidQueries(String query) {
         System.out.println(query);
@@ -133,6 +133,8 @@ class ParserTest {
             "SELECT Col1 FROM Tab1 WHERE Col1 > \"10-2-2019\"", // date is not formatted correctly
             "SELECT Col1 FROM Tab1 WHERE Col1 = abc", // having a string value as a numeric
             "SELECT COUNT(Col1) FROM Tab1 GROUP BY Col1 HAVING Col1 > 5", // forgetting aggregation type in having clause
+            "SELECT Col1, COUNT(Col1) FROM Tab1", // forgetting group by clause for non aggregated columns
+            "SELECT Col1, Col2, COUNT(Col3) FROM Tab1 GROUP BY Col1"
     })
     void testInvalidQueries(String query) {
         System.out.println(query);
@@ -267,7 +269,7 @@ class ParserTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "INSERT INTO Tab1 VALUES(1)", // simple
-            "INSERT INTO Tab1 VALUES(1, -2, 3.1, \"Blah\", \"10-02-2020\")" // complex
+            "INSERT INTO Tab1 VALUES(1, -2, 3.1, \"Blah\", \"2020-12-21\")" // complex
     })
     void testValidInsertCommands(String insert) {
         System.out.println(insert);
@@ -302,7 +304,7 @@ class ParserTest {
     @ValueSource(strings = {
             "DELETE FROM Tab1 WHERE Col1 = 1", // simple delete statements
             "DELETE FROM Tab1 WHERE Col1 != \"Blah\"",
-            "DELETE FROM Tab1 WHERE Col1 > \"10-22-2020\"",
+            "DELETE FROM Tab1 WHERE Col1 > \"2020-10-20\"",
             "DELETE FROM Tab1 WHERE Col1 < 1",
             "DELETE FROM Tab1 WHERE Col1 >= 1",
             "DELETE FROM Tab1 WHERE Col1 <= 1",
@@ -339,7 +341,7 @@ class ParserTest {
     @ValueSource(strings = {
             "UPDATE Tab1 SET Col1 = 1 WHERE Col2 = \"Blah\"",
             "UPDATE Tab1 SET Col1 = \"Blah\" WHERE Col2 = 1",
-            "UPDATE Tab1 SET Col1 = \"10-01-2019\" WHERE Col2 = 1.02",
+            "UPDATE Tab1 SET Col1 = \"2019-01-12\" WHERE Col2 = 1.02",
     })
     void testValidUpdateCommands(String update) {
         System.out.println(update);

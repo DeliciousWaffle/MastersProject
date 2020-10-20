@@ -1,8 +1,10 @@
 package systemcatalog.components;
 
+import datastructures.misc.Pair;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import enums.InputType;
+import utilities.Utilities;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct along with some other
@@ -92,8 +94,17 @@ public class Parser {
                 ! queryRuleGraph.hasIllegalDateAt(filteredInput, new int[] {30, 31, 32, 33, 34, 35}, new int[] {36, 38}) &&
                 ! queryRuleGraph.hasIllegalDateAt(filteredInput, new int[] {54, 55, 56, 57, 58, 59}, new int[] {60, 62});
 
-        errorMessage = isValid ? "" : "Parser error when validating Query:\n" + queryRuleGraph.getErrorMessage();
+        // make sure the group by clause is valid
+        Pair<Boolean, String> groupByClauseInfo = Utilities.hasInvalidGroupByClause(filteredInput);
+        boolean hasInvalidGroupByClause = groupByClauseInfo.getFirst();
 
+        if (hasInvalidGroupByClause) {
+            String groupByErrorMessage = groupByClauseInfo.getSecond();
+            errorMessage = "Parser error when validating Query:\n" + groupByErrorMessage;
+            isValid = false;
+        }
+
+        errorMessage = isValid ? "" : "Parser error when validating Query:\n" + queryRuleGraph.getErrorMessage();
         return isValid;
     }
 

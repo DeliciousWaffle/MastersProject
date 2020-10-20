@@ -1,15 +1,22 @@
 package utilities;
 
+import datastructures.misc.Pair;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
+import datastructures.relation.table.component.DataType;
+import datastructures.rulegraph.RuleGraph;
+import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
 import enums.InputType;
 import enums.Keyword;
 import enums.Symbol;
+import org.junit.jupiter.params.ParameterizedTest;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -221,7 +228,7 @@ public final class Utilities {
 
     /**
      * @param candidate is the String to check
-     * @return whether or not the candidate String is in the format of a date (MM-DD-YYYY)
+     * @return whether or not the candidate String is in the format of a date (YYYY-MM-DD)
      */
     public static boolean hasDateFormat(String candidate) {
 
@@ -233,20 +240,35 @@ public final class Utilities {
         }
 
         // check that "-" is present
-        boolean hasCorrectDashes = candidate.charAt(2) == '-' && candidate.charAt(5) == '-';
+        boolean hasCorrectDashes = candidate.charAt(4) == '-' && candidate.charAt(7) == '-';
 
         if (! hasCorrectDashes) {
             return false;
         }
 
-        // check that MM, DD, and YYYY are numeric
-        String[] monthDayYear = candidate.split("-");
+        // check that year, month, and day are numeric
+        String[] yearMonthDay = candidate.split("-");
 
-        boolean hasNumericMonth = isNumeric(monthDayYear[0]);
-        boolean hasNumericDay = isNumeric(monthDayYear[1]);
-        boolean hasNumericYear = isNumeric(monthDayYear[2]);
+        boolean hasNumericYear = isNumeric(yearMonthDay[0]);
+        boolean hasNumericMonth = isNumeric(yearMonthDay[1]);
+        boolean hasNumericDay = isNumeric(yearMonthDay[2]);
 
         return hasNumericMonth && hasNumericDay && hasNumericYear;
+    }
+
+    /**
+     * Determines whether the candidate with a date format is logically valid.
+     * Eg. 2020-99-21 will return false because months only go 1 through 12
+     * @param candidateWithDateFormat is the potential date to verify
+     * @return whether the candidate is logically valid
+     */
+    public static boolean isValidDate(String candidateWithDateFormat) {
+        try {
+            LocalDate.parse(candidateWithDateFormat);
+            return true;
+        } catch (DateTimeParseException e) {
+            return false;
+        }
     }
 
     /**
@@ -309,18 +331,68 @@ public final class Utilities {
         return null;
     }
 
+    public static Pair<Boolean, String> hasInvalidGroupByClause(String[] filteredInput) {
+
+        RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
+
+        boolean hasAggregateFunction = ! queryRuleGraph.getTokensAt(filteredInput, 3, 4, 5, 6, 7).isEmpty();
+
+        // don't have any aggregate functions, good to go
+        if (! hasAggregateFunction) {
+            return new Pair<>(false, "");
+        }
+
+        boolean hasGroupByClause = ! queryRuleGraph.getTokensAt(filteredInput, 41).isEmpty();
+
+        // using exclusively aggregate functions is fine -> SELECT MIN(Col1), MAX(Col2) FROM Tab1;
+        // this is not fine -> SELECT Col1, MAX(Col2) FROM Tab1;
+        if (! hasGroupByClause) {
+            return new Pair<>(false, "");
+        }
+
+        // check if there is a missing matching column in GROUP BY clause
+        List<String> nonAggregatedColumns = queryRuleGraph.getTokensAt(filteredInput, 2);
+        List<String> groupByColumns = queryRuleGraph.getTokensAt(filteredInput, 43);
+
+        for (String nonAggregatedColumn : nonAggregatedColumns) {
+
+            boolean foundMatchingColumn = false;
+
+            for (String groupByColumn : groupByColumns) {
+                if (nonAggregatedColumn.equalsIgnoreCase(groupByColumn)) {
+                    foundMatchingColumn = true;
+                    break;
+                }
+            }
+
+            // didn't find a matching column, this expression is invalid
+            if (! foundMatchingColumn) {
+                return new Pair<>(true, "Didn't find a matching column in GROUP BY clause" +
+                        "for the column \"" + nonAggregatedColumn + "\"");
+            }
+        }
+
+        // aggregation is valid
+        return new Pair<>(false, "");
+    }
+
     public static boolean isAmbiguousColumn(String columnName, List<Table> referencedTables) {
+
         int occurrences = 0;
+
         for (Table table : referencedTables) {
             if (table.hasColumn(columnName)) {
                 occurrences++;
             }
         }
+
         return occurrences > 1;
     }
 
     public static List<Column> getReferencedColumns(List<String> columnNames, List<Table> tables) {
+
         OptimizerUtilities.prefixColumnNamesWithTableNames(columnNames, tables);
+
         return columnNames.stream()
                 .map(prefixedColumnName ->  {
                     String[] tokens = prefixedColumnName.split("\\.");
@@ -331,5 +403,15 @@ public final class Utilities {
                     return referencedTable.getColumn(columnName);
                 })
                 .collect(Collectors.toList());
+    }
+
+    public static DataType getDataType(String value) {
+        if (hasDateFormat(value) && isValidDate(value)) {
+            return DataType.DATE;
+        } else if (isNumeric(value)) {
+            return DataType.NUMBER;
+        } else {
+            return DataType.CHAR;
+        }
     }
 }
