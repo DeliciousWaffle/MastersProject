@@ -1,6 +1,7 @@
 package test.systemcatalog.components;
 
 import datastructures.relation.table.Table;
+import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
 import enums.InputType;
 import files.io.FileType;
@@ -283,8 +284,8 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "UPDATE Customers SET ColumnID = -1 WHERE ColumnID = 1",
-            "UPDATE Customers SET FirstName = \"Blah\" WHERE ColumnID = 1"
+            "UPDATE Customers SET CustomerID = -1 WHERE CustomerID = 1",
+            "UPDATE Customers SET FirstName = \"Blah\" WHERE CustomerID = 1"
     })
     void validUpdateCommand(String createTable) {
         System.out.println(createTable);
@@ -292,6 +293,7 @@ public class VerifierTest {
         boolean isValid = verifier.isValid(InputType.UPDATE, filtered, tables, users);
         System.out.println("Error code: " + verifier.getErrorMessage());
         verifier.resetErrorMessage();
+        System.out.println(RuleGraphTypes.getUpdateRuleGraph());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
@@ -313,10 +315,16 @@ public class VerifierTest {
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
-/*
+
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "GRANT ALTER ON Customers TO Bob", // normal
+            "GRANT ALTER, DELETE, INDEX ON Customers TO Bob", // multiple columns
+            "GRANT UPDATE(CustomerID, FirstName, LastName) ON Customers TO Bob", // update, references
+            "GRANT ALL PRIVILEGES ON Customers TO Bob", // all
+            "GRANT ALTER ON Customers TO Bob, Sally, John", // multiple users
+            "GRANT ALTER ON Customers TO Bob WITH GRANT OPTION", // grant option
+            "GRANT ALTER, DELETE, INDEX, UPDATE(CustomerID, FirstName, LastName) ON Customers TO Bob, Sally, John" // mix of stuff
     })
     void validGrantCommand(String createTable) {
         System.out.println(createTable);
@@ -330,7 +338,13 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "GRANT ALTER ON Blah TO Bob", // table doesn't exist
+            "GRANT ALTER ON Customers TO Blah", // user doesn't exist
+            "GRANT ALTER ON Customers TO Bob, Sally, Blah", // multiple
+            "GRANT UPDATE(Blah) ON Customers TO Bob", // update, referenced columns don't exist in table
+            "GRANT UPDATE(CustomerID, FirstName, LastName, Blah) ON Customers TO Bob",
+            "GRANT REFERENCES(Blah) ON Customers TO Bob",
+            "GRANT REFERENCES(CustomerID, FirstName, LastName, Blah) ON Customers TO Bob",
     })
     void invalidGrantCommand(String createTable) {
         System.out.println(createTable);
@@ -344,7 +358,12 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REVOKE ALTER ON Customers FROM Bob", // normal
+            "REVOKE ALTER, DELETE, INDEX ON Customers FROM Bob", // multiple columns
+            "REVOKE UPDATE(CustomerID, FirstName, LastName) ON Customers FROM Bob", // update, references
+            "REVOKE ALL PRIVILEGES ON Customers FROM Bob", // all
+            "REVOKE ALTER ON Customers FROM Bob, Sally, John", // multiple users
+            "REVOKE ALTER, DELETE, INDEX, UPDATE(CustomerID, FirstName, LastName) ON Customers FROM Bob, Sally, John" // mix of stuff
     })
     void validRevokeCommand(String createTable) {
         System.out.println(createTable);
@@ -358,7 +377,13 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REVOKE ALTER ON Blah FROM Bob", // table doesn't exist
+            "REVOKE ALTER ON Customers FROM Blah", // user doesn't exist
+            "REVOKE ALTER ON Customers FROM Bob, Sally, Blah", // multiple
+            "REVOKE UPDATE(Blah) ON Customers FROM Bob", // update, referenced columns don't exist in table
+            "REVOKE UPDATE(CustomerID, FirstName, LastName, Blah) ON Customers FROM Bob",
+            "REVOKE REFERENCES(Blah) ON Customers FROM Bob",
+            "REVOKE REFERENCES(CustomerID, FirstName, LastName, Blah) ON Customers FROM Bob",
     })
     void invalidRevokeCommand(String createTable) {
         System.out.println(createTable);
@@ -372,7 +397,8 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "BUILD HASH TABLE ON CustomerID IN Customers", // normal
+            "BUILD CLUSTERED FILE ON Customers AND CustomerPurchaseDetails" // clustered files
     })
     void validBuildFileStructure(String createTable) {
         System.out.println(createTable);
@@ -386,7 +412,10 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "BUILD HASH TABLE ON CustomerID IN Blah", // table does not exist
+            "BUILD CLUSTERED FILE ON Customers AND Blah",
+            "BUILD CLUSTERED FILE ON Blah AND Customers",
+            "BUILD HASH TABLE ON Blah IN Customers", // column does not exist
     })
     void invalidBuildFileStructure(String createTable) {
         System.out.println(createTable);
@@ -400,7 +429,8 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REMOVE FILE STRUCTURE ON CustomerID IN Customers",
+            "REMOVE CLUSTERED FILE ON Customers AND CustomerPurchaseDetails"
     })
     void validRemoveFileStructure(String createTable) {
         System.out.println(createTable);
@@ -414,7 +444,10 @@ public class VerifierTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REMOVE FILE STRUCTURE ON CustomerID IN Blah", // table does not exist
+            "REMOVE CLUSTERED FILE ON Customers AND Blah",
+            "REMOVE CLUSTERED FILE ON Blah AND Customers",
+            "REMOVE FILE STRUCTURE ON Blah IN Customers" // column does not exist
     })
     void invalidRemoveFileStructure(String createTable) {
         System.out.println(createTable);
@@ -424,5 +457,5 @@ public class VerifierTest {
         verifier.resetErrorMessage();
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
-    }*/
+    }
 }

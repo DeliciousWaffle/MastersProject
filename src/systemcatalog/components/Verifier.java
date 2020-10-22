@@ -12,8 +12,6 @@ import utilities.OptimizerUtilities;
 import utilities.Utilities;
 import enums.InputType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -94,9 +92,9 @@ public class Verifier {
             case UPDATE:
                 return isValidUpdate(filteredInput, tables);
             case GRANT:
-                return isValidGrant(filteredInput, tables, users);
+                return isValidPrivilegeCommand("Grant", filteredInput, tables, users);
             case REVOKE:
-                return isValidRevoke(filteredInput, tables, users);
+                return isValidPrivilegeCommand("Revoke", filteredInput, tables, users);
             case BUILD_FILE_STRUCTURE:
                 return isValidBuildFileStructure(filteredInput, tables);
             case REMOVE_FILE_STRUCTURE:
@@ -318,7 +316,7 @@ public class Verifier {
         RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
 
         // make sure that the table name is not numeric
-        String tableName = filteredInput[2];
+        String tableName = createTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
         boolean isNumeric = Utilities.isNumeric(tableName);
 
         if (isNumeric) {
@@ -430,8 +428,10 @@ public class Verifier {
      */
     public boolean isValidDropTable(String[] filteredInput, List<Table> tables) {
 
+        RuleGraph dropTableRuleGraph = RuleGraphTypes.getDropTableRuleGraph();
+
         // make sure table exists
-        String tableName = filteredInput[2];
+        String tableName = dropTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
 
         for (Table table : tables) {
             if (table.getTableName().equalsIgnoreCase(tableName)) {
@@ -616,7 +616,7 @@ public class Verifier {
         RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
 
         // make sure table name exists
-        String tableName = filteredInput[2];
+        String tableName = insertRuleGraph.getTokensAt(filteredInput, 2).get(0);
         Table referencedTable = Utilities.getReferencedTable(tableName, tables);
         boolean tableExists = referencedTable != null;
 
@@ -667,7 +667,7 @@ public class Verifier {
         RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
 
         // make sure table name exists
-        String tableName = filteredInput[2];
+        String tableName = deleteRuleGraph.getTokensAt(filteredInput, 2).get(0);
         Table referencedTable = Utilities.getReferencedTable(tableName, tables);
         boolean foundTable = referencedTable != null;
 
@@ -712,7 +712,7 @@ public class Verifier {
         RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
 
         // make sure table name exists
-        String tableName = filteredInput[1];
+        String tableName = updateRuleGraph.getTokensAt(filteredInput, 1).get(0);
         Table referencedTable = Utilities.getReferencedTable(tableName, tables);
         boolean foundTable = referencedTable != null;
 
@@ -723,8 +723,8 @@ public class Verifier {
 
 
         // make sure the columns exist
-        String firstColumnName = filteredInput[3];
-        String secondColumnName = filteredInput[10];
+        String firstColumnName = updateRuleGraph.getTokensAt(filteredInput, 3).get(0);
+        String secondColumnName = updateRuleGraph.getTokensAt(filteredInput, 10).get(0);
 
         if (! referencedTable.hasColumn(firstColumnName)) {
             errorMessage = insertError + "Column \"" + firstColumnName + "\" does not exist";
@@ -763,71 +763,56 @@ public class Verifier {
     }
 
     /**
-     * Returns whether the data referenced in the GRANT command makes sense with respect to the data on the system.
+     * Returns whether the data referenced in the GRANT or REVOKE command makes sense with the system data.
+     * Since the rule graphs of these commands is very similar, compressed into this single method.
+     * @param command is either "GRANT" or "REVOKE"
      * @param filteredInput is the filtered input
      * @param tables are the tables of the system
-     * @return whether the GRANT command is valid
+     * @return whether the GRANT or REVOKE command is valid
      */
-    public boolean isValidGrant(String[] filteredInput, List<Table> tables, List<User> users) {
+    public boolean isValidPrivilegeCommand(String command, String[] filteredInput, List<Table> tables, List<User> users) {
 
-        RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
+        String grantError = "Verifier error when validating " + command + " statement:\n";
+        RuleGraph grantRuleGraph = command.equalsIgnoreCase("Grant")
+                ? RuleGraphTypes.getGrantRuleGraph()
+                : RuleGraphTypes.getRevokeRuleGraph();
 
         // make sure table exists
         String tableName = grantRuleGraph.getTokensAt(filteredInput, 20).get(0);
-        Table referencedTable = null;
-        boolean foundTable = false;
+        Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+        boolean foundTable = referencedTable != null;
 
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                referencedTable = table;
-                foundTable = true;
-            }
-        }
-
-        if(! foundTable) {
+        if (! foundTable) {
+            errorMessage = grantError + "Table \"" + tableName + "\" does not exist";
             return false;
         }
 
-        // make sure that columns exist for corresponding table if using UPDATE or REFERENCES
-        List<String> updateAndReferencesCols = grantRuleGraph.getTokensAt(filteredInput, 12, 16);
 
-        for(String candidate : updateAndReferencesCols) {
-            boolean hasCandidate = referencedTable.hasColumn(candidate);
-            if(! hasCandidate) {
+        // make sure users exists
+        List<String> usernames = grantRuleGraph.getTokensAt(filteredInput, 22);
+
+        for (String username : usernames) {
+            User referencedUser = Utilities.getReferencedUser(username, users);
+            boolean hasUser = referencedUser != null;
+            if (! hasUser) {
+                errorMessage = grantError + "User \"" + username + "\" does not exist";
                 return false;
             }
         }
 
-        // make sure user(s) exists
-        List<String> usersReferenced = grantRuleGraph.getTokensAt(filteredInput, 22);
 
-        for(String candidate : usersReferenced) {
+        // make sure that columns exist for corresponding table if using UPDATE or REFERENCES
+        List<String> updateAndReferencesColumns = grantRuleGraph.getTokensAt(filteredInput, 12, 16);
 
-            boolean foundUser = false;
-
-            for(User user : users) {
-                String username = user.getUsername();
-                if(username.equals(candidate)) {
-                    foundUser = true;
-                }
-            }
-
-            if(! foundUser) {
+        for (String updateAndReferenceColumn : updateAndReferencesColumns) {
+            boolean hasCandidate = referencedTable.hasColumn(updateAndReferenceColumn);
+            if (! hasCandidate) {
+                errorMessage = grantError + "Column \"" + updateAndReferenceColumn + "\" does not exist";
                 return false;
             }
         }
 
         return true;
-    }
-
-    /**
-     * Returns whether the data referenced in the REVOKE command makes sense with respect to the data on the system.
-     * @param filteredInput is the filtered input
-     * @param tables are the tables of the system
-     * @return whether the REVOKE command is valid
-     */
-    public boolean isValidRevoke(String[] filteredInput, List<Table> tables, List<User> users) {
-        return false;
     }
 
     /**
@@ -839,26 +824,37 @@ public class Verifier {
      */
     public boolean isValidBuildFileStructure(String[] filteredInput, List<Table> tables) {
 
-        // make sure table exists
-        String tableName = filteredInput[6];
-        Table referencedTable = null;
-        boolean foundTable = false;
+        String buildFileStructureError = "Verifier error when validating Build File Structure statement:\n";
+        RuleGraph buildFileStructureRuleGraph = RuleGraphTypes.getBuildFileStructureRuleGraph();
 
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                referencedTable = table;
-                foundTable = true;
+        // make sure table exists
+        List<String> tableNames = buildFileStructureRuleGraph.getTokensAt(filteredInput, 9, 12, 14);
+
+        for (String tableName : tableNames) {
+            Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+            boolean hasTable = referencedTable != null;
+            if (! hasTable) {
+                errorMessage = buildFileStructureError + "Table \"" + tableName + "\" does not exist";
+                return false;
             }
         }
 
-        if(! foundTable) {
-            return false;
-        }
 
-        String column = filteredInput[4];
+        // make sure column exists
+        boolean clustering = ! buildFileStructureRuleGraph.getTokensAt(filteredInput, 10).isEmpty();
 
-        if(! referencedTable.hasColumn(column)) {
-            return false;
+        if (! clustering) {
+
+            String tableName = buildFileStructureRuleGraph.getTokensAt(filteredInput, 9).get(0);
+            String columnName = buildFileStructureRuleGraph.getTokensAt(filteredInput, 7).get(0);
+            Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+            assert referencedTable != null;
+            boolean hasColumn = referencedTable.hasColumn(columnName);
+
+            if (! hasColumn) {
+                errorMessage = buildFileStructureError + "Column \"" + columnName + "\" does not exist";
+                return false;
+            }
         }
 
         return true;
@@ -873,6 +869,39 @@ public class Verifier {
      */
     public boolean isValidRemoveFileStructure(String[] filteredInput, List<Table> tables) {
 
-        return false;
+        String removeFileStructureError = "Verifier error when validating Remove File Structure statement:\n";
+        RuleGraph removeFileStructureRuleGraph = RuleGraphTypes.getRemoveFileStructureRuleGraph();
+
+        // make sure table exists
+        List<String> tableNames = removeFileStructureRuleGraph.getTokensAt(filteredInput, 6, 10);
+
+        for (String tableName : tableNames) {
+            Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+            boolean hasTable = referencedTable != null;
+            if (! hasTable) {
+                errorMessage = removeFileStructureError + "Table \"" + tableName + "\" does not exist";
+                return false;
+            }
+        }
+
+
+        // make sure column exists
+        boolean clustered = ! removeFileStructureRuleGraph.getTokensAt(filteredInput, 7).isEmpty();
+
+        if (! clustered) {
+
+            String tableName = removeFileStructureRuleGraph.getTokensAt(filteredInput, 6).get(0);
+            String columnName = removeFileStructureRuleGraph.getTokensAt(filteredInput, 4).get(0);
+            Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+            assert referencedTable != null;
+            boolean hasColumn = referencedTable.hasColumn(columnName);
+
+            if (! hasColumn) {
+                errorMessage = removeFileStructureError + "Column \"" + columnName + "\" does not exist";
+                return false;
+            }
+        }
+
+        return true;
     }
 }
