@@ -85,7 +85,8 @@ public class Parser {
                 // ensure that certain values are numeric
                 queryRuleGraph.hasNumericAt(filteredInput, 36, 60) &&
                 // column names referenced in SELECT clause must be unique
-                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 2, 9) &&
+                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 2) &&
+                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 9) &&
                 // table names referenced in FROM clause must be unique
                 ! queryRuleGraph.hasDuplicatesAt(filteredInput, 13, 15, 18) &&
                 // column names referenced in group by clause must be unique
@@ -101,7 +102,7 @@ public class Parser {
         if (hasInvalidGroupByClause) {
             String groupByErrorMessage = groupByClauseInfo.getSecond();
             errorMessage = "Parser error when validating Query:\n" + groupByErrorMessage;
-            isValid = false;
+            return false;
         }
 
         errorMessage = isValid ? "" : "Parser error when validating Query:\n" + queryRuleGraph.getErrorMessage();

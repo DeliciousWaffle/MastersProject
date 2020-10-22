@@ -266,14 +266,15 @@ public class Verifier {
             }
         }
 
+        // TODO figure out having clause fiasco
 
-        // make sure data types are valid in where clause
-        /*columnNames = queryRuleGraph.getTokensAt(filteredInput, 29);
+        // make sure data types are valid in where and having clauses
+        columnNames = queryRuleGraph.getTokensAt(filteredInput, 29, 52);
         referencedColumns = Utilities.getReferencedColumns(columnNames, referencedTables);
-        List<String> symbols = queryRuleGraph.getTokensAt(filteredInput, 30, 31, 32, 33, 34, 35);
-        List<String> values = queryRuleGraph.getTokensAt(filteredInput, 36, 38);
+        List<String> symbols = queryRuleGraph.getTokensAt(filteredInput, 30, 31, 32, 33, 34, 35, 54, 55, 56, 57, 58, 59);
+        List<String> values = queryRuleGraph.getTokensAt(filteredInput, 36, 38, 60, 62);
 
-        for (int i = 0; i < columnNames.size(); i++) {
+        for (int i = 0; i < referencedColumns.size(); i++) {
 
             // make sure that the format of a date is correct first
             if (Utilities.hasDateFormat(values.get(i)) && ! Utilities.isValidDate(values.get(i))) {
@@ -282,11 +283,11 @@ public class Verifier {
             }
 
             DataType columnDataType = referencedColumns.get(i).getDataType();
-            DataType valueDataType = Utilities.getDataType(columnNames.get(i));
+            DataType valueDataType = Utilities.getDataType(values.get(i));
 
             if (columnDataType != valueDataType) {
                 errorMessage = queryError + "Column \"" + referencedColumns.get(i).getColumnName() +
-                        "\" has a datatype of \"" + columnDataType + "\" which doesn't match \"" + values.get(i) +
+                        "\" has a datatype of \"" + columnDataType + "\" which\ndoesn't match \"" + values.get(i) +
                         "\" which has a data type of \"" + valueDataType + "\"";
                 return false;
             }
@@ -299,10 +300,7 @@ public class Verifier {
                 errorMessage = queryError + "Can't use \"" + symbols.get(i) + "\" with CHAR values";
                 return false;
             }
-        }*/
-
-
-        // make sure data types match values used in having clause
+        }
 
         return true;
     }
@@ -316,47 +314,107 @@ public class Verifier {
      */
     public boolean isValidCreateTable(String[] filteredInput, List<Table> tables) {
 
+        String createTableError = "Verifier error when validating Create Table statement:\n";
         RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
 
         // make sure that the table name is not numeric
-        String tableName  = filteredInput[2];
+        String tableName = filteredInput[2];
         boolean isNumeric = Utilities.isNumeric(tableName);
 
         if (isNumeric) {
+            errorMessage = createTableError + "Table name can't be completely numeric";
             return false;
         }
+
 
         // make sure that none of the column names are numeric
         List<String> columns = createTableRuleGraph.getTokensAt(filteredInput, 4);
 
-        for(String column : columns) {
+        for (String column : columns) {
             isNumeric = Utilities.isNumeric(column);
-            if(isNumeric) {
+            if (isNumeric) {
+                errorMessage = createTableError + "Column names can't be completely numeric";
                 return false;
             }
         }
+
 
         // make sure that the table doesn't already exist
-        boolean foundTable = false;
-
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                foundTable = true;
-                break;
+        for (Table table : tables) {
+            if (table.getTableName().equalsIgnoreCase(tableName)) {
+                errorMessage = createTableError + "Table \"" + table + "\" already exists";
+                return false;
             }
         }
 
-        if(foundTable) {
-            return false;
+
+        // make sure size is not a decimal, a negative value, and zero
+        List<String> sizes = createTableRuleGraph.getTokensAt(filteredInput, 9);
+
+        for (String size : sizes) {
+            boolean isDecimal = size.contains(".");
+            if (isDecimal) {
+                errorMessage = createTableError + "Size can't be a decimal";
+                return false;
+            }
+            boolean isNegative = Integer.parseInt(size) < 0;
+            if (isNegative) {
+                errorMessage = createTableError + "Size cannot be negative";
+                return false;
+            }
+            boolean isZero = size.equalsIgnoreCase("0");
+            if (isZero) {
+                errorMessage = createTableError + "Size cannot be 0";
+                return false;
+            }
         }
 
-        // make sure none of the columns' sizes are greater than 99
-        List<String> columnSizes = createTableRuleGraph.getTokensAt(filteredInput, 8);
 
-        for(String columnSize : columnSizes) {
-            int size = Integer.parseInt(columnSize);
-            if(size > 99) {
+        // make sure decimal size is not a decimal and a negative value
+        List<String> decimalSizes = createTableRuleGraph.getTokensAt(filteredInput, 11);
+
+        for (String decimalSize : decimalSizes) {
+            boolean isDecimal = decimalSize.contains(".");
+            if (isDecimal) {
+                errorMessage = createTableError + "Decimal size can't be a decimal";
                 return false;
+            }
+            boolean isNegative = Integer.parseInt(decimalSize) < 0;
+            if (isNegative) {
+                errorMessage = createTableError + "Decimal size can't be negative";
+                return false;
+            }
+        }
+
+
+        // char can't have decimal size > 0
+        // also can't use the rule graph to get the correct mapping of values, so things get messy
+        for (int i = 0; i < filteredInput.length - 4; i++) {
+
+            boolean foundChar = filteredInput[i].equalsIgnoreCase("CHAR");
+            boolean foundParenthesis = filteredInput[i + 1].equalsIgnoreCase("(");
+            boolean foundSize = Utilities.isNumeric(filteredInput[i + 2]);
+            boolean foundDecimalSize = Utilities.isNumeric(filteredInput[i + 4]);
+
+            boolean charHasDecimalSize = foundChar && foundParenthesis && foundSize && foundDecimalSize;
+
+            if (charHasDecimalSize) {
+                boolean hasInvalidChar = Integer.parseInt(filteredInput[i + 4]) > 0;
+                if (hasInvalidChar) {
+                    errorMessage = createTableError + "Can't have a datatype of \"CHAR\" and a decimal size > 0";
+                    return false;
+                }
+            }
+        }
+
+
+        // can't have duplicate columns
+        for (int i = 0; i < columns.size(); i++) {
+            for (int j = i + 1; j < columns.size(); j++) {
+                if (columns.get(i).equalsIgnoreCase(columns.get(j))) {
+                    errorMessage = createTableError + "Table contains duplicate column \"" + columns.get(i) + "\"";
+                    return false;
+                }
             }
         }
 
@@ -372,18 +430,19 @@ public class Verifier {
      */
     public boolean isValidDropTable(String[] filteredInput, List<Table> tables) {
 
-        // make sure table name exists
+        // make sure table exists
         String tableName = filteredInput[2];
-        boolean foundTable = false;
 
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                foundTable = true;
-                break;
+        for (Table table : tables) {
+            if (table.getTableName().equalsIgnoreCase(tableName)) {
+                return true;
             }
         }
 
-        return foundTable;
+        errorMessage = "Verifier error when validating Invalid Drop Table statement:\n" +
+                "Table \"" + tableName + "\" does not exist";
+
+        return false;
     }
 
     /**
@@ -395,46 +454,150 @@ public class Verifier {
      */
     public boolean isValidAlterTable(String[] filteredInput, List<Table> tables) {
 
-        // make sure table name exists
-        String tableName = filteredInput[2];
-        Table referencedTable = null;
-        boolean foundTable = false;
+        String alterTableError = "Verifier error when validating Alter Table statement:\n";
+        RuleGraph alterTableRuleGraph = RuleGraphTypes.getAlterTableRuleGraph();
 
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                foundTable = true;
-                break;
-            }
-        }
+        // make sure the table exists
+        String tableName = alterTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
+        Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+        boolean hasTable = referencedTable != null;
 
-        if(! foundTable) {
+        if (! hasTable) {
+            errorMessage = alterTableError + "Table \"" + tableName + "\" does not exist";
             return false;
         }
 
-        String type = filteredInput[3];
-        String columnName = filteredInput[6];
 
-        // if using drop or modify, ensure columns exist with associated table
-        if(type.equalsIgnoreCase("DROP") || type.equalsIgnoreCase("MODIFY")) {
-            if(! referencedTable.hasColumn(columnName)) {
+        // make sure column exists
+        String columnName = alterTableRuleGraph.getTokensAt(filteredInput, 6, 16).get(0);
+
+        boolean hasModify = ! alterTableRuleGraph.getTokensAt(filteredInput, 3).isEmpty();
+        boolean hasAdd = ! alterTableRuleGraph.getTokensAt(filteredInput, 4).isEmpty();
+        boolean hasDrop = ! alterTableRuleGraph.getTokensAt(filteredInput, 5).isEmpty();
+        boolean hasForeignKey = ! alterTableRuleGraph.getTokensAt(filteredInput, 13).isEmpty();
+        boolean hasPrimaryKey = ! alterTableRuleGraph.getTokensAt(filteredInput, 14).isEmpty();
+
+        if (! ((hasAdd && ! hasForeignKey && ! hasPrimaryKey) || (hasAdd && hasForeignKey) ||
+                (hasDrop && hasForeignKey))) {
+            boolean hasColumn = referencedTable.hasColumn(columnName);
+            if (! hasColumn) {
+                errorMessage = alterTableError + "Column \"" + columnName + "\" does not exist";
                 return false;
             }
         }
 
-        // make sure all rows associated with the column to change can actually transition from char to int
-        if(type.equalsIgnoreCase("MODIFY")) {
-            Column referencedColumn = referencedTable.getColumn(columnName);
-            // TODO
-            /*if(! referencedColumn.canAlterCharToInt()) {
+
+        // make sure foreign key exists
+        if (hasForeignKey) {
+
+            boolean isPrefixed = OptimizerUtilities.hasPrefixedTableName(columnName);
+
+            if (! isPrefixed) {
+                errorMessage = "Column needs to be prefixed with table name like this <table name>.<column name>";
                 return false;
-            }*/
+
+            } else {
+
+                String prefixedTableName = columnName.split("\\.")[0];
+                String prefixedColumnName = columnName.split("\\.")[1];
+                Table prefixedReferenceTable = Utilities.getReferencedTable(prefixedTableName, tables);
+                hasTable = prefixedReferenceTable != null;
+
+                if (! hasTable) {
+                    errorMessage = alterTableError + "Table \"" + prefixedTableName + "\" does not exist";
+                    return false;
+                }
+
+                boolean hasColumn = prefixedReferenceTable.hasColumn(prefixedColumnName);
+                if (! hasColumn) {
+                    errorMessage = alterTableError + "Prefixed column \"" + prefixedColumnName + "\" does not exist";
+                    return false;
+                }
+            }
         }
 
-        // if using add or modify, ensure size is not greater than 99
-        if(type.equalsIgnoreCase("ADD") || type.equalsIgnoreCase("MODIFY")) {
-            int size = Integer.parseInt(filteredInput[7]);
-            if(size > 99) {
+
+        // check for negative size, decimal size, and size of 0
+        boolean hasSize = ! alterTableRuleGraph.getTokensAt(filteredInput, 11).isEmpty();
+
+        if (hasSize) {
+
+            String size = alterTableRuleGraph.getTokensAt(filteredInput, 11).get(0);
+
+            boolean isDecimal = size.contains(".");
+            if (isDecimal) {
+                errorMessage = alterTableError + "Size can't be a decimal";
                 return false;
+            }
+
+            boolean isNegative = Integer.parseInt(size) < 0;
+            if (isNegative) {
+                errorMessage = alterTableError + "Size cannot be negative";
+                return false;
+            }
+
+            boolean isZero = size.equalsIgnoreCase("0");
+            if (isZero) {
+                errorMessage = alterTableError + "Size cannot be 0";
+                return false;
+            }
+        }
+
+
+        // make sure the conversion will be valid
+        if (hasModify) {
+
+            Column referencedColumn = referencedTable.getColumn(columnName);
+            DataType columnDataType = referencedColumn.getDataType();
+            DataType toConvertDataType = DataType.convertToDataType(
+                    alterTableRuleGraph.getTokensAt(filteredInput, 7, 8, 9).get(0));
+
+            // don't worry about size changes if the data types are the same
+            if (columnDataType != toConvertDataType) {
+
+                if (columnDataType == DataType.NUMBER) {
+                    // number to date (can't do)
+                    if (toConvertDataType == DataType.DATE) {
+                        errorMessage = alterTableError + "Can't convert a column of type \"NUMBER\" to type \"DATE\"";
+                        return false;
+                    }
+                    // number to char (auto succeed - don't check)
+
+                } else if (columnDataType == DataType.CHAR) {
+                    // char to number (all chars must be successfully converted to numbers)
+                    if (toConvertDataType == DataType.NUMBER) {
+                        List<String> rowsOfColumn = Utilities.getRowsAtColumn(referencedColumn, referencedTable);
+                        for (String row : rowsOfColumn) {
+                            boolean canBeConvertedToNumeric = Utilities.isNumeric(row);
+                            if (! canBeConvertedToNumeric) {
+                                errorMessage = alterTableError + "Unsuccessful conversion of type \"CHAR\" to " +
+                                        "\"NUMBER\", row \"" + row + "\" couldn't be converted successfully";
+                                return false;
+                            }
+                        }
+                    }
+                    // char to date (must have a date format and be a valid date)
+                    if (toConvertDataType == DataType.DATE) {
+                        List<String> rowsOfColumn = Utilities.getRowsAtColumn(referencedColumn, referencedTable);
+                        for (String row : rowsOfColumn) {
+                            boolean isValidDate = Utilities.isValidDate(row);
+                            if (! isValidDate) {
+                                errorMessage = alterTableError + "Unsuccessful conversion of type \"CHAR\" to " +
+                                        "\"DATE\", row \"" + row + "\" couldn't be converted successfully";
+                                return false;
+                            }
+                        }
+                    }
+
+                // convert to date
+                } else if (columnDataType == DataType.DATE) {
+                    // date to number (can't do)
+                    if (toConvertDataType == DataType.NUMBER) {
+                        errorMessage = alterTableError + "Can't convert a column of type \"DATE\" to type \"NUMBER\"";
+                        return false;
+                    }
+                    // date to char (auto succeed - don't check)
+                }
             }
         }
 
@@ -449,46 +612,44 @@ public class Verifier {
      */
     public boolean isValidInsert(String[] filteredInput, List<Table> tables) {
 
+        String insertError = "Verifier error when validating Insert statement:\n";
         RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
 
         // make sure table name exists
         String tableName = filteredInput[2];
-        Table referencedTable = null;
-        boolean foundTable = false;
+        Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+        boolean tableExists = referencedTable != null;
 
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                referencedTable = table;
-                foundTable = true;
-                break;
-            }
-        }
-
-        if(! foundTable) {
+        if (! tableExists) {
+            errorMessage = insertError + "Table \"" + tableName + "\" does not exist";
             return false;
         }
+
 
         // make sure that the number of values being inserted is not greater than the number of columns in the table
         int numColsInTable = referencedTable.getNumCols();
-        int numColsToInsert = insertRuleGraph.getTokensAt(filteredInput, 5).size();
+        int numColsToInsert = insertRuleGraph.getTokensAt(filteredInput, 5, 7).size();
 
-        if(numColsToInsert > numColsInTable) {
+        if (numColsToInsert > numColsInTable) {
+            errorMessage = insertError + "Number of columns inserted \"" + numColsToInsert + "\" is greater than\n" +
+                    "the number of columns in the table \"" + numColsInTable;
             return false;
         }
 
-        // make sure that each new column's value matches the datatype in the corresponding table
-        List<String> valuesToInsert = insertRuleGraph.getTokensAt(filteredInput, 5);
-        List<Column> columns = referencedTable.getColumns();
 
-        for(int i = 0; i < columns.size(); i++) {
+        // make sure the data types of the values being inserted match those of the table
+        List<String> values = insertRuleGraph.getTokensAt(filteredInput, 5, 7);
+        List<Column> referencedColumns = referencedTable.getColumns();
 
-            // TODO
-            /*boolean isNumericColumn = columns.get(i).isNumeric();
-            boolean isNumericValue  = Parser.isNumeric(valuesToInsert.get(i));
-
-            if(isNumericColumn && ! isNumericValue) {
+        for (int i = 0; i < values.size(); i++) {
+            DataType valueDataType = Utilities.getDataType(values.get(i));
+            DataType columnDataType = referencedColumns.get(i).getDataType();
+            if (valueDataType != columnDataType) {
+                errorMessage = insertError + "The value being inserted has a datatype of \"" + valueDataType +
+                        "\" which does not\nmatch column \"" + referencedColumns.get(i).getColumnName() +
+                        "\" which has a datatype of \"" + columnDataType + "\"";
                 return false;
-            }*/
+            }
         }
 
         return true;
@@ -502,43 +663,40 @@ public class Verifier {
      */
     public boolean isValidDelete(String[] filteredInput, List<Table> tables) {
 
+        String insertError = "Verifier error when validating Delete statement:\n";
         RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
 
         // make sure table name exists
         String tableName = filteredInput[2];
-        Table referencedTable = null;
-        boolean foundTable = false;
+        Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+        boolean foundTable = referencedTable != null;
 
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                foundTable = true;
-                referencedTable = table;
-                break;
-            }
-        }
-
-        if(! foundTable) {
+        if (! foundTable) {
+            errorMessage = insertError + "Table \"" + tableName + "\" does not exist";
             return false;
         }
+
 
         // make sure column exists for given table name
         String columnName = filteredInput[4];
         boolean foundColumn = referencedTable.hasColumn(columnName);
 
-        if(! foundColumn) {
+        if (! foundColumn) {
+            errorMessage = insertError + "Column \"" + columnName + "\" does not exist";
             return false;
         }
 
-        // make sure the column referenced matches the datatype of the value supplied
-        String value = filteredInput[11];
-        // TODO
-        /*boolean isNumericColumn = referencedTable.getColumn(columnName).isNumeric();
-        boolean isNumericValue  = Parser.isNumeric(value);
-
-        if(isNumericColumn && ! isNumericValue) {
+        // make sure the data type of the value matches that of the column
+        String value = deleteRuleGraph.getTokensAt(filteredInput, 11, 13).get(0);
+        DataType valueDataType = Utilities.getDataType(value);
+        DataType columnDataType = referencedTable.getColumn(columnName).getDataType();
+        if (valueDataType != columnDataType) {
+            errorMessage = insertError + "The value being inserted has a datatype of \"" + valueDataType +
+                    "\" which does not\nmatch column \"" + columnName +
+                    "\" which has a datatype of \"" + columnDataType + "\"";
             return false;
         }
-*/
+
         return true;
     }
 
@@ -550,47 +708,55 @@ public class Verifier {
      */
     public boolean isValidUpdate(String[] filteredInput, List<Table> tables) {
 
+        String insertError = "Verifier error when validating Update statement:\n";
         RuleGraph updateRuleGraph = RuleGraphTypes.getUpdateRuleGraph();
 
         // make sure table name exists
         String tableName = filteredInput[1];
-        Table referencedTable = null;
-        boolean foundTable = false;
+        Table referencedTable = Utilities.getReferencedTable(tableName, tables);
+        boolean foundTable = referencedTable != null;
 
-        for(Table table : tables) {
-            if(table.getTableName().equalsIgnoreCase(tableName)) {
-                referencedTable = table;
-                foundTable = true;
-                break;
-            }
-        }
-
-        if(! foundTable) {
+        if (! foundTable) {
+            errorMessage = insertError + "Table \"" + tableName + "\" does not exist";
             return false;
         }
 
-        // make sure columns referenced actually belong to the table supplied
-        String setColumn   = filteredInput[3];
-        if(! referencedTable.hasColumn(setColumn)) {
+
+        // make sure the columns exist
+        String firstColumnName = filteredInput[3];
+        String secondColumnName = filteredInput[10];
+
+        if (! referencedTable.hasColumn(firstColumnName)) {
+            errorMessage = insertError + "Column \"" + firstColumnName + "\" does not exist";
             return false;
         }
 
-        // an UPDATE using the WHERE clause
-        if(filteredInput.length > 6) {
+        if (! referencedTable.hasColumn(secondColumnName)) {
+            errorMessage = insertError + "Column \"" + secondColumnName + "\" does not exist";
+            return false;
+        }
 
-            String whereColumn = filteredInput[7];
+        // make sure the data types of the values match those of the columns
+        DataType firstColumnDataType = referencedTable.getColumn(firstColumnName).getDataType();
+        DataType secondColumnDataType = referencedTable.getColumn(secondColumnName).getDataType();
 
-            if(! referencedTable.hasColumn(whereColumn)) {
-                return false;
-            }
-// TODO
-            // make sure the column referenced in WHERE clause has the correct data type
-            /*boolean isNumericColumn = referencedTable.getColumn(whereColumn).isNumeric();
-            boolean isNumericValue  = Parser.isNumeric(update[9]);
+        DataType firstValueDataType = Utilities.getDataType(
+                updateRuleGraph.getTokensAt(filteredInput, 5, 7).get(0));
+        DataType secondValueDataType = Utilities.getDataType(
+                updateRuleGraph.getTokensAt(filteredInput, 12, 14).get(0));
 
-            if(isNumericColumn && !isNumericValue) {
-                return false;
-            }*/
+        if (firstColumnDataType != firstValueDataType) {
+            errorMessage = insertError + "The value being updated has a datatype of \"" + firstValueDataType +
+                    "\" which does not\nmatch column \"" + firstColumnName +
+                    "\" which has a datatype of \"" + firstColumnDataType + "\"";
+            return false;
+        }
+
+        if (secondColumnDataType != secondValueDataType) {
+            errorMessage = insertError + "The value being updated has a datatype of \"" + secondValueDataType +
+                    "\" which does not\nmatch column \"" + secondColumnName +
+                    "\" which has a datatype of \"" + secondColumnDataType + "\"";
+            return false;
         }
 
         return true;

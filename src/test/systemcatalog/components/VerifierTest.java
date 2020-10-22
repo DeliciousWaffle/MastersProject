@@ -50,12 +50,19 @@ public class VerifierTest {
             "SELECT Employees.FirstName FROM Customers INNER JOIN Employees ON CustomerID = EmployeeID",
             "SELECT Customers.CustomerID FROM Customers, CustomerPurchaseDetails", // prefixed columns in an ambiguous situation
             "SELECT CustomerPurchaseDetails.CustomerID FROM Customers, CustomerPurchaseDetails",
+            "SELECT CustomerID FROM Customers WHERE FirstName = \"Blah\"", // where clause stuff
+            "SELECT ProductName FROM Products WHERE Price > 1.20",
+            "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased < \"2019-10-20\"",
+            "SELECT State, COUNT(State) FROM Stores GROUP BY State", // group by stuff
+            // TODO rework having clause issue
+            //"SELECT State, COUNT(State) FROM Stores GROUP BY State HAVING COUNT(State) > 1" // having clause stuff
     })
     void testValidQuery(String query) {
         System.out.println(query);
         String[] filtered = Utilities.filterInput(query);
         boolean isValid = verifier.isValid(InputType.QUERY, filtered, tables, users);
         System.out.println("Error Code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
@@ -70,7 +77,6 @@ public class VerifierTest {
             "SELECT CustomerID FROM Customers WHERE CustomerID = 1 AND Blah = \"Blah\"",
             "SELECT CustomerID FROM Customers GROUP BY Blah", // in group by clause
             "SELECT CustomerID FROM Customers GROUP BY CustomerID HAVING COUNT(Blah) > 1", // in having clause
-
             "SELECT Customers.Blah FROM Customers", // prefixing a table that exists with a column that doesn't exist
             "SELECT CustomerID, Customers.Blah FROM Customers",
             "SELECT Blah.CustomerID FROM Customers", // column that exists but prefixed with a table that doesn't exist
@@ -85,9 +91,10 @@ public class VerifierTest {
             "SELECT Customers.CustomerID FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.FirstName > CustomerPurchaseDetails.PaymentMethod", // if data types match, make sure that if >, <, >=, <= is used, that the values are numeric or dates
             "SELECT CustomerID FROM Customers WHERE CustomerID = \"Blah\"", // make sure data types of columns match in where clause
             "SELECT CustomerID FROM Customers WHERE FirstName = 1",
-            "SELECT CustomerID FROM Customers WHERE CustomerID = \"10-10-2020\"",
+            "SELECT CustomerID FROM Customers WHERE CustomerID = \"2020-10-20\"",
             "SELECT COUNT(CustomerID) FROM Customers GROUP BY CustomerID HAVING SUM(FirstName) > 1", // make sure data types of columns match in having clause
-            // invalid dates for where and having clause TODO
+            "SELECT CustomerID FROM CustomerPurchaseDetails WHERE DatePurchased = \"2020-99-20\"", // invalid dates for where and having clause
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(DatePurchased) > \"2020-99-20\""
     })
     void testInvalidQuery(String query) {
         System.out.println(query);
@@ -95,8 +102,327 @@ public class VerifierTest {
         boolean isValid = verifier.isValid(InputType.QUERY, filtered, tables, users);
         System.out.println("Error Code: " + verifier.getErrorMessage());
         verifier.resetErrorMessage();
-        System.out.println(new Parser().isValid(InputType.QUERY, filtered));
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "CREATE TABLE Blah1(Col1 NUMBER(2, 1), Col2 CHAR(3), Col3 DATE, Col4 CHAR(10))"
+    })
+    void validCreateTable(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.CREATE_TABLE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "CREATE TABLE 1(Col1 DATE)", // numeric table name
+            "CREATE TABLE Blah(Col1 DATE, 2 CHAR(1), Col3 NUMBER(5))", // numeric column name
+            "CREATE TABLE Customers(Col1 DATE)", // table already exists in system
+            "CREATE TABLE Blah(Col1 CHAR(10.2))", // decimal size for size
+            "CREATE TABLE Blah(Col1 NUMBER(10, 1.2))", // decimal size for decimal size
+            "CREATE TABLE Blah(Col1 CHAR(10, 2))", // having a decimal size for char data type
+            "CREATE TABLE Blah(Col1 CHAR(5), Col2 CHAR(10, 2))",
+            "CREATE TABLE Blah(Col1 CHAR(-1))", // negative size
+            "CREATE TABLE Blah(Col1 NUMBER(10, -1))", // negative decimal size
+            "CREATE TABLE Blah(Col1 DATE, Col1 CHAR(3))" // duplicate columns
+    })
+    void invalidCreateTable(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.CREATE_TABLE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "DROP TABLE Customers" // exists
+    })
+    void validDropTable(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.DROP_TABLE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "DROP TABLE Blah" // table does not exist
+    })
+    void invalidDropTable(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.DROP_TABLE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "ALTER TABLE Customers MODIFY CustomerID NUMBER(100)", // valid number change
+            "ALTER TABLE Customers MODIFY CustomerID CHAR(5)", // valid number change
+            "ALTER TABLE Customers ADD Blah NUMBER(5)",
+            "ALTER TABLE Customers ADD FOREIGN KEY EmployeePurchaseDetails.EmployeeID", // TODO prefixed column name?
+            "ALTER TABLE Customers ADD PRIMARY KEY FirstName",
+    })
+    void validAlterTable(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.ALTER_TABLE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "ALTER TABLE Blah ADD Col1 DATE", // table Blah does not exist
+            "ALTER TABLE Customers MODIFY Blah NUMBER(2)", // column blah does not exist
+            "ALTER TABLE Customers MODIFY Blah CHAR(2)",
+            "ALTER TABLE Customers MODIFY Blah DATE",
+            "ALTER TABLE Customers DROP FOREIGN KEY Blah.BlahID", // foreign key does not exist
+            "ALTER TABLE Customers ADD FOREIGN KEY Employees.BlahID",
+            "ALTER TABLE Customers DROP PRIMARY KEY Blah", // primary key does not exist
+            "ALTER TABLE Customers ADD PRIMARY KEY Blah",
+            "ALTER TABLE Customers ADD Col1 NUMBER(-1)", // negative size
+            "ALTER TABLE Customers ADD Col1 NUMBER(1.1)", // decimal size
+            "ALTER TABLE Customers ADD Col1 NUMBER(0)", // 0 size
+            "ALTER TABLE Customers MODIFY CustomerID DATE", // invalid conversion
+            "ALTER TABLE Customers MODIFY FirstName DATE",
+            "ALTER TABLE Customers MODIFY FirstName NUMBER(20)"
+    })
+    void invalidAlterTable(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.ALTER_TABLE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "INSERT INTO CustomerPurchaseDetails VALUES(1, 2, 3, \"Blah\", \"2020-10-10\")",
+            "INSERT INTO CustomerPurchaseDetails VALUES(1)" // rest of the values will be null
+    })
+    void validInsertCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.INSERT, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "INSERT INTO CustomerPurchaseDetails VALUES(\"Blah\", 2, 3, \"Blah\", \"2020-10-10\")", // mismatch data types
+            "INSERT INTO CustomerPurchaseDetails VALUES(\"2020-10-10\", 2, 3, \"Blah\", \"2020-10-10\")",
+            "INSERT INTO CustomerPurchaseDetails VALUES(1, 2, 3, \"Blah\", 1)",
+            "INSERT INTO CustomerPurchaseDetails VALUES(1, 2, 3, 4, \"2020-10-10\")",
+            "INSERT INTO CustomerPurchaseDetails VALUES(1, 2, 3, \"Blah\", \"2020-10-10\", 4)", // too many values
+    })
+    void invalidInsertCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.INSERT, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "DELETE FROM Customers WHERE CustomerID = 1"
+    })
+    void validDeleteCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.DELETE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "DELETE FROM Blah WHERE CustomerID = 1", // table does not exist
+            "DELETE FROM Customers WHERE Blah = 1", // column does not exist
+            "DELETE FROM Customers WHERE CustomerID = \"Blah\"", // mismatch data type
+            "DELETE FROM Customers WHERE FirstName = 1",
+            "DELETE FROM Customers WHERE FirstName = \"2020-10-10\""
+    })
+    void invalidDeleteCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.DELETE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "UPDATE Customers SET ColumnID = -1 WHERE ColumnID = 1",
+            "UPDATE Customers SET FirstName = \"Blah\" WHERE ColumnID = 1"
+    })
+    void validUpdateCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.UPDATE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "UPDATE Blah SET Col1 = 1 WHERE Col1 = 1", // table does not exist
+            "UPDATE Customers SET Blah = 1 WHERE Col1 = 1", // column does not exist
+            "UPDATE Customers SET CustomerID = -1 WHERE Blah = \"Blah\"",
+            "UPDATE Customers SET CustomerID = \"Blah\" WHERE FirstName = \"Blah\"", // mismatch data type
+            "UPDATE Customers SET CustomerID = 1 WHERE FirstName = 1", // mismatch data type
+    })
+    void invalidUpdateCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.UPDATE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+/*
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void validGrantCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.GRANT, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void invalidGrantCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.GRANT, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void validRevokeCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.REVOKE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void invalidRevokeCommand(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.REVOKE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void validBuildFileStructure(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void invalidBuildFileStructure(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void validRemoveFileStructure(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertTrue(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+
+    })
+    void invalidRemoveFileStructure(String createTable) {
+        System.out.println(createTable);
+        String[] filtered = Utilities.filterInput(createTable);
+        boolean isValid = verifier.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, tables, users);
+        System.out.println("Error code: " + verifier.getErrorMessage());
+        verifier.resetErrorMessage();
+        assertFalse(isValid);
+        System.out.println("-----------------------------------------------------------------------------------------");
+    }*/
 }

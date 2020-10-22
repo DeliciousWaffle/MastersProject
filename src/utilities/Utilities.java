@@ -4,6 +4,7 @@ import datastructures.misc.Pair;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
+import datastructures.relation.table.component.TableData;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
@@ -343,17 +344,18 @@ public final class Utilities {
         }
 
         boolean hasGroupByClause = ! queryRuleGraph.getTokensAt(filteredInput, 41).isEmpty();
+        List<String> nonAggregatedColumns = queryRuleGraph.getTokensAt(filteredInput, 2);
+        boolean hasNoNonAggregatedColumns = nonAggregatedColumns.isEmpty();
 
         // using exclusively aggregate functions is fine -> SELECT MIN(Col1), MAX(Col2) FROM Tab1;
         // this is not fine -> SELECT Col1, MAX(Col2) FROM Tab1;
-        if (! hasGroupByClause) {
+        if (! hasGroupByClause && hasNoNonAggregatedColumns) {
             return new Pair<>(false, "");
         }
 
-        // check if there is a missing matching column in GROUP BY clause
-        List<String> nonAggregatedColumns = queryRuleGraph.getTokensAt(filteredInput, 2);
         List<String> groupByColumns = queryRuleGraph.getTokensAt(filteredInput, 43);
 
+        // check if there is a missing matching column in GROUP BY clause
         for (String nonAggregatedColumn : nonAggregatedColumns) {
 
             boolean foundMatchingColumn = false;
@@ -367,7 +369,7 @@ public final class Utilities {
 
             // didn't find a matching column, this expression is invalid
             if (! foundMatchingColumn) {
-                return new Pair<>(true, "Didn't find a matching column in GROUP BY clause" +
+                return new Pair<>(true, "Didn't find a matching column in the GROUP BY clause " +
                         "for the column \"" + nonAggregatedColumn + "\"");
             }
         }
@@ -413,5 +415,26 @@ public final class Utilities {
         } else {
             return DataType.CHAR;
         }
+    }
+
+    /**
+     * @return all the rows of a table at the specified column
+     */
+    public static List<String> getRowsAtColumn(Column column, Table table) {
+
+        // locate where the column is
+        List<Column> columns = table.getColumns();
+        int columnLocation = -1;
+
+        for (int i = 0; i < columns.size(); i++) {
+            if (columns.get(i).getColumnName().equalsIgnoreCase(column.getColumnName())) {
+                columnLocation = i;
+                break;
+            }
+        }
+
+        TableData tableData = table.getTableData();
+
+        return tableData.getRowsAt(columnLocation);
     }
 }

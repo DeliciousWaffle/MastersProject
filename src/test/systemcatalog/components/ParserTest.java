@@ -51,7 +51,6 @@ class ParserTest {
             "SELECT SUM(Col1) FROM Tab1",
             "SELECT MIN(Tab1.Col1) FROM Tab1", // aggregate function with column prefixed with table name
             "SELECT MIN(Col1), MAX(Col2) FROM Tab1", // two aggregate functions
-            "SELECT Col1, MIN(Col2), MAX(Col3) FROM Tab1", // one column and two aggregate functions
             "SELECT Col1, Col2 FROM Tab1", // multiple columns
             "SELECT Col1, Col2, Col3 FROM Tab1",
             "SELECT Col1 FROM Tab1, Tab2", // multiple tables
@@ -86,6 +85,7 @@ class ParserTest {
             "SELECT Col1, SUM(Col2) FROM Tab1, Tab2, Tab3 GROUP BY Col1 HAVING MAX(Col1) = 1", // having clauses mixed with other stuff
             "SELECT Col1, SUM(Col2) FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 != Tab2.Col1 INNER JOIN Tab3 ON Tab2.Col2 > Tab3.Col2 INNER JOIN Tab4 ON Tab3.Col3 = Tab4.Col3 GROUP BY Col1 HAVING AVG(Col1) = 1",
             "SELECT Col1, SUM(Col2) FROM Tab1 WHERE Col1 = \"Blah\" GROUP BY Col1 HAVING SUM(Col1) = 1",
+            "SELECT Col1, COUNT(Col1) FROM Tab1 GROUP BY Col1" // same columns referenced in select clause
     })
     void testValidQueries(String query) {
         System.out.println(query);
