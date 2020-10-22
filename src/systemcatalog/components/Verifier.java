@@ -12,6 +12,7 @@ import utilities.OptimizerUtilities;
 import utilities.Utilities;
 import enums.InputType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -116,7 +117,7 @@ public class Verifier {
         RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
         String queryError = "Verifier error when validating Query:\n";
 
-        // check that systemTables referenced exist in the system
+        // check that tables referenced exist in the system
         List<String> tableNames = queryRuleGraph.getTokensAt(filteredInput, 13, 15, 18);
 
         for (String tableName : tableNames) {
@@ -130,7 +131,7 @@ public class Verifier {
         }
 
 
-        // check that all columns exist within the systemTables referenced
+        // check that all columns exist within the tables referenced
         List<Table> referencedTables = Utilities.getReferencedTables(tableNames, systemTables);
         List<String> columnNames = queryRuleGraph.getTokensAt(filteredInput, 2, 9, 20, 27, 29, 43, 52);
         OptimizerUtilities.getColumnNamesFromStar(columnNames, referencedTables);
@@ -204,7 +205,8 @@ public class Verifier {
 
                 Keyword aggregationType = Keyword.toKeyword(aggregationTypes.get(i));
 
-                if (aggregationType == Keyword.COUNT) { // remove the associate column and type
+                // remove the associated column and type
+                if (aggregationType == Keyword.COUNT) {
                     aggregatedColumnNames.remove(i);
                     aggregationTypes.remove(i);
                     madeChanges = true;
@@ -249,7 +251,8 @@ public class Verifier {
                         secondColumn.getDataType() + "\"";
                 return false;
 
-            } else { // data types match
+            // data types match
+            } else {
 
                 // if >, <, >=, <= are used, make sure the data types are numeric or dates
                 boolean isRangeSymbol = Symbol.isRangeSymbol(joinSymbol);
@@ -264,13 +267,12 @@ public class Verifier {
             }
         }
 
-        // TODO figure out having clause fiasco
 
         // make sure data types are valid in where and having clauses
-        columnNames = queryRuleGraph.getTokensAt(filteredInput, 29, 52);
+        columnNames = queryRuleGraph.getTokensAt(filteredInput, 29);
         referencedColumns = Utilities.getReferencedColumns(columnNames, referencedTables);
-        List<String> symbols = queryRuleGraph.getTokensAt(filteredInput, 30, 31, 32, 33, 34, 35, 54, 55, 56, 57, 58, 59);
-        List<String> values = queryRuleGraph.getTokensAt(filteredInput, 36, 38, 60, 62);
+        List<String> symbols = queryRuleGraph.getTokensAt(filteredInput, 30, 31, 32, 33, 34, 35);
+        List<String> values = queryRuleGraph.getTokensAt(filteredInput, 36, 38);
 
         for (int i = 0; i < referencedColumns.size(); i++) {
 
@@ -296,6 +298,45 @@ public class Verifier {
 
             if (isRangeSymbol && isChar) {
                 errorMessage = queryError + "Can't use \"" + symbols.get(i) + "\" with CHAR values";
+                return false;
+            }
+        }
+
+        // using the aggregate function will produce either a numeric value or date
+        // which needs to be checked with the value provided
+        aggregationTypes = queryRuleGraph.getTokensAt(filteredInput, 46, 47, 48, 49, 50);
+        columnNames = queryRuleGraph.getTokensAt(filteredInput, 52);
+        referencedColumns = Utilities.getReferencedColumns(columnNames, referencedTables);
+        values = queryRuleGraph.getTokensAt(filteredInput, 60, 62);
+
+        // performing the mapping (can't use stream, order will matter for aggregation types)
+        List<DataType> dataTypesProducedFromAggregation = new ArrayList<>();
+
+        for (int i = 0; i < referencedColumns.size(); i++) {
+
+            DataType dataType = referencedColumns.get(i).getDataType();
+            Keyword aggregationType = Keyword.toKeyword(aggregationTypes.get(i));
+
+            // date and number will always be converted to a number if count is found
+            if (aggregationType == Keyword.COUNT) {
+                dataTypesProducedFromAggregation.add(DataType.NUMBER);
+            // otherwise date is mapped to date after applying aggregation and same is true for number
+            } else {
+                dataTypesProducedFromAggregation.add(dataType);
+            }
+        }
+
+        // after the mapping, check that values encountered match
+        for (int i = 0; i < dataTypesProducedFromAggregation.size(); i++) {
+
+            DataType dataTypeProducedFromAggregation = dataTypesProducedFromAggregation.get(i);
+            DataType valueDataType = Utilities.getDataType(values.get(i));
+
+            if (dataTypeProducedFromAggregation != valueDataType) {
+                errorMessage = queryError + "Column \"" + referencedColumns.get(i).getColumnName() +
+                        "\" after applying \"" + aggregationTypes.get(i) + "\" has a datatype of \"" +
+                        dataTypeProducedFromAggregation + "\" which\ndoesn't match \"" + values.get(i) +
+                        "\" which has a data type of \"" + valueDataType + "\"";
                 return false;
             }
         }

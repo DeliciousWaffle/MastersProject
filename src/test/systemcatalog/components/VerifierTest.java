@@ -55,8 +55,9 @@ public class VerifierTest {
             "SELECT ProductName FROM Products WHERE Price > 1.20",
             "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased < \"2019-10-20\"",
             "SELECT State, COUNT(State) FROM Stores GROUP BY State", // group by stuff
-            // TODO rework having clause issue
-            //"SELECT State, COUNT(State) FROM Stores GROUP BY State HAVING COUNT(State) > 1" // having clause stuff
+            "SELECT State, COUNT(State) FROM Stores GROUP BY State HAVING COUNT(State) > 1", // having clause stuff
+            "SELECT COUNT(EmployeeID) FROM EmployeePurchaseDetails GROUP BY PaymentMethod HAVING COUNT(PaymentMethod) > 1",
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(DatePurchased) > \"2020-10-17\""
     })
     void testValidQuery(String query) {
         System.out.println(query);
@@ -95,7 +96,7 @@ public class VerifierTest {
             "SELECT CustomerID FROM Customers WHERE CustomerID = \"2020-10-20\"",
             "SELECT COUNT(CustomerID) FROM Customers GROUP BY CustomerID HAVING SUM(FirstName) > 1", // make sure data types of columns match in having clause
             "SELECT CustomerID FROM CustomerPurchaseDetails WHERE DatePurchased = \"2020-99-20\"", // invalid dates for where and having clause
-            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(DatePurchased) > \"2020-99-20\""
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(DatePurchased) > \"Blah\""
     })
     void testInvalidQuery(String query) {
         System.out.println(query);
