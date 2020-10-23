@@ -8,13 +8,12 @@ import datastructures.relation.table.component.TableData;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.User;
+import datastructures.user.component.Privilege;
+import datastructures.user.component.TablePrivileges;
 import enums.InputType;
 import enums.Keyword;
 import enums.Symbol;
-import org.junit.jupiter.params.ParameterizedTest;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -436,5 +435,60 @@ public final class Utilities {
         TableData tableData = table.getTableData();
 
         return tableData.getRowsAt(columnLocation);
+    }
+
+    public static boolean hasAllGrantedPrivilegesOnTable(User user, Table table) {
+
+        TablePrivileges grantedTablePrivileges = user.getGrantedTablePrivileges(table.getTableName());
+
+        // check alter, delete, index, insert, and select privileges
+        boolean hasAllBasicPrivileges = grantedTablePrivileges.hasPrivilege(Privilege.ALTER) &&
+                grantedTablePrivileges.hasPrivilege(Privilege.DELETE) &&
+                grantedTablePrivileges.hasPrivilege(Privilege.INDEX) &&
+                grantedTablePrivileges.hasPrivilege(Privilege.INSERT) &&
+                grantedTablePrivileges.hasPrivilege(Privilege.SELECT);
+
+        if (! hasAllBasicPrivileges) {
+            return false;
+        }
+
+        // check update and references privileges
+        List<String> allColumnNames = table.getColumns().stream()
+                .map(Column::getColumnName)
+                .collect(Collectors.toList());
+
+        // update privileges
+        List<String> updateColumns = grantedTablePrivileges.getUpdateColumns();
+
+        for (String updateColumn : updateColumns) {
+            boolean foundColumn = false;
+            for (String columnName : allColumnNames) {
+                if (updateColumn.equalsIgnoreCase(columnName)) {
+                    foundColumn = true;
+                    break;
+                }
+            }
+            if (! foundColumn) {
+                return false;
+            }
+        }
+
+        List<String> referencesColumns = grantedTablePrivileges.getReferenceColumns();
+
+        // references privileges
+        for (String referencesColumn : referencesColumns) {
+            boolean foundColumn = false;
+            for (String columnName : allColumnNames) {
+                if (referencesColumn.equalsIgnoreCase(columnName)) {
+                    foundColumn = true;
+                    break;
+                }
+            }
+            if (! foundColumn) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

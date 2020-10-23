@@ -51,7 +51,7 @@ public class TablePrivileges {
     public void grantPrivilege(Privilege privilege) {
 
         if(privilege == Privilege.ALL_PRIVILEGES) {
-            privileges = Privilege.getAllPrivileges();
+            privileges = Privilege.getAllPrivilegesExceptUnknown();
 
         } else {
 

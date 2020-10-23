@@ -10,7 +10,6 @@ import java.util.List;
 
 public class User {
 
-    // TODO major refactor and continue working on the compiler
     // only here to distinguish the DBA from other users, the DBA has access to everything
     public enum Type {
         DATABASE_ADMINISTRATOR, OTHER
@@ -63,7 +62,7 @@ public class User {
         for(Table table : tables) {
 
             String tableName = table.getTableName();
-            List<Privilege> privileges = Privilege.getAllPrivileges();
+            List<Privilege> privileges = Privilege.getAllPrivilegesExceptUnknown();
             List<String> updateColumns = new ArrayList<>();
             List<String> referenceColumns = new ArrayList<>();
 
@@ -131,6 +130,17 @@ public class User {
     public TablePrivileges getTablePrivileges(String tableName) {
 
         for(TablePrivileges current : tablePrivilegesList) {
+            if(current.getTableName().equalsIgnoreCase(tableName)) {
+                return current;
+            }
+        }
+
+        return new TablePrivileges();
+    }
+
+    public TablePrivileges getGrantedTablePrivileges(String tableName) {
+
+        for (TablePrivileges current : passableTablePrivilegesList) {
             if(current.getTableName().equalsIgnoreCase(tableName)) {
                 return current;
             }

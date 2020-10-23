@@ -6,7 +6,6 @@ import datastructures.relation.table.component.DataType;
 import datastructures.relation.table.component.FileStructure;
 import datastructures.relation.table.component.TableData;
 import datastructures.querytree.QueryTree;
-import datastructures.querytree.operator.types.Relation;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import datastructures.user.component.Privilege;
 import datastructures.user.component.TablePrivileges;
@@ -568,7 +567,7 @@ public class Compiler {
 
         // if granting all privileges, well, do that
         if ((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
-            privileges = Privilege.getAllPrivileges();
+            privileges = Privilege.getAllPrivilegesExceptUnknown();
             // figure out what column names are within the given table in order to set the update and reference columns
             for (Table table : tables) {
                 String tableName = table.getTableName();

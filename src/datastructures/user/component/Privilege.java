@@ -31,7 +31,7 @@ public enum Privilege {
         }
     }
 
-    public static List<Privilege> getAllPrivileges() {
+    public static List<Privilege> getAllPrivilegesExceptUnknown() {
 
         List<Privilege> privileges = new ArrayList<>();
 
