@@ -65,7 +65,7 @@ public class Serializer {
                     tablePrivilegesList = new ArrayList<>();
                     break;
                 case "PASSABLE TABLE PRIVILEGES LIST DONE":
-                    user.setPassableTablePrivilegesList(tablePrivilegesList);
+                    user.setGrantedTablePrivilegesList(tablePrivilegesList);
                     tablePrivilegesList = new ArrayList<>();
                     break;
                 case "TABLE PRIVILEGES DONE":
@@ -199,7 +199,7 @@ public class Serializer {
             toSerialize.append("\t").append("TABLE PRIVILEGES LIST DONE").append("\n");
 
             // huge repeat of a bunch for passable table privileges
-            List<TablePrivileges> passableTablePrivilegesList = user.getPassableTablePrivilegesList();
+            List<TablePrivileges> passableTablePrivilegesList = user.getGrantedTablePrivilegesList();
             toSerialize.append("\t").append("PassableTablePrivilegesList: ");
 
             if(! passableTablePrivilegesList.isEmpty()) {

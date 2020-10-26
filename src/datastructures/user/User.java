@@ -8,6 +8,18 @@ import datastructures.user.component.Privilege;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * TODO rework this class a little bit, need to handle the case in which the user is being granted
+ * new table privileges and other stuff
+ * Class represents a user of the system. The user can take the form of a database administrator or a regular
+ * user. The DBA has access to all tables and can basically do whatever he wants. Regular users need to
+ * be granted privileges in order to perform operations. Each user has a list of table privileges which is
+ * essentially a list of privileges on a single table. These table privileges determine what kinds of commands
+ * the user can execute. Similarly, the have a list of table privileges that they are allowed to pass on to
+ * other users called "grantedTablePrivileges". These get added to when a user (who has the privilege(s)) grants
+ * privileges to another user and include the "WITH GRANT OPTION" allowing that user to pass on those privileges
+ * to other users if they wish.
+ */
 public class User {
 
     // only here to distinguish the DBA from other users, the DBA has access to everything
@@ -16,42 +28,44 @@ public class User {
     }
 
     private String username;
-    private final Type type;
+    private final Type userType;
     private List<TablePrivileges> tablePrivilegesList;
-    private List<TablePrivileges> passableTablePrivilegesList;
+    private List<TablePrivileges> grantedTablePrivilegesList;
 
+    /**
+     * Default constructor, should only be called when serializing or un-serializing data.
+     */
     public User() {
-
         this.username = "";
-        this.type = Type.OTHER;
+        this.userType = Type.OTHER;
         this.tablePrivilegesList = new ArrayList<>();
-        this.passableTablePrivilegesList = new ArrayList<>();
+        this.grantedTablePrivilegesList = new ArrayList<>();
     }
 
     public User(String username, List<TablePrivileges> tablePrivilegesList,
-                List<TablePrivileges> passableTablePrivilegesList) {
-
+                List<TablePrivileges> grantedTablePrivilegesList) {
         this.username = username;
-        this.type = Type.OTHER;
+        this.userType = Type.OTHER;
         this.tablePrivilegesList = tablePrivilegesList;
-        this.passableTablePrivilegesList = passableTablePrivilegesList;
+        this.grantedTablePrivilegesList = grantedTablePrivilegesList;
     }
 
     /**
-     * Helper constructor for creating a database administrator, can't be accessed normally.
-     * Will have access to everything within the system.
+     * Helper constructor for the method below which creates a database administrator. This
+     * constructor can't be accessed normally. Will have access to everything within the system.
      */
-    private User(String username, Type type, List<TablePrivileges> tablePrivilegesList,
-                 List<TablePrivileges> passableTablePrivilegesList) {
+    private User(String username, Type userType, List<TablePrivileges> tablePrivilegesList,
+                 List<TablePrivileges> grantedTablePrivilegesList) {
         this.username = username;
-        this.type = type;
+        this.userType = userType;
         this.tablePrivilegesList = tablePrivilegesList;
-        this.passableTablePrivilegesList = passableTablePrivilegesList;
+        this.grantedTablePrivilegesList = grantedTablePrivilegesList;
     }
 
     /**
      * Returns a special user that will have access to everything within the system.
      * Calls the private constructor for creation.
+     * @param tables are all the tables in the system
      * @return the Database Administrator
      */
     public static User DatabaseAdministrator(List<Table> tables) {
@@ -59,7 +73,7 @@ public class User {
         List<TablePrivileges> tablePrivilegesList = new ArrayList<>();
         List<TablePrivileges> passableTablePrivilegesList = new ArrayList<>();
 
-        for(Table table : tables) {
+        for (Table table : tables) {
 
             String tableName = table.getTableName();
             List<Privilege> privileges = Privilege.getAllPrivilegesExceptUnknown();
@@ -67,7 +81,7 @@ public class User {
             List<String> referenceColumns = new ArrayList<>();
 
             // need to get the update and reference columns
-            for(Column column : table.getColumns()) {
+            for (Column column : table.getColumns()) {
                 String columnName = column.getColumnName();
                 updateColumns.add(columnName);
                 referenceColumns.add(columnName);
@@ -89,7 +103,7 @@ public class User {
     public String getUsername() { return username; }
 
     public boolean isDBA() {
-        return type == Type.DATABASE_ADMINISTRATOR;
+        return userType == Type.DATABASE_ADMINISTRATOR;
     }
 
     public void setTablePrivilegesList(List<TablePrivileges> tablePrivilegesList) {
@@ -99,6 +113,7 @@ public class User {
     /**
      * Adds table privileges to the list of table privileges available, if the user
      * already has privileges with the associated table, adds only new stuff.
+     * @param tablePrivilegesToAdd are the table privileges to add
      */
     public void addTablePrivileges(TablePrivileges tablePrivilegesToAdd) {
 
@@ -119,7 +134,7 @@ public class User {
         if(hasDuplicateTablePrivileges) {
             handleDuplicates(tablePrivilegesToAdd, duplicateTablePrivileges);
         } else {
-            this.tablePrivilegesList.add(tablePrivilegesToAdd);
+            tablePrivilegesList.add(tablePrivilegesToAdd);
         }
     }
 
@@ -140,7 +155,7 @@ public class User {
 
     public TablePrivileges getGrantedTablePrivileges(String tableName) {
 
-        for (TablePrivileges current : passableTablePrivilegesList) {
+        for (TablePrivileges current : grantedTablePrivilegesList) {
             if(current.getTableName().equalsIgnoreCase(tableName)) {
                 return current;
             }
@@ -149,8 +164,8 @@ public class User {
         return new TablePrivileges();
     }
 
-    public void setPassableTablePrivilegesList(List<TablePrivileges> passableTablePrivilegesList) {
-        this.passableTablePrivilegesList = passableTablePrivilegesList;
+    public void setGrantedTablePrivilegesList(List<TablePrivileges> grantedTablePrivilegesList) {
+        this.grantedTablePrivilegesList = grantedTablePrivilegesList;
     }
 
     /**
@@ -162,7 +177,7 @@ public class User {
         // search through passable table privileges, checking if we already have the one added
         TablePrivileges duplicateTablePrivileges = null;
 
-        for(TablePrivileges tablePrivileges : passableTablePrivilegesList) {
+        for(TablePrivileges tablePrivileges : grantedTablePrivilegesList) {
             String tableName = tablePrivileges.getTableName();
             if(tableName.equalsIgnoreCase(tablePrivilegesToAdd.getTableName())) {
                 duplicateTablePrivileges = tablePrivileges;
@@ -176,12 +191,12 @@ public class User {
         if(hasDuplicateTablePrivileges) {
             handleDuplicates(tablePrivilegesToAdd, duplicateTablePrivileges);
         } else {
-            this.passableTablePrivilegesList.add(tablePrivilegesToAdd);
+            this.grantedTablePrivilegesList.add(tablePrivilegesToAdd);
         }
     }
 
-    public List<TablePrivileges> getPassableTablePrivilegesList() {
-        return passableTablePrivilegesList;
+    public List<TablePrivileges> getGrantedTablePrivilegesList() {
+        return grantedTablePrivilegesList;
     }
 
     /**
@@ -201,7 +216,7 @@ public class User {
         }
 
         // removing the passable table privileges
-        for(TablePrivileges tablePrivileges : passableTablePrivilegesList) {
+        for(TablePrivileges tablePrivileges : grantedTablePrivilegesList) {
             String tableName = tablePrivileges.getTableName();
             if(tableName.equalsIgnoreCase(tablePrivilegesToRevoke.getTableName())) {
                 for(Privilege privilegeToRevoke: tablePrivilegesToRevoke.getPrivileges()) {
@@ -219,7 +234,7 @@ public class User {
                 break;
             }
         }
-        for(TablePrivileges passableTablePrivileges : passableTablePrivilegesList) {
+        for(TablePrivileges passableTablePrivileges : grantedTablePrivilegesList) {
             String tableName = passableTablePrivileges.getTableName();
             if(tableName.equalsIgnoreCase(tableNameToRemove)) {
                 passableTablePrivileges.revokeAllPrivileges();
@@ -244,12 +259,19 @@ public class User {
     public boolean hasTablePrivilege(String candidateTable, Privilege candidatePrivilege,
                                      List<String> candidateColumnNames) {
 
+        assert candidatePrivilege == Privilege.UPDATE || candidatePrivilege == Privilege.REFERENCES;
+
         TablePrivileges referencedTablePrivileges = null;
 
         for(TablePrivileges tablePrivilege : tablePrivilegesList) {
             if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
                 referencedTablePrivileges = tablePrivilege;
             }
+        }
+
+        // doesn't have any privileges with the associated table
+        if (referencedTablePrivileges == null) {
+            return false;
         }
 
         List<String> updateOrReferenceColumns = null;
@@ -280,7 +302,7 @@ public class User {
 
     public boolean hasGrantedTablePrivilege(String candidateTable, Privilege candidatePrivilege) {
 
-        for(TablePrivileges tablePrivilege : passableTablePrivilegesList) {
+        for(TablePrivileges tablePrivilege : grantedTablePrivilegesList) {
             if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
                 if(tablePrivilege.hasPrivilege(candidatePrivilege)) {
                     return true;
@@ -296,7 +318,7 @@ public class User {
 
         TablePrivileges referencedTablePrivileges = null;
 
-        for(TablePrivileges tablePrivilege : passableTablePrivilegesList) {
+        for(TablePrivileges tablePrivilege : grantedTablePrivilegesList) {
             if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
                 referencedTablePrivileges = tablePrivilege;
             }
@@ -342,7 +364,7 @@ public class User {
 
         // add only new reference columns, Table Privileges takes care of duplicates
         for(String referenceColumnToAdd : tablePrivilegesToAdd.getReferenceColumns()) {
-            duplicateTablePrivileges.addReferenceColumn(referenceColumnToAdd);
+            duplicateTablePrivileges.addReferencesColumn(referenceColumnToAdd);
         }
     }
 
@@ -376,11 +398,11 @@ public class User {
 
         stringBuilder.append("\n").append("Passable Privileges: ");
 
-        if(! passableTablePrivilegesList.isEmpty()) {
+        if(! grantedTablePrivilegesList.isEmpty()) {
 
             stringBuilder.append("\n");
 
-            for (TablePrivileges tablePrivilege : passableTablePrivilegesList) {
+            for (TablePrivileges tablePrivilege : grantedTablePrivilegesList) {
                 stringBuilder.append("\t").append("Privileges On Table: ").append(tablePrivilege.getTableName()).
                         append("\n").append(tablePrivilege).append("\n");
             }
@@ -394,37 +416,5 @@ public class User {
         }
 
         return stringBuilder.toString();
-    }
-
-    public void printUserData() {
-
-        StringBuilder userData = new StringBuilder();
-
-        userData.append("Username: ").append(username).append("\n");
-
-        for(TablePrivileges tablePrivilege : tablePrivilegesList) {
-
-            String tableName = tablePrivilege.getTableName();
-            userData.append("\t").append(tableName).append("\n");
-
-            for(Privilege privilege : tablePrivilege.getPrivileges()) {
-
-                userData.append("\t\t").append(privilege).append("\n");
-
-                if(tablePrivilege.hasPrivilege(Privilege.UPDATE)) {
-                    for(String column : tablePrivilege.getUpdateColumns()) {
-                        userData.append("\t\t\t").append(column).append("\n");
-                    }
-                }
-
-                if(tablePrivilege.hasPrivilege(Privilege.REFERENCES)) {
-                    for(String column : tablePrivilege.getReferenceColumns()) {
-                        userData.append("\t\t\t").append(column).append("\n");
-                    }
-                }
-            }
-        }
-
-        System.out.println(userData.toString());
     }
 }

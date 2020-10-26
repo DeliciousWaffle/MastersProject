@@ -83,9 +83,9 @@ public class SecurityChecker {
             case UPDATE:
                 return isValidUpdate(filteredInput, currentUser);
             case GRANT:
-                return isValidGrant(filteredInput, currentUser, tables);
+                return isValidPrivilegeCommand("Grant", filteredInput, currentUser, tables);
             case REVOKE:
-                return isValidRevoke(filteredInput, currentUser, tables);
+                return isValidPrivilegeCommand("Revoke", filteredInput, currentUser, tables);
             case BUILD_FILE_STRUCTURE:
                 return isValidBuildFileStructure(filteredInput, currentUser);
             case REMOVE_FILE_STRUCTURE:
@@ -161,6 +161,7 @@ public class SecurityChecker {
 
         RuleGraph alterTableRuleGraph = RuleGraphTypes.getAlterTableRuleGraph();
         String tableName = alterTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
+        boolean hasForeignKey = ! alterTableRuleGraph.getTokensAt(filteredInput, 13).isEmpty();
 
         if (! currentUser.hasTablePrivilege(tableName, Privilege.ALTER)) {
             errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"ALTER\" privilege\n" +
@@ -168,10 +169,9 @@ public class SecurityChecker {
             return false;
         }
 
-        boolean hasForeignKey = ! alterTableRuleGraph.getTokensAt(filteredInput, 13).isEmpty();
-
         if (hasForeignKey) {
             List<String> referencedColumn = alterTableRuleGraph.getTokensAt(filteredInput, 16);
+            referencedColumn.set(0, referencedColumn.get(0).split("\\.")[1]);
             if (! currentUser.hasTablePrivilege(tableName, Privilege.REFERENCES, referencedColumn)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"REFERENCES\" " +
                         "privilege\n for \"" + referencedColumn.get(0) + "\", therefore, the Alter Table command was not executed";
@@ -244,14 +244,17 @@ public class SecurityChecker {
 
     /**
      * Checks to see if the current user has the passable table privileges needed
-     * in order to use the GRANT command.
+     * in order to use the GRANT or REVOKE command. Their rule graph structure is very
+     * similar so only one method is used.
      * @param filteredInput is the filtered input
      * @param currentUser is the current user of the system
      * @return whether the current user has the correct table privileges for the GRANT command
      */
-    public boolean isValidGrant(String[] filteredInput, User currentUser, List<Table> tables) {
+    public boolean isValidPrivilegeCommand(String command, String[] filteredInput, User currentUser, List<Table> tables) {
 
-        RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
+        RuleGraph grantRuleGraph = command.equalsIgnoreCase("Grant")
+                ? RuleGraphTypes.getGrantRuleGraph()
+                : RuleGraphTypes.getRevokeRuleGraph();
         String tableName = grantRuleGraph.getTokensAt(filteredInput, 20).get(0);
 
         // make sure user has passable privileges for alter, delete, index, insert, and select for the given table
@@ -260,7 +263,8 @@ public class SecurityChecker {
         for (String privilege : privilegeNames) {
             if (! currentUser.hasGrantedTablePrivilege(tableName, Privilege.convertToPrivilege(privilege))) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the passable \"" + privilege +
-                        "\" privilege\n on Table \"" + tableName + "\", therefore, the Grant command was not executed";
+                        "\" privilege\n on Table \"" + tableName + "\", therefore, the " + command +
+                        " command was not executed";
                 return false;
             }
         }
@@ -273,7 +277,7 @@ public class SecurityChecker {
             if (! currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, updateColumnNames)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have all the passable \"UPDATE\"" +
                         "privilege columns on Table\n\"" + tableName + "\", therefore, " +
-                        "the Grant command was not executed";
+                        "the " + command + " command was not executed";
                 return false;
             }
         }
@@ -286,7 +290,7 @@ public class SecurityChecker {
             if (! currentUser.hasGrantedTablePrivilege(tableName, Privilege.REFERENCES, updateColumnNames)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have all the passable " +
                         "\"REFERENCES\" privilege columns on Table\n\"" + tableName + "\", therefore, " +
-                        "the Grant command was not executed";
+                        "the " + command + " command was not executed";
                 return false;
             }
         }
@@ -301,7 +305,7 @@ public class SecurityChecker {
             if (! hasAllPrivileges) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have all the passable " +
                         "privileges on Table\n\"" + tableName + "\", therefore, " +
-                        "the Grant command was not executed";;
+                        "the " + command + " command was not executed";
                 return false;
             }
         }
@@ -310,31 +314,30 @@ public class SecurityChecker {
     }
 
     /**
-     * @param filteredInput is the filtered input
-     * @param currentUser is the current user of the system
-     * @return whether the current user has the correct table privileges for the REVOKE command
-     */
-    public boolean isValidRevoke(String[] filteredInput, User currentUser, List<Table> tables) {
-
-        RuleGraph revokeRuleGraph = RuleGraphTypes.getRevokeRuleGraph();
-
-        return false;
-    }
-
-    /**
+     * Checks if the current user has the INDEX privilege on the supplied table.
      * @param filteredInput is the filtered input
      * @param currentUser is the current user of the system
      * @return whether the current user has the correct table privileges for the BUILD FILE STRUCTURE command
      */
     public boolean isValidBuildFileStructure(String[] filteredInput, User currentUser) {
-        /*String tableName = tokenizedInput[6];
-        return currentUser.hasTablePrivilege(tableName, Privilege.INDEX);*/
+
         RuleGraph buildFileStructureRuleGraph = RuleGraphTypes.getBuildFileStructureRuleGraph();
+        List<String> tableNames = buildFileStructureRuleGraph.getTokensAt(filteredInput, 9, 12, 14);
+
+        for (String tableName : tableNames) {
+            if (! currentUser.hasTablePrivilege(tableName, Privilege.INDEX)) {
+                errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the passable " +
+                        "\"INDEX\" privilege on Table\n\"" + tableName + "\", therefore, " +
+                        "the Build File Structure command was not executed";
+                return false;
+            }
+        }
 
         return true;
     }
 
     /**
+     * Checks if the current user has the INDEX privilege on the supplied table.
      * @param filteredInput is the filtered input
      * @param currentUser is the current user of the system
      * @return whether the current user has the correct table privileges for the REMOVE FILE STRUCTURE command
@@ -342,6 +345,16 @@ public class SecurityChecker {
     public boolean isValidRemoveFileStructure(String[] filteredInput, User currentUser) {
 
         RuleGraph removeFileStructureRuleGraph = RuleGraphTypes.getRemoveFileStructureRuleGraph();
+        List<String> tableNames = removeFileStructureRuleGraph.getTokensAt(filteredInput, 9, 12, 14);
+
+        for (String tableName : tableNames) {
+            if (! currentUser.hasTablePrivilege(tableName, Privilege.INDEX)) {
+                errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the passable " +
+                        "\"INDEX\" privilege on Table\n\"" + tableName + "\", therefore, " +
+                        "the Build File Structure command was not executed";
+                return false;
+            }
+        }
 
         return false;
     }

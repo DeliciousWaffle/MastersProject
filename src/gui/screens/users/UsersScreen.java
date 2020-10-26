@@ -97,7 +97,7 @@ public class UsersScreen extends Screen {
 
             List<TablePrivilegePane> passableTablePrivilegePaneList = new ArrayList<>();
 
-            for(TablePrivileges passableTablePrivilege : user.getPassableTablePrivilegesList()) {
+            for(TablePrivileges passableTablePrivilege : user.getGrantedTablePrivilegesList()) {
                 TablePrivilegePane passableTablePrivilegePane = new TablePrivilegePane(passableTablePrivilege.getTableName(),
                         passableTablePrivilege.getPrivileges(), passableTablePrivilege.getUpdateColumns(),
                         passableTablePrivilege.getReferenceColumns());

@@ -143,14 +143,16 @@ public class SecurityCheckerTest {
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
     }
-/*
+
     @ParameterizedTest
     @ValueSource(strings = {
+            "INSERT INTO Customers VALUES(1)",
+            "INSERT INTO Customers VALUES(1, \"Blah\", \"Blah\")"
     })
     void validInsertCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.INSERT, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.INSERT, filtered, dba, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertTrue(isValid);
@@ -159,11 +161,13 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "INSERT INTO Customers VALUES(1)",
+            "INSERT INTO Customers VALUES(1, \"Blah\", \"Blah\")"
     })
     void invalidInsertCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.INSERT, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.INSERT, filtered, noPrivilegeGuy, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertFalse(isValid);
@@ -172,11 +176,12 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "DELETE FROM Customers WHERE CustomerID = 1"
     })
     void validDeleteCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.DELETE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.DELETE, filtered, dba, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertTrue(isValid);
@@ -185,12 +190,12 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "DELETE FROM Customers WHERE CustomerID = 1"
     })
     void invalidDeleteCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.DELETE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.DELETE, filtered, noPrivilegeGuy, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertFalse(isValid);
@@ -199,12 +204,12 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "UPDATE Customers SET FirstName = \"Blah\" WHERE CustomerID = 1"
     })
     void validUpdateCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.UPDATE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.UPDATE, filtered, dba, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         System.out.println(RuleGraphTypes.getUpdateRuleGraph());
@@ -214,12 +219,12 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "UPDATE Customers SET FirstName = \"Blah\" WHERE CustomerID = 1"
     })
     void invalidUpdateCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.UPDATE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.UPDATE, filtered, noPrivilegeGuy, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertFalse(isValid);
@@ -228,12 +233,18 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "GRANT ALTER ON Customers TO Bob", // normal
+            "GRANT ALTER, DELETE, INDEX ON Customers TO Bob", // multiple columns
+            "GRANT UPDATE(CustomerID, FirstName, LastName) ON Customers TO Bob", // update, references
+            "GRANT ALL PRIVILEGES ON Customers TO Bob", // all
+            "GRANT ALTER ON Customers TO Bob, Sally, John", // multiple users
+            "GRANT ALTER ON Customers TO Bob WITH GRANT OPTION", // grant option
+            "GRANT ALTER, DELETE, INDEX, UPDATE(CustomerID, FirstName, LastName) ON Customers TO Bob, Sally, John" // mix of stuff
     })
     void validGrantCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.GRANT, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.GRANT, filtered, dba, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertTrue(isValid);
@@ -242,12 +253,18 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "GRANT ALTER ON Customers TO Bob", // normal
+            "GRANT ALTER, DELETE, INDEX ON Customers TO Bob", // multiple columns
+            "GRANT UPDATE(CustomerID, FirstName, LastName) ON Customers TO Bob", // update, references
+            "GRANT ALL PRIVILEGES ON Customers TO Bob", // all
+            "GRANT ALTER ON Customers TO Bob, Sally, John", // multiple users
+            "GRANT ALTER ON Customers TO Bob WITH GRANT OPTION", // grant option
+            "GRANT ALTER, DELETE, INDEX, UPDATE(CustomerID, FirstName, LastName) ON Customers TO Bob, Sally, John" // mix of stuff
     })
     void invalidGrantCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.GRANT, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.GRANT, filtered, noPrivilegeGuy, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertFalse(isValid);
@@ -256,12 +273,17 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REVOKE ALTER ON Customers FROM Bob", // normal
+            "REVOKE ALTER, DELETE, INDEX ON Customers FROM Bob", // multiple columns
+            "REVOKE UPDATE(CustomerID, FirstName, LastName) ON Customers FROM Bob", // update, references
+            "REVOKE ALL PRIVILEGES ON Customers FROM Bob", // all
+            "REVOKE ALTER ON Customers FROM Bob, Sally, John", // multiple users
+            "REVOKE ALTER, DELETE, INDEX, UPDATE(CustomerID, FirstName, LastName) ON Customers FROM Bob, Sally, John" // mix of stuff
     })
     void validRevokeCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.REVOKE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.REVOKE, filtered, dba, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertTrue(isValid);
@@ -270,12 +292,17 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REVOKE ALTER ON Customers FROM Bob", // normal
+            "REVOKE ALTER, DELETE, INDEX ON Customers FROM Bob", // multiple columns
+            "REVOKE UPDATE(CustomerID, FirstName, LastName) ON Customers FROM Bob", // update, references
+            "REVOKE ALL PRIVILEGES ON Customers FROM Bob", // all
+            "REVOKE ALTER ON Customers FROM Bob, Sally, John", // multiple users
+            "REVOKE ALTER, DELETE, INDEX, UPDATE(CustomerID, FirstName, LastName) ON Customers FROM Bob, Sally, John" // mix of stuff
     })
     void invalidRevokeCommand(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.REVOKE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.REVOKE, filtered, noPrivilegeGuy, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertFalse(isValid);
@@ -284,12 +311,13 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "BUILD HASH TABLE ON CustomerID IN Customers", // normal
+            "BUILD CLUSTERED FILE ON Customers AND CustomerPurchaseDetails" // clustered files
     })
     void validBuildFileStructure(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, dba, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertTrue(isValid);
@@ -298,12 +326,13 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "BUILD HASH TABLE ON CustomerID IN Customers", // normal
+            "BUILD CLUSTERED FILE ON Customers AND CustomerPurchaseDetails" // clustered files
     })
     void invalidBuildFileStructure(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, noPrivilegeGuy, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertFalse(isValid);
@@ -312,12 +341,13 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REMOVE FILE STRUCTURE ON CustomerID IN Customers",
+            "REMOVE CLUSTERED FILE ON Customers AND CustomerPurchaseDetails"
     })
     void validRemoveFileStructure(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, dba, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertTrue(isValid);
@@ -326,15 +356,16 @@ public class SecurityCheckerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-
+            "REMOVE FILE STRUCTURE ON CustomerID IN Customers",
+            "REMOVE CLUSTERED FILE ON Customers AND CustomerPurchaseDetails"
     })
     void invalidRemoveFileStructure(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = securityChecker.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, tables, users);
+        boolean isValid = securityChecker.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, noPrivilegeGuy, tables);
         System.out.println("Error code: " + securityChecker.getErrorMessage());
         securityChecker.resetErrorMessage();
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
-    }*/
+    }
 }
