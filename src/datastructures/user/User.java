@@ -83,7 +83,7 @@ public class User {
         for (Table table : tables) {
 
             String tableName = table.getTableName();
-            List<Privilege> privileges = Privilege.getAllPrivilegesExceptUnknown();
+            List<Privilege> privileges = Privilege.getAllNonSpecialPrivileges();
             List<String> updateColumns = new ArrayList<>();
             List<String> referenceColumns = new ArrayList<>();
 
@@ -145,22 +145,34 @@ public class User {
     }
 
     /**
-     * @param candidate is the name of the table privileges to check
+     * @param tableNameToCheck is the name of the table privileges to check
      * @return whether a table privileges already exists within the list of table privileges
      */
-    public boolean hasTablePrivileges(String candidate) {
+    public boolean hasTablePrivileges(String tableNameToCheck) {
 
         boolean foundTablePrivileges = false;
 
         for (TablePrivileges tablePrivileges : tablePrivilegesList) {
             String tableName = tablePrivileges.getTableName();
-            if (candidate.equalsIgnoreCase(tableName)) {
+            if (tableNameToCheck.equalsIgnoreCase(tableName)) {
                 foundTablePrivileges = true;
                 break;
             }
         }
 
         return foundTablePrivileges;
+    }
+
+    /**
+     * Returns whether the user has all the privileges (including UPDATE and REFERENCES privilege
+     * columns) on the given table.
+     * @param table is the table to check
+     * @return whether the user has all privileges for the given table
+     */
+    public boolean hasAllTablePrivileges(Table table) {
+        TablePrivileges tablePrivileges = getTablePrivileges(table.getTableName());
+        boolean tableExists = tablePrivileges != null;
+        return tableExists && tablePrivileges.hasAllPrivileges(table);
     }
 
     /**
@@ -259,10 +271,14 @@ public class User {
         TablePrivileges tablePrivileges = getTablePrivileges(toRevoke.getTableName());
         assert tablePrivileges != null;
         tablePrivileges.revokePrivileges(toRevoke.getPrivileges());
+        tablePrivileges.removeUpdateColumns(toRevoke.getUpdateColumns());
+        tablePrivileges.removeReferencesColumns(toRevoke.getReferenceColumns());
 
         TablePrivileges grantedTablePrivileges = getGrantedTablePrivileges(toRevoke.getTableName());
         assert grantedTablePrivileges != null;
         grantedTablePrivileges.revokePrivileges(toRevoke.getPrivileges());
+        grantedTablePrivileges.removeUpdateColumns(toRevoke.getUpdateColumns());
+        grantedTablePrivileges.removeReferencesColumns(toRevoke.getReferenceColumns());
     }
 
     /**

@@ -31,11 +31,13 @@ public enum Privilege {
         }
     }
 
-    public static List<Privilege> getAllPrivilegesExceptUnknown() {
+    /**
+     * @return a list of all privileges that can be obtained except for ALL_PRIVILEGES and UNKNOWN
+     */
+    public static List<Privilege> getAllNonSpecialPrivileges() {
 
         List<Privilege> privileges = new ArrayList<>();
 
-        privileges.add(Privilege.ALL_PRIVILEGES);
         privileges.add(Privilege.ALTER);
         privileges.add(Privilege.DELETE);
         privileges.add(Privilege.INDEX);

@@ -567,7 +567,7 @@ public class Compiler {
 
         // if granting all privileges, well, do that
         if ((privilegesInput.size() == 1) && privilegesInput.get(0).equalsIgnoreCase("all")) {
-            privileges = Privilege.getAllPrivilegesExceptUnknown();
+            privileges = Privilege.getAllNonSpecialPrivileges();
             // figure out what column names are within the given table in order to set the update and reference columns
             for (Table table : tables) {
                 String tableName = table.getTableName();
@@ -600,7 +600,7 @@ public class Compiler {
                 if (userName.equalsIgnoreCase(userNameInput)) {
                     user.addTablePrivileges(tablePrivileges);
                     if (hasWithGrantOption) {
-                        user.addPassableTablePrivileges(passableTablePrivileges);
+                        //user.addPassableTablePrivileges(passableTablePrivileges); // TODO
                     }
                     break;
                 }

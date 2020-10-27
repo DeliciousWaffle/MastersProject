@@ -139,8 +139,10 @@ public class TablePrivileges {
      */
     public void grantAllPrivileges(Table table) {
 
+        tableName = table.getTableName();
+
         // grant all privileges
-        privileges = getAllPrivilegesExceptUnknown();
+        privileges = getAllNonSpecialPrivileges();
 
         // obtain a mapping of column names for UPDATE and REFERENCES privileges
         List<String> columnNames = table.getColumns().stream()

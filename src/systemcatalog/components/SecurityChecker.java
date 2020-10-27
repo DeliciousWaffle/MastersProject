@@ -172,7 +172,7 @@ public class SecurityChecker {
         if (hasForeignKey) {
             List<String> referencedColumn = alterTableRuleGraph.getTokensAt(filteredInput, 16);
             referencedColumn.set(0, referencedColumn.get(0).split("\\.")[1]);
-            if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.REFERENCES, referencedColumn)) {
+            if (! currentUser.hasReferencesColumnsOnTable(tableName, referencedColumn)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"REFERENCES\" " +
                         "privilege\n for \"" + referencedColumn.get(0) + "\", therefore, the Alter Table command was not executed";
                 return false;
@@ -232,7 +232,7 @@ public class SecurityChecker {
         String tableName = updateRuleGraph.getTokensAt(filteredInput, 1).get(0);
         List<String> columnNames = updateRuleGraph.getTokensAt(filteredInput, 3, 10);
 
-        if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.UPDATE, columnNames)) {
+        if (! currentUser.hasUpdateColumnsOnTable(tableName, columnNames)) {
             errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"UPDATE\" privilege on \"" +
                     tableName + "\"\n for both Column \"" + columnNames.get(0) + "\" and \" " + columnNames.get(1) +
                     "\", therefore, the update command was not executed";
@@ -261,7 +261,7 @@ public class SecurityChecker {
         List<String> privilegeNames = grantRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5);
 
         for (String privilege : privilegeNames) {
-            if (! currentUser.hasGrantedTablePrivilege(tableName, Privilege.convertToPrivilege(privilege))) {
+            if (! currentUser.hasGrantedPrivilegeOnTable(tableName, Privilege.convertToPrivilege(privilege))) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the passable \"" + privilege +
                         "\" privilege\n on Table \"" + tableName + "\", therefore, the " + command +
                         " command was not executed";
@@ -274,7 +274,7 @@ public class SecurityChecker {
 
         if (grantingUpdate) {
             List<String> updateColumnNames = grantRuleGraph.getTokensAt(filteredInput, 12);
-            if (! currentUser.hasGrantedTablePrivilege(tableName, Privilege.UPDATE, updateColumnNames)) {
+            if (! currentUser.hasGrantedUpdateColumnsOnTable(tableName, updateColumnNames)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have all the passable \"UPDATE\"" +
                         "privilege columns on Table\n\"" + tableName + "\", therefore, " +
                         "the " + command + " command was not executed";
@@ -286,8 +286,8 @@ public class SecurityChecker {
         boolean grantingReferences = ! grantRuleGraph.getTokensAt(filteredInput, 7).isEmpty();
 
         if (grantingReferences) {
-            List<String> updateColumnNames = grantRuleGraph.getTokensAt(filteredInput, 16);
-            if (! currentUser.hasGrantedTablePrivilege(tableName, Privilege.REFERENCES, updateColumnNames)) {
+            List<String> referencesColumnNames = grantRuleGraph.getTokensAt(filteredInput, 16);
+            if (! currentUser.hasGrantedReferencesColumnsOnTable(tableName, referencesColumnNames)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have all the passable " +
                         "\"REFERENCES\" privilege columns on Table\n\"" + tableName + "\", therefore, " +
                         "the " + command + " command was not executed";
@@ -301,7 +301,7 @@ public class SecurityChecker {
         if (grantingAllPrivileges) {
             Table referencedTable = Utilities.getReferencedTable(tableName, tables);
             assert referencedTable != null;
-            boolean hasAllPrivileges = Utilities.hasAllGrantedPrivilegesOnTable(currentUser, referencedTable);
+            boolean hasAllPrivileges = currentUser.hasAllTablePrivileges(referencedTable);
             if (! hasAllPrivileges) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have all the passable " +
                         "privileges on Table\n\"" + tableName + "\", therefore, " +

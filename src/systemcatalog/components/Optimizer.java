@@ -71,10 +71,10 @@ public class Optimizer {
         QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), filteredInput, tables);
         List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
 
-        List<QueryTree> queryTreeStates = Arrays.asList(
+        List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
                 queryTree, afterCascadingSelections, afterPushingDownSelections, afterFormingJoins,
                 afterRearrangingJoins, afterPushingDownProjections
-        );
+        ));
 
         queryTreeStates.addAll(afterPipeliningSubtrees);
 
@@ -107,9 +107,10 @@ public class Optimizer {
         List<String> selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(input, 9);
 
         // from clause data
-        if(tableNames.isEmpty()) { // initial query tree creation, extract table data from input
+        if (tableNames.isEmpty()) { // initial query tree creation, extract table data from input
             tableNames = queryRuleGraph.getTokensAt(input, 13, 15, 18);
         }
+
         List<String> firstJoinOnColumnNames = queryRuleGraph.getTokensAt(input, 20);
         List<String> innerJoinSymbols = queryRuleGraph.getTokensAt(input, 21, 22, 23, 24, 25, 26);
         List<String> secondJoinOnColumnNames = queryRuleGraph.getTokensAt(input, 27);
@@ -119,7 +120,6 @@ public class Optimizer {
         List<String> whereClauseColumnNames = queryRuleGraph.getTokensAt(input, 29);
         List<String> whereClauseSymbols = queryRuleGraph.getTokensAt(input, 30, 31, 32, 33, 34, 35);
         List<String> whereClauseValues = queryRuleGraph.getTokensAt(input, 36, 38);
-        int numWhereClauseAnds = queryRuleGraph.getTokensAt(input, 40).size();
 
         // group by clause data
         List<String> groupByColumnNames = queryRuleGraph.getTokensAt(input, 43);
@@ -249,7 +249,7 @@ public class Optimizer {
         // if there are no selections with conjunctions, don't bother with this
         boolean hasCompoundSelections = queryTree.getTypeOccurrence(COMPOUND_SELECTION) != 0;
 
-        if(! hasCompoundSelections) {
+        if (! hasCompoundSelections) {
             return queryTree;
         }
 
@@ -287,14 +287,14 @@ public class Optimizer {
         // don't bother if there are no selections to push down
         boolean hasSimpleSelections = queryTree.getTypeOccurrence(SIMPLE_SELECTION) != 0;
 
-        if(! hasSimpleSelections) {
+        if (! hasSimpleSelections) {
             return queryTree;
         }
 
         // also don't bother if there is only 1 relation
         boolean hasOneRelation = queryTree.getTypeOccurrence(RELATION) == 1;
 
-        if(hasOneRelation) {
+        if (hasOneRelation) {
             return queryTree;
         }
 
@@ -310,7 +310,7 @@ public class Optimizer {
                 OptimizerUtilities.getListOfFewestElements(simpleSelectionLocations);
 
         // removing each simple selection from the query tree
-        while(hasSimpleSelections) {
+        while (hasSimpleSelections) {
             queryTree.remove(smallestTraversal, NONE);
             hasSimpleSelections = queryTree.getTypeOccurrence(SIMPLE_SELECTION) != 0;
         }
@@ -324,12 +324,12 @@ public class Optimizer {
         Map<Operator, List<QueryTree.Traversal>> relationsAndLocations =
                 queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER);
 
-        for(Operator simpleSelection : simpleSelections) {
+        for (Operator simpleSelection : simpleSelections) {
             String prefixedTableName = ((SimpleSelection) simpleSelection).getColumnName().split("\\.")[0];
-            for(Map.Entry<Operator, List<QueryTree.Traversal>> entry : relationsAndLocations.entrySet()) {
+            for (Map.Entry<Operator, List<QueryTree.Traversal>> entry : relationsAndLocations.entrySet()) {
                 String tableName = ((Relation) entry.getKey()).getTableName();
                 List<QueryTree.Traversal> traversals = entry.getValue();
-                if(tableName.equalsIgnoreCase(prefixedTableName)) {
+                if (tableName.equalsIgnoreCase(prefixedTableName)) {
                     queryTree.add(traversals, UP, simpleSelection);
                     break;
                 }
@@ -337,7 +337,7 @@ public class Optimizer {
         }
 
         // place the selections with join conditions above cartesian products
-        for(Operator simpleSelection : selectionsWithJoinConditions) {
+        for (Operator simpleSelection : selectionsWithJoinConditions) {
             // changing the traversal locations for each relation, will need to get the updated versions
             relationsAndLocations = queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER);
             String firstPrefixedTableName = ((SimpleSelection) simpleSelection).getColumnName().split("\\.")[0];
@@ -345,28 +345,28 @@ public class Optimizer {
             // find each corresponding table name and get their traversals
             List<QueryTree.Traversal> firstTablesLocation = new ArrayList<>();
             List<QueryTree.Traversal> secondTablesLocation = new ArrayList<>();
-            for(Map.Entry<Operator, List<QueryTree.Traversal>> entry : relationsAndLocations.entrySet()) {
+            for (Map.Entry<Operator, List<QueryTree.Traversal>> entry : relationsAndLocations.entrySet()) {
                 String tableName = ((Relation) entry.getKey()).getTableName();
                 List<QueryTree.Traversal> traversals = entry.getValue();
-                if(tableName.equalsIgnoreCase(firstPrefixedTableName)) {
+                if (tableName.equalsIgnoreCase(firstPrefixedTableName)) {
                     firstTablesLocation = traversals;
                 }
-                if(tableName.equalsIgnoreCase(secondPrefixedTableName)) {
+                if (tableName.equalsIgnoreCase(secondPrefixedTableName)) {
                     secondTablesLocation = traversals;
                 }
             }
             // the relation with the fewest number of traversals is furthest up the tree, which is where
             // we want the join condition placed
             boolean atCartesianProduct = false;
-            if(firstTablesLocation.size() < secondTablesLocation.size()) {
-                while(! atCartesianProduct) {
+            if (firstTablesLocation.size() < secondTablesLocation.size()) {
+                while (! atCartesianProduct) {
                     int lastIndex = firstTablesLocation.size() - 1;
                     firstTablesLocation.remove(lastIndex);
                     atCartesianProduct = queryTree.get(firstTablesLocation, NONE).getType() == CARTESIAN_PRODUCT;
                 }
                 queryTree.add(firstTablesLocation, UP, simpleSelection);
             } else {
-                while(! atCartesianProduct) {
+                while (! atCartesianProduct) {
                     int lastIndex = secondTablesLocation.size() - 1;
                     secondTablesLocation.remove(lastIndex);
                     atCartesianProduct = queryTree.get(secondTablesLocation, NONE).getType() == CARTESIAN_PRODUCT;
@@ -393,7 +393,7 @@ public class Optimizer {
         boolean hasCartesianProducts = queryTree.getTypeOccurrence(CARTESIAN_PRODUCT) >= 1;
         boolean hasSimpleSelections = queryTree.getTypeOccurrence(SIMPLE_SELECTION) >= 1;
 
-        if(! hasSimpleSelections || ! hasCartesianProducts) {
+        if (! hasSimpleSelections || ! hasCartesianProducts) {
             return queryTree;
         }
 
@@ -489,7 +489,7 @@ public class Optimizer {
             Projection projection = new Projection(columnNamesForProjection);
             boolean foundCartesianOrJoinAbove = queryTree.get(relationLocation, UP).getType() == CARTESIAN_PRODUCT ||
                     queryTree.get(relationLocation, UP).getType() == INNER_JOIN;
-            while (!foundCartesianOrJoinAbove) {
+            while (! foundCartesianOrJoinAbove) {
                 int lastIndex = relationLocation.size() - 1;
                 relationLocation.remove(lastIndex);
                 foundCartesianOrJoinAbove = queryTree.get(relationLocation, UP).getType() == CARTESIAN_PRODUCT ||
@@ -586,7 +586,7 @@ public class Optimizer {
 
         List<QueryTree> permutedQueryTrees = new ArrayList<>();
 
-        for(int i = 0; i < permutedTableNames.size(); i++) {
+        for (int i = 0; i < permutedTableNames.size(); i++) {
             QueryTree permutedQueryTree = createQueryTree(input, tables, permutedTableNames.get(i));
             permutedQueryTree = cascadeSelections(permutedQueryTree);
             permutedQueryTree = pushDownSelections(permutedQueryTree);
