@@ -630,7 +630,7 @@ public class Compiler {
                 String username = user.getUsername();
                 for (String usernameInput : usernamesInput) {
                     if (usernameInput.equalsIgnoreCase(username)) {
-                        user.revokeAllTablePrivileges(tableInput);
+                        user.revokeAllTablePrivilegesAndGrantedTablePrivileges(tableInput);
                         break;
                     }
                 }
@@ -655,7 +655,7 @@ public class Compiler {
                 for (String userNameInput : usernamesInput) {
                     if (userName.equalsIgnoreCase(userNameInput)) {
                         // revokes passable table privileges too
-                        user.revokeTablePrivileges(tablePrivilegesToRevoke);
+                        user.revokeTablePrivilegesAndGrantedTablePrivileges(tablePrivilegesToRevoke);
                         break;
                     }
                 }

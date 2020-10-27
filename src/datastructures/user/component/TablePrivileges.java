@@ -230,6 +230,17 @@ public class TablePrivileges {
     }
 
     /**
+     * Removes the table privileges that occur in the given list. If removing UPDATE or REFERENCES privilege,
+     * removes the associated column names too.
+     * @param privilegesToRemove is a list of privileges to remove
+     */
+    public void revokePrivileges(List<Privilege> privilegesToRemove) {
+        for (Privilege privilegeToRevoke : privilegesToRemove) {
+            revokePrivilege(privilegeToRevoke);
+        }
+    }
+
+    /**
      * Removes all privileges and clears any update or references columns too.
      */
     public void revokeAllPrivileges() {
@@ -371,6 +382,21 @@ public class TablePrivileges {
     }
 
     /**
+     * @param columns are the columns to check
+     * @return whether all columns are present for the associated UPDATE privilege
+     */
+    public boolean hasUpdateColumns(List<String> columns) {
+
+        for (String column : columns) {
+            if (! hasUpdateColumn(column)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * @param candidate is the references column to check
      * @return whether the candidate exists in the list of references columns
      */
@@ -383,6 +409,21 @@ public class TablePrivileges {
         }
 
         return false;
+    }
+
+    /**
+     * @param columns are the columns to check
+     * @return whether all columns are present for the associated REFERENCES privilege
+     */
+    public boolean hasReferencesColumns(List<String> columns) {
+
+        for (String column : columns) {
+            if (! hasReferencesColumn(column)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

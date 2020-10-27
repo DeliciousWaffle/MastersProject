@@ -42,6 +42,12 @@ public class User {
         this.grantedTablePrivilegesList = new ArrayList<>();
     }
 
+    /**
+     * Basic constructor for creating everything that a user would have in the system.
+     * @param username is the username of the user
+     * @param tablePrivilegesList is a list of table privileges that the user has
+     * @param grantedTablePrivilegesList is a list of granted table privileges that the user has
+     */
     public User(String username, List<TablePrivileges> tablePrivilegesList,
                 List<TablePrivileges> grantedTablePrivilegesList) {
         this.username = username;
@@ -53,6 +59,7 @@ public class User {
     /**
      * Helper constructor for the method below which creates a database administrator. This
      * constructor can't be accessed normally. Will have access to everything within the system.
+     * The only differentiating feature is the presence of a user type
      */
     private User(String username, Type userType, List<TablePrivileges> tablePrivilegesList,
                  List<TablePrivileges> grantedTablePrivilegesList) {
@@ -98,274 +105,253 @@ public class User {
                 tablePrivilegesList, passableTablePrivilegesList);
     }
 
-    public void setUsername(String username) { this.username = username; }
+    // setters and getters
 
-    public String getUsername() { return username; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public boolean isDBA() {
-        return userType == Type.DATABASE_ADMINISTRATOR;
+    public String getUsername() {
+        return username;
+    }
+
+    public User.Type getUserType() {
+        return userType;
     }
 
     public void setTablePrivilegesList(List<TablePrivileges> tablePrivilegesList) {
         this.tablePrivilegesList = tablePrivilegesList;
     }
 
-    /**
-     * Adds table privileges to the list of table privileges available, if the user
-     * already has privileges with the associated table, adds only new stuff.
-     * @param tablePrivilegesToAdd are the table privileges to add
-     */
-    public void addTablePrivileges(TablePrivileges tablePrivilegesToAdd) {
-
-        // search through table privileges, checking if we already have the one added
-        TablePrivileges duplicateTablePrivileges = null;
-
-        for(TablePrivileges tablePrivileges : tablePrivilegesList) {
-            String tableName = tablePrivileges.getTableName();
-            if(tableName.equalsIgnoreCase(tablePrivilegesToAdd.getTableName())) {
-                duplicateTablePrivileges = tablePrivileges;
-                break;
-            }
-        }
-
-        boolean hasDuplicateTablePrivileges = duplicateTablePrivileges != null;
-
-        // if we have a duplicate, don't add a new table privileges to the list
-        if(hasDuplicateTablePrivileges) {
-            handleDuplicates(tablePrivilegesToAdd, duplicateTablePrivileges);
-        } else {
-            tablePrivilegesList.add(tablePrivilegesToAdd);
-        }
-    }
-
     public List<TablePrivileges> getTablePrivilegesList() {
         return tablePrivilegesList;
-    }
-
-    public TablePrivileges getTablePrivileges(String tableName) {
-
-        for(TablePrivileges current : tablePrivilegesList) {
-            if(current.getTableName().equalsIgnoreCase(tableName)) {
-                return current;
-            }
-        }
-
-        return new TablePrivileges();
-    }
-
-    public TablePrivileges getGrantedTablePrivileges(String tableName) {
-
-        for (TablePrivileges current : grantedTablePrivilegesList) {
-            if(current.getTableName().equalsIgnoreCase(tableName)) {
-                return current;
-            }
-        }
-
-        return new TablePrivileges();
     }
 
     public void setGrantedTablePrivilegesList(List<TablePrivileges> grantedTablePrivilegesList) {
         this.grantedTablePrivilegesList = grantedTablePrivilegesList;
     }
 
-    /**
-     * Adds table privileges to the list of table privileges available, if the user
-     * already has privileges with the associated table, adds only new stuff.
-     */
-    public void addPassableTablePrivileges(TablePrivileges tablePrivilegesToAdd) {
-
-        // search through passable table privileges, checking if we already have the one added
-        TablePrivileges duplicateTablePrivileges = null;
-
-        for(TablePrivileges tablePrivileges : grantedTablePrivilegesList) {
-            String tableName = tablePrivileges.getTableName();
-            if(tableName.equalsIgnoreCase(tablePrivilegesToAdd.getTableName())) {
-                duplicateTablePrivileges = tablePrivileges;
-                break;
-            }
-        }
-
-        boolean hasDuplicateTablePrivileges = duplicateTablePrivileges != null;
-
-        // if we have a duplicate, don't add a new table privileges to the list
-        if(hasDuplicateTablePrivileges) {
-            handleDuplicates(tablePrivilegesToAdd, duplicateTablePrivileges);
-        } else {
-            this.grantedTablePrivilegesList.add(tablePrivilegesToAdd);
-        }
-    }
-
     public List<TablePrivileges> getGrantedTablePrivilegesList() {
         return grantedTablePrivilegesList;
     }
 
+    // utility methods
+
     /**
-     * Revokes the table privileges provided from the user, this removes what privileges they
-     * can pass on as well.
+     * @return whether or not the current user is the DBA
      */
-    public void revokeTablePrivileges(TablePrivileges tablePrivilegesToRevoke) {
-
-        // removing the table privileges
-        for(TablePrivileges tablePrivileges : tablePrivilegesList) {
-            String tableName = tablePrivileges.getTableName();
-            if(tableName.equalsIgnoreCase(tablePrivilegesToRevoke.getTableName())) {
-                for(Privilege privilegeToRevoke: tablePrivilegesToRevoke.getPrivileges()) {
-                    tablePrivileges.revokePrivilege(privilegeToRevoke);
-                }
-            }
-        }
-
-        // removing the passable table privileges
-        for(TablePrivileges tablePrivileges : grantedTablePrivilegesList) {
-            String tableName = tablePrivileges.getTableName();
-            if(tableName.equalsIgnoreCase(tablePrivilegesToRevoke.getTableName())) {
-                for(Privilege privilegeToRevoke: tablePrivilegesToRevoke.getPrivileges()) {
-                    tablePrivileges.revokePrivilege(privilegeToRevoke);
-                }
-            }
-        }
+    public boolean isDBA() {
+        return userType == Type.DATABASE_ADMINISTRATOR;
     }
 
-    public void revokeAllTablePrivileges(String tableNameToRemove) {
-        for(TablePrivileges tablePrivileges : tablePrivilegesList) {
+    /**
+     * @param candidate is the name of the table privileges to check
+     * @return whether a table privileges already exists within the list of table privileges
+     */
+    public boolean hasTablePrivileges(String candidate) {
+
+        boolean foundTablePrivileges = false;
+
+        for (TablePrivileges tablePrivileges : tablePrivilegesList) {
             String tableName = tablePrivileges.getTableName();
-            if(tableName.equalsIgnoreCase(tableNameToRemove)) {
-                tablePrivileges.revokeAllPrivileges();
+            if (candidate.equalsIgnoreCase(tableName)) {
+                foundTablePrivileges = true;
                 break;
             }
         }
-        for(TablePrivileges passableTablePrivileges : grantedTablePrivilegesList) {
-            String tableName = passableTablePrivileges.getTableName();
-            if(tableName.equalsIgnoreCase(tableNameToRemove)) {
-                passableTablePrivileges.revokeAllPrivileges();
+
+        return foundTablePrivileges;
+    }
+
+    /**
+     * @param candidate is the name of the granted table privileges to check
+     * @return whether a granted table privileges already exists within the list of granted table privileges
+     */
+    public boolean hasGrantedTablePrivileges(String candidate) {
+
+        boolean foundGrantedTablePrivileges = false;
+
+        for (TablePrivileges grantedTablePrivileges : grantedTablePrivilegesList) {
+            String tableName = grantedTablePrivileges.getTableName();
+            if (candidate.equalsIgnoreCase(tableName)) {
+                foundGrantedTablePrivileges = true;
+                break;
+            }
+        }
+
+        return foundGrantedTablePrivileges;
+    }
+
+    /**
+     * @param tableName is the name of the table privileges to get
+     * @return a reference to the table privileges from the given table name or null if one is not found
+     */
+    public TablePrivileges getTablePrivileges(String tableName) {
+
+        for (TablePrivileges tablePrivileges : tablePrivilegesList) {
+            if (tableName.equalsIgnoreCase(tablePrivileges.getTableName())) {
+                return tablePrivileges;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param tableName is the name of the granted table privileges to get
+     * @return a reference to the granted table privileges from the given table name or null if one is not found
+     */
+    public TablePrivileges getGrantedTablePrivileges(String tableName) {
+
+        for (TablePrivileges grantedTablePrivileges : grantedTablePrivilegesList) {
+            if (tableName.equalsIgnoreCase(grantedTablePrivileges.getTableName())) {
+                return grantedTablePrivileges;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Adds table privileges to the list of table privileges available, if the user
+     * already has privileges with the associated table, adds only new privileges to the table.
+     * @param toAdd are the table privileges to add, omitting duplicate privileges
+     */
+    public void addTablePrivileges(TablePrivileges toAdd) {
+        // table privileges already exists within the list of table privileges, only add new stuff
+        if (hasTablePrivileges(toAdd.getTableName())) {
+            // get a reference to the table privileges that already exists and add the new data
+            // the TablePrivileges class omits duplicates by default
+            TablePrivileges alreadyExists = getTablePrivileges(toAdd.getTableName());
+            alreadyExists.grantPrivileges(toAdd.getPrivileges());
+            alreadyExists.addUpdateColumns(toAdd.getUpdateColumns());
+            alreadyExists.addReferencesColumns(toAdd.getReferenceColumns());
+        // otherwise, just add the new data to the list
+        } else {
+            tablePrivilegesList.add(toAdd);
+        }
+    }
+
+    /**
+     * Adds a granted table privileges to the list of granted table privileges available, if the user
+     * already has privileges with the associated table, adds only new privileges to the table.
+     * @param toAdd are the granted table privileges to add, omitting duplicate privileges
+     */
+    public void addGrantedTablePrivileges(TablePrivileges toAdd) {
+        if (hasGrantedTablePrivileges(toAdd.getTableName())) {
+            TablePrivileges alreadyExists = getGrantedTablePrivileges(toAdd.getTableName());
+            alreadyExists.grantPrivileges(toAdd.getPrivileges());
+            alreadyExists.addUpdateColumns(toAdd.getUpdateColumns());
+            alreadyExists.addReferencesColumns(toAdd.getReferenceColumns());
+        } else {
+            grantedTablePrivilegesList.add(toAdd);
+        }
+    }
+
+    /**
+     * Finds the table privileges and granted table privileges in the corresponding lists and removes
+     * their privileges, update columns, and references columns that appear in the table privileges to revoke.
+     * @param toRevoke contains the privileges, update columns, and references columns of the table
+     * privileges and granted table privileges to remove
+     */
+    public void revokeTablePrivilegesAndGrantedTablePrivileges(TablePrivileges toRevoke) {
+
+        TablePrivileges tablePrivileges = getTablePrivileges(toRevoke.getTableName());
+        assert tablePrivileges != null;
+        tablePrivileges.revokePrivileges(toRevoke.getPrivileges());
+
+        TablePrivileges grantedTablePrivileges = getGrantedTablePrivileges(toRevoke.getTableName());
+        assert grantedTablePrivileges != null;
+        grantedTablePrivileges.revokePrivileges(toRevoke.getPrivileges());
+    }
+
+    /**
+     * Finds the table privileges and granted table privileges in the corresponding lists and removes them.
+     * @param toRemove is the table name of the table privileges to remove
+     */
+    public void revokeAllTablePrivilegesAndGrantedTablePrivileges(String toRemove) {
+
+        for (int i = 0; i < tablePrivilegesList.size(); i++) {
+            String tableName = tablePrivilegesList.get(i).getTableName();
+            if (tableName.equalsIgnoreCase(toRemove)) {
+                tablePrivilegesList.remove(i);
+                break;
+            }
+        }
+
+        for (int i = 0; i < grantedTablePrivilegesList.size(); i++) {
+            String tableName = grantedTablePrivilegesList.get(i).getTableName();
+            if (tableName.equalsIgnoreCase(toRemove)) {
+                grantedTablePrivilegesList.remove(i);
                 break;
             }
         }
     }
 
-    public boolean hasTablePrivilege(String candidateTable, Privilege candidatePrivilege) {
-
-        for(TablePrivileges tablePrivilege : tablePrivilegesList) {
-            if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
-                if(tablePrivilege.hasPrivilege(candidatePrivilege)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+    /**
+     * @param tableName is the table name to check
+     * @param toCheck is the privilege to check in the given table name
+     * @return whether there exists a privilege in the associated table privileges list
+     */
+    public boolean hasPrivilegeOnTable(String tableName, Privilege toCheck) {
+        TablePrivileges tablePrivileges = getTablePrivileges(tableName);
+        boolean tableExists = tablePrivileges != null;
+        return tableExists && tablePrivileges.hasPrivilege(toCheck);
     }
 
-    public boolean hasTablePrivilege(String candidateTable, Privilege candidatePrivilege,
-                                     List<String> candidateColumnNames) {
-
-        assert candidatePrivilege == Privilege.UPDATE || candidatePrivilege == Privilege.REFERENCES;
-
-        TablePrivileges referencedTablePrivileges = null;
-
-        for(TablePrivileges tablePrivilege : tablePrivilegesList) {
-            if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
-                referencedTablePrivileges = tablePrivilege;
-            }
-        }
-
-        // doesn't have any privileges with the associated table
-        if (referencedTablePrivileges == null) {
-            return false;
-        }
-
-        List<String> updateOrReferenceColumns = null;
-
-        if(candidatePrivilege == Privilege.UPDATE) {
-            updateOrReferenceColumns = referencedTablePrivileges.getUpdateColumns();
-        } else {
-            updateOrReferenceColumns = referencedTablePrivileges.getReferenceColumns();
-        }
-
-        for(String candidateColumn : candidateColumnNames) {
-
-            boolean foundColumn = false;
-
-            for(String column : updateOrReferenceColumns) {
-                if(column.equalsIgnoreCase(candidateColumn)) {
-                    foundColumn = true;
-                }
-            }
-
-            if(! foundColumn) {
-                return false;
-            }
-        }
-
-        return true;
+    /**
+     * @param tableName is the table name to check
+     * @param toCheck is the granted privilege to check in the given table name
+     * @return whether there exists a privilege in the associated granted table privileges list
+     */
+    public boolean hasGrantedPrivilegeOnTable(String tableName, Privilege toCheck) {
+        TablePrivileges grantedTablePrivileges = getGrantedTablePrivileges(tableName);
+        boolean tableExists = grantedTablePrivileges != null;
+        return tableExists && grantedTablePrivileges.hasPrivilege(toCheck);
     }
 
-    public boolean hasGrantedTablePrivilege(String candidateTable, Privilege candidatePrivilege) {
-
-        for(TablePrivileges tablePrivilege : grantedTablePrivilegesList) {
-            if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
-                if(tablePrivilege.hasPrivilege(candidatePrivilege)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+    /**
+     * @param tableName is the table name to check
+     * @param columnsToCheck are the update columns to check
+     * @return whether all update columns are present for the associated table privileges
+     */
+    public boolean hasUpdateColumnsOnTable(String tableName, List<String> columnsToCheck) {
+        TablePrivileges tablePrivileges = getTablePrivileges(tableName);
+        boolean tableExists = tablePrivileges != null;
+        return tableExists && tablePrivileges.hasUpdateColumns(columnsToCheck);
     }
 
-    public boolean hasGrantedTablePrivilege(String candidateTable, Privilege candidatePrivilege,
-                                     List<String> candidateColumnNames) {
-
-        TablePrivileges referencedTablePrivileges = null;
-
-        for(TablePrivileges tablePrivilege : grantedTablePrivilegesList) {
-            if(tablePrivilege.getTableName().equalsIgnoreCase(candidateTable)) {
-                referencedTablePrivileges = tablePrivilege;
-            }
-        }
-
-        List<String> updateOrReferenceColumns = null;
-
-        if(candidatePrivilege == Privilege.UPDATE) {
-            updateOrReferenceColumns = referencedTablePrivileges.getUpdateColumns();
-        } else {
-            updateOrReferenceColumns = referencedTablePrivileges.getReferenceColumns();
-        }
-
-        for(String candidateColumn : candidateColumnNames) {
-
-            boolean foundColumn = false;
-
-            for(String column : updateOrReferenceColumns) {
-                if(column.equalsIgnoreCase(candidateColumn)) {
-                    foundColumn = true;
-                }
-            }
-
-            if(! foundColumn) {
-                return false;
-            }
-        }
-
-        return true;
+    /**
+     * @param tableName is the table name to check
+     * @param columnsToCheck are the references columns to check
+     * @return whether all references columns are present for the associated table privileges
+     */
+    public boolean hasReferencesColumnsOnTable(String tableName, List<String> columnsToCheck) {
+        TablePrivileges tablePrivileges = getTablePrivileges(tableName);
+        boolean tableExists = tablePrivileges != null;
+        return tableExists && tablePrivileges.hasReferencesColumns(columnsToCheck);
     }
 
-    private void handleDuplicates(TablePrivileges tablePrivilegesToAdd, TablePrivileges duplicateTablePrivileges) {
+    /**
+     * @param tableName is the table name to check
+     * @param columnsToCheck are the update columns to check
+     * @return whether all update columns are present for the associated granted table privileges
+     */
+    public boolean hasGrantedUpdateColumnsOnTable(String tableName, List<String> columnsToCheck) {
+        TablePrivileges grantedTablePrivileges = getGrantedTablePrivileges(tableName);
+        boolean tableExists = grantedTablePrivileges != null;
+        return tableExists && grantedTablePrivileges.hasUpdateColumns(columnsToCheck);
+    }
 
-        // adding the privileges, Table Privileges takes care of duplicates
-        for(Privilege privilegeToAdd : tablePrivilegesToAdd.getPrivileges()) {
-            duplicateTablePrivileges.grantPrivilege(privilegeToAdd);
-        }
-
-        // add only new update columns, Table Privileges takes care of duplicates
-        for(String updateColumnToAdd : tablePrivilegesToAdd.getUpdateColumns()) {
-            duplicateTablePrivileges.addUpdateColumn(updateColumnToAdd);
-        }
-
-        // add only new reference columns, Table Privileges takes care of duplicates
-        for(String referenceColumnToAdd : tablePrivilegesToAdd.getReferenceColumns()) {
-            duplicateTablePrivileges.addReferencesColumn(referenceColumnToAdd);
-        }
+    /**
+     * @param tableName is the table name to check
+     * @param columnsToCheck are the update columns to check
+     * @return whether all references columns are present for the associated granted table privileges
+     */
+    public boolean hasGrantedReferencesColumnsOnTable(String tableName, List<String> columnsToCheck) {
+        TablePrivileges grantedTablePrivileges = getGrantedTablePrivileges(tableName);
+        boolean tableExists = grantedTablePrivileges != null;
+        return tableExists && grantedTablePrivileges.hasReferencesColumns(columnsToCheck);
     }
 
     /**
@@ -375,11 +361,10 @@ public class User {
     public String toString() {
 
         StringBuilder stringBuilder = new StringBuilder();
-
         stringBuilder.append("Username: ").append(username).append("\n");
         stringBuilder.append("Privileges: ");
 
-        if(! tablePrivilegesList.isEmpty()) {
+        if (! tablePrivilegesList.isEmpty()) {
 
             stringBuilder.append("\n");
 
@@ -392,13 +377,12 @@ public class User {
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
         } else {
-
             stringBuilder.append("None");
         }
 
         stringBuilder.append("\n").append("Passable Privileges: ");
 
-        if(! grantedTablePrivilegesList.isEmpty()) {
+        if (! grantedTablePrivilegesList.isEmpty()) {
 
             stringBuilder.append("\n");
 
@@ -411,7 +395,6 @@ public class User {
             stringBuilder.deleteCharAt(stringBuilder.length() - 1);
 
         } else {
-
             stringBuilder.append("None");
         }
 

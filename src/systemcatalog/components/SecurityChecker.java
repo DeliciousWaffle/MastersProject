@@ -109,7 +109,7 @@ public class SecurityChecker {
         List<String> tableNames = queryRuleGraph.getTokensAt(filteredInput, 13, 15, 18);
 
         for (String tableName : tableNames) {
-            boolean hasPrivilege = currentUser.hasTablePrivilege(tableName, Privilege.SELECT);
+            boolean hasPrivilege = currentUser.hasPrivilegeOnTable(tableName, Privilege.SELECT);
             if (! hasPrivilege) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"SELECT\" privilege\n" +
                         "on Table \"" + tableName + "\", therefore, the Query was not executed";
@@ -141,7 +141,7 @@ public class SecurityChecker {
         RuleGraph dropTableRuleGraph = RuleGraphTypes.getDropTableRuleGraph();
         String tableName = dropTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
 
-        if (! currentUser.hasTablePrivilege(tableName, Privilege.ALTER)) {
+        if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.ALTER)) {
             errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"ALTER\" privilege\n" +
                     "on Table \"" + tableName + "\", therefore, the Drop Table command was not executed";
             return false;
@@ -163,7 +163,7 @@ public class SecurityChecker {
         String tableName = alterTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
         boolean hasForeignKey = ! alterTableRuleGraph.getTokensAt(filteredInput, 13).isEmpty();
 
-        if (! currentUser.hasTablePrivilege(tableName, Privilege.ALTER)) {
+        if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.ALTER)) {
             errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"ALTER\" privilege\n" +
                     "on Table \"" + tableName + "\", therefore, the Alter Table command was not executed";
             return false;
@@ -172,7 +172,7 @@ public class SecurityChecker {
         if (hasForeignKey) {
             List<String> referencedColumn = alterTableRuleGraph.getTokensAt(filteredInput, 16);
             referencedColumn.set(0, referencedColumn.get(0).split("\\.")[1]);
-            if (! currentUser.hasTablePrivilege(tableName, Privilege.REFERENCES, referencedColumn)) {
+            if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.REFERENCES, referencedColumn)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"REFERENCES\" " +
                         "privilege\n for \"" + referencedColumn.get(0) + "\", therefore, the Alter Table command was not executed";
                 return false;
@@ -192,7 +192,7 @@ public class SecurityChecker {
         RuleGraph insertRuleGraph = RuleGraphTypes.getInsertRuleGraph();
         String tableName = insertRuleGraph.getTokensAt(filteredInput, 2).get(0);
 
-        if (! currentUser.hasTablePrivilege(tableName, Privilege.INSERT)) {
+        if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.INSERT)) {
             errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"INSERT\" privilege\n" +
                     "on Table \"" + tableName + "\", therefore, the Insert command was not executed";
             return false;
@@ -211,7 +211,7 @@ public class SecurityChecker {
         RuleGraph deleteRuleGraph = RuleGraphTypes.getDeleteRuleGraph();
         String tableName = deleteRuleGraph.getTokensAt(filteredInput, 2).get(0);
 
-        if (! currentUser.hasTablePrivilege(tableName, Privilege.DELETE)) {
+        if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.DELETE)) {
             errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"DELETE\" privilege\n" +
                     "on Table \"" + tableName + "\", therefore, the Delete command was not executed";
             return false;
@@ -232,7 +232,7 @@ public class SecurityChecker {
         String tableName = updateRuleGraph.getTokensAt(filteredInput, 1).get(0);
         List<String> columnNames = updateRuleGraph.getTokensAt(filteredInput, 3, 10);
 
-        if (! currentUser.hasTablePrivilege(tableName, Privilege.UPDATE, columnNames)) {
+        if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.UPDATE, columnNames)) {
             errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the \"UPDATE\" privilege on \"" +
                     tableName + "\"\n for both Column \"" + columnNames.get(0) + "\" and \" " + columnNames.get(1) +
                     "\", therefore, the update command was not executed";
@@ -325,7 +325,7 @@ public class SecurityChecker {
         List<String> tableNames = buildFileStructureRuleGraph.getTokensAt(filteredInput, 9, 12, 14);
 
         for (String tableName : tableNames) {
-            if (! currentUser.hasTablePrivilege(tableName, Privilege.INDEX)) {
+            if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.INDEX)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the passable " +
                         "\"INDEX\" privilege on Table\n\"" + tableName + "\", therefore, " +
                         "the Build File Structure command was not executed";
@@ -348,7 +348,7 @@ public class SecurityChecker {
         List<String> tableNames = removeFileStructureRuleGraph.getTokensAt(filteredInput, 9, 12, 14);
 
         for (String tableName : tableNames) {
-            if (! currentUser.hasTablePrivilege(tableName, Privilege.INDEX)) {
+            if (! currentUser.hasPrivilegeOnTable(tableName, Privilege.INDEX)) {
                 errorMessage = "User \"" + currentUser.getUsername() + "\" does not have the passable " +
                         "\"INDEX\" privilege on Table\n\"" + tableName + "\", therefore, " +
                         "the Build File Structure command was not executed";

@@ -36,28 +36,4 @@ public class UserTest {
         );
     }
 
-    @Test
-    public void testGrant2() {
-
-    }
-
-    @Test
-    public void testGrant3() {
-
-    }
-
-    @Test
-    public void testGrant4() {
-
-    }
-
-    @Test
-    public void testGrant5() {
-
-    }
-
-    @Test
-    public void testGrant6() {
-
-    }
 }
