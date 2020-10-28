@@ -63,12 +63,12 @@ public class Optimizer {
 
     public List<QueryTree> getQueryTreeStates(String[] filteredInput, List<Table> tables) {
 
-        QueryTree queryTree                     = createQueryTree(filteredInput, tables, new ArrayList<>());
-        QueryTree afterCascadingSelections      = cascadeSelections(new QueryTree(queryTree));
-        QueryTree afterPushingDownSelections    = pushDownSelections(new QueryTree(afterCascadingSelections));
-        QueryTree afterFormingJoins             = formJoins(new QueryTree(afterPushingDownSelections));
-        QueryTree afterPushingDownProjections   = pushDownProjections(new QueryTree(afterFormingJoins));
-        QueryTree afterRearrangingJoins         = rearrangeJoins(new QueryTree(afterFormingJoins), filteredInput, tables);
+        QueryTree queryTree = createQueryTree(filteredInput, tables, new ArrayList<>());
+        QueryTree afterCascadingSelections = cascadeSelections(new QueryTree(queryTree));
+        QueryTree afterPushingDownSelections = pushDownSelections(new QueryTree(afterCascadingSelections));
+        QueryTree afterFormingJoins = formJoins(new QueryTree(afterPushingDownSelections));
+        QueryTree afterPushingDownProjections = pushDownProjections(new QueryTree(afterFormingJoins));
+        QueryTree afterRearrangingJoins = rearrangeJoins(new QueryTree(afterFormingJoins), filteredInput, tables);
         List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
 
         List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
@@ -79,9 +79,7 @@ public class Optimizer {
         queryTreeStates.addAll(afterPipeliningSubtrees);
 
         // remove prefixed column names from each query tree state
-        queryTreeStates.forEach(e -> e.getOperatorsAndLocations(PREORDER)
-                .keySet()
-                .forEach(operator -> removePrefixedColumnNames(operator.getReferencedColumnNames())));
+        // TODO figure out why not working
 
         return queryTreeStates;
     }

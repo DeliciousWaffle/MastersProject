@@ -406,14 +406,14 @@ public final class OptimizerUtilities {
      * an unambiguous result. For instance, an operator containing tab1.col1, tab2.col1, tab3.col2 will
      * yield tab1.col1, tab2.col1, col2.
      * @param prefixedColumnNames is a list of prefixed column names whose prefixes will attempted to be removed
-     * @return a list of unambiguous column names
      */
-    public static List<String> removePrefixedColumnNames(List<String> prefixedColumnNames) {
-        return prefixedColumnNames.stream()
+    public static void removePrefixedColumnNames(List<String> prefixedColumnNames) {
+        /*return prefixedColumnNames.stream()
                 .map(prefixedColumnName -> isAmbiguousColumnName(prefixedColumnName, prefixedColumnNames)
                         ? prefixedColumnName // don't remove the prefixed table name if not unique
                         : prefixedColumnName.split("\\.")[1]) // remove the prefixed table name if unique
-                .collect(Collectors.toList());
+                .collect(Collectors.toList());*/
+        // TODO figure out why this bullshit isn't working correctly
     }
 
     /**

@@ -85,7 +85,8 @@ class ParserTest {
             "SELECT Col1, SUM(Col2) FROM Tab1, Tab2, Tab3 GROUP BY Col1 HAVING MAX(Col1) = 1", // having clauses mixed with other stuff
             "SELECT Col1, SUM(Col2) FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 != Tab2.Col1 INNER JOIN Tab3 ON Tab2.Col2 > Tab3.Col2 INNER JOIN Tab4 ON Tab3.Col3 = Tab4.Col3 GROUP BY Col1 HAVING AVG(Col1) = 1",
             "SELECT Col1, SUM(Col2) FROM Tab1 WHERE Col1 = \"Blah\" GROUP BY Col1 HAVING SUM(Col1) = 1",
-            "SELECT Col1, COUNT(Col1) FROM Tab1 GROUP BY Col1" // same columns referenced in select clause
+            "SELECT Col1, COUNT(Col1) FROM Tab1 GROUP BY Col1", // same columns referenced in select clause
+            "SELECT Col1 FROM Tab1, Tab2 WHERE Tab1.Col1 = Tab2.Col1" // having a join predicate in where clause
     })
     void testValidQueries(String query) {
         System.out.println(query);
@@ -131,7 +132,6 @@ class ParserTest {
             "SELECT Col1 FROM Tab1 WHERE Col1 = \"1.23\"",
             "SELECT Col1 FROM Tab1 WHERE Col1 < \"NotANumber\"", // not using a number for a comparison
             "SELECT Col1 FROM Tab1 WHERE Col1 > \"10-2-2019\"", // date is not formatted correctly
-            "SELECT Col1 FROM Tab1 WHERE Col1 = abc", // having a string value as a numeric
             "SELECT COUNT(Col1) FROM Tab1 GROUP BY Col1 HAVING Col1 > 5", // forgetting aggregation type in having clause
             "SELECT Col1, COUNT(Col1) FROM Tab1", // forgetting group by clause for non aggregated columns
             "SELECT Col1, Col2, COUNT(Col3) FROM Tab1 GROUP BY Col1"

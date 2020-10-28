@@ -238,7 +238,7 @@ public class RuleGraph {
         for (String token : tokens) {
             boolean isNumeric = Utilities.isNumeric(token);
             if (! isNumeric) {
-                errorMessage = "Expected a numeric value, but found: " + token + "\"";
+                errorMessage = "Expected a numeric value, but found: \"" + token + "\"";
                 return false;
             }
         }

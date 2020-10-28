@@ -47,6 +47,8 @@ public class VerifierTest {
             "SELECT CustomerID FROM Customers", // simple
             "SELECT * FROM Customers",
             "SELECT CustomerID, ProductID FROM Customers, Products",
+            "SELECT Customers.CustomerID FROM Customers, CustomerPurchaseDetails WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // join in where clause
+            "SELECT Customers.CustomerID FROM Customers, CustomerPurchaseDetails WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID and FirstName = \"Billy\"",
             "SELECT FirstName FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID", // prefixed join
             "SELECT Employees.FirstName FROM Customers INNER JOIN Employees ON CustomerID = EmployeeID",
             "SELECT Customers.CustomerID FROM Customers, CustomerPurchaseDetails", // prefixed columns in an ambiguous situation

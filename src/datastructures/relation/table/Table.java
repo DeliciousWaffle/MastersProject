@@ -161,6 +161,10 @@ public class Table {
         this.primaryKeys = primaryKeys;
     }
 
+    public void addPrimaryKey(String primaryKey) {
+        primaryKeys.add(primaryKey);
+    }
+
     /**
      * @return the foreign keys of this table
      */

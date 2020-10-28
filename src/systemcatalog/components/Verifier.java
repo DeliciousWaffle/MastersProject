@@ -13,6 +13,7 @@ import utilities.Utilities;
 import enums.InputType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -274,31 +275,73 @@ public class Verifier {
         List<String> symbols = queryRuleGraph.getTokensAt(filteredInput, 30, 31, 32, 33, 34, 35);
         List<String> values = queryRuleGraph.getTokensAt(filteredInput, 36, 38);
 
+        // --- edge case begin
+        // check if the value in the where clause is actually a column in the system, occurs when the
+        // user wishes to add a join predicate in the where clause
+        List<Integer> whereClauseJoinPredicateLocations = Utilities.getWhereClauseJoinPredicateLocations(values, referencedTables);
+        // --- edge case end
+
         for (int i = 0; i < referencedColumns.size(); i++) {
 
-            // make sure that the format of a date is correct first
-            if (Utilities.hasDateFormat(values.get(i)) && ! Utilities.isValidDate(values.get(i))) {
-                errorMessage = queryError + "\"" + values.get(i) + "\" is an invalid date";
-                return false;
-            }
+            // check the edge case first
+            final int temp = i; // needed for lambda
+            boolean hasColumnAsValue = whereClauseJoinPredicateLocations.stream()
+                    .anyMatch(location -> temp == location);
 
-            DataType columnDataType = referencedColumns.get(i).getDataType();
-            DataType valueDataType = Utilities.getDataType(values.get(i));
+            if (hasColumnAsValue) {
 
-            if (columnDataType != valueDataType) {
-                errorMessage = queryError + "Column \"" + referencedColumns.get(i).getColumnName() +
-                        "\" has a datatype of \"" + columnDataType + "\" which\ndoesn't match \"" + values.get(i) +
-                        "\" which has a data type of \"" + valueDataType + "\"";
-                return false;
-            }
+                String columnName = columnNames.get(i);
+                String columnValue = values.get(whereClauseJoinPredicateLocations.get(i));
 
-            // if using >, <, >=, <= make sure value is not of type CHAR
-            boolean isRangeSymbol = Symbol.isRangeSymbol(symbols.get(i));
-            boolean isChar = valueDataType == DataType.CHAR;
+                // make sure both the column and the column value are not ambiguous
+                boolean isAmbiguous = columnName.equalsIgnoreCase(columnValue);
 
-            if (isRangeSymbol && isChar) {
-                errorMessage = queryError + "Can't use \"" + symbols.get(i) + "\" with CHAR values";
-                return false;
+                if (isAmbiguous) {
+                    errorMessage = queryError + "Ambiguous column \"" + columnName +
+                            "\" found in WHERE clause join predicate";
+                    return false;
+                }
+
+                // ensure correct data types
+                Column columnValueReference = Utilities.getReferencedColumns(
+                        new ArrayList<>(Arrays.asList(columnValue)), referencedTables).get(0);
+
+                DataType columnDataType = referencedColumns.get(i).getDataType();
+                DataType columnValueDataType = columnValueReference.getDataType();
+
+                if (columnDataType != columnValueDataType) {
+                    errorMessage = queryError + "In WHERE clause, column \"" + columnName + "\" has a datatype of \"" +
+                            columnDataType + "\" which does not match column \"" + columnValue + "\" which has a " +
+                            "datatype of \"" + columnValueDataType + "\"";
+                    return false;
+                }
+
+            } else {
+
+                // make sure that the format of a date is correct first
+                if (Utilities.hasDateFormat(values.get(i)) && !Utilities.isValidDate(values.get(i))) {
+                    errorMessage = queryError + "\"" + values.get(i) + "\" is an invalid date";
+                    return false;
+                }
+
+                DataType columnDataType = referencedColumns.get(i).getDataType();
+                DataType valueDataType = Utilities.getDataType(values.get(i));
+
+                if (columnDataType != valueDataType) {
+                    errorMessage = queryError + "Column \"" + referencedColumns.get(i).getColumnName() +
+                            "\" has a datatype of \"" + columnDataType + "\" which\ndoesn't match \"" + values.get(i) +
+                            "\" which has a data type of \"" + valueDataType + "\"";
+                    return false;
+                }
+
+                // if using >, <, >=, <= make sure value is not of type CHAR
+                boolean isRangeSymbol = Symbol.isRangeSymbol(symbols.get(i));
+                boolean isChar = valueDataType == DataType.CHAR;
+
+                if (isRangeSymbol && isChar) {
+                    errorMessage = queryError + "Can't use \"" + symbols.get(i) + "\" with CHAR values";
+                    return false;
+                }
             }
         }
 

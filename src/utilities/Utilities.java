@@ -406,6 +406,51 @@ public final class Utilities {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Checks whether the values encountered in the WHERE clause are actually join predicates.
+     * Eg. "WHERE Col1 = Col2" or "WHERE Tab1.Col1 = Tab2.Col1" will return true.
+     * Basically just checks if the values are encountered in the system.
+     * @param candidate is the value to check (can be prefixed)
+     * @param tables are a list of the system tables
+     * @return whether the value encountered in the WHERE clause is actually a join predicate
+     */
+    public static boolean hasWhereClauseJoinPredicate(String candidate, List<Table> tables) {
+        if (OptimizerUtilities.hasPrefixedTableName(candidate)) {
+            String tableName = candidate.split("\\.")[0];
+            String columnName = candidate.split("\\.")[1];
+            Table referencedTable = getReferencedTable(tableName, tables);
+            boolean tableExists = referencedTable != null;
+            return tableExists && referencedTable.hasColumn(columnName);
+        } else {
+            for (Table table : tables) {
+                if (table.hasColumn(candidate)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Returns a list of index locations of where join predicates in the WHERE clause occur.
+     * @param values are the values to check
+     * @param tables is a list of the system tables
+     * @return a list of index locations of where join predicates occur
+     */
+    public static List<Integer> getWhereClauseJoinPredicateLocations(List<String> values, List<Table> tables) {
+
+        List<Integer> joinPredicateLocations = new ArrayList<>();
+
+        for (int i = 0; i < values.size(); i++) {
+            String value = values.get(i);
+            if (hasWhereClauseJoinPredicate(value, tables)) {
+                joinPredicateLocations.add(i);
+            }
+        }
+
+        return joinPredicateLocations;
+    }
+
     public static DataType getDataType(String value) {
         if (hasDateFormat(value) && isValidDate(value)) {
             return DataType.DATE;
