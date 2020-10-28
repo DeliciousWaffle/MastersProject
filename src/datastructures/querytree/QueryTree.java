@@ -833,7 +833,7 @@ public final class QueryTree {
 
             Operator operator = entry.getKey();
             List<Traversal> traversals = entry.getValue();
-            print.append(operator.toString()).append("\n").append("Location: ");
+            print.append(operator.toString()).append(": ");
 
             if (traversals.isEmpty()) {
                 print.append("Root");
@@ -843,7 +843,12 @@ public final class QueryTree {
                 // remove ", "
                 print.delete(print.length() - 2, print.length());
             }
+
+            print.append("\n");
         }
+
+        // remove "\n"
+        print.deleteCharAt(print.length() - 1);
 
         return print.toString();
     }

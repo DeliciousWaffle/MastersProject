@@ -39,6 +39,10 @@ public class AggregateSelection extends Operator {
         return aggregateTypes;
     }
 
+    public List<String> getColumnNames() {
+        return columnNames;
+    }
+
     public List<String> getSymbols() {
         return symbols;
     }

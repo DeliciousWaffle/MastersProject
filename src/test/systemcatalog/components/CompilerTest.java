@@ -1,69 +1,88 @@
 package test.systemcatalog.components;
 
+import datastructures.querytree.QueryTree;
+import datastructures.relation.resultset.ResultSet;
+import datastructures.relation.table.Table;
+import datastructures.relation.table.component.Column;
+import datastructures.user.User;
+import files.io.FileType;
+import files.io.IO;
+import files.io.Serializer;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import systemcatalog.components.Optimizer;
+import systemcatalog.components.Compiler;
+import utilities.Utilities;
+
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Test class for ensuring that the System Catalog's Compiler is operating as it should be.
  * This means that when input is executed, this makes sure that the output is correct.
  */
 public class CompilerTest {
-/*
+
+    private static Optimizer optimizer;
     private static Compiler compiler;
+    private static List<Table> tables;
+    private static List<User> users;
 
     @BeforeAll
     public static void init() {
+        optimizer = new Optimizer();
         compiler = new Compiler();
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
     }
 
-    public Table getTable() {
-        Table table = new Table("Tab1");
-
-        List<Column> columns = new ArrayList<>();
-        columns.add(new Column("Col1", DataType.NUMBER, 5));
-        columns.add(new Column("Col2", DataType.CHAR, 10));
-        columns.add(new Column("Col3", DataType.CHAR, 10));
-        table.setColumns(columns);
-
-        List<String> row1 = new ArrayList<>(Arrays.asList("1", "john", "us"));
-        List<String> row2 = new ArrayList<>(Arrays.asList("2", "mike", "germany"));
-        List<String> row3 = new ArrayList<>(Arrays.asList("3", "tyler", "germany"));
-        List<String> row4 = new ArrayList<>(Arrays.asList("4", "gavin", "mexico"));
-        List<List<String>> data = new ArrayList<>(Arrays.asList(row1, row2, row3, row4));
-        table.setTableData(new TableData(
-                new ArrayList<>(Arrays.asList(5, 10, 10)), data));
-
-        System.out.println(table);
-
-        return table;
-    }
-
-    public User getUser() {
-        User user = new User();
-
-        user.setUsername("Fred");
-        List<TablePrivileges> tablePrivileges = new ArrayList<>();
-        List<Privilege> privileges = new ArrayList<>();
-        privileges.add(Privilege.ALTER);
-        privileges.add(Privilege.REFERENCES);
-        List<String> referencesColumns = new ArrayList<>();
-        referencesColumns.add("Col2");
-        TablePrivileges toAdd = new TablePrivileges("Tab1", privileges);
-        toAdd.setReferenceColumns(referencesColumns);
-        tablePrivileges.add(toAdd);
-        user.setTablePrivilegesList(tablePrivileges);
-
-        System.out.println(user);
-
-        return user;
-    }
-
-   /* @ParameterizedTest
+    @ParameterizedTest
     @ValueSource(strings = {
+            "SELECT FirstName FROM Customers",
+            "SELECT Customers.FirstName FROM Customers",
+            "SELECT FirstName, LastName FROM Customers",
+            "SELECT LastName, FirstName FROM Customers",
+            "SELECT * FROM Customers",
+            "SELECT * FROM Customers WHERE CustomerID = 1",
+            "SELECT * FROM Customers WHERE FirstName = \"Genaro\"",
+            "SELECT * FROM Customers WHERE FirstName = \"Genaro\" AND CustomerID = -1",
+            "SELECT * FROM Customers WHERE CustomerID != 1",
+            "SELECT * FROM Customers WHERE CustomerID != 1 AND CustomerID != 20",
+            "SELECT * FROM Customers WHERE FirstName != \"Genaro\" AND CustomerID != 20",
+            "SELECT CustomerID FROM Customers WHERE CustomerID > 20",
+            "SELECT CustomerID FROM Customers WHERE CustomerId < 30",
+            "SELECT CustomerID FROM Customers WHERE CustomerId > 20 AND CustomerID < 30",
+            "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased > \"2021-01-01\"",
+            "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased < \"2021-01-01\"",
+
     })
-    public void testQuery() {
-        System.out.println("testQuery() -----------------------------------------------------------------------------");
-        assertTrue(true);
+    public void testQuery(String query) {
+        System.out.println(query);
+        String[] filtered = Utilities.filterInput(query);
+        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
+        ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
+        System.out.println(resultSet);
     }
-*/
+
+    @Test
+    public void test() {
+        String query = "SELECT * FROM Products, Customers";
+        System.out.println(query);
+        String[] filtered = Utilities.filterInput(query);
+        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
+        ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
+        try {
+            FileWriter fileWriter = new FileWriter("Temp.txt");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     /*@Test
     public void testCreateTable() {
         System.out.println("testCreateTable() -----------------------------------------------------------------------");

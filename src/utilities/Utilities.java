@@ -1,6 +1,7 @@
 package utilities;
 
 import datastructures.misc.Pair;
+import datastructures.relation.resultset.ResultSet;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
@@ -536,4 +537,6 @@ public final class Utilities {
 
         return true;
     }
+
+
 }

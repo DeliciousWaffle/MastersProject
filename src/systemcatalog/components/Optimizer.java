@@ -150,8 +150,9 @@ public class Optimizer {
         whereClauseValues.addAll(secondJoinOnColumnNames);
 
         // wrap each value that appears in the WHERE and HAVING clauses in quotation marks
-        OptimizerUtilities.addQuotationsToStringValues(whereClauseValues);
-        OptimizerUtilities.addQuotationsToStringValues(havingClauseValues);
+        // TODO don't do this
+        //OptimizerUtilities.addQuotationsToStringValues(whereClauseValues);
+        //OptimizerUtilities.addQuotationsToStringValues(havingClauseValues);
 
         // add unique column names that don't appear in select clause from group by when using aggregation
         selectClauseColumnNames = OptimizerUtilities.addUniqueColumnNames(selectClauseColumnNames, groupByColumnNames);

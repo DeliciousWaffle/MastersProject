@@ -166,7 +166,7 @@ public class SystemCatalog {
             successfullyExecuted = true;
 
             if (inputType == InputType.QUERY) {
-                resultSet = compiler.executeQuery(queryTreeStates);
+                resultSet = compiler.executeQuery(queryTreeStates, tables);
                 executionMessage = "QUERY was successfully executed!";
             } else {
                 compiler.executeDML(inputType, filteredInput, tables, users);

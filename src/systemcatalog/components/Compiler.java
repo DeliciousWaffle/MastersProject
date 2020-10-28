@@ -1,5 +1,7 @@
 package systemcatalog.components;
 
+import datastructures.querytree.operator.Operator;
+import datastructures.querytree.operator.types.*;
 import datastructures.relation.resultset.ResultSet;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
@@ -13,21 +15,23 @@ import datastructures.rulegraph.RuleGraph;
 import datastructures.relation.table.Table;
 import datastructures.user.User;
 import enums.InputType;
+import enums.Keyword;
 import enums.Symbol;
+import utilities.OptimizerUtilities;
 import utilities.Utilities;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static datastructures.querytree.QueryTree.TreeTraversal.PREORDER;
 
 /**
  * Responsible for executing a given input. If the input is a query, an associated result set
  * will be produced. If the input is a DML statement, then the change will be carried out here.
  */
 public class Compiler {
-// TODO change -1 for column date to something that makes sense
+
     /**
      * Executes the given query which produces a result set. Requires the query tree produced right before
      * pipelining in order to create the result set. This query tree state contains all the necessary information
@@ -36,11 +40,78 @@ public class Compiler {
      * @param queryTreeStates are the states of the query tree after being run through the Optimizer
      * @return the result set of executing the query
      */
-    public ResultSet executeQuery(List<QueryTree> queryTreeStates) {
+    public ResultSet executeQuery(List<QueryTree> queryTreeStates, List<Table> tables) {
+
+        // get query tree before pipelining and convert it to a stack
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
+        Deque<Operator> startingStack =
+                OptimizerUtilities.setToDeque(queryTreeBeforePipelining.getOperatorsAndLocations(PREORDER).keySet());
+        Deque<ResultSet> workingStack = new ArrayDeque<>();
 
+        while (! startingStack.isEmpty()) {
+            Operator operator = startingStack.pop();
+            switch (operator.getType()) {
+                case RELATION: {
+                    Relation relation = (Relation) operator;
+                    String tableName = relation.getTableName();
+                    ResultSet resultSet = new ResultSet(Utilities.getReferencedTable(tableName, tables));
+                    workingStack.push(resultSet);
+                    break;
+                }
+                case SIMPLE_SELECTION: {
+                    SimpleSelection simpleSelection = (SimpleSelection) operator;
+                    String columnName = simpleSelection.getColumnName();
+                    String symbol = simpleSelection.getSymbol();
+                    String value = simpleSelection.getValue();
+                    ResultSet resultSet = workingStack.pop().selection(columnName, symbol, value);
+                    workingStack.push(resultSet);
+                    break;
+                }
+                case PROJECTION:
+                    Projection projection = (Projection) operator;
+                    List<String> columnNames = projection.getColumnNames();
+                    ResultSet resultSet = workingStack.pop().projection(columnNames);
+                    workingStack.push(resultSet);
+                    break;
+                case INNER_JOIN: {
+                    InnerJoin innerJoin = (InnerJoin) operator;
+                    String firstJoinColumnName = innerJoin.getFirstJoinColumnName();
+                    String secondJoinColumnName = innerJoin.getSecondJoinColumnName();
+                    ResultSet firstResultSet = workingStack.pop();
+                    ResultSet secondResultSet = workingStack.pop();
+                    workingStack.push(firstResultSet.innerJoin(
+                            secondResultSet, firstJoinColumnName, secondJoinColumnName));
+                    break;
+                }
+                case CARTESIAN_PRODUCT: {
+                    ResultSet firstResultSet = workingStack.pop();
+                    ResultSet secondResultSet = workingStack.pop();
+                    workingStack.push(firstResultSet.cartesianProduct(secondResultSet));
+                    break;
+                }
+                case AGGREGATION: {
+                    Aggregation aggregation = (Aggregation) operator;
+                    List<String> groupByColumnNames = aggregation.getGroupByColumnNames();
+                    List<String> aggregationTypes = aggregation.getAggregationTypes();
+                    List<String> aggregatedColumnNames = aggregation.getAggregatedColumnNames();
+                    workingStack.push(workingStack.pop().aggregate(
+                            groupByColumnNames, aggregationTypes, aggregatedColumnNames));
+                    break;
+                }
+                case AGGREGATE_SELECTION: {
+                    AggregateSelection aggregateSelection = (AggregateSelection) operator;
+                    List<String> aggregationTypes = aggregateSelection.getAggregateTypes();
+                    List<String> aggregatedColumnNames = aggregateSelection.getColumnNames();
+                    List<String> symbols = aggregateSelection.getSymbols();
+                    List<String> values = aggregateSelection.getValues();
+                    workingStack.push(workingStack.pop().having(
+                            aggregationTypes, aggregatedColumnNames, symbols, values));
+                    break;
+                }
+            }
+        }
 
-        return null;
+        return workingStack.pop();
     }
 
     /**
@@ -93,40 +164,43 @@ public class Compiler {
      * @param tables is a list of system tables
      */
     public void createTable(String[] filteredInput, List<Table> tables) {
-// TODO
-        RuleGraph createTableRuleGraph = RuleGraphTypes.getCreateTableRuleGraph();
 
-        // getting the table data
-        String tableName = createTableRuleGraph.getTokensAt(filteredInput, 2).get(0);
-        List<String> columnNames = createTableRuleGraph.getTokensAt(filteredInput, 4);
-        List<String> dataTypeNames = createTableRuleGraph.getTokensAt(filteredInput, 5, 6, 7);
-        List<String> sizeNames = createTableRuleGraph.getTokensAt(filteredInput, 9);
-        List<String> decimalSizeNames = createTableRuleGraph.getTokensAt(filteredInput, 11);
-
-        // convert the input into a table along with its column data
-        Table table = new Table(tableName);
+        // unfortunately, can't use the create table rule graph because the mapping gets wonky, so we got this
+        String tableName = filteredInput[2];
         List<Column> columns = new ArrayList<>();
 
-        for (int i = 0, j = 0; i < columnNames.size(); i++) {
+        for (int i = 4; i < filteredInput.length; i++) {
 
-            String columnName = columnNames.get(i);
-            String dataTypeName = dataTypeNames.get(i);
-            String sizeName = sizeNames.get(i);
+            String columnName = filteredInput[i];
+            DataType dataType = DataType.convertToDataType(filteredInput[i + 1]);
+            boolean isNumeric = dataType == DataType.NUMBER;
+            boolean isChar = dataType == DataType.CHAR;
+            boolean isDate = dataType == DataType.DATE;
 
-            DataType dataType = DataType.convertToDataType(dataTypeName);
-            int size = Integer.parseInt(sizeName);
-
-            // decimal size will only appear when adding a numeric column
-            if (dataType == DataType.NUMBER) {
-                int decimalSize = Integer.parseInt(decimalSizeNames.get(j));
-                j++;
+            if (isNumeric) {
+                int size = Integer.parseInt(filteredInput[i + 2]);
+                int decimalSize = 0;
+                boolean hasDecimalSize = filteredInput[i + 4].equalsIgnoreCase(",") && Utilities.isNumeric(filteredInput[i + 5]);
+                if (hasDecimalSize) {
+                    decimalSize = Integer.parseInt(filteredInput[i + 5]);
+                }
+                Column column = new Column(columnName, DataType.NUMBER, size, decimalSize);
+                columns.add(column);
             }
 
-            Column column = new Column(columnName, dataType, -1, size);
-            columns.add(column);
+            if (isChar) {
+                int size = Integer.parseInt(filteredInput[i + 2]);
+                Column column = new Column(columnName, DataType.CHAR, size, 0);
+                columns.add(column);
+            }
+
+            if (isDate) {
+                Column column = new Column(columnName, DataType.DATE, 0, 0);
+                columns.add(column);
+            }
         }
 
-        table.setColumns(columns);
+        Table table = new Table(tableName, columns, new ArrayList<>(), new HashMap<>());
         tables.add(table);
     }
 
