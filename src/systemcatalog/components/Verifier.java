@@ -275,11 +275,9 @@ public class Verifier {
         List<String> symbols = queryRuleGraph.getTokensAt(filteredInput, 30, 31, 32, 33, 34, 35);
         List<String> values = queryRuleGraph.getTokensAt(filteredInput, 36, 38);
 
-        // --- edge case begin
         // check if the value in the where clause is actually a column in the system, occurs when the
         // user wishes to add a join predicate in the where clause
         List<Integer> whereClauseJoinPredicateLocations = Utilities.getWhereClauseJoinPredicateLocations(values, referencedTables);
-        // --- edge case end
 
         for (int i = 0; i < referencedColumns.size(); i++) {
 
@@ -382,6 +380,23 @@ public class Verifier {
                         "\" which has a data type of \"" + valueDataType + "\"";
                 return false;
             }
+        }
+
+
+        // columns present in the group by clause, but there are no aggregate functions being used in the select clause
+        aggregatedColumnNames = queryRuleGraph.getTokensAt(filteredInput, 9);
+        List<String> groupByClauseColumnNames = queryRuleGraph.getTokensAt(filteredInput, 43);
+
+        boolean hasAggregateFunction = ! aggregatedColumnNames.isEmpty();
+        boolean hasGroupByColumn = ! groupByClauseColumnNames.isEmpty();
+
+        if (! hasAggregateFunction && hasGroupByColumn) {
+            System.out.println(aggregatedColumnNames);
+            System.out.println(groupByClauseColumnNames);
+            errorMessage = queryError + "Operation is currently not supported\n"+
+                    "There needs to be at least one function present\n"+
+                    "in the select clause in order to use the group by clause";
+            return false;
         }
 
         return true;

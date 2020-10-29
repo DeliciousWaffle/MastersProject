@@ -8,8 +8,12 @@ import enums.Keyword;
 import enums.Symbol;
 import utilities.Utilities;
 
+import java.math.BigInteger;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Represents the data returned after execution of a query. Table data is set initially, then
@@ -347,9 +351,11 @@ public class ResultSet {
         List<Column> joinColumns = new ArrayList<>();
         cartesianProductResultSet.columns.forEach(column -> joinColumns.add(new Column(column)));
 
+        System.out.println(cartesianProductResultSet.columns);
+
         // get the index locations of the columns to perform the join on
-        int firstColumnIndex = getColumnLocation(getColumnFromColumnName(firstColumnToJoin));
-        int secondColumnIndex = getColumnLocation(getColumnFromColumnName(secondColumnToJoin));
+        int firstColumnIndex = cartesianProductResultSet.getColumnLocation(cartesianProductResultSet.getColumnFromColumnName(firstColumnToJoin));
+        int secondColumnIndex = cartesianProductResultSet.getColumnLocation(cartesianProductResultSet.getColumnFromColumnName(secondColumnToJoin));
 
         // keep only rows to join on
         List<List<String>> joinRows = new ArrayList<>();
@@ -369,83 +375,204 @@ public class ResultSet {
      * Performs an aggregate function on the columns supplied for this result set and groups the result
      * according to the supplied column names. Aggregate functions include min, max, avg, count, and sum.
      * Similar to using the SELECT clause with an aggregate function along with a group by clause.
-     * @param groupByColumnNames are the column names to group by, column names are assumed to be prefixed
+     * @param columnNamesToGroupBy are the column names to group by, column names are assumed to be prefixed
      * @param aggregationTypes are the types of aggregations to apply to the aggregated columns
-     * @param aggregatedColumnNames are the names of the columns to be aggregated, assumed to be prefixed
+     * @param columnNamesToAggregate are the names of the columns to be aggregated, assumed to be prefixed
      * @return a new result set after being aggregated
      */
-    public ResultSet aggregate(List<String> groupByColumnNames, List<String> aggregationTypes,
-                               List<String> aggregatedColumnNames) {
+    public ResultSet aggregate(List<String> columnNamesToGroupBy, List<String> aggregationTypes,
+                               List<String> columnNamesToAggregate) {
 
-        return null;
-        // first project each of the columns that we wish to aggregate on this result set
-        /*List<Column> columnsToProject = new ArrayList<>();
+        // copying each column
+        List<Column> columnsToGroupByCopy = columnNamesToGroupBy.stream()
+                .map(this::getColumnFromColumnName)
+                .map(Column::new)
+                .collect(Collectors.toList());
 
-        for(Column columnToProject : columnsToAggregate.values()) {
-            columnsToProject.add(new Column(columnToProject));
+        List<Column> columnsToAggregateCopy = new ArrayList<>();
+
+        for (int i = 0; i < aggregationTypes.size(); i++) {
+
+            // append the aggregation type to the aggregated column name
+            String aggregationType = aggregationTypes.get(i);
+            String aggregatedColumnName = columnNamesToAggregate.get(i);
+            String newColumnName = aggregationType + "(" + aggregatedColumnName + ")";
+
+            Column columnToAdd = new Column(getColumnFromColumnName(aggregatedColumnName));
+            columnToAdd.setName(newColumnName);
+            columnsToAggregateCopy.add(columnToAdd);
         }
 
-        // will be using this result set to apply our aggregate functions to
-        ResultSet projectedResultSet = this.projection(columnsToProject);
+        List<Column> columnsToAggregate = columnNamesToAggregate.stream()
+                .map(this::getColumnFromColumnName)
+                .collect(Collectors.toList());
 
-        // adding the columns to group by, transforms "t1.col1" into "<SomeAggregateFunction>(t1.col1)"
-        List<Column> columnsToReturn = new ArrayList<>();
+        List<String> rowToReturn = new ArrayList<>();
 
-        for(Map.Entry<Keyword, Column> entry : columnsToAggregate.entrySet()) {
+        boolean hasGroupByColumns = ! columnNamesToGroupBy.isEmpty();
 
-            Keyword keyword = entry.getKey();
-            Column column = entry.getValue();
-            String columnName = column.getColumnName();
+        // no group by columns, just go through each aggregated column performing the aggregation
+        if (! hasGroupByColumns) {
+            for (int i = 0; i < columnsToAggregate.size(); i++) {
 
-            String groupByColumnName = keyword + "(" + columnName + ")";
+                // get the data at the column and how to process it
+                Column columnToAggregate = columnsToAggregate.get(i);
+                List<String> columnsData = getColumnDataAt(columnToAggregate);
+                DataType columnsDataType = columnToAggregate.getDataType();
+                Keyword aggregationType = Keyword.toKeyword(aggregationTypes.get(i));
 
-            // the size will be set later based on the length of the value returned from the aggregate function
-            Column groupByColumn = new Column(groupByColumnName, DataType.NUMBER, 0, 0);
-            columnsToReturn.add(groupByColumn);
+                // for decimal formatting
+                StringBuilder sb = new StringBuilder();
+                for (int j = 0; j < columnToAggregate.getDecimalSize(); j++) {
+                    sb.append("0");
+                }
+                DecimalFormat decimalFormat = new DecimalFormat("#." + sb.toString());
+                decimalFormat.setDecimalSeparatorAlwaysShown(false);
+
+                // process the data and add it to the data to be returned
+                switch (columnsDataType) {
+                    case NUMBER: {
+                        List<Double> columnsDataAsNumber = columnsData.stream()
+                                .map(Double::parseDouble)
+                                .collect(Collectors.toList());
+                        switch (aggregationType) {
+                            case MIN:
+                                double min = minDoubleInColumnData(columnsDataAsNumber);
+                                rowToReturn.add(decimalFormat.format(min));
+                                break;
+                            case MAX:
+                                double max = maxDoubleInColumnData(columnsDataAsNumber);
+                                rowToReturn.add(decimalFormat.format(max));
+                                break;
+                            case AVG:
+                                double avg = avgDoubleInColumnData(columnsDataAsNumber);
+                                rowToReturn.add(decimalFormat.format(avg));
+                                break;
+                            case COUNT:
+                                rowToReturn.add(Integer.toString(columnsDataAsNumber.size()));
+                                break;
+                            case SUM:
+                                double sum = sumDoubleInColumnData(columnsDataAsNumber);
+                                rowToReturn.add(decimalFormat.format(sum));
+                                break;
+                        }
+                        break;
+                    }
+                    case DATE: {
+                        List<LocalDate> columnsDataAsDate = columnsData.stream()
+                                .map(LocalDate::parse)
+                                .collect(Collectors.toList());
+                        switch (aggregationType) {
+                            case MIN:
+                                rowToReturn.add(minDateInColumnData(columnsDataAsDate).toString());
+                                break;
+                            case MAX:
+                                rowToReturn.add(maxDataInColumnData(columnsDataAsDate).toString());
+                                break;
+                            case AVG:
+                                rowToReturn.add(avgDateInColumnData(columnsDataAsDate).toString());
+                                break;
+                            case COUNT:
+                                rowToReturn.add(Integer.toString(columnsDataAsDate.size()));
+                                break;
+                            case SUM:
+                                rowToReturn.add(sumDateInColumnData(columnsDataAsDate).toString());
+                                break;
+                        }
+                        break;
+                    }
+                    case CHAR: {
+                        rowToReturn.add(Integer.toString(columnsData.size()));
+                        break;
+                    }
+                }
+            }
+
+            List<List<String>> toReturnData = new ArrayList<>();
+            toReturnData.add(rowToReturn);
+
+            return new ResultSet(columnsToAggregateCopy, toReturnData);
         }
 
-        // data to be returned after applying the aggregate function, will only contain a single row
-        List<List<String>> groupByData = new ArrayList<>();
-        List<String> groupByRow = new ArrayList<>();
+        // grouping by columns
 
-        for(Map.Entry<Keyword, Column> entry : columnsToAggregate.entrySet()) {
+        // find each group by column's location and aggregate column location with respect to the columns of this result set
+        List<Integer> groupByColumnLocations = getColumnLocations(getColumnsFromColumnNames(columnNamesToGroupBy));
+        List<Integer> aggregateColumnLocations = getColumnLocations(getColumnsFromColumnNames(columnNamesToAggregate));
 
-            Keyword aggregateFunction = entry.getKey();
-            Column columnToAggregate = entry.getValue();
+        System.out.println(groupByColumnLocations);
+        System.out.println(columns);
+        // find each unique row according to the columns to group by
+        ResultSet projection = projection(columnNamesToGroupBy);
+        List<List<String>> uniqueProjectedRows = uniqueRows(projection.data);
 
-            List<String> columnData = projectedResultSet.getColumnDataAt(columnToAggregate);
+uniqueProjectedRows.forEach(System.out::println);
 
-            switch(aggregateFunction) {
-                case MIN:
-                    groupByRow.add(Double.toString(minColumnValue(columnData)));
+List<List<String>> rowsToReturn = new ArrayList<>();
+
+
+
+        // for each unique row, go through all of the original data, finding matches for that row
+        for (List<String> uniqueProjectedRow : uniqueProjectedRows) {
+            // when a match is found, add it to the list of column rows to aggregate
+            List<List<String>> columnRowsToAggregate = new ArrayList<>();
+            for (List<String> row : data) {
+                if (containsMatchingElementsAt(uniqueProjectedRow, row, groupByColumnLocations)) {
+                    columnRowsToAggregate.add(row);
+                }
+            }
+            // once we got all rows corresponding with that unique projected row, for each column to aggregate,
+            // perform that aggregation, adding the result to the unique projected row to return
+            List<String> rowToAdd = new ArrayList<>();
+            rowToAdd.addAll(uniqueProjectedRow);
+            for (Integer aggregateColumnLocation : aggregateColumnLocations) {
+                List<String> columnData = getColumnDataAt(columnRowsToAggregate, aggregateColumnLocation);
+                DataType dataType = columns.get(aggregateColumnLocation).getDataType();
+                // perform that aggregation
+                // add result to row to return
+
+
+                rowToAdd.add("blah");
+            }
+            rowsToReturn.add(rowToAdd);
+        }
+
+        // when a match is found, perform each aggregate functions on it
+
+        // after processing that row, add to it the row(s) generated from the aggregate functions
+
+        columnsToGroupByCopy.addAll(columnsToAggregateCopy);
+        System.out.println(columnsToGroupByCopy);
+        return new ResultSet(columnsToGroupByCopy, rowsToReturn);
+    }
+
+    private List<List<String>> uniqueRows(List<List<String>> allRows) {
+
+        List<List<String>> uniqueRows = new ArrayList<>();
+
+        for (List<String> row : allRows) {
+            boolean foundRow = false;
+            for (List<String> uniqueRow : uniqueRows) {
+                if (hasEqualRows(row, uniqueRow)) {
+                    foundRow = true;
                     break;
-                case MAX:
-                    groupByRow.add(Double.toString(maxColumnValue(columnData)));
-                    break;
-                case AVG:
-                    groupByRow.add(Double.toString(avgColumnValue(columnData)));
-                    break;
-                case COUNT:
-                    groupByRow.add(Double.toString(countColumnValue(columnData)));
-                    break;
-                case SUM:
-                    groupByRow.add(Double.toString(sumColumnValue(columnData)));
-                    break;
+                }
+            }
+            if (! foundRow) {
+                uniqueRows.add(row);
             }
         }
 
-        groupByData.add(groupByRow);
+        return uniqueRows;
+    }
 
-        // set the size of each column to the length of the data stored there
-        List<String> row = groupByData.get(0);
-
-        for(int i = 0; i < columnsToReturn.size(); i++) {
-            Column column = columnsToReturn.get(i);
-            int size = row.get(i).length();
-            column.setSize(size);
+    public boolean containsMatchingElementsAt(List<String> uniqueProjectedRow, List<String> row, List<Integer> locations) {
+        for (int i = 0, j = 0; i < locations.size(); i++, j++) {
+            if (! uniqueProjectedRow.get(i).equalsIgnoreCase(row.get(locations.get(j)))) {
+                return false;
+            }
         }
-
-        return new ResultSet(columnsToReturn, groupByData);*/
+        return true;
     }
 
     /**
@@ -533,97 +660,43 @@ public class ResultSet {
         return new ResultSet(unionColumns, unionData);
     }
 
-    /**
-     * Orders the rows of this result set in ascending order based on the column supplied.
-     * @param columnToOrderBy is the column to order by
-     * @return a result set that is in ascending order based on the column supplied
-     */
-    public ResultSet orderByAsc(Column columnToOrderBy) {
+    public void orderByAsc(List<String> columnNamesToOrderBy) {
 
-        // copy columns
-        List<Column> orderedByAscColumns = new ArrayList<>();
+        List<Integer> columnLocations = getColumnLocations(getColumnsFromColumnNames(columnNamesToOrderBy));
+        columnLocations.add(0, -1); // used for the helper method
 
-        for(Column column : columns) {
-            orderedByAscColumns.add(new Column(column));
+        for (int i = 1; i < columnLocations.size(); i++) {
+            int prevSortInd = columnLocations.get(i - 1);
+            int sortInd = columnLocations.get(i);
+            orderGroupedRow(data, sortInd, prevSortInd);
         }
+    }
 
-        // get column index for this result set
-        int columnIndex = 0;
-        String columnNameToOrderBy = columnToOrderBy.getColumnName();
-
-        for(int i = 0; i < columns.size(); i++) {
-            String columnName = columns.get(i).getColumnName();
-            if(columnName.equalsIgnoreCase(columnNameToOrderBy)) {
-                columnIndex = i;
-            }
-        }
-
-        // copy data but sorted on column name, this is not done efficiently
-        List<List<String>> orderedByData = new ArrayList<>();
-
-        for(List<String> rows : this.data) {
-            orderedByData.add(new ArrayList<>(rows));
-        }
-
-        // if cell is a string, sort lexicographically, otherwise just do things normally
-        boolean isNumeric = Utilities.isNumeric(orderedByData.get(0).get(columnIndex));
-
-        // just doing a ghetto bubble sort, not efficient but am lazy
-        for(int i = 0; i < orderedByData.size() - 1; i++) {
-            for(int j = 0; j < orderedByData.size() - i - 1; j++) {
-
-                if (isNumeric) {
-
-                    int cell1 = Integer.parseInt(orderedByData.get(j).get(columnIndex));
-                    int cell2 = Integer.parseInt(orderedByData.get(j + 1).get(columnIndex));
-
-                    if(cell1 > cell2) {
-                        List<String> temp = orderedByData.get(j);
-                        orderedByData.set(j, orderedByData.get(j + 1));
-                        orderedByData.set(j + 1, temp);
+    public void orderGroupedRow(List<List<String>> groupedRows, int sortInd, int lastSortInd) {
+        for (int i = 0; i < groupedRows.size() - 1; i++) {
+            for (int j = 0; j < groupedRows.size() - i - 1; j++) {
+                if (Utilities.isNumeric(groupedRows.get(j).get(sortInd))) {
+                    // equal rows
+                    if (lastSortInd == -1 || groupedRows.get(j).get(lastSortInd).equalsIgnoreCase(groupedRows.get(j + 1).get(lastSortInd))) {
+                        if (Double.parseDouble(groupedRows.get(j).get(sortInd)) > Double.parseDouble(groupedRows.get(j + 1).get(sortInd))) {
+                            swap(data, j, j + 1);
+                        }
                     }
-
                 } else {
-
-                    String cell1 = orderedByData.get(j).get(columnIndex);
-                    String cell2 = orderedByData.get(j + 1).get(columnIndex);
-
-                    if(cell1.compareTo(cell2) > 0) {
-                        List<String> temp = orderedByData.get(j);
-                        orderedByData.set(j, orderedByData.get(j + 1));
-                        orderedByData.set(j + 1, temp);
+                    if (lastSortInd == -1 || groupedRows.get(j).get(lastSortInd).equalsIgnoreCase(groupedRows.get(j + 1).get(lastSortInd))) {
+                        if (groupedRows.get(j).get(sortInd).compareTo(groupedRows.get(j + 1).get(sortInd)) > 0) {
+                            swap(data, j, j + 1);
+                        }
                     }
                 }
             }
         }
-
-        return new ResultSet(orderedByAscColumns, orderedByData);
     }
 
-    /**
-     * Orders the rows of this result set in descending order based on the column supplied.
-     * @param columnToOrderBy is the column to order by
-     * @return a result set that is in descending order based on the column supplied
-     */
-    public ResultSet orderByDesc(Column columnToOrderBy) {
-
-        ResultSet orderedAscResultSet = orderByAsc(columnToOrderBy);
-
-        // copy columns
-        List<Column> orderedByDescColumns = new ArrayList<>();
-
-        for(Column column : columns) {
-            orderedByDescColumns.add(new Column(column));
-        }
-
-        // copy data, but reversed
-        List<List<String>> orderByDescData = new ArrayList<>();
-
-        for (int rows = orderedAscResultSet.data.size() - 1; rows >= 0; rows--) {
-            orderByDescData.add(orderedAscResultSet.data.get(rows));
-        }
-
-        return new ResultSet(orderedByDescColumns, orderByDescData);
+    private void swap(List<List<String>> data, int i, int j) {
+        List<String> temp = data.get(i);
+        data.set(i, data.get(j));
+        data.set(j, temp);
     }
 
     // helper methods for above transformation methods -----------------------------------------------------------------
@@ -658,7 +731,7 @@ public class ResultSet {
 
         List<String> columnData = new ArrayList<>();
 
-        for(List<String> rows : data) {
+        for (List<String> rows : data) {
             String data = rows.get(columnIndex);
             columnData.add(data);
         }
@@ -674,9 +747,9 @@ public class ResultSet {
 
         String columnName = column.getColumnName();
 
-        for(int cols = 0; cols < columns.size(); cols++) {
+        for( int cols = 0; cols < columns.size(); cols++) {
             String thisColumnName = columns.get(cols).getColumnName();
-            if(columnName.equalsIgnoreCase(thisColumnName)) {
+            if (columnName.equalsIgnoreCase(thisColumnName)) {
                 return getColumnDataAt(cols);
             }
         }
@@ -684,76 +757,112 @@ public class ResultSet {
         return new ArrayList<>();
     }
 
-    /**
-     * @param columnData is the column data to search
-     * @return the minimum value from the column data supplied
-     */
-    public double minColumnValue(List<String> columnData) {
+    public List<String> getColumnDataAt(List<List<String>> rows, int colInd) {
+        List<String> columnData = new ArrayList<>();
+        for (List<String> row : rows) {
+            columnData.add(row.get(colInd));
+        }
+        return columnData;
+    }
 
-        double min = Integer.parseInt(columnData.get(0));
+    public double minDoubleInColumnData(List<Double> columnData) {
 
-        for(String data : columnData) {
-            double dataValue = Double.parseDouble(data);
-            if(dataValue < min) {
-                min = dataValue;
+        double min = columnData.get(0);
+
+        for (Double data : columnData) {
+            if (data < min) {
+                min = data;
             }
         }
 
         return min;
     }
 
-    /**
-     * @param columnData is the column data to search
-     * @return the maximum value from the column data supplied
-     */
-    public double maxColumnValue(List<String> columnData) {
+    public LocalDate minDateInColumnData(List<LocalDate> columnData) {
 
-        double max = Integer.parseInt(columnData.get(0));
+        LocalDate min = columnData.get(0);
 
-        for(String data : columnData) {
-            double dataValue = Double.parseDouble(data);
-            if(dataValue > max) {
-                max = dataValue;
+        for (LocalDate localDate : columnData) {
+            if (localDate.isBefore(min)) {
+                min = localDate;
+            }
+        }
+
+        return min;
+    }
+
+    public double maxDoubleInColumnData(List<Double> columnData) {
+
+        double max = columnData.get(0);
+
+        for (Double data : columnData) {
+            if(data > max) {
+                max = data;
             }
         }
 
         return max;
     }
 
-    /**
-     * @param columnData is the column data to search
-     * @return the average value of data within a column
-     */
-    public double avgColumnValue(List<String> columnData) {
+    public LocalDate maxDataInColumnData(List<LocalDate> columnData) {
 
-        double totalValue = sumColumnValue(columnData);
-        int numRows = countColumnValue(columnData);
+        LocalDate max = columnData.get(0);
+
+        for (LocalDate localDate : columnData) {
+            if (localDate.isAfter(max)) {
+                max = localDate;
+            }
+        }
+
+        return max;
+    }
+
+    public double avgDoubleInColumnData(List<Double> columnData) {
+
+        double totalValue = sumDoubleInColumnData(columnData);
+        int numRows = columnData.size();
 
         return totalValue / numRows;
     }
 
-    /**
-     * @param columnData is the column data to search
-     * @return the number of rows in a column of data
-     */
-    public int countColumnValue(List<String> columnData) {
-        return columnData.size();
+    public LocalDate avgDateInColumnData(List<LocalDate> columnData) {
+
+        BigInteger totalMillis = BigInteger.ZERO;
+
+        for (LocalDate localDate : columnData) {
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            totalMillis = totalMillis.add(BigInteger.valueOf(date.getTime()));
+        }
+
+        BigInteger averageMillis = totalMillis.divide(BigInteger.valueOf(columnData.size()));
+        Date averageDate = new Date(averageMillis.longValue());
+
+        return averageDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
-    /**
-     * @param columnData is the column data to search
-     * @return the summation of all data for a column
-     */
-    public double sumColumnValue(List<String> columnData) {
+    public double sumDoubleInColumnData(List<Double> columnData) {
 
         double sum = 0;
 
-        for(String data : columnData) {
-            double dataValue = Double.parseDouble(data);
+        for(Double data : columnData) {
+            double dataValue = data;
             sum += dataValue;
         }
 
         return sum;
+    }
+
+    public LocalDate sumDateInColumnData(List<LocalDate> columnData) {
+
+        BigInteger totalMillis = BigInteger.ZERO;
+
+        for (LocalDate localDate : columnData) {
+            Date date = Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            totalMillis = totalMillis.add(BigInteger.valueOf(date.getTime()));
+        }
+
+        Date date = new Date(totalMillis.longValue());
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     /**

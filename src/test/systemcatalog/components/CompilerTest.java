@@ -5,6 +5,7 @@ import datastructures.relation.resultset.ResultSet;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.user.User;
+import enums.InputType;
 import files.io.FileType;
 import files.io.IO;
 import files.io.Serializer;
@@ -14,13 +15,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Optimizer;
 import systemcatalog.components.Compiler;
+import systemcatalog.components.Parser;
+import systemcatalog.components.Verifier;
 import utilities.Utilities;
 
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 /**
  * Test class for ensuring that the System Catalog's Compiler is operating as it should be.
  * This means that when input is executed, this makes sure that the output is correct.
@@ -58,7 +64,19 @@ public class CompilerTest {
             "SELECT CustomerID FROM Customers WHERE CustomerId > 20 AND CustomerID < 30",
             "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased > \"2021-01-01\"",
             "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased < \"2021-01-01\"",
-
+            "SELECT * FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID",
+            "SELECT COUNT(FirstName) FROM Customers",
+            "SELECT AVG(FirstName) FROM Customers", // would be invalid, but allow anyways
+            "SELECT COUNT(CustomerID) FROM Customers",
+            "SELECT SUM(CustomerID) FROM Customers",
+            "SELECT COUNT(CustomerID), SUM(CustomerID) FROM Customers",
+            "SELECT SUM(DatePurchased) FROM CustomerPurchaseDetails",
+            "SELECT AVG(DatePurchased) FROM CustomerPurchaseDetails",
+            "SELECT SUM(DatePurchased), AVG(DatePurchased), COUNT(CustomerID) FROM CustomerPurchaseDetails",
+            "SELECT AVG(Price) FROM Products",
+            "SELECT AVG(DiscountAmount) FROM EmployeePurchaseDetails",
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod",
+            "SELECT PaymentMethod, Quantity, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod, Quantity",
     })
     public void testQuery(String query) {
         System.out.println(query);
@@ -66,21 +84,47 @@ public class CompilerTest {
         List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
         ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
         System.out.println(resultSet);
+
+        Parser p = new Parser();
+        if (! p.isValid(InputType.QUERY, filtered)) {
+            System.out.println(p.getErrorMessage());
+            fail();
+        }
+
+        Verifier v = new Verifier();
+        if (! v.isValid(InputType.QUERY, filtered, tables, users)) {
+            System.out.println(v.getErrorMessage());
+            fail();
+        }
     }
 
     @Test
     public void test() {
-        String query = "SELECT * FROM Products, Customers";
+        String query = "SELECT FirstName FROM Products, Customers";
         System.out.println(query);
         String[] filtered = Utilities.filterInput(query);
         List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
         ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
         try {
             FileWriter fileWriter = new FileWriter("Temp.txt");
-
+            fileWriter.append(resultSet.toString());
+            fileWriter.flush();
+            fileWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void test2() {
+        String query = "SELECT * FROM CustomerPurchaseDetails";
+        System.out.println(query);
+        String[] filtered = Utilities.filterInput(query);
+        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
+        ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
+
+        resultSet.orderByAsc(new ArrayList<>(Arrays.asList("CustomerPurchaseDetails.PaymentMethod", "CustomerPurchaseDetails.Quantity")));
+        System.out.println(resultSet);
     }
 
     /*@Test
