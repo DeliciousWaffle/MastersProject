@@ -77,6 +77,9 @@ public class CompilerTest {
             "SELECT AVG(DiscountAmount) FROM EmployeePurchaseDetails",
             "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod",
             "SELECT PaymentMethod, Quantity, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod, Quantity",
+            "SELECT PaymentMethod, COUNT(PaymentMethod), AVG(Quantity) FROM CustomerPurchaseDetails GROUP BY PaymentMethod",
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails WHERE PaymentMethod = \"American Express\" GROUP By PaymentMethod",
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING COUNT(PaymentMethod) > 5"
     })
     public void testQuery(String query) {
         System.out.println(query);
