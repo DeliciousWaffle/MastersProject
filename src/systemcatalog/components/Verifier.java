@@ -399,6 +399,41 @@ public class Verifier {
             return false;
         }
 
+
+        // make sure all having clause columns are present in select clause
+        List<String> selectClauseAggregationTypes = queryRuleGraph.getTokensAt(filteredInput, 3, 4, 5, 6, 7);
+        List<String> selectClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(filteredInput, 9);
+        List<String> havingClauseAggregationTypes = queryRuleGraph.getTokensAt(filteredInput, 46, 47, 48, 49, 50);
+        List<String> havingClauseAggregatedColumnNames = queryRuleGraph.getTokensAt(filteredInput, 52);
+
+        List<String> mappedSelectClauseAggregatedColumnNames = new ArrayList<>();
+        List<String> mappedHavingClauseAggregatedColumnNames = new ArrayList<>();
+
+        for (int i = 0; i < selectClauseAggregatedColumnNames.size(); i++) {
+            mappedSelectClauseAggregatedColumnNames.add(selectClauseAggregationTypes.get(i) + "(" +
+                    selectClauseAggregatedColumnNames.get(i) + ")");
+        }
+
+        for (int i = 0; i < havingClauseAggregatedColumnNames.size(); i++) {
+            mappedHavingClauseAggregatedColumnNames.add(havingClauseAggregationTypes.get(i) + "(" +
+                    havingClauseAggregatedColumnNames.get(i) + ")");
+        }
+
+        for (String mappedHavingClauseAggregatedColumnName : mappedHavingClauseAggregatedColumnNames) {
+            boolean foundColumn = false;
+            for (String mappedSelectClauseAggregatedColumnName : mappedSelectClauseAggregatedColumnNames) {
+                if (mappedHavingClauseAggregatedColumnName.equalsIgnoreCase(mappedSelectClauseAggregatedColumnName)) {
+                    foundColumn = true;
+                    break;
+                }
+            }
+            if (! foundColumn) {
+                errorMessage = queryError + "Did not find having clause column \"" +
+                        mappedHavingClauseAggregatedColumnName + "\" in select clause";
+                return false;
+            }
+        }
+
         return true;
     }
 

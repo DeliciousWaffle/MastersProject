@@ -214,7 +214,6 @@ public class ResultSet {
             switch (dataType) {
 
                 case NUMBER:
-                    System.out.println("TRIUE");
                     double numericValue = Double.parseDouble(value);
                     double numericResultSetValue = Double.parseDouble(resultSetValue);
                     switch (symbol) {
@@ -344,7 +343,8 @@ public class ResultSet {
      * @param firstColumnToJoin is the column to join on from this result set
      * @param secondColumnToJoin is the column to join on from the other result set
      */
-    public ResultSet innerJoin(ResultSet otherResultSet, String firstColumnToJoin, String secondColumnToJoin) {
+    public ResultSet innerJoin(ResultSet otherResultSet, String firstColumnToJoin, String joinSymbolName,
+                               String secondColumnToJoin) {
 
         // perform a cartesian product
         ResultSet cartesianProductResultSet = this.cartesianProduct(otherResultSet);
@@ -353,11 +353,14 @@ public class ResultSet {
         List<Column> joinColumns = new ArrayList<>();
         cartesianProductResultSet.columns.forEach(column -> joinColumns.add(new Column(column)));
 
-        System.out.println(cartesianProductResultSet.columns);
-
         // get the index locations of the columns to perform the join on
-        int firstColumnIndex = cartesianProductResultSet.getColumnLocation(cartesianProductResultSet.getColumnFromColumnName(firstColumnToJoin));
-        int secondColumnIndex = cartesianProductResultSet.getColumnLocation(cartesianProductResultSet.getColumnFromColumnName(secondColumnToJoin));
+        int firstColumnIndex = cartesianProductResultSet.getColumnLocation(
+                cartesianProductResultSet.getColumnFromColumnName(firstColumnToJoin));
+        int secondColumnIndex = cartesianProductResultSet.getColumnLocation(
+                        cartesianProductResultSet.getColumnFromColumnName(secondColumnToJoin));
+        Symbol joinSymbol = Symbol.convertToSymbol(joinSymbolName);
+        DataType bothColumnsDataType =
+                cartesianProductResultSet.getColumnFromColumnName(firstColumnToJoin).getDataType();
 
         // keep only rows to join on
         List<List<String>> joinRows = new ArrayList<>();
@@ -365,8 +368,67 @@ public class ResultSet {
         for(List<String> rows : cartesianProductResultSet.data) {
             String firstRowData = rows.get(firstColumnIndex);
             String secondRowData = rows.get(secondColumnIndex);
-            if (firstRowData.equalsIgnoreCase(secondRowData)) {
-                joinRows.add(rows);
+            switch (joinSymbol) {
+                case EQUAL: {
+                    if (firstRowData.equalsIgnoreCase(secondRowData)) {
+                        joinRows.add(rows);
+                    }
+                    break;
+                }
+                case NOT_EQUAL: {
+                    if (! firstRowData.equalsIgnoreCase(secondRowData)) {
+                        joinRows.add(rows);
+                    }
+                    break;
+                }
+                case LESS_THAN: {
+                    if (bothColumnsDataType == DataType.NUMBER) {
+                        if (Double.parseDouble(firstRowData) < Double.parseDouble(secondRowData)) {
+                            joinRows.add(rows);
+                        }
+                    } else {
+                        if (LocalDate.parse(firstRowData).compareTo(LocalDate.parse(secondRowData)) < 0) {
+                            joinRows.add(rows);
+                        }
+                    }
+                    break;
+                }
+                case GREATER_THAN: {
+                    if (bothColumnsDataType == DataType.NUMBER) {
+                        if (Double.parseDouble(firstRowData) > Double.parseDouble(secondRowData)) {
+                            joinRows.add(rows);
+                        }
+                    } else {
+                        if (LocalDate.parse(firstRowData).compareTo(LocalDate.parse(secondRowData)) > 0) {
+                            joinRows.add(rows);
+                        }
+                    }
+                    break;
+                }
+                case LESS_THAN_OR_EQUAL: {
+                    if (bothColumnsDataType == DataType.NUMBER) {
+                        if (Double.parseDouble(firstRowData) <= Double.parseDouble(secondRowData)) {
+                            joinRows.add(rows);
+                        }
+                    } else {
+                        if (LocalDate.parse(firstRowData).compareTo(LocalDate.parse(secondRowData)) <= 0) {
+                            joinRows.add(rows);
+                        }
+                    }
+                    break;
+                }
+                case GREATER_THAN_OR_EQUAL: {
+                    if (bothColumnsDataType == DataType.NUMBER) {
+                        if (Double.parseDouble(firstRowData) >= Double.parseDouble(secondRowData)) {
+                            joinRows.add(rows);
+                        }
+                    } else {
+                        if (LocalDate.parse(firstRowData).compareTo(LocalDate.parse(secondRowData)) >= 0) {
+                            joinRows.add(rows);
+                        }
+                    }
+                    break;
+                }
             }
         }
 
@@ -395,13 +457,17 @@ public class ResultSet {
 
         for (int i = 0; i < aggregationTypes.size(); i++) {
 
-            // append the aggregation type to the aggregated column name
+            // append the aggregation type to the aggregated column name and change its type
             String aggregationType = aggregationTypes.get(i);
             String aggregatedColumnName = columnNamesToAggregate.get(i);
             String newColumnName = aggregationType + "(" + aggregatedColumnName + ")";
 
             Column columnToAdd = new Column(getColumnFromColumnName(aggregatedColumnName));
             columnToAdd.setName(newColumnName);
+            // performing COUNT() on a char data type produces a number, not a char
+            if (columnToAdd.getDataType() == DataType.CHAR) {
+                columnToAdd.setDataType(DataType.NUMBER);
+            }
             columnsToAggregateCopy.add(columnToAdd);
         }
 
@@ -614,14 +680,10 @@ public class ResultSet {
         // convert into the correct column name
         String aggregatedColumnName = aggregationTypes.get(0) + "(" + columnNames.get(0) + ")";
 
-        System.out.println(this);
-
         // each predicate is essentially a selection
         ResultSet resultSet = selection(aggregatedColumnName, symbols.get(0), values.get(0));
 
-        System.out.println(resultSet);
-
-        // if there is more than 1 predicate, process those
+        // if there is more than 1 predicate, process those too
         for (int i = 1; i < aggregationTypes.size(); i++) {
             aggregatedColumnName = aggregationTypes.get(i) + "(" + columnNames.get(i) + ")";
             resultSet = resultSet.selection(aggregatedColumnName, symbols.get(i), values.get(i));

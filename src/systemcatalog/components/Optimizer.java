@@ -149,9 +149,6 @@ public class Optimizer {
         whereClauseSymbols.addAll(innerJoinSymbols);
         whereClauseValues.addAll(secondJoinOnColumnNames);
 
-        // add unique column names that don't appear in select clause from group by when using aggregation
-        selectClauseColumnNames = OptimizerUtilities.addUniqueColumnNames(selectClauseColumnNames, groupByColumnNames);
-
         // checking to see what will be eventually added to the tree
 
         boolean hasAggregateSelection = ! havingClauseAggregationTypes.isEmpty();
@@ -528,14 +525,20 @@ public class Optimizer {
                 columnNamesToProject.addAll(queryTree.get(operatorsLocation, RIGHT).getReferencedColumnNames());
 
                 // if current operator is a join, subtract the join criteria from the list of column names to project
+                // edge case: node above is an aggregation, make sure that we're not removing column names that
+                // are present in that node!
                 if (operator.getType() == INNER_JOIN) {
-                    String firstJoinColumnName = ((InnerJoin) operator).getFirstJoinColumnName();
-                    String secondJoinColumnName = ((InnerJoin) operator).getSecondJoinColumnName();
-                    columnNamesToProject = OptimizerUtilities
-                            .minus(columnNamesToProject, Arrays.asList(firstJoinColumnName, secondJoinColumnName));
-                    // may get an empty list, in this case, add all referenced column names from the aggregation above
-                    if (columnNamesToProject.isEmpty()) {
-                        columnNamesToProject.addAll(queryTree.get(operatorsLocation, UP).getReferencedColumnNames());
+                    if (queryTree.get(operatorsLocation, UP).getType() == AGGREGATION) {
+                        columnNamesToProject = queryTree.get(operatorsLocation, UP).getReferencedColumnNames();
+                    } else {
+                        String firstJoinColumnName = ((InnerJoin) operator).getFirstJoinColumnName();
+                        String secondJoinColumnName = ((InnerJoin) operator).getSecondJoinColumnName();
+                        columnNamesToProject = OptimizerUtilities.minus(columnNamesToProject,
+                                new ArrayList<>(Arrays.asList(firstJoinColumnName, secondJoinColumnName)));
+                        // may get an empty list, in this case, add all referenced column names from the aggregation above
+                        if (columnNamesToProject.isEmpty()) {
+                            columnNamesToProject.addAll(queryTree.get(operatorsLocation, UP).getReferencedColumnNames());
+                        }
                     }
                 }
 

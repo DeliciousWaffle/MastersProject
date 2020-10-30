@@ -58,7 +58,7 @@ public class VerifierTest {
             "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased < \"2019-10-20\"",
             "SELECT State, COUNT(State) FROM Stores GROUP BY State", // group by stuff
             "SELECT State, COUNT(State) FROM Stores GROUP BY State HAVING COUNT(State) > 1", // having clause stuff
-            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(DatePurchased) > \"2020-10-17\""
+            "SELECT PaymentMethod, COUNT(PaymentMethod), AVG(Quantity) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(Quantity) > 1",
     })
     void testValidQuery(String query) {
         System.out.println(query);
@@ -98,7 +98,8 @@ public class VerifierTest {
             "SELECT COUNT(CustomerID) FROM Customers GROUP BY CustomerID HAVING SUM(FirstName) > 1", // make sure data types of columns match in having clause
             "SELECT CustomerID FROM CustomerPurchaseDetails WHERE DatePurchased = \"2020-99-20\"", // invalid dates for where and having clause
             "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(DatePurchased) > \"Blah\"",
-            "SELECT * FROM Customers GROUP BY CustomerID" // not allowed as there are no aggregate functions being used
+            "SELECT * FROM Customers GROUP BY CustomerID", // not allowed as there are no aggregate functions being used
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING AVG(DatePurchased) > \"2020-10-17\"" // missing AVG(DatePurchased) in select clause
     })
     void testInvalidQuery(String query) {
         System.out.println(query);

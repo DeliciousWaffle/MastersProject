@@ -47,7 +47,7 @@ public class Compiler {
         Deque<Operator> startingStack =
                 OptimizerUtilities.setToDeque(queryTreeBeforePipelining.getOperatorsAndLocations(PREORDER).keySet());
         Deque<ResultSet> workingStack = new ArrayDeque<>();
-
+System.out.println(queryTreeBeforePipelining);
         while (! startingStack.isEmpty()) {
             Operator operator = startingStack.pop();
             switch (operator.getType()) {
@@ -76,11 +76,12 @@ public class Compiler {
                 case INNER_JOIN: {
                     InnerJoin innerJoin = (InnerJoin) operator;
                     String firstJoinColumnName = innerJoin.getFirstJoinColumnName();
+                    String joinSymbolName = innerJoin.getSymbol();
                     String secondJoinColumnName = innerJoin.getSecondJoinColumnName();
                     ResultSet firstResultSet = workingStack.pop();
                     ResultSet secondResultSet = workingStack.pop();
                     workingStack.push(firstResultSet.innerJoin(
-                            secondResultSet, firstJoinColumnName, secondJoinColumnName));
+                            secondResultSet, firstJoinColumnName, joinSymbolName, secondJoinColumnName));
                     break;
                 }
                 case CARTESIAN_PRODUCT: {

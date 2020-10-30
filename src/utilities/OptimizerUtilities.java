@@ -54,6 +54,7 @@ public final class OptimizerUtilities {
      * @param tables are the tables in the system
      */
     public static void prefixColumnNamesWithTableNames(List<String> columnNames, List<Table> tables) {
+
         for (int i = 0; i < columnNames.size(); i++) {
             columnNames.set(i, prefixColumnNameWithTableName(columnNames.get(i), tables));
         }

@@ -82,9 +82,6 @@ public class Parser {
                 ! queryRuleGraph.hasIllegalReservedWord(filteredInput, 2, 9, 13, 15, 18, 20, 27, 29, 36, 38, 43, 52, 60, 62) &&
                 // ensure that column names, table names, and other values are non numeric
                 queryRuleGraph.hasNonNumericAt(filteredInput, 2, 9, 13, 15, 18, 20, 27, 29, 38, 43, 52, 62) &&
-                // column names referenced in SELECT clause must be unique
-                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 2) &&
-                ! queryRuleGraph.hasDuplicatesAt(filteredInput, 9) &&
                 // table names referenced in FROM clause must be unique
                 ! queryRuleGraph.hasDuplicatesAt(filteredInput, 13, 15, 18) &&
                 // column names referenced in group by clause must be unique

@@ -49,6 +49,7 @@ public class CompilerTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "SELECT FirstName FROM Customers",
+            "SELECT FirstName, FirstName FROM Customers",
             "SELECT Customers.FirstName FROM Customers",
             "SELECT FirstName, LastName FROM Customers",
             "SELECT LastName, FirstName FROM Customers",
@@ -66,7 +67,7 @@ public class CompilerTest {
             "SELECT * FROM CustomerPurchaseDetails WHERE DatePurchased < \"2021-01-01\"",
             "SELECT * FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID",
             "SELECT COUNT(FirstName) FROM Customers",
-            "SELECT AVG(FirstName) FROM Customers", // would be invalid, but allow anyways
+            //"SELECT AVG(FirstName) FROM Customers", // would be invalid, but allow anyways
             "SELECT COUNT(CustomerID) FROM Customers",
             "SELECT SUM(CustomerID) FROM Customers",
             "SELECT COUNT(CustomerID), SUM(CustomerID) FROM Customers",
@@ -79,7 +80,18 @@ public class CompilerTest {
             "SELECT PaymentMethod, Quantity, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod, Quantity",
             "SELECT PaymentMethod, COUNT(PaymentMethod), AVG(Quantity) FROM CustomerPurchaseDetails GROUP BY PaymentMethod",
             "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails WHERE PaymentMethod = \"American Express\" GROUP By PaymentMethod",
-            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING COUNT(PaymentMethod) > 5"
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING COUNT(PaymentMethod) = 16",
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails GROUP BY PaymentMethod HAVING COUNT(PaymentMethod) > 16 AND COUNT(PaymentMethod) < 20",
+            "SELECT FirstName, LastName, ProductName FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID INNER JOIN Products ON CustomerPurchaseDetails.ProductID = Products.ProductID",
+            "SELECT FirstName, LastName, ProductName FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID INNER JOIN Products ON CustomerPurchaseDetails.ProductID = Products.ProductID WHERE FirstName = \"Genaro\" AND LastName = \"Curnutt\"",
+            "SELECT ProductName, COUNT(CustomerPurchaseDetails.ProductID) FROM Products INNER JOIN CustomerPurchaseDetails ON Products.ProductID = CustomerPurchaseDetails.ProductID GROUP BY ProductName",
+            "SELECT ProductName, COUNT(Products.ProductID) FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID = CustomerPurchaseDetails.CustomerID INNER JOIN Products ON CustomerPurchaseDetails.ProductID = Products.ProductID GROUP BY ProductName",
+            "SELECT * FROM Products INNER JOIN CustomerPurchaseDetails ON Products.ProductID = CustomerPurchaseDetails.ProductID",
+            "SELECT * FROM Customers, Products WHERE CustomerID = 1",
+            "SELECT PaymentMethod, COUNT(PaymentMethod) FROM CustomerPurchaseDetails WHERE PaymentMethod = \"Check\" GROUP BY PaymentMethod HAVING COUNT(PaymentMethod) > 16 AND COUNT(PaymentMethod) < 20",
+            // not supported
+            //"SELECT * FROM Customers, CustomerPurchaseDetails WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID AND Customers.CustomerID = CustomerPurchaseDetails.Quantity"
+            "SELECT * FROM Customers INNER JOIN CustomerPurchaseDetails ON Customers.CustomerID > CustomerPurchaseDetails.CustomerID"
     })
     public void testQuery(String query) {
         System.out.println(query);
@@ -99,35 +111,6 @@ public class CompilerTest {
             System.out.println(v.getErrorMessage());
             fail();
         }
-    }
-
-    @Test
-    public void test() {
-        String query = "SELECT FirstName FROM Products, Customers";
-        System.out.println(query);
-        String[] filtered = Utilities.filterInput(query);
-        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
-        ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
-        try {
-            FileWriter fileWriter = new FileWriter("Temp.txt");
-            fileWriter.append(resultSet.toString());
-            fileWriter.flush();
-            fileWriter.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void test2() {
-        String query = "SELECT * FROM CustomerPurchaseDetails";
-        System.out.println(query);
-        String[] filtered = Utilities.filterInput(query);
-        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
-        ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
-
-        resultSet.orderByAsc(new ArrayList<>(Arrays.asList("CustomerPurchaseDetails.PaymentMethod", "CustomerPurchaseDetails.Quantity")));
-        System.out.println(resultSet);
     }
 
     /*@Test
