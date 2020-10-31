@@ -34,7 +34,13 @@ public class TableData {
     /**
      * @return columnSizes a list of all the column sizes
      */
-    public List<Integer> getPaddingAmountList() { return paddingAmountList; }
+    public List<Integer> getPaddingAmountList() {
+        return paddingAmountList;
+    }
+
+    public void setPaddingAmountList(List<Integer> paddingAmountList) {
+        this.paddingAmountList = paddingAmountList;
+    }
 
     public void setData(List<List<String>> tableData) {
         this.tableData = tableData;

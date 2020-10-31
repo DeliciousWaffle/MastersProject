@@ -273,12 +273,25 @@ public class User {
         tablePrivileges.revokePrivileges(toRevoke.getPrivileges());
         tablePrivileges.removeUpdateColumns(toRevoke.getUpdateColumns());
         tablePrivileges.removeReferencesColumns(toRevoke.getReferenceColumns());
+        // will need to add back the update and references privileges if columns remain
+        if (! tablePrivileges.getUpdateColumns().isEmpty()) {
+            tablePrivileges.grantPrivilege(Privilege.UPDATE);
+        }
+        if (! tablePrivileges.getReferenceColumns().isEmpty()) {
+            tablePrivileges.grantPrivilege(Privilege.REFERENCES);
+        }
 
         TablePrivileges grantedTablePrivileges = getGrantedTablePrivileges(toRevoke.getTableName());
         assert grantedTablePrivileges != null;
         grantedTablePrivileges.revokePrivileges(toRevoke.getPrivileges());
         grantedTablePrivileges.removeUpdateColumns(toRevoke.getUpdateColumns());
         grantedTablePrivileges.removeReferencesColumns(toRevoke.getReferenceColumns());
+        if (! tablePrivileges.getUpdateColumns().isEmpty()) {
+            tablePrivileges.grantPrivilege(Privilege.UPDATE);
+        }
+        if (! tablePrivileges.getReferenceColumns().isEmpty()) {
+            tablePrivileges.grantPrivilege(Privilege.REFERENCES);
+        }
     }
 
     /**

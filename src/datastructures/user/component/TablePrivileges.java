@@ -217,13 +217,6 @@ public class TablePrivileges {
             for (int i = 0; i < privileges.size(); i++) {
                 Privilege current = privileges.get(i);
                 if (current == privilegeToRemove) {
-                    // reset respective lists if update or references encountered
-                    if (current == Privilege.UPDATE) {
-                        updateColumns = new ArrayList<>();
-                    }
-                    if (current == Privilege.REFERENCES) {
-                        referenceColumns = new ArrayList<>();
-                    }
                     privileges.remove(i);
                     break;
                 }

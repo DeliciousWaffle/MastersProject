@@ -47,7 +47,7 @@ public class Compiler {
         Deque<Operator> startingStack =
                 OptimizerUtilities.setToDeque(queryTreeBeforePipelining.getOperatorsAndLocations(PREORDER).keySet());
         Deque<ResultSet> workingStack = new ArrayDeque<>();
-System.out.println(queryTreeBeforePipelining);
+
         while (! startingStack.isEmpty()) {
             Operator operator = startingStack.pop();
             switch (operator.getType()) {
@@ -170,7 +170,7 @@ System.out.println(queryTreeBeforePipelining);
         String tableName = filteredInput[2];
         List<Column> columns = new ArrayList<>();
 
-        for (int i = 4; i < filteredInput.length; i++) {
+        for (int i = 4; i < filteredInput.length - 4; i++) {
 
             String columnName = filteredInput[i];
             DataType dataType = DataType.convertToDataType(filteredInput[i + 1]);
@@ -179,7 +179,7 @@ System.out.println(queryTreeBeforePipelining);
             boolean isDate = dataType == DataType.DATE;
 
             if (isNumeric) {
-                int size = Integer.parseInt(filteredInput[i + 2]);
+                int size = Integer.parseInt(filteredInput[i + 3]);
                 int decimalSize = 0;
                 boolean hasDecimalSize = filteredInput[i + 4].equalsIgnoreCase(",") && Utilities.isNumeric(filteredInput[i + 5]);
                 if (hasDecimalSize) {
@@ -190,7 +190,7 @@ System.out.println(queryTreeBeforePipelining);
             }
 
             if (isChar) {
-                int size = Integer.parseInt(filteredInput[i + 2]);
+                int size = Integer.parseInt(filteredInput[i + 3]);
                 Column column = new Column(columnName, DataType.CHAR, size, 0);
                 columns.add(column);
             }
@@ -252,21 +252,58 @@ System.out.println(queryTreeBeforePipelining);
             String dataTypeName = alterTableRuleGraph.getTokensAt(filteredInput, 7, 8, 9).get(0);
             String sizeName = alterTableRuleGraph.getTokensAt(filteredInput, 11).get(0);
 
-            DataType dataType = DataType.convertToDataType(dataTypeName);
-            int size = Integer.parseInt(sizeName);
+            DataType newDataType = DataType.convertToDataType(dataTypeName);
+            int newSize = Integer.parseInt(sizeName);
 
-            outerLoop:
-            for (Table table : tables) {
-                if (table.getTableName().equalsIgnoreCase(tableName)) {
-                    for (Column column : table.getColumns()) {
-                        if (column.getColumnName().equalsIgnoreCase(columnName)) {
-                            column.setSize(size);
-                            column.setDataType(dataType);
-                            break outerLoop;
+            Table table = Utilities.getReferencedTable(tableName, tables);
+            assert table != null;
+            List<Column> columns = table.getColumns();
+
+            // used for formatting purposes if the size of the column changes
+            List<Integer> paddingAmountList = new ArrayList<>();
+
+            for (int i = 0; i < columns.size(); i++) {
+
+                Column column = columns.get(i);
+                int originalSize = column.size();
+
+                // found the column to change
+                if (column.getColumnName().equalsIgnoreCase(columnName)) {
+
+                    column.setSize(newSize);
+                    column.setDataType(newDataType);
+
+                    // check if the data located at the column needs shrinking
+                    // eg. change char(4) to char(2) would change "Blah" to "Bl"
+                    boolean dataNeedsShrinking = newSize < originalSize;
+
+                    if (dataNeedsShrinking) {
+                        List<List<String>> data = table.getTableData().getData();
+                        for (List<String> row : data) {
+                            if (row.get(i).length() > newSize) {
+                                row.set(i, row.get(i).substring(0, newSize));
+                            }
                         }
                     }
                 }
+
+                // if the size changes, save the new padding amount and adjust for later
+                int columnNameLength = column.getColumnName().length();
+                int maxNumSpaces = column.size();
+
+                // if this column has decimal spaces account for those and the "." too
+                if (column.getDecimalSize() > 0) {
+                    maxNumSpaces += (column.getDecimalSize() + 1);
+                }
+
+                if(columnNameLength > maxNumSpaces) {
+                    paddingAmountList.add(columnNameLength);
+                } else {
+                    paddingAmountList.add(column.size());
+                }
             }
+
+            table.getTableData().setPaddingAmountList(paddingAmountList);
 
         } else if (alterType.equalsIgnoreCase("add")) {
 
@@ -370,6 +407,15 @@ System.out.println(queryTreeBeforePipelining);
                 // if there are less values than what's stored in the table, add nulls
                 while (valueNames.size() < table.getNumCols()) {
                     valueNames.add("null");
+                }
+                List<Column> columns = table.getColumns();
+                // if the size of the value to be inserted is greater than the column size, shrink
+                for (int i = 0; i < columns.size(); i++) {
+                    int valueToAddSize = valueNames.get(i).length();
+                    int columnSize = columns.get(i).size();
+                    if (valueToAddSize > columnSize) {
+                        valueNames.set(i, valueNames.get(i).substring(0, columnSize));
+                    }
                 }
                 // add the new row
                 table.addRow(valueNames);
@@ -686,15 +732,14 @@ System.out.println(queryTreeBeforePipelining);
         RuleGraph grantRuleGraph = RuleGraphTypes.getGrantRuleGraph();
 
         // getting what to grant
-        List<String> privilegesInput = grantRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 8);
+        List<String> privilegesInput = grantRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5, 6, 7);
         List<String> updateColumnsInput = grantRuleGraph.getTokensAt(filteredInput, 12);
         List<String> referenceColumnsInput = grantRuleGraph.getTokensAt(filteredInput, 16);
         String tableInput = grantRuleGraph.getTokensAt(filteredInput, 20).get(0);
         List<String> userNamesInput = grantRuleGraph.getTokensAt(filteredInput, 22);
 
         // rule graph would only allow for one element if granting all privileges
-        boolean isGrantingAllPrivileges =
-                Privilege.convertToPrivilege(privilegesInput.get(0)) == Privilege.ALL_PRIVILEGES;
+        boolean isGrantingAllPrivileges = ! grantRuleGraph.getTokensAt(filteredInput, 8).isEmpty();
         // check if using grant option
         boolean hasWithGrantOption = ! grantRuleGraph.getTokensAt(filteredInput, 25).isEmpty();
 
@@ -728,19 +773,15 @@ System.out.println(queryTreeBeforePipelining);
                         .map(Privilege::convertToPrivilege)
                         .collect(Collectors.toList());
 
-                TablePrivileges tablePrivileges = new TablePrivileges();
-                tablePrivileges.grantPrivileges(privileges);
-                tablePrivileges.addUpdateColumns(updateColumnsInput);
-                tablePrivileges.addReferencesColumns(referenceColumnsInput);
+                TablePrivileges tablePrivileges =
+                        new TablePrivileges(tableInput, privileges, updateColumnsInput, referenceColumnsInput);
 
                 referencedUser.addTablePrivileges(tablePrivileges);
 
                 if (hasWithGrantOption) {
 
-                    TablePrivileges grantedTablePrivileges = new TablePrivileges();
-                    grantedTablePrivileges.grantPrivileges(privileges);
-                    grantedTablePrivileges.addUpdateColumns(updateColumnsInput);
-                    grantedTablePrivileges.addReferencesColumns(referenceColumnsInput);
+                    TablePrivileges grantedTablePrivileges =
+                            new TablePrivileges(tableInput, privileges, updateColumnsInput, referenceColumnsInput);
 
                     referencedUser.addGrantedTablePrivileges(grantedTablePrivileges);
                 }
@@ -758,14 +799,13 @@ System.out.println(queryTreeBeforePipelining);
         RuleGraph revokeRuleGraph = RuleGraphTypes.getRevokeRuleGraph();
 
         // getting what to revoke
-        List<String> privilegesInput = revokeRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5, 6, 7, 8);
+        List<String> privilegesInput = revokeRuleGraph.getTokensAt(filteredInput, 1, 2, 3, 4, 5, 6, 7);
         List<String> updateColumnsInput = revokeRuleGraph.getTokensAt(filteredInput, 12);
         List<String> referenceColumnsInput = revokeRuleGraph.getTokensAt(filteredInput, 16);
         String tableInput = revokeRuleGraph.getTokensAt(filteredInput, 20).get(0);
         List<String> usernamesInput = revokeRuleGraph.getTokensAt(filteredInput, 22);
 
-        boolean isRevokingAllPrivileges =
-                Privilege.convertToPrivilege(privilegesInput.get(0)) == Privilege.ALL_PRIVILEGES;
+        boolean isRevokingAllPrivileges = ! revokeRuleGraph.getTokensAt(filteredInput, 8).isEmpty();
 
         // map the data
         List<User> referencedUsers = Utilities.getReferencedUsers(usernamesInput, users);
@@ -784,10 +824,8 @@ System.out.println(queryTreeBeforePipelining);
                         .map(Privilege::convertToPrivilege)
                         .collect(Collectors.toList());
 
-                TablePrivileges tablePrivileges = new TablePrivileges();
-                tablePrivileges.grantPrivileges(privileges);
-                tablePrivileges.addUpdateColumns(updateColumnsInput);
-                tablePrivileges.addReferencesColumns(referenceColumnsInput);
+                TablePrivileges tablePrivileges =
+                        new TablePrivileges(tableInput, privileges, updateColumnsInput, referenceColumnsInput);
 
                 referencedUser.revokeTablePrivilegesAndGrantedTablePrivileges(tablePrivileges);
             }

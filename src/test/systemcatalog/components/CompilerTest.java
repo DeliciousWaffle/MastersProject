@@ -12,6 +12,8 @@ import files.io.Serializer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Optimizer;
 import systemcatalog.components.Compiler;
@@ -23,6 +25,7 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -35,14 +38,14 @@ public class CompilerTest {
 
     private static Optimizer optimizer;
     private static Compiler compiler;
-    private static List<Table> tables;
+    private static List<Table> tablesForQuery;
     private static List<User> users;
 
     @BeforeAll
     public static void init() {
         optimizer = new Optimizer();
         compiler = new Compiler();
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tablesForQuery = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
     }
 
@@ -96,8 +99,8 @@ public class CompilerTest {
     public void testQuery(String query) {
         System.out.println(query);
         String[] filtered = Utilities.filterInput(query);
-        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
-        ResultSet resultSet = compiler.executeQuery(queryTrees, tables);
+        List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tablesForQuery);
+        ResultSet resultSet = compiler.executeQuery(queryTrees, tablesForQuery);
         System.out.println(resultSet);
 
         Parser p = new Parser();
@@ -107,323 +110,248 @@ public class CompilerTest {
         }
 
         Verifier v = new Verifier();
-        if (! v.isValid(InputType.QUERY, filtered, tables, users)) {
+        if (! v.isValid(InputType.QUERY, filtered, tablesForQuery, users)) {
             System.out.println(v.getErrorMessage());
             fail();
         }
     }
 
-    /*@Test
+    @Test
     public void testCreateTable() {
-        System.out.println("testCreateTable() -----------------------------------------------------------------------");
-
-        RuleGraph ruleGraph = new RuleGraphTypes().getCreateTableRuleGraph();
-
-        // single column
-        String input = "create table tab1(col1 number(5))";
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        String input = "CREATE TABLE Blah1(Col1 NUMBER(2, 1), Col2 CHAR(3), Col3 DATE, Col4 CHAR(10))";
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<Table> tables = new ArrayList<>();
-        compiler.createTable(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // multiple columns
-        input = "create table tab1(col1 number(5), col2 char(10), col3 number(1))";
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.CREATE_TABLE, tokens, tables, users);
+        input = "CREATE TABLE Blah2(Col1 NUMBER(2))";
         System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>();
-        compiler.createTable(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        assertTrue(true);
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.CREATE_TABLE, tokens, tables, users);
+        input = "CREATE TABLE Blah3(Col1 NUMBER(2, 5), Col2 NUMBER(3, 5), Col3 DATE, Col4 DATE, Col5 CHAR(10), Col6 NUMBER(3), Col7 DATE)";
+        System.out.println(input);
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.CREATE_TABLE, tokens, tables, users);
+        tables.forEach(System.out::println);
     }
 
     @Test
     public void testDropTable() {
-        System.out.println("testDropTable() -------------------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getDropTableRuleGraph();
-
-        String input = "drop table tab1";
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        String input = "DROP TABLE Customers";
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<Table> tables = new ArrayList<>();
-        tables.add(getTable());
-        compiler.dropTable(tokens, ruleGraph, tables);
-        System.out.println(tables.isEmpty());
-
-
-        assertTrue(true);
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.DROP_TABLE, tokens, tables, users);
+        tables.forEach(System.out::println);
     }
 
-    @Test
-    public void testAlterTable() {
-        System.out.println("testAlterTable() ------------------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getAlterTableRuleGraph();
-
-        // TODO: results in strange formatting, fix
-        // modify column
-        String input = "alter table tab1 modify col1 char(10)";
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "ALTER TABLE Customers MODIFY CustomerID NUMBER(100)",
+            "ALTER TABLE Customers MODIFY CustomerID CHAR(5)",
+            "ALTER TABLE Customers MODIFY FirstName CHAR(100)",
+            "ALTER TABLE Customers MODIFY FirstName CHAR(1)",
+            "ALTER TABLE Customers ADD Blah NUMBER(5)",
+            "ALTER TABLE Customers ADD FOREIGN KEY EmployeePurchaseDetails.EmployeeID",
+            "ALTER TABLE Customers ADD PRIMARY KEY FirstName",
+            "ALTER TABLE Customers DROP LastName"
+    })
+    public void testAlterTable(String input) {
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<Table> tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.alterTable(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // add column
-        input = "alter table tab1 add col99 number(10)";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.alterTable(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // add primary/foreign keys
-        input = "alter table tab1 add primary key col1";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.alterTable(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // drop column
-        input = "alter table tab1 drop col1";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.alterTable(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // drop primary/foreign keys
-        input = "alter table tab1 drop primary key col1";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.alterTable(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        assertTrue(true);
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.ALTER_TABLE, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(System.out::println);
     }
 
     @Test
     public void testInsert() {
-        System.out.println("testInsert() ----------------------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getInsertRuleGraph();
 
-        // regular insert
-        String input = "insert into tab1 values(1, b, c)";
+        String input = "INSERT INTO Customers VALUES(-1, \"Blah\", \"Blah\")";
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<Table> tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.insert(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.INSERT, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(System.out::println);
 
-        // insert with less columns, addition of null values
-        input = "insert into tab1 values(1)";
+        input = "INSERT INTO Customers VALUES(-2)";
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.insert(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.INSERT, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(System.out::println);
 
-        assertTrue(true);
+        input = "INSERT INTO Customers VALUES(-3, \"A Very Long Name That Should Be Cut Off\")";
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        System.out.println(input);
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.INSERT, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(System.out::println);
     }
 
     @Test
     public void testDelete() {
-        System.out.println("testDelete() ----------------------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getDeleteRuleGraph();
 
-        // =
-        String input = "delete from tab1 where col2 = john";
+        String input = "DELETE FROM Customers WHERE CustomerID = 1";
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<Table> tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.delete(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.DELETE, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(System.out::println);
 
-        // !=
-        input = "delete from tab1 where col2 != john";
+        input = "DELETE FROM CustomerPurchaseDetails WHERE PaymentMethod = \"Check\"";
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.delete(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // >
-        input = "delete from tab1 where col1 > 1";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.delete(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // <
-        input = "delete from tab1 where col1 < 5";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.delete(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        assertTrue(true);
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.DELETE, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("CustomerPurchaseDetails"))
+                .forEach(System.out::println);
     }
 
     @Test
     public void testUpdate() {
-        System.out.println("testUpdate() ----------------------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getUpdateRuleGraph();
 
-        // whole column
-        String input = "update tab1 set col1 = zzz";
+        String input = "UPDATE Customers SET FirstName = \"Blah\" WHERE CustomerID = 1";
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<Table> tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.update(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.UPDATE, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(System.out::println);
 
-        // single value
-        input = "update tab1 set col1 = zzz where col3 = mexico";
+        input = "UPDATE CustomerPurchaseDetails SET PaymentMethod = \"Blah\" WHERE PaymentMethod = \"Check\"";
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.update(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        assertTrue(true);
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.UPDATE, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("CustomerPurchaseDetails"))
+                .forEach(System.out::println);
     }
 
-    @Test
-    public void testBuildFileStructure() {
-        System.out.println("testBuildFileStructure() ----------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getBuildFileStructureRuleGraph();
-
-        // build hash, secondary, and clustered b trees
-        String input = "build hash table on col1 in tab1";
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "BUILD HASH TABLE ON CustomerID IN Customers",
+            "BUILD SECONDARY BTREE ON CustomerID IN Customers",
+            "BUILD CLUSTERED BTREE ON CustomerID IN Customers",
+            "BUILD CLUSTERED FILE ON Customers AND CustomerPurchaseDetails"
+    })
+    public void testBuildFileStructure(String input) {
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<Table> tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.buildFileStructure(tokens, ruleGraph, tables);
-        for(Column column : tables.get(0).getColumns()) {
-            System.out.println(column + " " + column.getFileStructure());
-        }
-
-        // build cluster file - no file structures prev built
-        input = "build clustered file on tab1 and tab2";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.buildFileStructure(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        // build cluster file - file structures prev built
-        input = "build hash table on col1 in tab1";
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.buildFileStructure(tokens, ruleGraph, tables);
-        for(Column column : tables.get(0).getColumns()) {
-            System.out.println(column + " " + column.getFileStructure());
-        }
-        input = "build clustered file on tab1 and tab2";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        compiler.buildFileStructure(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-        for(Column column : tables.get(0).getColumns()) {
-            System.out.println(column + " " + column.getFileStructure());
-        }
-
-        assertTrue(true);
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.BUILD_FILE_STRUCTURE, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(table -> {
+                    System.out.println(table.getTableName() + " clustered with " + table.getClusteredWith());
+                    table.getColumns()
+                        .forEach(col -> System.out.println(col + " " + col.getFileStructure()));
+                });
     }
 
-    @Test
-    public void testRemoveFileStructure() {
-        System.out.println("testRemoveFileStructure() ---------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getRemoveFileStructureRuleGraph();
-
-        // remove hash, secondary, and clustered b trees
-        String input = "remove file structure on col1 in tab1";
-        System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        System.out.println(ruleGraph.isSyntacticallyCorrect(tokens));
-        List<Table> tables = new ArrayList<>(Arrays.asList(getTable()));
-        tables.get(0).getColumns().get(0).setFileStructure(FileStructure.CLUSTERED_B_TREE);
-        for(Column column : tables.get(0).getColumns()) {
-            System.out.println(column + " " + column.getFileStructure());
-        }
-        compiler.removeFileStructure(tokens, ruleGraph, tables);
-        for(Column column : tables.get(0).getColumns()) {
-            System.out.println(column + " " + column.getFileStructure());
-        }
-
-        // remove cluster file
-        input = "remove clustered file on tab1 and tab2";
-        System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        tables.get(0).setClusteredWith("tab2");
-        System.out.println(tables.get(0));
-        compiler.removeFileStructure(tokens, ruleGraph, tables);
-        System.out.println(tables.get(0));
-
-        assertTrue(true);
+    @ParameterizedTest
+    @CsvSource(value = {
+            "BUILD HASH TABLE ON CustomerID IN Customers,REMOVE FILE STRUCTURE ON CustomerID IN Customers",
+            "BUILD SECONDARY BTREE ON CustomerID IN Customers,REMOVE FILE STRUCTURE ON CustomerID IN Customers",
+            "BUILD CLUSTERED BTREE ON CustomerID IN Customers,REMOVE FILE STRUCTURE ON CustomerID IN Customers",
+            "BUILD CLUSTERED FILE ON Customers AND CustomerPurchaseDetails,REMOVE CLUSTERED FILE ON Customers AND CustomerPurchaseDetails"
+    })
+    public void testRemoveFileStructure(String buildFileStructure, String removeFileStructure) {
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        System.out.println(removeFileStructure);
+        String[] tokens = Utilities.filterInput(buildFileStructure);
+        compiler.executeDML(InputType.BUILD_FILE_STRUCTURE, tokens, tables, users);
+        tokens = Utilities.filterInput(removeFileStructure);
+        compiler.executeDML(InputType.REMOVE_FILE_STRUCTURE, tokens, tables, users);
+        tables.stream()
+                .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
+                .forEach(table -> {
+                    System.out.println(table.getTableName() + " clustered with " + table.getClusteredWith());
+                    table.getColumns()
+                            .forEach(col -> System.out.println(col + " " + col.getFileStructure()));
+                });
     }
 
     @Test
     public void testGrant() {
-        System.out.println("testGrant() -----------------------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getGrantRuleGraph();
-
-        // grant normal
-        String input = "grant insert, select on tab1 to fred";
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        String input = "GRANT ALTER, DELETE, INDEX ON Customers TO Jango";
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<User> users = new ArrayList<>(Arrays.asList(getUser()));
-        List<Table> tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.grant(tokens, ruleGraph, users, tables);
-        System.out.println(users.get(0));
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.GRANT, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
 
-        // grant normal with grant option
-        input = "grant insert, select on tab1 to fred with grant option";
+        input = "GRANT ALTER, UPDATE(CustomerID, FirstName, LastName) ON Customers TO Jango";
         System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        users = new ArrayList<>(Arrays.asList(getUser()));
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.grant(tokens, ruleGraph, users, tables);
-        System.out.println(users.get(0));
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.GRANT, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
 
-        // grant all privileges
-        input = "grant all privileges on tab1 to fred";
+        input = "GRANT SELECT, UPDATE(CustomerID, FirstName, LastName) ON Customers TO Jango WITH GRANT OPTION";
         System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        users = new ArrayList<>(Arrays.asList(getUser()));
-        tables = new ArrayList<>(Arrays.asList(getTable()));
-        compiler.grant(tokens, ruleGraph, users, tables);
-        System.out.println(users.get(0));
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.GRANT, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
 
-        assertTrue(true);
+        input = "GRANT ALL PRIVILEGES ON Customers TO Jango";
+        System.out.println(input);
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.GRANT, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
     }
-*//*
+
     @Test
     public void testRevoke() {
-        System.out.println("testRevoke() ----------------------------------------------------------------------------");
-        RuleGraph ruleGraph = new RuleGraphTypes().getRevokeRuleGraph();
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        String input = "GRANT ALL PRIVILEGES ON Customers TO Jango WITH GRANT OPTION";
+        String[] tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.GRANT, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
 
-        // revoke normal
-        String input = "revoke alter, references(col2) on tab1 from fred";
+        input = "REVOKE ALTER, DELETE, INDEX ON Customers FROM Jango";
         System.out.println(input);
-        String[] tokens = new Parser().formatAndTokenizeInput(input);
-        List<User> users = new ArrayList<>(Arrays.asList(getUser()));
-        compiler.revoke(tokens, ruleGraph, users);
-        System.out.println(users.get(0));
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.REVOKE, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
 
-        // revoke all privileges
-        input = "revoke all privileges on tab1 from fred";
+        input = "REVOKE SELECT, REFERENCES(CustomerID, FirstName) ON Customers FROM Jango";
         System.out.println(input);
-        tokens = new Parser().formatAndTokenizeInput(input);
-        users = new ArrayList<>(Arrays.asList(getUser()));
-        compiler.revoke(tokens, ruleGraph, users);
-        System.out.println(users.get(0));
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.REVOKE, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
 
-        assertTrue(true);
-    }*/
+        input = "REVOKE ALL PRIVILEGES ON Customers FROM Jango";
+        System.out.println(input);
+        tokens = Utilities.filterInput(input);
+        compiler.executeDML(InputType.REVOKE, tokens, tables, users);
+        users.stream()
+                .filter(user -> user.getUsername().equalsIgnoreCase("Jango"))
+                .forEach(System.out::println);
+    }
 }

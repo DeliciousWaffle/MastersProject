@@ -181,7 +181,7 @@ public class VerifierTest {
             "ALTER TABLE Customers MODIFY CustomerID NUMBER(100)", // valid number change
             "ALTER TABLE Customers MODIFY CustomerID CHAR(5)", // valid number change
             "ALTER TABLE Customers ADD Blah NUMBER(5)",
-            "ALTER TABLE Customers ADD FOREIGN KEY EmployeePurchaseDetails.EmployeeID", // TODO prefixed column name?
+            "ALTER TABLE Customers ADD FOREIGN KEY EmployeePurchaseDetails.EmployeeID",
             "ALTER TABLE Customers ADD PRIMARY KEY FirstName",
     })
     void validAlterTable(String createTable) {
