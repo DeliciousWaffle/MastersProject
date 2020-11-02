@@ -85,7 +85,7 @@ public class TablePane {
         }
 
         viewTableDataButton.setOnAction(e -> {
-            new TableDataWindow(tableName, columnNames, table.getTableData());
+            new TableDataWindow(tableName, columnNames, table.getTableData().getData());
         });
 
         // adding everything to the main pane

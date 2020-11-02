@@ -21,6 +21,10 @@ public class Relation extends Operator {
         return tableName;
     }
 
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
+    }
+
     @Override
     public Type getType() {
         return Type.RELATION;

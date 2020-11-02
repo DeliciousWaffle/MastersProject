@@ -1,11 +1,18 @@
 package gui.screens.terminal;
 
+import datastructures.querytree.QueryTree;
+import datastructures.relation.resultset.ResultSet;
 import datastructures.rulegraph.RuleGraph;
+import enums.InputType;
 import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
 import gui.screens.Screen;
+import gui.screens.tables.components.tabledatawindow.TableDataWindow;
 import gui.screens.terminal.popupwindows.QueryTreeWindow;
+import gui.screens.terminal.popupwindows.RelationalAlgebraWindow;
+import gui.screens.terminal.popupwindows.ResultSetWindow;
+import gui.screens.terminal.popupwindows.querytreegui.popupwindows.QueryTreeOptimizationHeuristicWindows;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -21,6 +28,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import systemcatalog.SystemCatalog;
 
+import java.util.List;
+
 public class TerminalScreen extends Screen {
 
     private Scene terminalScreen;
@@ -31,6 +40,8 @@ public class TerminalScreen extends Screen {
             recommendedFileStructuresButton;
     private VBox rightColumnButtonLayout;
     private BorderPane terminalScreenLayout;
+
+    private static final int ICON_WIDTH = 120, ICON_HEIGHT = 66;
 
     public TerminalScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
@@ -94,9 +105,8 @@ public class TerminalScreen extends Screen {
         this.executeButton = new Button();
 
         ImageView imageView = new ImageView(IO.readAsset(FileType.Asset.PLAY_IMAGE));
-
-        imageView.setFitWidth(125);
-        imageView.setFitHeight(100);
+        imageView.setFitWidth(ICON_WIDTH);
+        imageView.setFitHeight(ICON_HEIGHT);
         imageView.setSmooth(true);
 
         executeButton.setGraphic(imageView);
@@ -113,6 +123,7 @@ public class TerminalScreen extends Screen {
             } else {
                 input = input.split(";")[0];
                 systemCatalog.executeInput(input);
+                output.setText(systemCatalog.getExecutionMessage());
             }
         });
 
@@ -120,13 +131,60 @@ public class TerminalScreen extends Screen {
         tooltip.setFont(new Font(20));
         executeButton.setTooltip(tooltip);
 
+        // clear input/output button ...................................................................................
+        Button clearButton = new Button();
+
+        imageView = new ImageView(IO.readAsset(FileType.Asset.ERASER_IMAGE));
+        imageView.setFitWidth(ICON_WIDTH);
+        imageView.setFitHeight(ICON_HEIGHT);
+        imageView.setSmooth(true);
+
+        clearButton.setGraphic(imageView);
+        clearButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        clearButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
+        clearButton.setOnAction(e -> {
+            terminal.clear();
+            output.clear();
+            systemCatalog.clear();
+        });
+
+        tooltip = new Tooltip("Clear Input and Output");
+        tooltip.setFont(new Font(20));
+        clearButton.setTooltip(tooltip);
+
+        // view query result set .......................................................................................
+
+        Button resultSetButton = new Button();
+
+        imageView = new ImageView(IO.readAsset(FileType.Asset.RESULT_SET_IMAGE));
+        imageView.setFitWidth(ICON_WIDTH);
+        imageView.setFitHeight(ICON_HEIGHT);
+        imageView.setSmooth(true);
+
+        resultSetButton.setGraphic(imageView);
+        resultSetButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        resultSetButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
+        resultSetButton.setOnAction(e -> {
+            boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
+            boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
+            if (wasSuccessfullyExecuted && executedQuery) {
+                ResultSet resultSet = systemCatalog.getResultSet();
+                new ResultSetWindow(resultSet);
+            }
+        });
+
+        tooltip = new Tooltip("View Result Set");
+        tooltip.setFont(new Font(20));
+        resultSetButton.setTooltip(tooltip);
+
         // relational algebra button ...................................................................................
         this.relationalAlgebraButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.X_IMAGE));
-
-        imageView.setFitWidth(125);
-        imageView.setFitHeight(100);
+        imageView.setFitWidth(ICON_WIDTH);
+        imageView.setFitHeight(ICON_HEIGHT);
         imageView.setSmooth(true);
 
         relationalAlgebraButton.setGraphic(imageView);
@@ -135,7 +193,13 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the relational algebra
         relationalAlgebraButton.setOnAction(e -> {
-
+            boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
+            boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
+            if (wasSuccessfullyExecuted && executedQuery) {
+                String naiveRelationalAlgebra = systemCatalog.getNaiveRelationalAlgebra();
+                String optimizedRelationalAlgebra = systemCatalog.getOptimizedRelationalAlgebra();
+                new RelationalAlgebraWindow(naiveRelationalAlgebra, optimizedRelationalAlgebra);
+            }
         });
 
         tooltip = new Tooltip("View Corresponding Relational Algebra");
@@ -146,8 +210,8 @@ public class TerminalScreen extends Screen {
         this.queryTreeStatesButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.TREE_IMAGE));
-        imageView.setFitWidth(125);
-        imageView.setFitHeight(100);
+        imageView.setFitWidth(ICON_WIDTH);
+        imageView.setFitHeight(ICON_HEIGHT);
         imageView.setSmooth(true);
 
         queryTreeStatesButton.setGraphic(imageView);
@@ -156,7 +220,12 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the query tree states
         queryTreeStatesButton.setOnAction(e -> {
-
+            boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
+            boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
+            if (wasSuccessfullyExecuted && executedQuery) {
+                List<QueryTree> queryTreeStates = systemCatalog.getQueryTreeStates();
+                new QueryTreeWindow(queryTreeStates);
+            }
         });
 
         tooltip = new Tooltip("View Query Tree States");
@@ -167,8 +236,8 @@ public class TerminalScreen extends Screen {
         this.queryCostButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.DOLLAR_SIGN_IMAGE));
-        imageView.setFitWidth(125);
-        imageView.setFitHeight(100);
+        imageView.setFitWidth(ICON_WIDTH);
+        imageView.setFitHeight(ICON_HEIGHT);
         imageView.setSmooth(true);
 
         queryCostButton.setGraphic(imageView);
@@ -188,8 +257,8 @@ public class TerminalScreen extends Screen {
         this.recommendedFileStructuresButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.FOLDER_IMAGE));
-        imageView.setFitWidth(125);
-        imageView.setFitHeight(100);
+        imageView.setFitWidth(ICON_WIDTH);
+        imageView.setFitHeight(ICON_HEIGHT);
         imageView.setSmooth(true);
 
         recommendedFileStructuresButton.setGraphic(imageView);
@@ -205,10 +274,12 @@ public class TerminalScreen extends Screen {
         tooltip.setFont(new Font(20));
         recommendedFileStructuresButton.setTooltip(tooltip);
 
-        rightColumnButtonLayout.getChildren().addAll(executeButton, relationalAlgebraButton, queryTreeStatesButton,
-                queryCostButton, recommendedFileStructuresButton);
+        rightColumnButtonLayout.getChildren().addAll(executeButton, clearButton, resultSetButton,
+                relationalAlgebraButton, queryTreeStatesButton, queryCostButton, recommendedFileStructuresButton);
 
         VBox.setMargin(executeButton, new Insets(10, 10, 0, 10));
+        VBox.setMargin(clearButton, new Insets(0, 10, 0, 10));
+        VBox.setMargin(resultSetButton, new Insets(0, 10, 0, 10));
         VBox.setMargin(relationalAlgebraButton, new Insets(0, 10, 0, 10));
         VBox.setMargin(queryTreeStatesButton, new Insets(0, 10, 0, 10));
         VBox.setMargin(queryCostButton, new Insets(0, 10, 0, 10));
@@ -239,8 +310,10 @@ public class TerminalScreen extends Screen {
 
         terminalScreen.heightProperty().addListener((observable, oldValue, newValue) -> {
             double newHeight = (double) newValue;
-            terminal.setMaxHeight(newHeight - 400);
-            output.setMaxHeight(newHeight - 500);
+            terminal.setMinHeight(300);
+            output.setMinHeight(160);
+            terminal.setPrefHeight(newHeight - 420 + 40);
+            output.setPrefHeight(newHeight - 560 + 40);
         });
     }
 

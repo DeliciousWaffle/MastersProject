@@ -119,7 +119,7 @@ public class SystemCatalog {
      */
     public void executeInput(String input) {
 
-        reset();
+        clear();
 
         // there may be an unknown error that I didn't account for, try catch prevents the app from crashing
         try {
@@ -159,7 +159,8 @@ public class SystemCatalog {
                 naiveRelationalAlgebra = optimizer.getNaiveRelationAlgebra(queryTreeStates);
                 optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra(queryTreeStates);
                 recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates);
-                costAnalysis = optimizer.getCostAnalysis(queryTreeStates);
+                // TODO
+                //costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables).getFirst().toString();
             }
 
             // at this point, the query/DML statement was successfully executed
@@ -333,7 +334,7 @@ public class SystemCatalog {
         users.add(0, DBA);
         currentUser = DBA;
 
-        reset();
+        clear();
 
         turnOnVerifier();
         turnOnSecurityChecker();
@@ -344,7 +345,7 @@ public class SystemCatalog {
      * Resets most of the values within the system catalog as well as its components. Called when the user clears
      * the input and output sections within the terminal area or when the system catalog is executing some input.
      */
-    public void reset() {
+    public void clear() {
 
         parser.resetErrorMessage();
         verifier.resetErrorMessage();

@@ -12,8 +12,10 @@ public class PipelinedExpression extends Operator {
     private final List<Operator> pipelinedOperators;
 
     public PipelinedExpression(List<Operator> pipelinedOperators, int subscript) {
+
         this.pipelinedOperators = pipelinedOperators;
-        switch(subscript) {
+
+        switch (subscript) {
             case 1:
                 this.subscript = "₁";
                 break;
@@ -53,10 +55,6 @@ public class PipelinedExpression extends Operator {
         toCopy.pipelinedOperators.forEach(e -> pipelinedOperators.add(e.copy(e)));
     }
 
-    public List<Operator> getPipelinedOperators() {
-        return pipelinedOperators;
-    }
-
     public String getRelationalAlgebra() {
 
         StringBuilder relationalAlgebra = new StringBuilder();
@@ -91,7 +89,7 @@ public class PipelinedExpression extends Operator {
                     }
                 }
             }
-            assert firstRelation != null && secondRelation != null; // should never be thrown
+            assert firstRelation != null && secondRelation != null;
             relationalAlgebra.append(" [").append(firstRelation.toString()).append(" ")
                     .append(joinOrCartesianProduct.toString())
                     .append(" ").append(secondRelation.toString()).append("]");

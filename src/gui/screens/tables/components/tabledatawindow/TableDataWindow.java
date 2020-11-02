@@ -11,13 +11,14 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TableDataWindow extends Stage {
 
     double fontSize = 25.0;
 
-    public TableDataWindow(String tableName, List<String> columnNames, TableData tableData) {
+    public TableDataWindow(String tableName, List<String> columnNames, List<List<String>> data) {
 
         Font font = new Font(fontSize);
         String columnNameStyle = "-fx-background-color: rgb(30, 30, 30);";
@@ -30,12 +31,12 @@ public class TableDataWindow extends Stage {
         columnDataLayout.setMinSize(0, 0);
         columnDataLayout.setStyle(columnNameStyle);
 
-        int numCols = tableData.getData().isEmpty() ? 0 : tableData.getData().get(0).size();
+        int numCols = data.isEmpty() ? 0 : data.get(0).size();
 
         // might have 0 data returned, if that's the case, still need to show the column names
         boolean hasNoData = numCols == 0;
 
-        if(hasNoData) {
+        if (hasNoData) {
 
             for (String columnName : columnNames) {
 
@@ -56,7 +57,11 @@ public class TableDataWindow extends Stage {
 
                 // getting the column name and the data at the current column
                 String columnName = columnNames.get(col);
-                List<String> columnsCellData = tableData.getRowsAt(col);
+                List<String> columnsCellData = new ArrayList<>();
+
+                for (List<String> row : data) {
+                    columnsCellData.add(row.get(col));
+                }
 
                 // for each cell in the current column, create corresponding text and add it the vBox
                 VBox columnsCellDataContainer = new VBox();
@@ -125,11 +130,13 @@ public class TableDataWindow extends Stage {
         this.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = (double) newValue;
             scrollPane.setPrefWidth(newWidth);
+            columnDataLayout.setMinWidth(newWidth);
         });
 
         this.heightProperty().addListener((observable, oldValue, newValue) -> {
             double newHeight = (double) newValue;
             scrollPane.setPrefHeight(newHeight);
+            columnDataLayout.setMinHeight(newHeight);
         });
 
         this.setTitle(tableName);

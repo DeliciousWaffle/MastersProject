@@ -10,6 +10,8 @@ import utilities.Utilities;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static utilities.Utilities.isNumeric;
+
 /**
  * Class that offers additional functionality to the Optimizer class because that class
  * got polluted with too many internal helper methods and this keeps things somewhat clean.
@@ -122,7 +124,7 @@ public final class OptimizerUtilities {
         for (int i = 0; i < values.size(); i++) {
 
             String value = values.get(i);
-            boolean isNumeric = Utilities.isNumeric(value);
+            boolean isNumeric = isNumeric(value);
             boolean hasPrefixedTableName = hasPrefixedTableName(value); // don't wrap column names in quotes
 
             if (! isNumeric && ! hasPrefixedTableName) {
@@ -220,22 +222,16 @@ public final class OptimizerUtilities {
      * @param <T> is a generic type
      */
     public static <T> void permuteList(int i, List<T> list, List<List<T>> permutedList) {
-
         if (i == 1) {
             permutedList.add(new ArrayList<>(list));
-
         } else {
-
             permuteList(i - 1, list, permutedList);
-
             for (int j = 0; j < i - 1; j++) {
-
                 if (j % 2 == 0) {
                     swap(j, i - 1, list);
                 } else {
                     swap(0, i - 1, list);
                 }
-
                 permuteList(i - 1, list, permutedList);
             }
         }
@@ -383,7 +379,7 @@ public final class OptimizerUtilities {
      * @param recommendedFileStructures is a list of triplets containing table name, column name, and file
      * structure in that order
      */
-    public static int hasFileStructureConflict(Triple<String, String, String> candidate, List<Triple<String, String, String>> recommendedFileStructures) {
+    public static int hasFileStructureConflictAtIndex(Triple<String, String, String> candidate, List<Triple<String, String, String>> recommendedFileStructures) {
 
         String candidateTableName = candidate.getFirst();
         String candidateColumnName = candidate.getSecond();
@@ -408,13 +404,12 @@ public final class OptimizerUtilities {
      * yield tab1.col1, tab2.col1, col2.
      * @param prefixedColumnNames is a list of prefixed column names whose prefixes will attempted to be removed
      */
-    public static void removePrefixedColumnNames(List<String> prefixedColumnNames) {
-        /*return prefixedColumnNames.stream()
+    public static List<String> removePrefixedColumnNames(List<String> prefixedColumnNames) {
+        return prefixedColumnNames.stream()
                 .map(prefixedColumnName -> isAmbiguousColumnName(prefixedColumnName, prefixedColumnNames)
                         ? prefixedColumnName // don't remove the prefixed table name if not unique
                         : prefixedColumnName.split("\\.")[1]) // remove the prefixed table name if unique
-                .collect(Collectors.toList());*/
-        // TODO figure out why this bullshit isn't working correctly
+                .collect(Collectors.toList());
     }
 
     /**
@@ -430,6 +425,8 @@ public final class OptimizerUtilities {
     }
 
     /**
+     * NOTE: This is not a perfect science, would need a reference to the tables being referenced
+     * in the query too. I will change this at some point.
      * @param candidate is the prefixed column name to check
      * @param prefixedColumnNames is the list of prefixed columns to check the prefixed column name against
      * @return returns whether the prefixed column name would be ambiguous if it wasn't prefixed with the
@@ -440,5 +437,9 @@ public final class OptimizerUtilities {
                 .map(prefixedColumnName -> prefixedColumnName.split("\\.")[1])
                 .filter(columnName -> columnName.equalsIgnoreCase(candidate.split("\\.")[1]))
                 .count() >= 2;
+    }
+
+    public static boolean isJoinPredicate(String firstColumnName, String secondColumnName) {
+        return firstColumnName.contains(".") && (! isNumeric(secondColumnName) && secondColumnName.contains("."));
     }
 }

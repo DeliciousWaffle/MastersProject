@@ -1,13 +1,14 @@
 package datastructures.querytree.operator.types;
 
 import datastructures.querytree.operator.Operator;
+import utilities.OptimizerUtilities;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Projection extends Operator {
 
-    private final List<String> columnNames;
+    private List<String> columnNames;
 
     public Projection(List<String> columnNames) {
         this.columnNames = columnNames;
@@ -20,6 +21,10 @@ public class Projection extends Operator {
 
     public List<String> getColumnNames() {
         return columnNames;
+    }
+
+    public void setColumnNames(List<String> columnNames) {
+        this.columnNames = columnNames;
     }
 
     @Override
@@ -44,15 +49,22 @@ public class Projection extends Operator {
 
         print.append("π").append(" (");
 
-        if(columnNames.size() == 1) {
-            print.append(columnNames.get(0));
+        if (columnNames.size() == 1) {
+            String columnName = columnNames.get(0);
+            if (! OptimizerUtilities.isAmbiguousColumnName(columnName, columnNames)) {
+                columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
+            }
+            print.append(columnName);
+
         } else {
-            for(String columnName : columnNames) {
+            for (String columnName : columnNames) {
+                if (! OptimizerUtilities.isAmbiguousColumnName(columnName, columnNames)) {
+                    columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
+                }
                 print.append(columnName).append(", ");
             }
             // remove ", "
-            print.deleteCharAt(print.length() - 1);
-            print.deleteCharAt(print.length() - 1);
+            print.delete(print.length() - 2, print.length());
         }
 
         print.append(")");

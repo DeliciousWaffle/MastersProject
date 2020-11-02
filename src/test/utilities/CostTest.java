@@ -100,14 +100,4 @@ class CostTest {
 
     }
 
-
-    /*@Test
-    public void question4() {
-
-    }
-
-    @Test
-    public void question5() {
-
-    }*/
 }

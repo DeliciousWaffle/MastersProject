@@ -81,14 +81,15 @@ public final class FileType {
         ALTER_TABLE_DIAGRAM("helpscreen/AlterTableDiagram.png"),
         BUILD_FILE_STRUCTURE_DIAGRAM("helpscreen/BuildFileStructureDiagram.png"),
         CREATE_TABLE_DIAGRAM("helpscreen/CreateTableDiagram.png"),
+        DATABASE_SCHEMA_DIAGRAM("helpscreen/DatabaseSchema.png"),
         DELETE_DIAGRAM("helpscreen/DeleteDiagram.png"),
         DROP_TABLE_DIAGRAM("helpscreen/DropTableDiagram.png"),
+        ER_DIAGRAM("helpscreen/ERDiagram.png"),
         GRANT_DIAGRAM("helpscreen/GrantDiagram.png"),
         INSERT_DIAGRAM("helpscreen/InsertDiagram.png"),
         QUERY_DIAGRAM("helpscreen/QueryDiagram.png"),
         REMOVE_FILE_STRUCTURE_DIAGRAM("helpscreen/RemoveFileStructureDiagram.png"),
         REVOKE_DIAGRAM("helpscreen/RevokeDiagram.png"),
-        SCHEMA_DIAGRAM("helpscreen/SchemaDiagram.png"),
         UPDATE_DIAGRAM("helpscreen/UpdateDiagram.png"),
 
         // options screen assets
@@ -103,11 +104,13 @@ public final class FileType {
         PRIMARY_KEY_IMAGE("tablesscreen/PrimaryKey.png"),
 
         // terminal screen assets
-        PLAY_IMAGE("terminalscreen/Play.png"),
-        X_IMAGE("terminalscreen/X.png"),
-        TREE_IMAGE("terminalscreen/Tree.png"),
         DOLLAR_SIGN_IMAGE("terminalscreen/DollarSign.png"),
-        FOLDER_IMAGE("terminalscreen/Folder.png");
+        ERASER_IMAGE("terminalscreen/Eraser.png"),
+        FOLDER_IMAGE("terminalscreen/Folder.png"),
+        PLAY_IMAGE("terminalscreen/Play.png"),
+        RESULT_SET_IMAGE("terminalscreen/ResultSet.png"),
+        TREE_IMAGE("terminalscreen/Tree.png"),
+        X_IMAGE("terminalscreen/X.png");
 
         private final String path;
 

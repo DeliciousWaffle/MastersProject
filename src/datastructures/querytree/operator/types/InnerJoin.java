@@ -7,30 +7,42 @@ import java.util.List;
 
 public class InnerJoin extends Operator {
 
-    private final String joinOnColumn1, symbol, joinOnColumn2;
+    private String firstJoinColumnName, symbol, secondJoinColumnName;
 
-    public InnerJoin(String joinOnColumn1, String symbol, String joinOnColumn2) {
-        this.joinOnColumn1 = joinOnColumn1;
+    public InnerJoin(String firstJoinColumnName, String symbol, String secondJoinColumnName) {
+        this.firstJoinColumnName = firstJoinColumnName;
         this.symbol = symbol;
-        this.joinOnColumn2 = joinOnColumn2;
+        this.secondJoinColumnName = secondJoinColumnName;
     }
 
     public InnerJoin(InnerJoin toCopy) {
-        this.joinOnColumn1 = toCopy.joinOnColumn1;
+        this.firstJoinColumnName = toCopy.firstJoinColumnName;
         this.symbol = toCopy.symbol;
-        this.joinOnColumn2 = toCopy.joinOnColumn2;
+        this.secondJoinColumnName = toCopy.secondJoinColumnName;
     }
 
     public String getFirstJoinColumnName() {
-        return joinOnColumn1;
+        return firstJoinColumnName;
+    }
+
+    public void setFirstJoinColumnName(String firstJoinColumnName) {
+        this.firstJoinColumnName = firstJoinColumnName;
     }
 
     public String getSymbol() {
         return symbol;
     }
 
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
     public String getSecondJoinColumnName() {
-        return joinOnColumn2;
+        return secondJoinColumnName;
+    }
+
+    public void setSecondJoinColumnName(String secondJoinColumnName) {
+        this.secondJoinColumnName = secondJoinColumnName;
     }
 
     @Override
@@ -40,7 +52,7 @@ public class InnerJoin extends Operator {
 
     @Override
     public List<String> getReferencedColumnNames() {
-        return Arrays.asList(joinOnColumn1, joinOnColumn2);
+        return Arrays.asList(firstJoinColumnName, secondJoinColumnName);
     }
 
     @Override
@@ -50,6 +62,6 @@ public class InnerJoin extends Operator {
 
     @Override
     public String toString() {
-        return "⨝" + " (" + joinOnColumn1 + " " + symbol + " " + joinOnColumn2 + ")";
+        return "⨝" + " (" + firstJoinColumnName + " " + symbol + " " + secondJoinColumnName + ")";
     }
 }

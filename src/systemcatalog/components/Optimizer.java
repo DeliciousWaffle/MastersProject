@@ -1,7 +1,9 @@
 package systemcatalog.components;
 
+import datastructures.misc.Pair;
 import datastructures.misc.Triple;
 import datastructures.querytree.operator.types.*;
+import datastructures.relation.resultset.ResultSet;
 import datastructures.relation.table.Table;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
@@ -707,32 +709,28 @@ public class Optimizer {
 
         StringBuilder naiveRelationalAlgebra = new StringBuilder();
         StringBuilder closingBrackets = new StringBuilder();
+        Deque<String> cartesianProducts = new ArrayDeque<>();
 
         List<Operator> operators = new ArrayList<>(initialQueryTree.getOperatorsAndLocations(PREORDER).keySet());
-        List<Operator> relations =
-                new ArrayList<>(initialQueryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER).keySet());
 
         for (Operator operator : operators) {
             if (operator.getType() == CARTESIAN_PRODUCT) {
-                break;
+                cartesianProducts.push(operator.toString());
+            } else {
+                if (operator.getType() == RELATION) {
+                    naiveRelationalAlgebra.append(operator).append(" ");
+                    if (! cartesianProducts.isEmpty()) {
+                        naiveRelationalAlgebra.append(cartesianProducts.pop()).append(" ");
+                    } else {
+                        naiveRelationalAlgebra.deleteCharAt(naiveRelationalAlgebra.length() - 1);
+                    }
+                } else {
+                    naiveRelationalAlgebra.append(operator.toString()).append(" [");
+                    closingBrackets.append("]");
+                }
             }
-            naiveRelationalAlgebra.append(operator).append(" [");
-            closingBrackets.append("]");
         }
 
-        // remove last " [" and "]" if they are not needed
-        if (relations.size() == 1) {
-            naiveRelationalAlgebra.delete(naiveRelationalAlgebra.length() - 2, naiveRelationalAlgebra.length());
-            closingBrackets.deleteCharAt(closingBrackets.length() - 1);
-        }
-
-        // add the relations and cartesian products manually
-        relations.forEach(relation -> naiveRelationalAlgebra.append(relation).append(" ✕ "));
-
-        // remove last " ✕ "
-        naiveRelationalAlgebra.delete(naiveRelationalAlgebra.length() - 3, naiveRelationalAlgebra.length());
-
-        // add closing brackets
         naiveRelationalAlgebra.append(closingBrackets);
 
         return naiveRelationalAlgebra.toString();
@@ -795,7 +793,7 @@ public class Optimizer {
         // the triplet is composed of column name, table name, and the file structure to use
         List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>();
 
-        // will build file structures on columns in tables first
+        // will build file structures on columns referenced in where clause first
         List<SimpleSelection> simpleSelections =
                 queryTreeBeforePipelining.getOperatorsAndLocationsOfType(SIMPLE_SELECTION, PREORDER)
                         .keySet()
@@ -821,8 +819,7 @@ public class Optimizer {
                     new Triple<>(tableName, columnName, fileStructure);
 
             // if there's a conflict, don't add, but instead replace the existing recommendation with a secondary b-tree
-            int replaceIndex = hasFileStructureConflict(recommendedFileStructure, recommendedFileStructures);
-
+            int replaceIndex = hasFileStructureConflictAtIndex(recommendedFileStructure, recommendedFileStructures);
             boolean hasConflict = replaceIndex != -1;
 
             if (hasConflict) {
@@ -834,26 +831,162 @@ public class Optimizer {
         }
 
         // suggest file structures to build on for joins
+        List<InnerJoin> innerJoins =
+                queryTreeBeforePipelining.getOperatorsAndLocationsOfType(INNER_JOIN, PREORDER)
+                        .keySet()
+                        .stream()
+                        .map(operator -> (InnerJoin) operator)
+                        .collect(Collectors.toList());
 
-        // if a clustered b-tree and hash table are recommended for the same column, change to secondary b-tree
+        for (InnerJoin innerJoin : innerJoins) {
 
-        // if a clustered file is recommended for a join, remove any file structures that were built on columns
-        // belonging to the tables being joined together
+            String firstJoinColumn = innerJoin.getFirstJoinColumnName();
+            String secondJoinColumn = innerJoin.getSecondJoinColumnName();
+            String firstTableName = firstJoinColumn.split("\\.")[0];
+            String secondTableName = secondJoinColumn.split("\\.")[0];
+            String firstColumnName = firstJoinColumn.split("\\.")[1];
+            String secondColumnName = firstJoinColumn.split("\\.")[1];
+            String firstFileStructure = "";
+            String secondFileStructure = "";
+            String symbol = innerJoin.getSymbol();
 
+            if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
+                firstFileStructure = "Hash Table";
+                secondFileStructure = "Hash Table";
+            } else { // >, <, >=, <=
+                firstFileStructure = "Clustered B-Tree";
+                secondFileStructure = "Clustered B-Tree";
+            }
+
+            Triple<String, String, String> firstRecommendedFileStructure =
+                    new Triple<>(firstTableName, firstColumnName, firstFileStructure);
+
+            int replaceIndex =
+                    hasFileStructureConflictAtIndex(firstRecommendedFileStructure, recommendedFileStructures);
+            boolean hasConflict = replaceIndex != -1;
+
+            if (hasConflict) {
+                firstRecommendedFileStructure = new Triple<>(firstTableName, firstColumnName, "Secondary B-Tree");
+                recommendedFileStructures.set(replaceIndex, firstRecommendedFileStructure);
+            } else {
+                recommendedFileStructures.add(firstRecommendedFileStructure);
+            }
+
+            Triple<String, String, String> secondRecommendedFileStructure =
+                    new Triple<>(secondTableName, secondColumnName, secondFileStructure);
+
+            replaceIndex =
+                    hasFileStructureConflictAtIndex(secondRecommendedFileStructure, recommendedFileStructures);
+            hasConflict = replaceIndex != -1;
+
+            if (hasConflict) {
+                secondRecommendedFileStructure =
+                        new Triple<>(secondTableName, secondColumnName, "Secondary B-Tree");
+                recommendedFileStructures.set(replaceIndex, secondRecommendedFileStructure);
+            } else {
+                recommendedFileStructures.add(secondRecommendedFileStructure);
+            }
+        }
+
+        // check to see if clustering the two tables would perform better than the previous recommendations
+        // in order to do this, will need to calculate the total cost of the query tree with the file structures
+        // already built and compare them to each possible clustered file orientation's query tree cost
+
+
+        // after that, if a clustered file is recommended for a join, remove any file structures that
+        // were built on columns belonging to the tables being joined together
 
         return "";
     }
 
     /**
+     * Returns a lot of information with respect to how the cost of the query tree is calculated. This includes
+     * the total execution cost, the total write to disk cost, and a string containing info about how these
+     * costs were generated. Essentially, shows the work that was done to get these costs.
      * @param queryTreeStates is a list of query tree states produced after the optimization process
-     * @return returns a mini spreadsheet outlining how query cost was produced
+     * @return the total execution cost, the total write to disk cost, and a string representation
+     * of how these costs were produced
      */
-    public String getCostAnalysis(List<QueryTree> queryTreeStates) {
+    public Triple<Double, Double, String> getCostAnalysis(List<QueryTree> queryTreeStates, List<Table> tables) {
 
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
-        StringBuilder costAnalysis = new StringBuilder();
+        double totalCost = 0;
+        double totalWriteToDiskCost = 0;
+        StringBuilder showWork = new StringBuilder();
 
-        return costAnalysis.toString();
+        Deque<Operator> startingStack =
+                setToDeque(queryTreeBeforePipelining.getOperatorsAndLocations(PREORDER).keySet());
+        Deque<ResultSet> workingStack = new ArrayDeque<>();
+
+        while (! startingStack.isEmpty()) {
+            Operator operator = startingStack.pop();
+            switch (operator.getType()) {
+                case RELATION: {
+                    Relation relation = (Relation) operator;
+                    String tableName = relation.getTableName();
+                    Table table = Utilities.getReferencedTable(tableName, tables);
+                    assert table != null;
+                    int recordSize = QueryCost.recordSize(table.getColumns());
+                    int numRecords = QueryCost.numberRecords(table);
+                    int blockingFactor = QueryCost.blockingFactor(recordSize);
+                    int blocks = QueryCost.blocks(numRecords, blockingFactor);
+
+
+                    break;
+                }
+                case SIMPLE_SELECTION: {
+                    SimpleSelection simpleSelection = (SimpleSelection) operator;
+                    String columnName = simpleSelection.getColumnName();
+                    String symbol = simpleSelection.getSymbol();
+                    String value = simpleSelection.getValue();
+
+                    break;
+                }
+                case PROJECTION:
+                    Projection projection = (Projection) operator;
+                    List<String> columnNames = projection.getColumnNames();
+
+                    break;
+                case INNER_JOIN: {
+                    InnerJoin innerJoin = (InnerJoin) operator;
+                    String firstJoinColumnName = innerJoin.getFirstJoinColumnName();
+                    String joinSymbolName = innerJoin.getSymbol();
+                    String secondJoinColumnName = innerJoin.getSecondJoinColumnName();
+                    ResultSet firstResultSet = workingStack.pop();
+                    ResultSet secondResultSet = workingStack.pop();
+                    workingStack.push(firstResultSet.innerJoin(
+                            secondResultSet, firstJoinColumnName, joinSymbolName, secondJoinColumnName));
+                    break;
+                }
+                case CARTESIAN_PRODUCT: {
+                    ResultSet firstResultSet = workingStack.pop();
+                    ResultSet secondResultSet = workingStack.pop();
+                    workingStack.push(firstResultSet.cartesianProduct(secondResultSet));
+                    break;
+                }
+                case AGGREGATION: {
+                    Aggregation aggregation = (Aggregation) operator;
+                    List<String> groupByColumnNames = aggregation.getGroupByColumnNames();
+                    List<String> aggregationTypes = aggregation.getAggregationTypes();
+                    List<String> aggregatedColumnNames = aggregation.getAggregatedColumnNames();
+                    workingStack.push(workingStack.pop().aggregate(
+                            groupByColumnNames, aggregationTypes, aggregatedColumnNames));
+                    break;
+                }
+                case AGGREGATE_SELECTION: {
+                    AggregateSelection aggregateSelection = (AggregateSelection) operator;
+                    List<String> aggregationTypes = aggregateSelection.getAggregateTypes();
+                    List<String> aggregatedColumnNames = aggregateSelection.getColumnNames();
+                    List<String> symbols = aggregateSelection.getSymbols();
+                    List<String> values = aggregateSelection.getValues();
+                    workingStack.push(workingStack.pop().having(
+                            aggregationTypes, aggregatedColumnNames, symbols, values));
+                    break;
+                }
+            }
+        }
+
+        return new Triple<>(totalCost, totalWriteToDiskCost, showWork.toString());
     }
 }

@@ -1,14 +1,18 @@
 package datastructures.querytree.operator.types;
 
 import datastructures.querytree.operator.Operator;
+import utilities.OptimizerUtilities;
+import utilities.Utilities;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class SimpleSelection extends Operator {
 
     private final Type type;
-    private final String columnName, symbol, value;
+    private String columnName, symbol, value;
 
     public SimpleSelection(String columnName, String symbol, String value) {
         this.type = Type.SIMPLE_SELECTION;
@@ -28,12 +32,24 @@ public class SimpleSelection extends Operator {
         return columnName;
     }
 
+    public void setColumnName(String columnName) {
+        this.columnName = columnName;
+    }
+
     public String getSymbol() {
         return symbol;
     }
 
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
     public String getValue() {
         return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     @Override
@@ -43,7 +59,7 @@ public class SimpleSelection extends Operator {
 
     @Override
     public List<String> getReferencedColumnNames() {
-        return Collections.singletonList(columnName);
+        return new ArrayList<>(Arrays.asList(columnName));
     }
 
     @Override
@@ -53,6 +69,19 @@ public class SimpleSelection extends Operator {
 
     @Override
     public String toString() {
-        return "σ" + " (" + columnName + " " + symbol + " " + value + ")";
+
+        String formattedColumnName = columnName;
+        String formattedValue = value;
+
+        if (! OptimizerUtilities.isJoinPredicate(columnName, value)) {
+            formattedColumnName = OptimizerUtilities.removePrefixedColumnName(formattedColumnName);
+        }
+
+        // enclose date and char values in quotes only if the value is not a join predicate and not a number
+        if (! OptimizerUtilities.isJoinPredicate(columnName, value) && ! Utilities.isNumeric(value)) {
+            formattedValue = "\"" + value + "\"";
+        }
+
+        return "σ" + " (" + formattedColumnName + " " + symbol + " " + formattedValue + ")";
     }
 }

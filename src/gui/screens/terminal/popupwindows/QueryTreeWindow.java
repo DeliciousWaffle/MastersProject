@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class QueryTreeWindow extends Stage { // change back to Stage
+public class QueryTreeWindow extends Stage {
 
     private List<QueryTreeGUI> queryTreeGUIStates;
     private List<Button> optimizationInfoButtons;
@@ -105,7 +105,6 @@ public class QueryTreeWindow extends Stage { // change back to Stage
             }
         });
 
-        // change back to this
         this.setTitle("Query Tree States");
         this.setScene(new Scene(root));
         this.show();

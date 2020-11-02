@@ -1,14 +1,18 @@
 package datastructures.querytree.operator.types;
 
 import datastructures.querytree.operator.Operator;
+import systemcatalog.components.Optimizer;
+import utilities.OptimizerUtilities;
+import utilities.Utilities;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class CompoundSelection extends Operator {
 
-    private final List<String> columnNames, symbols, values;
+    private List<String> columnNames, symbols, values;
 
     public CompoundSelection(List<String> columnNames, List<String> symbols, List<String> values) {
         this.columnNames = columnNames;
@@ -35,12 +39,24 @@ public class CompoundSelection extends Operator {
         return columnNames;
     }
 
+    public void setColumnNames(List<String> columnNames) {
+        this.columnNames = columnNames;
+    }
+
     public List<String> getSymbols() {
         return symbols;
     }
 
+    public void setSymbols(List<String> symbols) {
+        this.symbols = symbols;
+    }
+
     public List<String> getValues() {
         return values;
+    }
+
+    public void setValues(List<String> values) {
+        this.values = values;
     }
 
     @Override
@@ -65,25 +81,33 @@ public class CompoundSelection extends Operator {
 
         StringBuilder print = new StringBuilder();
 
-        print.append("\u03C3").append(" (");
+        print.append("σ").append(" (");
 
-        for(int i = 0; i < symbols.size(); i++) {
+        for (int i = 0; i < symbols.size(); i++) {
 
             String columnName = columnNames.get(i);
             String symbol = symbols.get(i);
             String value = values.get(i);
 
-            print.append(columnName).append(" ").append(symbol).append(" ").append(value);
+            String formattedColumnName = columnName;
+            String formattedValue = value;
 
-            // logical conjunction unicode value
-            print.append(" ").append("\u2227").append(" ");
+            if (! OptimizerUtilities.isJoinPredicate(columnName, value) &&
+                    ! OptimizerUtilities.isAmbiguousColumnName(formattedColumnName, columnNames)) {
+                formattedColumnName = OptimizerUtilities.removePrefixedColumnName(formattedColumnName);
+            }
+
+            // enclose date and char values in quotes only if the value is not a join predicate and not a number
+            if (! OptimizerUtilities.isJoinPredicate(columnName, value) && ! Utilities.isNumeric(value)) {
+                formattedValue = "\"" + formattedValue + "\"";
+            }
+
+            print.append(formattedColumnName).append(" ").append(symbol).append(" ").append(formattedValue);
+            print.append(" ").append("∧").append(" ");
         }
 
         // remove logical conjunction and spaces
-        print.deleteCharAt(print.length() - 1);
-        print.deleteCharAt(print.length() - 1);
-        print.deleteCharAt(print.length() - 1);
-
+        print.delete(print.length() - 3, print.length());
         print.append(")");
 
         return print.toString();

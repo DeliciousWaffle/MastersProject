@@ -1,13 +1,16 @@
 package datastructures.querytree.operator.types;
 
 import datastructures.querytree.operator.Operator;
+import datastructures.relation.table.component.DataType;
+import utilities.OptimizerUtilities;
+import utilities.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AggregateSelection extends Operator {
 
-    private final List<String> aggregateTypes, columnNames, symbols, values;
+    private List<String> aggregateTypes, columnNames, symbols, values;
 
     public AggregateSelection(List<String> aggregateTypes, List<String> columnNames,
                               List<String> symbols, List<String> values) {
@@ -39,16 +42,32 @@ public class AggregateSelection extends Operator {
         return aggregateTypes;
     }
 
+    public void setAggregateTypes(List<String> aggregateTypes) {
+        this.aggregateTypes = aggregateTypes;
+    }
+
     public List<String> getColumnNames() {
         return columnNames;
+    }
+
+    public void setColumnNames(List<String> columnNames) {
+        this.columnNames = columnNames;
     }
 
     public List<String> getSymbols() {
         return symbols;
     }
 
+    public void setSymbols(List<String> symbols) {
+        this.symbols = symbols;
+    }
+
     public List<String> getValues() {
         return values;
+    }
+
+    public void setValues(List<String> values) {
+        this.values = values;
     }
 
     @Override
@@ -68,29 +87,41 @@ public class AggregateSelection extends Operator {
 
     @Override
     public String toString() {
+
         StringBuilder print = new StringBuilder();
 
         print.append("σ (");
 
-        for(int i = 0; i < aggregateTypes.size(); i++) {
+        for (int i = 0; i < aggregateTypes.size(); i++) {
 
             String aggregateType = aggregateTypes.get(i);
             String columnName = columnNames.get(i);
             String symbol = symbols.get(i);
             String value = values.get(i);
 
-            print.append(aggregateType).append("(").append(columnName).append(")");
-            print.append(" ").append(symbol).append(" ").append(value);
+            String formattedColumnName = columnName;
+            String formattedValue = value;
+
+            if (! OptimizerUtilities.isJoinPredicate(columnName, value) &&
+                    ! OptimizerUtilities.isAmbiguousColumnName(formattedColumnName, columnNames)) {
+                formattedColumnName = OptimizerUtilities.removePrefixedColumnName(formattedColumnName);
+            }
+
+            // enclose date and char values in quotes only if the value is not a join predicate and not a number
+            if (! OptimizerUtilities.isJoinPredicate(columnName, value) && ! Utilities.isNumeric(value)) {
+                formattedValue = "\"" + formattedValue + "\"";
+            }
+
+            // build the string
+            print.append(aggregateType).append("(").append(formattedColumnName).append(")");
+            print.append(" ").append(symbol).append(" ").append(formattedValue);
 
             // logical conjunction unicode value
             print.append(" ").append("∧").append(" ");
         }
 
         // remove logical conjunction and spaces
-        print.deleteCharAt(print.length() - 1);
-        print.deleteCharAt(print.length() - 1);
-        print.deleteCharAt(print.length() - 1);
-
+        print.delete(print.length() - 3, print.length());
         print.append("))");
 
         return print.toString();
