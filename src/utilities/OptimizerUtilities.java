@@ -294,22 +294,21 @@ public final class OptimizerUtilities {
 
     /**
      * Basically performs the set operation minus which means that the this method will return a list
-     * of elements that are in the first list, but not the second
+     * of elements that are in the first list, but not the second. Ignores the casing of strings.
      * @param list is the initial list
      * @param toSubtract is the list whose elements will not appear in the final product
-     * @param <T> a generic type
      * @return returns a new list containing elements that are in the first list, but not in the second
      */
-    public static <T> List<T> minus(List<T> list, List<T> toSubtract) {
+    public static List<String> minus(List<String> list, List<String> toSubtract) {
 
-        List<T> toKeep = new ArrayList<>();
+        List<String> toKeep = new ArrayList<>();
 
-        for (T element : list) {
+        for (String element : list) {
 
             boolean foundElementToSubtract = false;
 
-            for (T elementToSubtract : toSubtract) {
-                if (element.equals(elementToSubtract)) {
+            for (String elementToSubtract : toSubtract) {
+                if (element.equalsIgnoreCase(elementToSubtract)) {
                     foundElementToSubtract = true;
                     break;
                 }

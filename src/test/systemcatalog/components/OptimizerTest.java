@@ -37,7 +37,7 @@ public class OptimizerTest {
         tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
         users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
     }
-/*
+
     @ParameterizedTest
     @ValueSource(strings = {
             "SELECT FirstName FROM Customers", // simple query
@@ -121,7 +121,7 @@ public class OptimizerTest {
         sb.delete(sb.length() - 24, sb.length()); // removing "Pipeline Subtrees Again"
         System.out.println(sb.toString());
     }
-
+/*
     @ParameterizedTest
     @ValueSource(strings = {
             "SELECT FirstName FROM Customers", // simple query
@@ -202,7 +202,7 @@ public class OptimizerTest {
 
         System.out.println(optimizer.getOptimizedRelationalAlgebra(queryTrees));
     }
-*/
+*//*
     @ParameterizedTest
     @ValueSource(strings = {
             "SELECT FirstName FROM Customers", // simple query
@@ -234,7 +234,7 @@ public class OptimizerTest {
     void testRecommendedFileStructures(String query) {
 
     }
-
+*/
     /*
     @ParameterizedTest
     @ValueSource(strings = {

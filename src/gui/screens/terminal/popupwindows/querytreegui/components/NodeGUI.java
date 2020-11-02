@@ -4,6 +4,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 
 public class NodeGUI {
 
@@ -26,7 +27,10 @@ public class NodeGUI {
 
         this.width = temp.getLayoutBounds().getWidth();
         this.height = temp.getLayoutBounds().getHeight();
-        System.out.println("height: " + height);
+    }
+
+    public String getText() {
+        return text;
     }
 
     public void setX(double x) {
@@ -67,7 +71,8 @@ public class NodeGUI {
         gc.setFill(Color.WHITE);
         Font font = new Font(text, textSize);
         gc.setFont(font);
+        gc.setTextAlign(TextAlignment.CENTER);
         // "y - other garbage" is to accommodate our compound selections, which are chunky
-        gc.fillText(text, x - width / 2, y - (height > 50 ? height - 46.552734375 : 0));
+        gc.fillText(text, x, y - (height > 50 ? height - 46.552734375 : 0));
     }
 }

@@ -10,6 +10,7 @@ import gui.ScreenController;
 import gui.screens.Screen;
 import gui.screens.tables.components.tabledatawindow.TableDataWindow;
 import gui.screens.terminal.popupwindows.QueryTreeWindow;
+import gui.screens.terminal.popupwindows.RecommendedFileStructuresWindow;
 import gui.screens.terminal.popupwindows.RelationalAlgebraWindow;
 import gui.screens.terminal.popupwindows.ResultSetWindow;
 import gui.screens.terminal.popupwindows.querytreegui.popupwindows.QueryTreeOptimizationHeuristicWindows;
@@ -246,7 +247,11 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the query cost
         queryCostButton.setOnAction(e -> {
+            boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
+            boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
+            if (wasSuccessfullyExecuted && executedQuery) {
 
+            }
         });
 
         tooltip = new Tooltip("View Query Cost");
@@ -267,7 +272,12 @@ public class TerminalScreen extends Screen {
 
         // launch a new window displaying the recommended file structures
         recommendedFileStructuresButton.setOnAction(e -> {
-
+            boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
+            boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
+            if (wasSuccessfullyExecuted && executedQuery) {
+                String recommendedFileStructures = systemCatalog.getRecommendedFileStructures();
+                new RecommendedFileStructuresWindow(recommendedFileStructures);
+            }
         });
 
         tooltip = new Tooltip("View Recommended File Structures");

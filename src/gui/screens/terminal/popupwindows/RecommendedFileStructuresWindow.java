@@ -1,4 +1,9 @@
 package gui.screens.terminal.popupwindows;
 
-public class RecommendedFileStructuresWindow {
+import javafx.stage.Stage;
+
+public class RecommendedFileStructuresWindow extends Stage {
+    public RecommendedFileStructuresWindow(String recommendedFileStructures) {
+
+    }
 }

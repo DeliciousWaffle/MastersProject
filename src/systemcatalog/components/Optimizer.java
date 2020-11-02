@@ -80,9 +80,6 @@ public class Optimizer {
 
         queryTreeStates.addAll(afterPipeliningSubtrees);
 
-        // remove prefixed column names from each query tree state
-        // TODO figure out why not working
-
         return queryTreeStates;
     }
 
@@ -452,7 +449,8 @@ public class Optimizer {
         // for each relation, starting from the root, move down the query tree until that relation is reached
         // while adding all referenced column names that appear in the operator nodes along the way
         // the locations of each relation changes while adding new projections, this helps with that problem
-        List<Operator> relations = new ArrayList<>(queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER).keySet());
+        List<Operator> relations =
+                new ArrayList<>(queryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER).keySet());
 
         for (Operator relation : relations) {
 
@@ -491,7 +489,7 @@ public class Optimizer {
             queryTree.add(relationLocation, UP, projection);
         }
 
-        // after that, will need to add projections between sequential cartesian products and sequential joins will get
+        // after that, will need to add projections between sequential cartesian products and sequential joins, will get
         // the column names referenced in the projections added from earlier which are located to the left and right of
         // cartesian products/joins, removing the join criteria (if join) and add above the cartesian product/join
         // also adds projections right before aggregations too!
@@ -539,7 +537,8 @@ public class Optimizer {
                                 new ArrayList<>(Arrays.asList(firstJoinColumnName, secondJoinColumnName)));
                         // may get an empty list, in this case, add all referenced column names from the aggregation above
                         if (columnNamesToProject.isEmpty()) {
-                            columnNamesToProject.addAll(queryTree.get(operatorsLocation, UP).getReferencedColumnNames());
+                            columnNamesToProject.addAll(queryTree.get(operatorsLocation, UP)
+                                    .getReferencedColumnNames());
                         }
                     }
                 }

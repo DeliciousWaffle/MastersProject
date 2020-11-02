@@ -1,6 +1,7 @@
 package gui.screens.terminal.popupwindows.querytreegui;
 
 import datastructures.querytree.QueryTree;
+import datastructures.querytree.operator.Operator;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.terminal.popupwindows.querytreegui.components.NodeGUI;
@@ -15,9 +16,14 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class QueryTreeGUI {
 
@@ -44,9 +50,10 @@ public class QueryTreeGUI {
         container.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         container.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         container.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        container.setHvalue(0.5); // set scroll bar in the middle by default
         container.setStyle("-fx-background-color: rgb(30, 30, 30);");
 
-        // where we are drawing to, width and height can change
+        // where we are drawing to, width and height can change upon window resize
         Canvas canvas = new Canvas();
         canvas.setWidth(canvasWidth);
         canvas.setHeight(canvasHeight);
@@ -54,73 +61,124 @@ public class QueryTreeGUI {
         // used for drawing to the canvas
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
-        // getting an estimate of the positions of the nodes that will be drawn to screen
-        List<NodeGUI> nodeGUIS = new ArrayList<>();
+        List<NodeGUI> nodeGUIList = new ArrayList<>();
+
+        // extracting the string representation of each operator, if that operator is a projection or selection, will
+        // modify that string to include line breaks so that it is easier to see
+        List<String> nodeTextList = queryTree.getOperatorsAndLocations(QueryTree.TreeTraversal.PREORDER)
+                .keySet()
+                .stream()
+                .map(operator -> {
+                    if (operator.getType() == Operator.Type.PROJECTION ||
+                            operator.getType() == Operator.Type.COMPOUND_SELECTION) {
+                        String text = operator.toString();
+                        text = text.replaceAll("∧ ", "∧\n");
+                        char[] tokens = text.toCharArray();
+                        int occurrences = 0;
+                        for (int i = 0; i < tokens.length - 1; i++) {
+                            if (tokens[i] == ',') {
+                                occurrences++;
+                                if (occurrences == 3) {
+                                    tokens[i + 1] = '\n'; // replace ", " with ",\n"
+                                    occurrences = 0;
+                                }
+                            }
+                        }
+                        return new String(tokens);
+                    } else {
+                        return operator.toString();
+                    }
+                })
+                .collect(Collectors.toList());
+
+        List<List<QueryTree.Traversal>> nodeLocationList =
+                new ArrayList<>(queryTree.getOperatorsAndLocations(QueryTree.TreeTraversal.PREORDER).values());
 
         // spacing between nodes
-        double nodeOffset = 100;
-// TODO
-        // adding the nodes, their locations will be tweaked later
-        for(;;) {//for(List<QueryTree.Traversal> currentNodesLocation : queryTree.getEveryOperatorsLocation()) {
-            // creating the node
-            String text = "";//queryTree.get(currentNodesLocation, QueryTree.Traversal.NONE).toString();
-            if(text.contains("∧")) {
-                text = text.replaceAll("∧ ", "∧\n");
-                text = text.replaceAll("∨ ", "∨\n");
+        double nodeOffset = 100.0, totalHeightOffset = 0.0;
+
+        // creating and adding to the nodeGUI list
+        for (int i = 0; i < nodeTextList.size(); i++) {
+
+            String text = nodeTextList.get(i);
+            List<QueryTree.Traversal> location = nodeLocationList.get(i);
+
+            // adjust the width and height of the node
+            Text temp = new Text(text);
+            temp.setFont(new Font(35));
+            double height = temp.getLayoutBounds().getHeight();
+
+            // adjust the height if needed
+            if (height > 46.552734375) {
+                double heightOffset = (height - 46.552734375);
+                totalHeightOffset += heightOffset;
             }
-            NodeGUI nodeGUI = new NodeGUI(text, 0, 0);
-            nodeGUIS.add(nodeGUI);
-            break;//
-        }
 
-        for(int i = 0; i < nodeGUIS.size(); i++) {
+            // figure out where to draw the current operator on screen
+            double x = startX, y = startY;
 
-            NodeGUI currentNodeGUI = nodeGUIS.get(i); // TODO
-            List<QueryTree.Traversal> currentNodesLocation = null;//queryTree.getEveryOperatorsLocation().get(i);
+            List<QueryTree.Traversal> workingTraversal = new ArrayList<>();
 
-            double x = 0;
-            double y = 0;
+            for (QueryTree.Traversal traversal : location) {
+                workingTraversal.add(traversal);
 
-            for(int j = 0; j < currentNodesLocation.size(); j++) {
-
-                QueryTree.Traversal traversal = currentNodesLocation.get(j);
-
-                // some nodes will need to be spaced further apart, to take into consideration their widths, prevents overlapping
-                double widthOffset = 0;
+                // get the height of the node located at the current working traversal
+                Operator operator = queryTree.get(workingTraversal, QueryTree.Traversal.NONE);
+                String blah = operator.toString();
+                if (operator.getType() == Operator.Type.PROJECTION ||
+                        operator.getType() == Operator.Type.COMPOUND_SELECTION) {
+                    blah = operator.toString();
+                    blah = blah.replaceAll("∧ ", "∧\n");
+                    char[] tokens = blah.toCharArray();
+                    int occurrences = 0;
+                    for (int q = 0; q < tokens.length - 1; q++) {
+                        if (tokens[q] == ',') {
+                            occurrences++;
+                            if (occurrences == 3) {
+                                tokens[q + 1] = '\n'; // replace ", " with ",\n"
+                                occurrences = 0;
+                            }
+                        }
+                    }
+                    blah = new String(tokens);
+                }
+                temp = new Text(blah);
+                temp.setFont(new Font(35));
+                double width = temp.getLayoutBounds().getWidth();
+                height = temp.getLayoutBounds().getHeight();
+                if (height > 46.552734375) {
+                    double heightOffset = (height - 46.552734375);
+                    totalHeightOffset += heightOffset;
+                }
 
                 switch (traversal) {
-                    case NONE:
-                        x = startX;
-                        y = startY;
-                        break;
-                    case LEFT:
-                        widthOffset = nodeGUIS.get(j).getWidth() / 4;
-                        x -= (nodeOffset + widthOffset);
+                    case DOWN: {
                         y += nodeOffset;
+                        y += height;
                         break;
-                    case RIGHT:
-                        widthOffset = nodeGUIS.get(j).getWidth() / 4;
-                        x += (nodeOffset + widthOffset);
+                    }
+                    case LEFT: {
+                        x -= nodeOffset;
                         y += nodeOffset;
+                        x -= width / 2;
+                        y += height;
                         break;
-                    case UP:
-                        y -= nodeOffset;
-                        break;
-                    case DOWN:
+                    }
+                    case RIGHT: {
+                        x += nodeOffset;
                         y += nodeOffset;
-                        // to accommodate our compound selections, which are chunky
-                        y += nodeGUIS.get(j).getHeight() > 50 ? nodeGUIS.get(j).getHeight() - 46.552734375 : 0;
+                        x += width / 2;
+                        y += height;
                         break;
+                    }
                 }
             }
-
-            // updating the x and y positions
-            currentNodeGUI.setX(x);
-            currentNodeGUI.setY(y);
+            // create the node
+            nodeGUIList.add(new NodeGUI(text, x, y));
         }
 
         // will need to resize the canvas if any nodes go offscreen, prevents them from being clipped
-        for(NodeGUI nodeGUI : nodeGUIS) {
+        for (NodeGUI nodeGUI : nodeGUIList) {
 
             double x = nodeGUI.getX();
             double y = nodeGUI.getY();
@@ -128,24 +186,34 @@ public class QueryTreeGUI {
             double width = nodeGUI.getWidth();
             double height = nodeGUI.getHeight();
 
-            // rare situation in which node goes offscreen in the right direction, increase canvas width
-            if(x + width/2 >= canvasWidth) {
-                canvasWidth+= canvasBuffer;
+            // increase canvas width if a node moves right offscreen
+            while (x + width / 2 >= canvasWidth) {
+                canvasWidth += canvasBuffer;
             }
 
             // increase canvas width if a node moves left offscreen
-            if(x - width/2 <= 0) {
+            while (nodeGUI.getX() - width / 2 <= 0) { // note: using nodeGUI.getX() because var x won't change
 
                 // will need to translate all nodes to the right too
-                for(NodeGUI toTranslate : nodeGUIS) {
+                for (NodeGUI toTranslate : nodeGUIList) {
                     toTranslate.setX(toTranslate.getX() + canvasBuffer);
                 }
 
-                canvasWidth+= canvasBuffer;
+                canvasWidth += canvasBuffer;
             }
 
-            // increase canvas height if the current node's y position goes offscreen
-            if(((y + height) + canvasBuffer) >= canvasHeight) {
+            // increase canvas height if the current node moves up offscreen
+            while (nodeGUI.getY() - height - 100 <= 0) {
+
+                for (NodeGUI toTranslate : nodeGUIList) {
+                    toTranslate.setY(toTranslate.getY() + canvasBuffer);
+                }
+
+                canvasHeight += canvasBuffer;
+            }
+
+            // increase canvas height if the current node moves down offscreen
+            while (((y + height) + canvasBuffer) >= canvasHeight) {
                 canvasHeight += canvasBuffer;
             }
         }
@@ -158,13 +226,13 @@ public class QueryTreeGUI {
 
         int offset = 0;
 
-        for(int i = 1; i < nodeGUIS.size(); i++) {
+        for(int i = 1; i < nodeGUIList.size(); i++) {
 
-            NodeGUI prevQueryNodeGUI = nodeGUIS.get(i - 1);
-            NodeGUI currQueryNodeGUI = nodeGUIS.get(i);
-//TODO
-            /*int prevTraversalSize = queryTree.getEveryOperatorsLocation().get(i-1).size();
-            int currTraversalSize = queryTree.getEveryOperatorsLocation().get(i).size();
+            NodeGUI prevQueryNodeGUI = nodeGUIList.get(i - 1);
+            NodeGUI currQueryNodeGUI = nodeGUIList.get(i);
+
+            int prevTraversalSize = nodeLocationList.get(i-1).size();
+            int currTraversalSize = nodeLocationList.get(i).size();
 
             if(currTraversalSize <= prevTraversalSize) {
 
@@ -173,7 +241,7 @@ public class QueryTreeGUI {
                 offset += temp;
 
                 try {
-                    prevQueryNodeGUI = nodeGUIS.get(offset + (i - 1));
+                    prevQueryNodeGUI = nodeGUIList.get(offset + (i - 1));
                 } catch (Exception e) {
                     System.out.println("Problem with getting lines to connect!");
                 }
@@ -186,7 +254,7 @@ public class QueryTreeGUI {
             double currY = currQueryNodeGUI.getY();
 
             Line line = new Line(prevX, prevY, currX, currY);
-            lines.add(line);*/
+            lines.add(line);
         }
 
         // finally drawing to the canvas, drawing lines first, so they appear behind the nodes
@@ -202,7 +270,7 @@ public class QueryTreeGUI {
             gc.strokeLine(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());
         }
 
-        for(NodeGUI nodeGUI : nodeGUIS) {
+        for(NodeGUI nodeGUI : nodeGUIList) {
             nodeGUI.render(gc);
         }
 
