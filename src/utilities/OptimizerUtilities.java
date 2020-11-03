@@ -9,8 +9,10 @@ import utilities.Utilities;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static utilities.Utilities.isNumeric;
+import static utilities.Utilities.isPresent;
 
 /**
  * Class that offers additional functionality to the Optimizer class because that class
@@ -103,16 +105,20 @@ public final class OptimizerUtilities {
     /**
      * Adds unique column names to the provided list of column names
      * @param columnNames is the list of column names to add to
-     * @param toAdd are the column names to add
+     * @param columnNamesToAdd are the column names to add
      * @return list of unique column names
      */
-    public static List<String> addUniqueColumnNames(List<String> columnNames, List<String> toAdd) {
+    public static List<String> addUniqueColumnNames(List<String> columnNames, List<String> columnNamesToAdd) {
 
-        columnNames.addAll(toAdd);
+        List<String> uniqueColumnNames = new ArrayList<>(columnNames);
 
-        return columnNames.stream()
-                .distinct()
-                .collect(Collectors.toList());
+        for (String columnNameToAdd : columnNamesToAdd) {
+            if (! isPresent(columnNameToAdd, uniqueColumnNames)) {
+                uniqueColumnNames.add(columnNameToAdd);
+            }
+        }
+
+        return uniqueColumnNames;
     }
 
     /**
@@ -440,5 +446,11 @@ public final class OptimizerUtilities {
 
     public static boolean isJoinPredicate(String firstColumnName, String secondColumnName) {
         return firstColumnName.contains(".") && (! isNumeric(secondColumnName) && secondColumnName.contains("."));
+    }
+
+    public static <T> void reverseList(List<T> list) {
+        for (int i = 0; i < list.size() / 2; i++) {
+            swap(i, list.size() - i - 1, list);
+        }
     }
 }

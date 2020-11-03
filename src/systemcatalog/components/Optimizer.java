@@ -1,6 +1,5 @@
 package systemcatalog.components;
 
-import datastructures.misc.Pair;
 import datastructures.misc.Triple;
 import datastructures.querytree.operator.types.*;
 import datastructures.relation.resultset.ResultSet;
@@ -506,6 +505,9 @@ public class Optimizer {
                     queryTree.getOperatorsAndLocationsOfType(INNER_JOIN, PREORDER).keySet().stream()
             ).collect(Collectors.toList());
 
+            // reversing the order, following algorithm want joins located near the bottom first when processing
+            reverseList(cartesianProductsAndJoins);
+
             for (Operator operator : cartesianProductsAndJoins) {
 
                 // all this mess does is get the current operator's location
@@ -514,32 +516,53 @@ public class Optimizer {
                         queryTree.getOperatorsAndLocationsOfType(INNER_JOIN, PREORDER).entrySet().stream()
                 ).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)).get(operator);
 
-                // avoid producing a redundant projection (only occurs if root node is a projection)
+                // avoid producing a redundant projection (occurs if root node is a projection and we're at a join)
                 if (queryTree.get(operatorsLocation, UP).getType() == PROJECTION) {
                     continue;
                 }
 
                 // get and add all column names from the left and right projections
                 List<String> columnNamesToProject = new ArrayList<>();
+
                 columnNamesToProject.addAll(queryTree.get(operatorsLocation, LEFT).getReferencedColumnNames());
                 columnNamesToProject.addAll(queryTree.get(operatorsLocation, RIGHT).getReferencedColumnNames());
 
-                // if current operator is a join, subtract the join criteria from the list of column names to project
-                // edge case: node above is an aggregation, make sure that we're not removing column names that
-                // are present in that node!
-                if (operator.getType() == INNER_JOIN) {
-                    if (queryTree.get(operatorsLocation, UP).getType() == AGGREGATION) {
-                        columnNamesToProject = queryTree.get(operatorsLocation, UP).getReferencedColumnNames();
-                    } else {
-                        String firstJoinColumnName = ((InnerJoin) operator).getFirstJoinColumnName();
-                        String secondJoinColumnName = ((InnerJoin) operator).getSecondJoinColumnName();
-                        columnNamesToProject = OptimizerUtilities.minus(columnNamesToProject,
-                                new ArrayList<>(Arrays.asList(firstJoinColumnName, secondJoinColumnName)));
-                        // may get an empty list, in this case, add all referenced column names from the aggregation above
-                        if (columnNamesToProject.isEmpty()) {
-                            columnNamesToProject.addAll(queryTree.get(operatorsLocation, UP)
-                                    .getReferencedColumnNames());
+                // move up the query tree from this position, adding all referenced columns
+                List<QueryTree.Traversal> traversingUp = new ArrayList<>(operatorsLocation);
+                traversingUp.remove(traversingUp.size() - 1);
+                List<String> allReferencedColumnNames = new ArrayList<>();
+
+                while (! traversingUp.isEmpty()) {
+                    allReferencedColumnNames = OptimizerUtilities.addUniqueColumnNames(allReferencedColumnNames,
+                            queryTree.get(traversingUp, NONE).getReferencedColumnNames());
+                    traversingUp.remove(traversingUp.size() - 1);
+                }
+
+                // do one more addition at the root to include its columns
+                allReferencedColumnNames = OptimizerUtilities.addUniqueColumnNames(allReferencedColumnNames,
+                        queryTree.get(new ArrayList<>(), NONE).getReferencedColumnNames());
+
+                // remove from the columns to project columns that do no appear farther up the tree
+                boolean doneRemoving = false;
+                while (! doneRemoving) {
+                    boolean madeChanges = false;
+                    for (int i = 0; i < columnNamesToProject.size(); i++) {
+                        String columnNameToProject = columnNamesToProject.get(i);
+                        boolean foundColumn = false;
+                        for (String referencedColumnName : allReferencedColumnNames) {
+                            if (columnNameToProject.equalsIgnoreCase(referencedColumnName)) {
+                                foundColumn = true;
+                                break;
+                            }
                         }
+                        if (! foundColumn) {
+                            columnNamesToProject.remove(i);
+                            madeChanges = true;
+                            break;
+                        }
+                    }
+                    if (! madeChanges) {
+                        doneRemoving = true;
                     }
                 }
 
@@ -554,8 +577,8 @@ public class Optimizer {
     /**
      * Performs the 5th step in query tree optimization which is to rearrange the ordering of joins
      * such that ones with the most restricted references are executed first in the query tree. This
-     * takes into account selections that are performed in the subtree of where that table is located
-     * as well as available file structures. Performing this action will reduce the write to disk cost
+     * primarily involves finding the query tree that executes the smaller relations first.
+     * Performing this action will reduce the write to disk cost
      * when pipelining intermediary subtrees of the query tree, thus, increasing performance.
      * @param queryTree is the query tree to perform the reordering of joins on
      * @param tables are a list of tables in the system that will be referenced to determine the cost
@@ -564,7 +587,7 @@ public class Optimizer {
      */
     public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) {
 
-        if (joinOptimizationIsOn) {
+        if (! joinOptimizationIsOn) {
             return new QueryTree(queryTree);
         }
 
@@ -595,60 +618,40 @@ public class Optimizer {
         // filter out query tree permutations that contain cartesian products, these will be inherently worse
         permutedQueryTrees = removeQueryTreesWithOperatorsOfType(permutedQueryTrees, CARTESIAN_PRODUCT);
 
-        // for each query tree permutation, calculate the cost it will take to execute each one with respect
-        // to selections encountered and file structures already built
-        int lowestCost = Integer.MAX_VALUE, indexOfLowestCost = 0;
+        // finding the query tree that executes its smallest relations first
+        QueryTree smallestPermutedQueryTree = permutedQueryTrees.get(0);
+        int smallestBlockingSize = Integer.MAX_VALUE;
 
         for (QueryTree permutedQueryTree : permutedQueryTrees) {
-            // convert the operators from this permuted query tree to a stack
-            Deque<Operator> operatorStack =
-                    OptimizerUtilities.setToDeque(permutedQueryTree.getOperatorsAndLocations(PREORDER).keySet());
-            Deque<Integer> costStack = new ArrayDeque<>();
 
-            // perform the calculation
-            while(! operatorStack.isEmpty()) {
-                Operator operator = operatorStack.pop();
-
-                switch(operator.getType()) {
-                    case RELATION: {
-                        Relation relation = (Relation) operator;
-                        Table table = Utilities.getReferencedTable(relation.getTableName(), tables);
+            // mapping each relation to the number of blocks it contains
+            List<Integer> blockSizeOfEachTableInPermutedQueryTree =
+                    permutedQueryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER)
+                    .keySet()
+                    .stream()
+                    .map(relation -> ((Relation) relation).getTableName())
+                    .map(tableName -> Utilities.getReferencedTable(tableName, tables))
+                    .map(table -> {
                         assert table != null;
-                        int recordSize = table.getRecordSize();
-                        int numRecords = table.getNumRecords();
+                        int recordSize = QueryCost.recordSize(table.getColumns());
+                        int numRecords = QueryCost.numberRecords(table);
                         int blockingFactor = QueryCost.blockingFactor(recordSize);
-                        int blocks = QueryCost.blocks(numRecords, blockingFactor);
-                        costStack.push(blocks);
-                        break;
-                    }
-                    case SIMPLE_SELECTION: {
-                        SimpleSelection simpleSelection = (SimpleSelection) operator;
-                        
-                        break;
-                    }
-                    case INNER_JOIN: {
-                        InnerJoin innerJoin = (InnerJoin) operator;
-                        break;
-                    }
-                }
+                        return QueryCost.blocks(numRecords, blockingFactor);
+                    })
+                    .collect(Collectors.toList());
+
+            // this is not a perfect science, just adding the deepest tables blocks together first
+            // and if there are matches, choose the query with the largest table that's executed last
+            int leftDeepNodeBlocks = blockSizeOfEachTableInPermutedQueryTree.get(0);
+            int rightDeepNodeBlocks = blockSizeOfEachTableInPermutedQueryTree.get(1);
+
+            if (leftDeepNodeBlocks + rightDeepNodeBlocks < smallestBlockingSize) {
+                smallestBlockingSize = leftDeepNodeBlocks + rightDeepNodeBlocks;
+                smallestPermutedQueryTree = permutedQueryTree;
             }
-            // for each relation, traverse up the tree, calculating cost along the way
-
-
-            // get each node from the tree
-            // determine type of node
-            // relation
-            // map to system data
-            // get size and add it to running cost
-            // selection
-            // map to system data
-            // calculate the cost and add it to running cost
-            // join
-            // map to system data
-            // calculate the cost and add it to running cost
         }
 
-        return queryTree;
+        return smallestPermutedQueryTree;
     }
 
     /**

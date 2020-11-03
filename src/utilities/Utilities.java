@@ -538,5 +538,13 @@ public final class Utilities {
         return true;
     }
 
+    public static boolean isPresent(String candidate, List<String> columnNames) {
+        for (String columnName : columnNames) {
+            if (columnName.equalsIgnoreCase(candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 }
