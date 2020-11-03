@@ -318,6 +318,21 @@ public class User {
     }
 
     /**
+     * Completely removes the table privileges with the given name from the user.
+     * Only called when a table gets dropped in the system
+     * @param tableName is the name of table privileges to remove
+     */
+    public void removeTablePrivileges(String tableName) {
+        for (int i = 0; i < tablePrivilegesList.size(); i++) {
+            String currentName = tablePrivilegesList.get(i).getTableName();
+            if (currentName.equalsIgnoreCase(tableName)) {
+                tablePrivilegesList.remove(i);
+                break;
+            }
+        }
+    }
+
+    /**
      * @param tableName is the table name to check
      * @param toCheck is the privilege to check in the given table name
      * @return whether there exists a privilege in the associated table privileges list

@@ -210,7 +210,7 @@ public class Compiler {
      * @param filteredInput is the filtered input
      * @param tables is a list of system tables
      * @param users is a list of users of the system, will need to remove all table privileges on the dropped
-     * table from each user
+     * table from each user because that table will no longer exist
      */
     public void dropTable(String[] filteredInput, List<Table> tables, List<User> users) {
 
@@ -232,6 +232,11 @@ public class Compiler {
         for (Table table : tables) {
             Map<String, String> foreignKeys = table.getForeignKeys();
             foreignKeys.remove(table.getTableName());
+        }
+
+        // remove the table privileges on that table from each user
+        for (User user : users) {
+            user.removeTablePrivileges(tableNameToRemove);
         }
     }
 

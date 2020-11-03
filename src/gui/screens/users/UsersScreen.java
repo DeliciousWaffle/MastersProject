@@ -98,7 +98,8 @@ public class UsersScreen extends Screen {
             List<TablePrivilegePane> passableTablePrivilegePaneList = new ArrayList<>();
 
             for(TablePrivileges passableTablePrivilege : user.getGrantedTablePrivilegesList()) {
-                TablePrivilegePane passableTablePrivilegePane = new TablePrivilegePane(passableTablePrivilege.getTableName(),
+                TablePrivilegePane passableTablePrivilegePane =
+                        new TablePrivilegePane(passableTablePrivilege.getTableName(),
                         passableTablePrivilege.getPrivileges(), passableTablePrivilege.getUpdateColumns(),
                         passableTablePrivilege.getReferenceColumns());
                 passableTablePrivilegePaneList.add(passableTablePrivilegePane);
@@ -127,6 +128,7 @@ public class UsersScreen extends Screen {
             tablePrivilegePaneListLayout.getChildren().addAll(blah1);
             tablePrivilegePaneListLayout.getChildren().add(passableTablePrivilegesText);
             tablePrivilegePaneListLayout.getChildren().addAll(blah2);
+            tablePrivilegePaneListLayout.setMinSize(Screen.defaultWidth / 2 - 60, 0);
 
             listOfTablePrivilegePaneListLayouts.add(tablePrivilegePaneListLayout);
 
@@ -187,9 +189,6 @@ public class UsersScreen extends Screen {
         this.userContentScrollPane = new ScrollPane();
         userContentScrollPane.setContent(userContentContainerLayout);
         userContentScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
-        userContentScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
-        userContentScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        userContentScrollPane.setHvalue(0.5);
 
         this.leftSideContainer = new BorderPane();
         leftSideContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
@@ -202,12 +201,8 @@ public class UsersScreen extends Screen {
         BorderPane.setAlignment(tablePrivilegesText, Pos.CENTER);
 
         // DBA's table privileges shown first
-        listOfTablePrivilegePaneListLayouts.forEach(e -> e.setAlignment(Pos.CENTER));
         tablePrivilegeListLayoutScrollPane.setContent(listOfTablePrivilegePaneListLayouts.get(0));
         tablePrivilegeListLayoutScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
-        tablePrivilegeListLayoutScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
-        tablePrivilegeListLayoutScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        tablePrivilegeListLayoutScrollPane.setHvalue(0.5);
 
         this.rightSideContainer = new BorderPane();
         rightSideContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
@@ -239,14 +234,16 @@ public class UsersScreen extends Screen {
             super.adjustButtonWidth(newWidth);
             userContentScrollPane.setPrefWidth(newWidth / 2);
             tablePrivilegeListLayoutScrollPane.setPrefWidth(newWidth / 2);
-            listOfTablePrivilegePaneListLayouts.forEach(e -> e.setPrefWidth(newWidth / 2));
+            listOfTablePrivilegePaneListLayouts.forEach(e -> e.setPrefWidth(newWidth / 2 - 22));
             usersScreenLayout.setPrefWidth(newWidth);
+            userContentContainerLayout.setPrefWidth(newWidth / 2 - 22); // 22 is slack for scroll bar
         });
 
         usersScreen.heightProperty().addListener((observable, oldValue, newValue) -> {
             double newHeight = (double) newValue;
             userContentScrollPane.setPrefHeight(newHeight - 200);
             tablePrivilegeListLayoutScrollPane.setPrefHeight(newHeight - 200);
+            userContentContainerLayout.setPrefHeight(newHeight);
         });
     }
 
@@ -269,7 +266,8 @@ public class UsersScreen extends Screen {
         this.userContentScrollPane.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
         this.userContentContainerList.forEach(e -> e.setBackground(new Background(
                 new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY))));
-        this.tablePrivilegeListLayoutScrollPane.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
+        this.tablePrivilegeListLayoutScrollPane
+                .getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
         this.listOfTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToLightMode));
         this.passableTablePrivilegesTextList.forEach(e -> e.setFill(Color.BLACK));
         this.listOfPassableTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToLightMode));
@@ -289,7 +287,8 @@ public class UsersScreen extends Screen {
         this.userContentScrollPane.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         this.userContentContainerList.forEach(e -> e.setBackground(new Background(
                 new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY))));
-        this.tablePrivilegeListLayoutScrollPane.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        this.tablePrivilegeListLayoutScrollPane
+                .getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         this.listOfTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToDarkMode));
         this.passableTablePrivilegesTextList.forEach(e -> e.setFill(Color.WHITE));
         this.listOfPassableTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToDarkMode));
