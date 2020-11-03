@@ -70,7 +70,7 @@ public class QueryTreeWindow extends Stage {
         leftButton.setOnAction(e -> {
             decrementStateIndex();
             root.setTop(queryTreeGUIStates.get(stateIndex).getContainer());
-            
+
             if (stateIndex >= optimizationInfoButtons.size()) {
                 infoContainer.setCenter(optimizationInfoButtons.get(optimizationInfoButtons.size() - 1));
             } else {

@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * A GUI representation of the query tree and needs a healthy refactor.
+ */
 public class QueryTreeGUI {
 
     private final ScrollPane container;
@@ -85,6 +88,9 @@ public class QueryTreeGUI {
                             }
                         }
                         return new String(tokens);
+                    } else if (operator.getType() == Operator.Type.INNER_JOIN) {
+                        String text = operator.toString();
+                        return text.replaceAll("= ", "=\n");
                     } else {
                         return operator.toString();
                     }
@@ -124,12 +130,12 @@ public class QueryTreeGUI {
 
                 // get the height of the node located at the current working traversal
                 Operator operator = queryTree.get(workingTraversal, QueryTree.Traversal.NONE);
-                String blah = operator.toString();
+                String operatorString = operator.toString();
                 if (operator.getType() == Operator.Type.PROJECTION ||
                         operator.getType() == Operator.Type.COMPOUND_SELECTION) {
-                    blah = operator.toString();
-                    blah = blah.replaceAll("∧ ", "∧\n");
-                    char[] tokens = blah.toCharArray();
+                    operatorString = operator.toString();
+                    operatorString = operatorString.replaceAll("∧ ", "∧\n");
+                    char[] tokens = operatorString.toCharArray();
                     int occurrences = 0;
                     for (int q = 0; q < tokens.length - 1; q++) {
                         if (tokens[q] == ',') {
@@ -140,9 +146,12 @@ public class QueryTreeGUI {
                             }
                         }
                     }
-                    blah = new String(tokens);
+                    operatorString = new String(tokens);
+                } else if (operator.getType() == Operator.Type.INNER_JOIN) {
+                    operatorString = operator.toString();
+                    operatorString = operatorString.replaceAll("= ", "=\n");
                 }
-                temp = new Text(blah);
+                temp = new Text(operatorString);
                 temp.setFont(new Font(35));
                 double width = temp.getLayoutBounds().getWidth();
                 height = temp.getLayoutBounds().getHeight();

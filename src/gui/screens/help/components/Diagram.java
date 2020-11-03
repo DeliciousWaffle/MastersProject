@@ -1,7 +1,11 @@
 package gui.screens.help.components;
 
+import files.io.FileType;
+import files.io.IO;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
@@ -18,11 +22,11 @@ import javafx.stage.Stage;
 public class Diagram extends Stage {
 
     public enum Type {
-        SCHEMA, QUERY, CREATE_TABLE, ALTER_TABLE, DROP_TABLE, INSERT, UPDATE, DELETE, GRANT, REVOKE,
+        ER_DIAGRAM, SCHEMA, QUERY, CREATE_TABLE, ALTER_TABLE, DROP_TABLE, INSERT, UPDATE, DELETE, GRANT, REVOKE,
         BUILD_FILE_STRUCTURE, REMOVE_FILE_STRUCTURE
     }
 
-    public Diagram(String diagramTitle, String diagramFilename, double windowWidth, double windowHeight) {
+    public Diagram(String diagramTitle, String diagramFilename) {
 
         // setting the title
         Text text = new Text(diagramTitle);
@@ -40,8 +44,8 @@ public class Diagram extends Stage {
 
         // used to give the image view extra whitespace padding
         BorderPane imageWhiteSpacePadding = new BorderPane();
-        imageWhiteSpacePadding.setPrefWidth(windowWidth);
-        imageWhiteSpacePadding.setPrefHeight(windowHeight);
+        imageWhiteSpacePadding.setPrefWidth(1080);
+        imageWhiteSpacePadding.setPrefHeight(720);
         imageWhiteSpacePadding.setCenter(imageView);
         imageWhiteSpacePadding.setBackground(
                 new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
@@ -50,12 +54,26 @@ public class Diagram extends Stage {
         BorderPane containsEverything = new BorderPane();
         containsEverything.setTop(centerText);
         containsEverything.setCenter(imageWhiteSpacePadding);
+        containsEverything.setStyle("-fx-background-color: white;");
 
-        Scene scene = new Scene(containsEverything, windowWidth, windowHeight);
+        // allow the user to scroll around the image
+        ScrollPane scrollPane = new ScrollPane(containsEverything);
+        scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+
+        Scene scene = new Scene(scrollPane, 1080, 720);
+
+        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
+            double newWidth = (double) newValue;
+            containsEverything.setPrefWidth(newWidth);
+        });
+
+        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
+            double newHeight = (double) newValue;
+            containsEverything.setPrefHeight(newHeight);
+        });
 
         this.setTitle(diagramTitle);
         this.setScene(scene);
-        this.setResizable(false);
         this.show();
     }
 }

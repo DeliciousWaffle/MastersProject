@@ -2,18 +2,15 @@ package gui.screens.terminal;
 
 import datastructures.querytree.QueryTree;
 import datastructures.relation.resultset.ResultSet;
-import datastructures.rulegraph.RuleGraph;
 import enums.InputType;
 import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
 import gui.screens.Screen;
-import gui.screens.tables.components.tabledatawindow.TableDataWindow;
 import gui.screens.terminal.popupwindows.QueryTreeWindow;
 import gui.screens.terminal.popupwindows.RecommendedFileStructuresWindow;
 import gui.screens.terminal.popupwindows.RelationalAlgebraWindow;
 import gui.screens.terminal.popupwindows.ResultSetWindow;
-import gui.screens.terminal.popupwindows.querytreegui.popupwindows.QueryTreeOptimizationHeuristicWindows;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -125,6 +122,12 @@ public class TerminalScreen extends Screen {
                 input = input.split(";")[0];
                 systemCatalog.executeInput(input);
                 output.setText(systemCatalog.getExecutionMessage());
+                // upon successful execution of a dml statement, refresh the tables/users screens to reflect the changes
+                boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
+                boolean executedDML = systemCatalog.getInputType() != InputType.QUERY;
+                if (wasSuccessfullyExecuted && executedDML) {
+                    screenController.refresh(systemCatalog);
+                }
             }
         });
 

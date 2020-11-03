@@ -31,9 +31,7 @@ public class TablesScreen extends Screen {
         HBox buttonLayout = super.getButtonLayout(screenController);
 
         // convert the tables that we have in system to a gui representation
-        String blah = IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES);
-        List<Table> tables = Serializer.unSerializeTables(blah);
-
+        List<Table> tables = systemCatalog.getTables();
         this.tablePaneList = new ArrayList<>();
 
         for(Table table : tables) {
@@ -67,14 +65,6 @@ public class TablesScreen extends Screen {
         tablePanesScrollLayout.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         tablePanesLayout.setPadding(new Insets(10, 20, 20, 20));
 
-        // increase scroll speed
-        tablePanesLayout.setOnScroll(e -> {
-            double deltaY = e.getDeltaY() * 1.1;
-            double width = tablePanesScrollLayout.getContent().getBoundsInLocal().getWidth();
-            double vValue = tablePanesScrollLayout.getVvalue();
-            tablePanesScrollLayout.setVvalue(vValue + -(deltaY / width));
-        });
-
         // add the button layout and content layout to overall screen
         this.overallLayout = new BorderPane();
         overallLayout.setTop(buttonLayout);
@@ -87,6 +77,7 @@ public class TablesScreen extends Screen {
 
         tablesScreen.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = (double) newValue;
+            super.adjustButtonWidth(newWidth);
             tablePanesScrollLayout.setPrefWidth(newWidth);
         });
 

@@ -3,16 +3,12 @@ package gui.screens.help.components;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.Screen;
-import gui.screens.help.components.diagramwindows.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -48,47 +44,64 @@ public class HelpPane {
 
         // if the button is clicked, what kind of window does it launch?
         switch(diagramType) {
+            case ER_DIAGRAM:
+                button.setOnAction(e -> new Diagram("ER Diagram",
+                        "ERDiagram.png"));
+                break;
             case SCHEMA:
-                button.setOnAction(e -> new SchemaDiagram());
+                button.setOnAction(e -> new Diagram("Database Schema",
+                        "DatabaseSchema.png"));
                 break;
             case QUERY:
-                button.setOnAction(e -> new QueryDiagram());
+                button.setOnAction(e -> new Diagram("Query Diagram",
+                        "QueryDiagram.png"));
                 break;
             case CREATE_TABLE:
-                button.setOnAction(e -> new CreateTableDiagram());
+                button.setOnAction(e -> new Diagram("Create Table Diagram",
+                        "CreateTableDiagram.png"));
                 break;
             case ALTER_TABLE:
-                button.setOnAction(e -> new AlterTableDiagram());
+                button.setOnAction(e -> new Diagram("Alter Table Diagram",
+                        "AlterTableDiagram.png"));
                 break;
             case DROP_TABLE:
-                button.setOnAction(e -> new DropTableDiagram());
+                button.setOnAction(e -> new Diagram("Drop Table Diagram",
+                        "DropTableDiagram.png"));
                 break;
             case INSERT:
-                button.setOnAction(e -> new InsertDiagram());
+                button.setOnAction(e -> new Diagram("Insert Diagram",
+                        "InsertDiagram.png"));
                 break;
             case UPDATE:
-                button.setOnAction(e -> new UpdateDiagram());
+                button.setOnAction(e -> new Diagram("Update Diagram",
+                        "UpdateDiagram.png"));
                 break;
             case DELETE:
-                button.setOnAction(e -> new DeleteDiagram());
+                button.setOnAction(e -> new Diagram("Delete Diagram",
+                        "DeleteDiagram.png"));
                 break;
             case GRANT:
-                button.setOnAction(e -> new GrantDiagram());
+                button.setOnAction(e -> new Diagram("Grant Diagram",
+                        "GrantDiagram.png"));
                 break;
             case REVOKE:
-                button.setOnAction(e -> new RevokeDiagram());
+                button.setOnAction(e -> new Diagram("Revoke Diagram",
+                        "RevokeDiagram.png"));
                 break;
             case BUILD_FILE_STRUCTURE:
-                button.setOnAction(e -> new BuildFileStructureDiagram());
+                button.setOnAction(e -> new Diagram("Build File Structure Diagram",
+                        "BuildFileStructureDiagram.png"));
                 break;
             case REMOVE_FILE_STRUCTURE:
-                button.setOnAction(e -> new RemoveFileStructureDiagram());
+                button.setOnAction(e -> new Diagram("Remove File Structure Diagram",
+                        "RemoveFileStructureDiagram.png"));
                 break;
         }
 
         // creating the help pane
         this.helpPane = new BorderPane();
-        helpPane.setMinSize(0, 0);
+        helpPane.setMinSize(Screen.defaultWidth - 100.0, 0);
+        helpPane.setMaxWidth(Screen.defaultWidth - 100.0);
         BorderPane.setAlignment(text, Pos.CENTER);
         BorderPane.setAlignment(button, Pos.CENTER);
         helpPane.setTop(text);

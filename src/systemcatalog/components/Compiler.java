@@ -130,7 +130,7 @@ public class Compiler {
                 createTable(filteredInput, tables);
                 break;
             case DROP_TABLE:
-                dropTable(filteredInput, tables);
+                dropTable(filteredInput, tables, users);
                 break;
             case ALTER_TABLE:
                 alterTable(filteredInput, tables);
@@ -209,8 +209,10 @@ public class Compiler {
      * Executes the DROP TABLE command, removing a table from the system tables.
      * @param filteredInput is the filtered input
      * @param tables is a list of system tables
+     * @param users is a list of users of the system, will need to remove all table privileges on the dropped
+     * table from each user
      */
-    public void dropTable(String[] filteredInput, List<Table> tables) {
+    public void dropTable(String[] filteredInput, List<Table> tables, List<User> users) {
 
         RuleGraph dropTableRuleGraph = RuleGraphTypes.getDropTableRuleGraph();
 

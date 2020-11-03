@@ -14,7 +14,7 @@ import systemcatalog.SystemCatalog;
 public class ScreenController {
 
     private final Stage primaryStage;
-    private final Screen terminalScreen, tablesScreen, usersScreen, optionsScreen, helpScreen;
+    private Screen terminalScreen, tablesScreen, usersScreen, optionsScreen, helpScreen;
 
     public ScreenController(Stage primaryStage, SystemCatalog systemCatalog) {
 
@@ -64,6 +64,12 @@ public class ScreenController {
                 primaryStage.show();
                 break;
         }
+    }
+
+    // a bit of a hack to refresh data that might have been modified during execution of the input
+    public void refresh(SystemCatalog systemCatalog) {
+        tablesScreen = new TablesScreen(this, systemCatalog);
+        usersScreen = new UsersScreen(this, systemCatalog);
     }
 
     // sets all UI elements to light mode
