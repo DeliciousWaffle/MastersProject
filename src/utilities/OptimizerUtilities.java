@@ -411,9 +411,24 @@ public final class OptimizerUtilities {
      */
     public static List<String> removePrefixedColumnNames(List<String> prefixedColumnNames) {
         return prefixedColumnNames.stream()
-                .map(prefixedColumnName -> isAmbiguousColumnName(prefixedColumnName, prefixedColumnNames)
-                        ? prefixedColumnName // don't remove the prefixed table name if not unique
-                        : prefixedColumnName.split("\\.")[1]) // remove the prefixed table name if unique
+                .map(prefixedColumnName -> {
+                    // is ambiguous, don't remove prefixing
+                    if (isAmbiguousColumnName(prefixedColumnName, prefixedColumnNames)) {
+                        return prefixedColumnName;
+                    // remove prefixing
+                    } else {
+                        // is an aggregated column name
+                        if (prefixedColumnName.contains("(") && prefixedColumnName.contains(")")) {
+                            String aggregateFunction = prefixedColumnName.split("\\(")[0];
+                            String columnName = prefixedColumnName.split("\\(")[1];
+                            columnName = columnName.substring(0, columnName.length() - 1); // remove trailing ")"
+                            return aggregateFunction + "(" + columnName.split("\\.")[1] + ")";
+                        // regular column name
+                        } else {
+                            return prefixedColumnName.split("\\.")[1];
+                        }
+                    }
+                })
                 .collect(Collectors.toList());
     }
 

@@ -70,7 +70,12 @@ public class QueryTreeWindow extends Stage {
         leftButton.setOnAction(e -> {
             decrementStateIndex();
             root.setTop(queryTreeGUIStates.get(stateIndex).getContainer());
-            infoContainer.setCenter(optimizationInfoButtons.get(stateIndex));
+            
+            if (stateIndex >= optimizationInfoButtons.size()) {
+                infoContainer.setCenter(optimizationInfoButtons.get(optimizationInfoButtons.size() - 1));
+            } else {
+                infoContainer.setCenter(optimizationInfoButtons.get(stateIndex));
+            }
         });
 
         // on right click, go to next state in query tree
@@ -79,10 +84,10 @@ public class QueryTreeWindow extends Stage {
             incrementStateIndex();
             root.setTop(queryTreeGUIStates.get(stateIndex).getContainer());
 
-            try {
-                infoContainer.setCenter(optimizationInfoButtons.get(stateIndex));
-            } catch(ArrayIndexOutOfBoundsException blah) {
+            if (stateIndex >= optimizationInfoButtons.size()) {
                 infoContainer.setCenter(optimizationInfoButtons.get(optimizationInfoButtons.size() - 1));
+            } else {
+                infoContainer.setCenter(optimizationInfoButtons.get(stateIndex));
             }
         });
 
@@ -162,7 +167,7 @@ public class QueryTreeWindow extends Stage {
         leftButton.setVisible(true);
         rightButton.setVisible(true);
 
-        if(stateIndex < 0) {
+        if(stateIndex <= 0) {
             stateIndex = 0;
             leftButton.setVisible(false);
         }
@@ -174,7 +179,7 @@ public class QueryTreeWindow extends Stage {
         rightButton.setVisible(true);
         leftButton.setVisible(true);
 
-        if(stateIndex > queryTreeGUIStates.size() - 1) {
+        if(stateIndex >= queryTreeGUIStates.size() - 1) {
             stateIndex = queryTreeGUIStates.size() - 1;
             rightButton.setVisible(false);
         }

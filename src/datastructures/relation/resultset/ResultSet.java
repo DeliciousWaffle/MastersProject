@@ -468,6 +468,7 @@ public class ResultSet {
             if (columnToAdd.getDataType() == DataType.CHAR) {
                 columnToAdd.setDataType(DataType.NUMBER);
             }
+
             columnsToAggregateCopy.add(columnToAdd);
         }
 
