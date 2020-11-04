@@ -735,7 +735,14 @@ public class Optimizer {
 
         naiveRelationalAlgebra.append(closingBrackets);
 
-        return naiveRelationalAlgebra.toString();
+        String toReturn = naiveRelationalAlgebra.toString();
+
+        // if the size is very long, break up into multiple lines
+        if (toReturn.length() > 75) {
+            toReturn = toReturn.replaceAll("\\[", "\n\t[");
+        }
+
+        return toReturn;
     }
 
     /**
@@ -768,11 +775,21 @@ public class Optimizer {
                 .collect(Collectors.toList());
 
         // appending to string builder
-        pipelinedExpressions.forEach(pipelinedExpression ->
-                optimizedRelationalAlgebra.append(pipelinedExpression.getRelationalAlgebra()).append("\n"));
+        pipelinedExpressions.forEach(pipelinedExpression -> {
+            String toAppend = pipelinedExpression.getRelationalAlgebra();
+            if (toAppend.length() > 75) {
+                toAppend = toAppend.replaceAll("\\[", "\n\t[");
+            }
+            optimizedRelationalAlgebra.append(toAppend).append("\n");
+        });
 
         // remove "\n"
         optimizedRelationalAlgebra.deleteCharAt(optimizedRelationalAlgebra.length() - 1);
+
+        // remove "P = " junk
+        if (pipelinedQueryTrees.size() == 1) {
+            optimizedRelationalAlgebra.delete(0, 6);
+        }
 
         return optimizedRelationalAlgebra.toString();
     }
