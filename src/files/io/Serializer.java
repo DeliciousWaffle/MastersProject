@@ -449,7 +449,7 @@ public class Serializer {
             }
 
             toSerialize.append("\t").append("FOREIGN KEY LIST DONE").append("\n");
-            toSerialize.append("\t").append("IsClusteredWith: ").append(table.getClusteredWith()).append("\n");
+            toSerialize.append("\t").append("IsClusteredWith: ").append(table.getClusteredWithTableName()).append("\n");
             toSerialize.append("\t").append("TableDataFilename: ").append(table.getTableName())
                     .append(".txt").append("\n");
             toSerialize.append("TABLE DONE").append("\n");

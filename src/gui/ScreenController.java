@@ -1,5 +1,6 @@
 package gui;
 
+import datastructures.relation.table.Table;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.options.OptionsScreen;
@@ -68,6 +69,9 @@ public class ScreenController {
 
     // a bit of a hack to refresh data that might have been modified during execution of the input
     public void refresh(SystemCatalog systemCatalog) {
+        for (Table table : systemCatalog.getTables()) {
+            System.out.println(table.getTableName() + " is clusterd iwth : " + table.getClusteredWithTableName());
+        }
         tablesScreen = new TablesScreen(this, systemCatalog);
         usersScreen = new UsersScreen(this, systemCatalog);
     }

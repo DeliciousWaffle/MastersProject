@@ -189,7 +189,7 @@ public class Table {
     /**
      * @return the table name that this table is clustered with
      */
-    public String getClusteredWith() {
+    public String getClusteredWithTableName() {
         return clusteredWith;
     }
 
@@ -348,7 +348,7 @@ public class Table {
             }
         }
 
-        if(! otherTable.getClusteredWith().equals(this.getClusteredWith())) {
+        if(! otherTable.getClusteredWithTableName().equals(this.getClusteredWithTableName())) {
             return false;
         }
 

@@ -3,7 +3,6 @@ package test.systemcatalog.components;
 import datastructures.querytree.QueryTree;
 import datastructures.relation.resultset.ResultSet;
 import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
 import datastructures.user.User;
 import enums.InputType;
 import files.io.FileType;
@@ -12,7 +11,6 @@ import files.io.Serializer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import systemcatalog.components.Optimizer;
@@ -21,11 +19,7 @@ import systemcatalog.components.Parser;
 import systemcatalog.components.Verifier;
 import utilities.Utilities;
 
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -255,7 +249,7 @@ public class CompilerTest {
         tables.stream()
                 .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
                 .forEach(table -> {
-                    System.out.println(table.getTableName() + " clustered with " + table.getClusteredWith());
+                    System.out.println(table.getTableName() + " clustered with " + table.getClusteredWithTableName());
                     table.getColumns()
                         .forEach(col -> System.out.println(col + " " + col.getFileStructure()));
                 });
@@ -278,7 +272,7 @@ public class CompilerTest {
         tables.stream()
                 .filter(table -> table.getTableName().equalsIgnoreCase("Customers"))
                 .forEach(table -> {
-                    System.out.println(table.getTableName() + " clustered with " + table.getClusteredWith());
+                    System.out.println(table.getTableName() + " clustered with " + table.getClusteredWithTableName());
                     table.getColumns()
                             .forEach(col -> System.out.println(col + " " + col.getFileStructure()));
                 });

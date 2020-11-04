@@ -4,117 +4,173 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import files.io.FileType;
 import files.io.IO;
-import gui.screens.tables.components.tabledatawindow.TableDataWindow;
+import gui.ScreenController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import systemcatalog.SystemCatalog;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
+// TODO figure out how to refresh the screen for clustered table stuff
 public class TablePane {
 
     private BorderPane tablePane;
     private Text tableNameText;
     private List<ColumnPane> columnPaneList;
-    private ChoiceBox<String> clusteredFileTableOptions;
+    //private ChoiceBox<String> clusteredFileTableOptions;
     private Button viewTableDataButton;
 
-    public TablePane(Table table, List<String> otherTableNames) {
+    public TablePane(Table table, SystemCatalog systemCatalog, ScreenController screenController) {
 
-        double fontSize = 50.0;
-
-        // setting the name
+        // getting the table data
         String tableName = table.getTableName();
-        this.tableNameText = new Text(tableName);
-        tableNameText.setFont(new Font(fontSize));
-        tableNameText.setTextAlignment(TextAlignment.CENTER);
+        List<String> primaryKeys = table.getPrimaryKeys();
+        Map<String, String> foreignKeys = table.getForeignKeys();
+        String clusteredWithTableName = table.getClusteredWithTableName();
+        List<Column> columns = table.getColumns();
+
+        // used to store all information of this table pane
+        VBox tableContent = new VBox(15);
+        tableContent.setAlignment(Pos.TOP_CENTER);
+        tableContent.setBackground(new Background(
+                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
+        tableContent.setEffect(new DropShadow(
+                BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
+        Text tableNameText = new Text(tableName);
+        tableNameText.setFont(new Font(50.0));
         tableNameText.setFill(Color.WHITE);
 
-        // setting the columns
-        this.columnPaneList = new ArrayList<>();
+        tableContent.getChildren().add(tableNameText);
 
-        for(Column column : table.getColumns()) {
-            columnPaneList.add(new ColumnPane(column, "None"));
-        }
 
-        VBox columnPanesLayout = new VBox();
-        columnPanesLayout.setSpacing(20);
-        columnPanesLayout.getChildren().addAll(columnPaneList.stream()
-                .map(ColumnPane::getColumnPane)
-                .collect(Collectors.toList())
-        );
+        // used to contain the primary keys button, and foreign keys button; gets added ot the table content later
+        BorderPane keyButtonsContainer = new BorderPane();
 
-        // adding a choice box for choosing a table to build a clustered file with
-        this.clusteredFileTableOptions = new ChoiceBox<>();
-        clusteredFileTableOptions.getItems().addAll(otherTableNames);
+        Button primaryKeysButton = new Button("Primary Key(s)");
+        primaryKeysButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        primaryKeysButton.setFont(new Font(25.0));
+        primaryKeysButton.setOnAction(e -> new KeyWindow("Primary Key", primaryKeys));
 
-        if(table.getClusteredWith().equalsIgnoreCase("none")) {
+        BorderPane.setMargin(primaryKeysButton, new Insets(0, 7.5, 0, 15));
+        keyButtonsContainer.setLeft(primaryKeysButton);
+
+        Button foreignKeysButton = new Button("Foreign Key(s)");
+        foreignKeysButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        foreignKeysButton.setFont(new Font(25.0));
+
+        List<String> formattedForeignKeys = foreignKeys
+                .entrySet()
+                .stream()
+                .map(entry -> entry.getValue() + " is a foreign key to table " + entry.getKey())
+                .collect(Collectors.toList());
+        foreignKeysButton.setOnAction(e -> new KeyWindow("Foreign Key", formattedForeignKeys));
+
+        BorderPane.setMargin(foreignKeysButton, new Insets(0, 15, 0, 7.5));
+        keyButtonsContainer.setRight(foreignKeysButton);
+
+        tableContent.getChildren().add(keyButtonsContainer);
+
+
+        // creating a choice box to show what tables can be clustered with others
+        ChoiceBox<String> clusteredFileTableOptions = new ChoiceBox<>();
+        clusteredFileTableOptions.getItems().addAll(
+                systemCatalog.getTables()
+                .stream()
+                .map(Table::getTableName)
+                        // add all table names except for this one
+                        .filter(systemTableName -> ! tableName.equalsIgnoreCase(systemTableName))
+                .collect(Collectors.toList()));
+        clusteredFileTableOptions.getItems().add("Clustered With No Table");
+
+        if (clusteredWithTableName.equalsIgnoreCase("none")) {
             clusteredFileTableOptions.setValue("Clustered With No Table");
         } else {
-            clusteredFileTableOptions.setValue(table.getClusteredWith());
+            clusteredFileTableOptions.setValue(table.getClusteredWithTableName());
         }
+
+        // if the user clusters this table with another table, reflect that change in the system
+        clusteredFileTableOptions.setOnAction(e -> {
+            boolean isRemovingClustering =
+                    clusteredFileTableOptions.getValue().equalsIgnoreCase("Clustered With No Table");
+            // remove the clustering from this table along with the other table that is clustered with this one
+            if (isRemovingClustering) {
+                table.setClusteredWith("none");
+                systemCatalog.getTables().forEach(t -> {
+                    if (t.getClusteredWithTableName().equalsIgnoreCase(tableName)) {
+                        t.setClusteredWith("none");
+                    }
+                });
+            // cluster both tables
+            } else {
+                String otherClusterTable = clusteredFileTableOptions.getValue();
+                // if this table was previously clustered with another table, remove the clustering from the other table
+                systemCatalog.getTables().forEach(t -> {
+                    if (t.getClusteredWithTableName().equalsIgnoreCase(tableName)) {
+                        t.setClusteredWith("none");
+                    }
+                });
+                systemCatalog.getTables().forEach(t -> {
+                    if (t.getClusteredWithTableName().equalsIgnoreCase(otherClusterTable)) {
+                        t.setClusteredWith("none");
+                    }
+                });
+                // set this table as clustered
+                systemCatalog.getTables().forEach(t -> {
+                    if (t.getTableName().equalsIgnoreCase(tableName)) {
+                        t.setClusteredWith(otherClusterTable);
+                    }
+                });
+                // set the other table clustered with this table
+                systemCatalog.getTables().forEach(t -> {
+                    if (t.getTableName().equalsIgnoreCase(otherClusterTable)) {
+                        t.setClusteredWith(tableName);
+                    }
+                });
+            }
+            // bad hack to force refresh of the screen
+            screenController.refresh(systemCatalog);
+        });
 
         clusteredFileTableOptions.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
         clusteredFileTableOptions.setStyle("-fx-font-size: 25; -fx-pref-width: 360;");
         clusteredFileTableOptions.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
-        // adding a button that allows the user to view the table data
-        this.viewTableDataButton = new Button("View Table Data");
-        viewTableDataButton.setMinSize(0, 0);
-        viewTableDataButton.setPrefWidth(360);
-        viewTableDataButton.setFont(new Font(25));
-        viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        tableContent.getChildren().add(clusteredFileTableOptions);
 
-        // create a new window containing the table's data
-        List<String> columnNames = new ArrayList<>();
 
-        for(Column column : table.getColumns()) {
-            String columnName = column.getColumnName();
-            columnNames.add(columnName);
-        }
+        // create and add each column pane to the table pane
+        tableContent.getChildren().addAll(table
+                .getColumns()
+                .stream()
+                .map(ColumnPane::new)
+                .map(ColumnPane::getColumnPane)
+                .collect(Collectors.toList()));
 
-        viewTableDataButton.setOnAction(e -> {
-            new TableDataWindow(tableName, columnNames, table.getTableData().getData());
-        });
+        // add a button to view the table data
+        Button viewTableDataButton = new Button("View Table Data");
+        viewTableDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        viewTableDataButton.setFont(new Font(25.0));
 
-        // adding everything to the main pane
-        BorderPane topContainer = new BorderPane();
-        topContainer.setTop(tableNameText);
-        topContainer.setBottom(columnPanesLayout);
+        VBox.setMargin(viewTableDataButton, new Insets(0, 0, 15, 0));
+        tableContent.getChildren().add(viewTableDataButton);
 
-        BorderPane bottomContainer = new BorderPane();
-        bottomContainer.setTop(clusteredFileTableOptions);
-        bottomContainer.setBottom(viewTableDataButton);
-
-        this.tablePane = new BorderPane();
-        tablePane.setTop(topContainer);
-        tablePane.setBottom(bottomContainer);
-
-        BorderPane.setAlignment(tableNameText, Pos.CENTER);
-        BorderPane.setAlignment(columnPanesLayout, Pos.CENTER);
-        BorderPane.setAlignment(clusteredFileTableOptions, Pos.CENTER);
-        BorderPane.setAlignment(viewTableDataButton, Pos.CENTER);
-
-        BorderPane.setMargin(tableNameText, new Insets(20, 20, 10, 20));
-        BorderPane.setMargin(columnPanesLayout, new Insets(10, 20, 10, 20));
-        BorderPane.setMargin(clusteredFileTableOptions, new Insets(10 + 20, 20, 10 + 20, 20));
-        BorderPane.setMargin(viewTableDataButton, new Insets(10, 20, 20, 20));
-
-        tablePane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));
-        tablePane.setEffect(
-                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        // add the table content to the table pane
+        tablePane = new BorderPane(tableContent);
     }
 
     public BorderPane getTablePane() {
@@ -124,7 +180,6 @@ public class TablePane {
     public void setToLightMode() {
         this.tableNameText.setFill(Color.BLACK);
         this.columnPaneList.forEach(ColumnPane::setToLightMode);
-        this.clusteredFileTableOptions.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_CHOICE_BOX_STYLE));
         this.viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
         this.tablePane.setBackground(new Background(
                 new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY)));;
@@ -133,7 +188,6 @@ public class TablePane {
     public void setToDarkMode() {
         this.tableNameText.setFill(Color.WHITE);
         this.columnPaneList.forEach(ColumnPane::setToDarkMode);
-        this.clusteredFileTableOptions.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
         this.viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         this.tablePane.setBackground(new Background(
                 new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));;
