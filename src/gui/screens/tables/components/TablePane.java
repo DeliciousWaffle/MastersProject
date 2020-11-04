@@ -5,6 +5,7 @@ import datastructures.relation.table.component.Column;
 import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
+import gui.screens.Screen;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -24,7 +25,7 @@ import systemcatalog.SystemCatalog;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-// TODO figure out how to refresh the screen for clustered table stuff
+
 public class TablePane {
 
     private BorderPane tablePane;
@@ -63,7 +64,7 @@ public class TablePane {
         Button primaryKeysButton = new Button("Primary Key(s)");
         primaryKeysButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         primaryKeysButton.setFont(new Font(25.0));
-        primaryKeysButton.setOnAction(e -> new KeyWindow("Primary Key", primaryKeys));
+        primaryKeysButton.setOnAction(e -> new KeyWindow("Primary Key(s):", primaryKeys));
 
         BorderPane.setMargin(primaryKeysButton, new Insets(0, 7.5, 0, 15));
         keyButtonsContainer.setLeft(primaryKeysButton);
@@ -75,9 +76,9 @@ public class TablePane {
         List<String> formattedForeignKeys = foreignKeys
                 .entrySet()
                 .stream()
-                .map(entry -> entry.getValue() + " is a foreign key to table " + entry.getKey())
+                .map(entry -> entry.getValue() + " is a foreign key to " + entry.getKey())
                 .collect(Collectors.toList());
-        foreignKeysButton.setOnAction(e -> new KeyWindow("Foreign Key", formattedForeignKeys));
+        foreignKeysButton.setOnAction(e -> new KeyWindow("Foreign Key(s):", formattedForeignKeys));
 
         BorderPane.setMargin(foreignKeysButton, new Insets(0, 15, 0, 7.5));
         keyButtonsContainer.setRight(foreignKeysButton);
@@ -141,8 +142,9 @@ public class TablePane {
                     }
                 });
             }
-            // bad hack to force refresh of the screen
+            // hack to force refresh of the screen
             screenController.refresh(systemCatalog);
+            screenController.setScreen(Screen.Type.TABLES_SCREEN);
         });
 
         clusteredFileTableOptions.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));

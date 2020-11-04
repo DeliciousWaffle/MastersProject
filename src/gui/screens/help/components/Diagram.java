@@ -30,8 +30,8 @@ public class Diagram extends Stage {
 
         // setting the title
         Text text = new Text(diagramTitle);
-        text.setFont(new Font("Ariel", 50.0));
-        text.setFontSmoothingType(FontSmoothingType.LCD);
+        text.setFont(new Font("Ariel", 100.0));
+        text.setSmooth(true);
 
         // centering the text
         BorderPane centerText = new BorderPane();
@@ -53,6 +53,7 @@ public class Diagram extends Stage {
         // used to contain the title and image
         BorderPane containsEverything = new BorderPane();
         containsEverything.setTop(centerText);
+        BorderPane.setMargin(centerText, new Insets(0, 0, 50, 0));
         containsEverything.setCenter(imageWhiteSpacePadding);
         containsEverything.setStyle("-fx-background-color: white;");
 

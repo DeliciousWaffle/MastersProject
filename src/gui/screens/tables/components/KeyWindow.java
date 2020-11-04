@@ -2,10 +2,12 @@ package gui.screens.tables.components;
 
 import files.io.FileType;
 import files.io.IO;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontSmoothingType;
 import javafx.scene.text.Text;
@@ -18,8 +20,9 @@ public class KeyWindow extends Stage {
 
         // create the top part of the screen
         Text keyText = new Text(keyType);
-        keyText.setFont(new Font("Ariel", 50.0));
-        keyText.setFontSmoothingType(FontSmoothingType.LCD);
+        keyText.setFont(new Font("Ariel", 100.0));
+        keyText.setFill(Color.WHITE);
+        keyText.setSmooth(true);
 
         Text keysText = new Text();
         StringBuilder formattedKeys = new StringBuilder();
@@ -30,21 +33,24 @@ public class KeyWindow extends Stage {
             formattedKeys.delete(formattedKeys.length() - 2, formattedKeys.length());
         }
         keysText.setText(formattedKeys.toString());
-        keysText.setFont(new Font("Ariel", 25.0));
-        keysText.setFontSmoothingType(FontSmoothingType.LCD);
+        keysText.setFont(new Font("Ariel", 75.0));
+        keysText.setFill(Color.WHITE);
+        keysText.setSmooth(true);
 
         BorderPane container = new BorderPane();
         container.setTop(keyText);
         BorderPane.setAlignment(keyText, Pos.CENTER);
-        container.setBottom(keysText);
-        BorderPane.setAlignment(keysText, Pos.CENTER);
+        container.setCenter(keysText);
+        BorderPane.setAlignment(keysText, Pos.TOP_CENTER);
+        container.setPrefSize(1080, 720);
         container.setStyle("-fx-background-color: rgb(30, 30, 30);");
 
         // allow the user to scroll around the image
         ScrollPane scrollPane = new ScrollPane(container);
         scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.setHvalue(0.5);
 
-        Scene scene = new Scene(scrollPane, 500, 500);
+        Scene scene = new Scene(scrollPane);
 
         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = (double) newValue;
