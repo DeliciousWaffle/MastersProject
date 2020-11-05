@@ -68,20 +68,19 @@ public final class IO {
 
     // write operations ------------------------------------------------------------------------------------------------
 
+    // only allowed to overwrite current data, not original data
     public static void writeCurrentData(String data, FileType.CurrentData currentDataFileType) {
-        write(data, currentDataFileType.getPath());
+        System.out.println(currentDataFileType.getPath().resolve("txt") + "\n" + data);
+        //write(data, currentDataFileType.getPath()); // resolve txt
     }
 
-    /**
-     * @param data
-     * @param currentTableDataFileType
-     * @param tableName the name of the table appended with ".txt"
-     */
-    public static void writeCurrentTableData(String data, FileType.CurrentTableData currentTableDataFileType, String tableName) {
-        write(data, currentTableDataFileType.getPath().resolve(tableName));
+    public static void writeCurrentTableData(String data, FileType.CurrentTableData currentTableDataFileType,
+                                             String tableName) {
+        System.out.println(currentTableDataFileType.getPath().resolve(tableName).resolve("txt") + "\n" + data);
+        //write(data, currentTableDataFileType.getPath().resolve(tableName).resolve("txt"));
     }
 
-    public static void write(String data, Path path) {
+    private static void write(String data, Path path) {
 
         try {
 

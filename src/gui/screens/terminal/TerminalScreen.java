@@ -120,6 +120,7 @@ public class TerminalScreen extends Screen {
 
         // tell the system catalog to execute the input
         executeButton.setOnAction(e -> {
+            systemCatalog.saveChanges();
             output.clear();
             String input = terminal.getText();
             // get the content on the text area up until the first semicolon is reached
@@ -307,7 +308,9 @@ public class TerminalScreen extends Screen {
                 ));*/
                 Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures =
                         systemCatalog.getRecommendedFileStructures();
-                new RecommendedFileStructuresWindow(recommendedFileStructures, clusteredTables, systemCatalog,
+                List<Triple<String, String, String>> fileStructures = recommendedFileStructures.getFirst();
+                List<Pair<String, String>> clusteredTables = recommendedFileStructures.getSecond();
+                new RecommendedFileStructuresWindow(fileStructures, clusteredTables, systemCatalog,
                         screenController);
             }
         });

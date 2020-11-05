@@ -59,7 +59,7 @@ public class SystemCatalog {
     private List<QueryTree> queryTreeStates;
     private String naiveRelationalAlgebra, optimizedRelationalAlgebra;
     private Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures;
-    private Pair<String, String> costAnalysis;
+    private Triple<Double, Double, String> costAnalysis;
 
     public SystemCatalog() {
 
@@ -107,7 +107,7 @@ public class SystemCatalog {
         naiveRelationalAlgebra = "";
         optimizedRelationalAlgebra = "";
         recommendedFileStructures = new Pair<>(new ArrayList<>(), new ArrayList<>());
-        costAnalysis = new Pair<>("", "");
+        costAnalysis = new Triple<>(0.0, 0.0, "");
     }
 
     // execution -------------------------------------------------------------------------------------------------------
@@ -139,9 +139,7 @@ public class SystemCatalog {
                 return;
             }
 
-            // get the rule graph to use
-            RuleGraph ruleGraph = ruleGraphTypes.get(inputType.getIndex());
-
+            // validation using each system catalog component
             if (! parser.isValid(inputType, filteredInput)) {
                 executionMessage = parser.getErrorMessage();
                 return;
@@ -166,9 +164,6 @@ public class SystemCatalog {
                 costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables);
             }
 
-            // at this point, the query/DML statement was successfully executed
-            successfullyExecuted = true;
-
             if (inputType == InputType.QUERY) {
                 resultSet = compiler.executeQuery(queryTreeStates, tables);
                 executionMessage = "QUERY was successfully executed!";
@@ -177,8 +172,11 @@ public class SystemCatalog {
                 executionMessage = "DML statement was successfully executed!";
             }
 
+            // at this point, the query/DML statement was successfully executed
+            successfullyExecuted = true;
+
         } catch(Exception e) {
-            executionMessage = "Unknown Error Occurred, I screwed up somewhere!";
+            executionMessage = "Unknown Error Occurred! Whoops!";
             e.printStackTrace();
         }
     }
@@ -272,7 +270,7 @@ public class SystemCatalog {
     /**
      * @return the cost analysis of the last successfully executed QUERY
      */
-    public String getCostAnalysis() {
+    public Triple<Double, Double, String> getCostAnalysis() {
         return costAnalysis;
     }
 
@@ -321,21 +319,34 @@ public class SystemCatalog {
     }
 
     /**
+     * Saves the current state of the database system and writes it out to disk.
+     */
+    public void saveChanges() {
+
+        IO.writeCurrentData(Serializer.serializeTables(tables), FileType.CurrentData.CURRENT_TABLES);
+        tables.forEach(table -> IO.writeCurrentTableData(Serializer.serializeTableData(table), FileType.CurrentTableData.CURRENT_TABLE_DATA, table.getTableName()));
+
+        // don't add the dba!
+        users.remove(0);
+        IO.writeCurrentData(Serializer.serializeUsers(users), FileType.CurrentData.CURRENT_USERS);
+
+        // re-add the DBA
+        User DBA = User.DatabaseAdministrator(tables);
+        users.add(0, DBA);
+        currentUser = DBA;
+    }
+
+    /**
      * Restores the database. This means that data such as users and tables will be set back to their default values.
      */
     public void restoreDatabase() {
 
         // load the original data
-        //tables = Serialize.unSerializeTables(IO.readCurrentData(FileType.OriginalData.ORIGINAL_TABLES));
-        //users = Serialize.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
 
         // write the original data out as the current data
-        //Serializer.serializeUsers(users);
-        //Serializer.serializeTables(tables);
-
-        User DBA = User.DatabaseAdministrator(tables);
-        users.add(0, DBA);
-        currentUser = DBA;
+        saveChanges();
 
         clear();
 
@@ -361,25 +372,7 @@ public class SystemCatalog {
         queryTreeStates = new ArrayList<>();
         naiveRelationalAlgebra = "";
         optimizedRelationalAlgebra = "";
-        recommendedFileStructures = "";
-        costAnalysis = "";
-    }
-
-    // IO related ------------------------------------------------------------------------------------------------------
-
-    /**
-     * Stores the tables and their states in files. Called when the system closes.
-     */
-    public void writeOutTables() {
-        IO.writeCurrentData(Serializer.serializeTables(tables), FileType.CurrentData.CURRENT_TABLES);
-    }
-
-    /**
-     * Stores the users and their states in files. Called when the system closes.
-     */
-    public void writeOutUsers() {
-        // don't write out the DBA!
-        users.remove(0);
-        IO.writeCurrentData(Serializer.serializeUsers(users), FileType.CurrentData.CURRENT_USERS);
+        recommendedFileStructures = new Pair<>(new ArrayList<>(), new ArrayList<>());
+        costAnalysis = new Triple<>(0.0, 0.0, "");
     }
 }

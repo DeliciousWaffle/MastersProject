@@ -1,5 +1,6 @@
 package systemcatalog.components;
 
+import datastructures.misc.Pair;
 import datastructures.misc.Triple;
 import datastructures.querytree.operator.types.*;
 import datastructures.relation.resultset.ResultSet;
@@ -307,7 +308,6 @@ public class Optimizer {
         // get a list of selections that contain join conditions, these will be dealt with later
         List<Operator> selectionsWithJoinConditions =
                 OptimizerUtilities.getSelectionsWithJoinConditions(simpleSelections);
-
 
         // place the remaining selections right above their respective relations
         Map<Operator, List<QueryTree.Traversal>> relationsAndLocations =
@@ -805,7 +805,8 @@ public class Optimizer {
      * @param queryTreeStates is a list of query tree states produced after the optimization process
      * @return a recommendation of file structures to build for a particular query
      */
-    public String getRecommendedFileStructures(List<QueryTree> queryTreeStates) {
+    public Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> getRecommendedFileStructures(
+            List<QueryTree> queryTreeStates) {
 
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
@@ -910,12 +911,12 @@ public class Optimizer {
         // check to see if clustering the two tables would perform better than the previous recommendations
         // in order to do this, will need to calculate the total cost of the query tree with the file structures
         // already built and compare them to each possible clustered file orientation's query tree cost
-
+        List<Pair<String, String>> clusteredFiles = new ArrayList<>();
 
         // after that, if a clustered file is recommended for a join, remove any file structures that
         // were built on columns belonging to the tables being joined together
 
-        return "";
+        return new Pair<>(recommendedFileStructures, clusteredFiles);
     }
 
     /**
