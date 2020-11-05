@@ -37,10 +37,10 @@ public abstract class Screen {
 
         // creating the buttons
         this.terminalButton = new Button("Terminal");
-        this.tablesButton   = new Button("Tables");
-        this.usersButton    = new Button("Users");
-        this.optionsButton  = new Button("Options");
-        this.helpButton     = new Button("Help");
+        this.tablesButton = new Button("Tables");
+        this.usersButton = new Button("Users");
+        this.optionsButton = new Button("Options");
+        this.helpButton = new Button("Help");
 
         // setting the preferred sizes
         buttonWidth = defaultWidth / 5.0;

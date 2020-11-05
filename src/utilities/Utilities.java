@@ -547,4 +547,14 @@ public final class Utilities {
         return false;
     }
 
+    public static List<String> getUnique(List<String> values) {
+        List<String> uniqueValues = new ArrayList<>();
+        for (String value : values) {
+            if (! isPresent(value, uniqueValues)) {
+                uniqueValues.add(value);
+            }
+        }
+        return uniqueValues;
+    }
+
 }

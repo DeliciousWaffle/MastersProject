@@ -2,10 +2,12 @@ package gui.screens.tables.components;
 
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
+import datastructures.relation.table.component.FileStructure;
 import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
 import gui.screens.Screen;
+import gui.screens.tables.components.tabledatawindow.TableDataWindow;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -120,25 +122,25 @@ public class TablePane {
                 String otherClusterTable = clusteredFileTableOptions.getValue();
                 // if this table was previously clustered with another table, remove the clustering from the other table
                 systemCatalog.getTables().forEach(t -> {
-                    if (t.getClusteredWithTableName().equalsIgnoreCase(tableName)) {
+                    if (t.getClusteredWithTableName().equalsIgnoreCase(tableName) ||
+                            t.getClusteredWithTableName().equalsIgnoreCase(otherClusterTable)) {
                         t.setClusteredWith("none");
-                    }
-                });
-                systemCatalog.getTables().forEach(t -> {
-                    if (t.getClusteredWithTableName().equalsIgnoreCase(otherClusterTable)) {
-                        t.setClusteredWith("none");
+                        // remove any file structures built
+                        t.getColumns().forEach(c -> c.setFileStructure(FileStructure.NONE));
                     }
                 });
                 // set this table as clustered
                 systemCatalog.getTables().forEach(t -> {
                     if (t.getTableName().equalsIgnoreCase(tableName)) {
                         t.setClusteredWith(otherClusterTable);
+                        t.getColumns().forEach(c -> c.setFileStructure(FileStructure.NONE));
                     }
                 });
                 // set the other table clustered with this table
                 systemCatalog.getTables().forEach(t -> {
                     if (t.getTableName().equalsIgnoreCase(otherClusterTable)) {
                         t.setClusteredWith(tableName);
+                        t.getColumns().forEach(c -> c.setFileStructure(FileStructure.NONE));
                     }
                 });
             }
@@ -159,7 +161,7 @@ public class TablePane {
         tableContent.getChildren().addAll(table
                 .getColumns()
                 .stream()
-                .map(ColumnPane::new)
+                .map(column -> new ColumnPane(column, table, systemCatalog, screenController))
                 .map(ColumnPane::getColumnPane)
                 .collect(Collectors.toList()));
 
@@ -167,6 +169,14 @@ public class TablePane {
         Button viewTableDataButton = new Button("View Table Data");
         viewTableDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         viewTableDataButton.setFont(new Font(25.0));
+
+        viewTableDataButton.setOnAction(e -> {
+            new TableDataWindow(tableName,
+                    columns.stream()
+                            .map(Column::getColumnName)
+                            .collect(Collectors.toList()),
+                    table.getTableData().getData());
+        });
 
         VBox.setMargin(viewTableDataButton, new Insets(0, 0, 15, 0));
         tableContent.getChildren().add(viewTableDataButton);

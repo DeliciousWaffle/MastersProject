@@ -12,7 +12,7 @@ public class Histogram {
     // string is the element, integer represents the number of occurrences of that element
     private TreeMap<String, Integer> barGraph;
 
-    // the result of applying varying bucket sizes to the bar graph
+    // the result of applying varying bucket sizes to the bar graph (using a tree map to preserve ordering of the keys)
     private TreeMap<String, Integer> histogram;
 
     // bucket size is the number of data items stored within a single bar
@@ -22,8 +22,6 @@ public class Histogram {
 
         this.rawData = rawData;
         this.bucketSize = 1;
-
-        // using a tree map to preserve ordering of the keys
         this.barGraph = new TreeMap<>();
 
         // adding elements and their frequencies

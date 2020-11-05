@@ -1,5 +1,7 @@
 package gui.screens.terminal;
 
+import datastructures.misc.Pair;
+import datastructures.misc.Triple;
 import datastructures.querytree.QueryTree;
 import datastructures.relation.resultset.ResultSet;
 import enums.InputType;
@@ -26,6 +28,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import systemcatalog.SystemCatalog;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TerminalScreen extends Screen {
@@ -96,8 +100,10 @@ public class TerminalScreen extends Screen {
         // -------------------------------------------------------------------------------------------------------------
         this.rightColumnButtonLayout = new VBox();
         rightColumnButtonLayout.setSpacing(10);
-        rightColumnButtonLayout.setBackground(new Background(new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
-        rightColumnButtonLayout.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        rightColumnButtonLayout.setBackground(new Background(new BackgroundFill(
+                Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
+        rightColumnButtonLayout.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // execute button ..............................................................................................
         this.executeButton = new Button();
@@ -109,7 +115,8 @@ public class TerminalScreen extends Screen {
 
         executeButton.setGraphic(imageView);
         executeButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        executeButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        executeButton.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // tell the system catalog to execute the input
         executeButton.setOnAction(e -> {
@@ -145,7 +152,8 @@ public class TerminalScreen extends Screen {
 
         clearButton.setGraphic(imageView);
         clearButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        clearButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        clearButton.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         clearButton.setOnAction(e -> {
             terminal.clear();
@@ -168,7 +176,8 @@ public class TerminalScreen extends Screen {
 
         resultSetButton.setGraphic(imageView);
         resultSetButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        resultSetButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        resultSetButton.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         resultSetButton.setOnAction(e -> {
             boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
@@ -193,7 +202,8 @@ public class TerminalScreen extends Screen {
 
         relationalAlgebraButton.setGraphic(imageView);
         relationalAlgebraButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        relationalAlgebraButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        relationalAlgebraButton.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // launch a new window displaying the relational algebra
         relationalAlgebraButton.setOnAction(e -> {
@@ -220,7 +230,8 @@ public class TerminalScreen extends Screen {
 
         queryTreeStatesButton.setGraphic(imageView);
         queryTreeStatesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        queryTreeStatesButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        queryTreeStatesButton.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // launch a new window displaying the query tree states
         queryTreeStatesButton.setOnAction(e -> {
@@ -246,7 +257,8 @@ public class TerminalScreen extends Screen {
 
         queryCostButton.setGraphic(imageView);
         queryCostButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        queryCostButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        queryCostButton.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // launch a new window displaying the query cost
         queryCostButton.setOnAction(e -> {
@@ -271,15 +283,32 @@ public class TerminalScreen extends Screen {
 
         recommendedFileStructuresButton.setGraphic(imageView);
         recommendedFileStructuresButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        recommendedFileStructuresButton.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        recommendedFileStructuresButton.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // launch a new window displaying the recommended file structures
         recommendedFileStructuresButton.setOnAction(e -> {
             boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
             boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
             if (wasSuccessfullyExecuted && executedQuery) {
-                String recommendedFileStructures = systemCatalog.getRecommendedFileStructures();
-                new RecommendedFileStructuresWindow(recommendedFileStructures);
+                //String recommendedFileStructures = systemCatalog.getRecommendedFileStructures();
+                /*List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>(Arrays.asList(
+                        new Triple<>("CustomerID", "Customers", "Secondary B-Tree"),
+                        new Triple<>("FirstName", "Customers", "Clustered B-Tree"),
+                        new Triple<>("ProductID", "Products", "Secondary B-Tree"),
+                        new Triple<>("ProductName", "Products", "Hash Table"),
+                        new Triple<>("Price", "Products", "Secondary B-Tree"),
+                        new Triple<>("StoreID", "Stores", "Clustered B-Tree"),
+                        new Triple<>("StoreName", "Stores", "Clustered B-Tree")
+                ));
+                List<Pair<String, String>> clusteredTables = new ArrayList<>(Arrays.asList(
+                        //new Pair<>("CustomerPurchaseDetails", "EmployeePurchaseDetails"),
+                        //new Pair<>("Suppliers", "InventoryDetails")
+                ));*/
+                Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures =
+                        systemCatalog.getRecommendedFileStructures();
+                new RecommendedFileStructuresWindow(recommendedFileStructures, clusteredTables, systemCatalog,
+                        screenController);
             }
         });
 

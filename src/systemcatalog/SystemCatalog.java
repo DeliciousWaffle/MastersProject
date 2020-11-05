@@ -1,5 +1,7 @@
 package systemcatalog;
 
+import datastructures.misc.Pair;
+import datastructures.misc.Triple;
 import datastructures.relation.resultset.ResultSet;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
@@ -55,7 +57,9 @@ public class SystemCatalog {
     // following will only be used if the input is a query and it's successfully executed
     private ResultSet resultSet;
     private List<QueryTree> queryTreeStates;
-    private String naiveRelationalAlgebra, optimizedRelationalAlgebra, recommendedFileStructures, costAnalysis;
+    private String naiveRelationalAlgebra, optimizedRelationalAlgebra;
+    private Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures;
+    private Pair<String, String> costAnalysis;
 
     public SystemCatalog() {
 
@@ -102,8 +106,8 @@ public class SystemCatalog {
         queryTreeStates = new ArrayList<>();
         naiveRelationalAlgebra = "";
         optimizedRelationalAlgebra = "";
-        recommendedFileStructures = "";
-        costAnalysis = "";
+        recommendedFileStructures = new Pair<>(new ArrayList<>(), new ArrayList<>());
+        costAnalysis = new Pair<>("", "");
     }
 
     // execution -------------------------------------------------------------------------------------------------------
@@ -159,8 +163,7 @@ public class SystemCatalog {
                 naiveRelationalAlgebra = optimizer.getNaiveRelationAlgebra(queryTreeStates);
                 optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra(queryTreeStates);
                 recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates);
-                // TODO
-                //costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables).getFirst().toString();
+                costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables);
             }
 
             // at this point, the query/DML statement was successfully executed
@@ -262,7 +265,7 @@ public class SystemCatalog {
     /**
      * @return recommended file structures to build for the last successfully executed QUERY
      */
-    public String getRecommendedFileStructures() {
+    public Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> getRecommendedFileStructures() {
         return recommendedFileStructures;
     }
 
