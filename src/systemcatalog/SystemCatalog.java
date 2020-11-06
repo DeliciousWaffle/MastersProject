@@ -22,6 +22,7 @@ import enums.InputType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Responsible for controlling all the data that will be used in the system. Starts
@@ -71,7 +72,8 @@ public class SystemCatalog {
         compiler = new Compiler();
 
         // loading table and user data
-        tables = Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES));
+        tables = Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES),
+                true);
         users = Serializer.unSerializeUsers(IO.readCurrentData(FileType.CurrentData.CURRENT_USERS));
 
         // set the current user as the DBA who has all privileges on every table
@@ -161,7 +163,7 @@ public class SystemCatalog {
                 naiveRelationalAlgebra = optimizer.getNaiveRelationAlgebra(queryTreeStates);
                 optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra(queryTreeStates);
                 recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates);
-                costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables);
+                //costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables);
             }
 
             if (inputType == InputType.QUERY) {
@@ -336,7 +338,8 @@ public class SystemCatalog {
     public void saveChanges() {
 
         IO.writeCurrentData(Serializer.serializeTables(tables), FileType.CurrentData.CURRENT_TABLES);
-        tables.forEach(table -> IO.writeCurrentTableData(Serializer.serializeTableData(table), FileType.CurrentTableData.CURRENT_TABLE_DATA, table.getTableName()));
+        tables.forEach(table -> IO.writeCurrentTableData(Serializer.serializeTableData(table),
+                FileType.CurrentTableData.CURRENT_TABLE_DATA, table.getTableName()));
 
         // don't add the dba!
         users.remove(0);
@@ -354,13 +357,12 @@ public class SystemCatalog {
     public void restoreDatabase() {
 
         // load the original data
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES),
+                false);
         users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
 
         // write the original data out as the current data
         saveChanges();
-
-        clear();
 
         turnOnVerifier();
         turnOnSecurityChecker();

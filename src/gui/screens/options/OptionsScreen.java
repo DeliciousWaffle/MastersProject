@@ -216,6 +216,61 @@ public class OptionsScreen extends Screen {
         vBoxContainer.getChildren().add(securityCheckerContentArea);
 
 
+        // join optimization toggle area -------------------------------------------------------------------------------
+        // security checker toggle area contains text, toggle button, and info button ----------------------------------
+        BorderPane joinOptimizationToggleArea = new BorderPane();
+        joinOptimizationToggleArea.setBackground(new Background(
+                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
+        joinOptimizationToggleArea.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
+        Text joinOptimizationToggleText = new Text("Toggle Join Optimization:");
+        joinOptimizationToggleText.setFont(new Font(50));
+        joinOptimizationToggleText.setFill(Color.WHITE);
+
+        BorderPane.setAlignment(joinOptimizationToggleText, Pos.CENTER);
+        BorderPane.setMargin(joinOptimizationToggleText, new Insets(0, 0, 0, 15));
+        joinOptimizationToggleArea.setLeft(joinOptimizationToggleText);
+
+        BorderPane joinOptimizationToggleAndInfoButtons = new BorderPane();
+
+        Button joinOptimizationToggleButton = new Button("On");
+        joinOptimizationToggleButton.setFont(new Font(40));
+        joinOptimizationToggleButton.setTextFill(Color.WHITE);
+        joinOptimizationToggleButton.setPrefSize(120, 80);
+        joinOptimizationToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        joinOptimizationToggleButton.setOnAction(e -> {
+            if (systemCatalog.isJoinOptimizationOn()) {
+                systemCatalog.turnOffJoinOptimization();
+                joinOptimizationToggleButton.setText("Off");
+            } else {
+                systemCatalog.turnOnJoinOptimization();
+                joinOptimizationToggleButton.setText("On");
+            }
+        });
+
+        BorderPane.setMargin(joinOptimizationToggleButton, new Insets(10, 5, 10, 10));
+        joinOptimizationToggleAndInfoButtons.setLeft(joinOptimizationToggleButton);
+
+        Button joinOptimizationToggleInfoButton = new Button();
+        questionImage = IO.readAsset(FileType.Asset.QUESTION_MARK);
+        questionImageView = new ImageView(questionImage);
+        questionImageView.setFitWidth(100);
+        questionImageView.setFitHeight(80);
+        questionImageView.setSmooth(true);
+        joinOptimizationToggleInfoButton.setGraphic(questionImageView);
+        joinOptimizationToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        joinOptimizationToggleInfoButton.setOnAction(e -> new OptionsScreenPopUps.JoinOptimizationToggleWindow());
+
+        joinOptimizationToggleAndInfoButtons.setRight(joinOptimizationToggleInfoButton);
+        BorderPane.setMargin(joinOptimizationToggleInfoButton, new Insets(10, 10, 10, 5));
+
+        joinOptimizationToggleArea.setRight(joinOptimizationToggleAndInfoButtons);
+
+        VBox.setMargin(joinOptimizationToggleArea, new Insets(0, 30, 0, 30));
+        vBoxContainer.getChildren().add(joinOptimizationToggleArea);
+
+
         // save content ------------------------------------------------------------------------------------------------
         BorderPane saveDataArea = new BorderPane();
         saveDataArea.setBackground(new Background(
@@ -290,7 +345,7 @@ public class OptionsScreen extends Screen {
         refreshImageView.setSmooth(true);
         restoreDataButton.setGraphic(refreshImageView);
         restoreDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        restoreDataButton.setOnAction(e -> systemCatalog.saveChanges());
+        restoreDataButton.setOnAction(e -> systemCatalog.restoreDatabase());
 
         BorderPane.setMargin(restoreDataButton, new Insets(10, 5, 10, 10));
         restoreDataAndInfoButtons.setLeft(restoreDataButton);

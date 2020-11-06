@@ -24,7 +24,7 @@ public class UserTest {
 
     @BeforeAll
     static void init() {
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         bob = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS)).get(0);
         System.out.println(bob);
     }

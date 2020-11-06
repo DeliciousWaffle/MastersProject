@@ -11,6 +11,9 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import systemcatalog.SystemCatalog;
 
 import java.util.ArrayList;
@@ -33,11 +36,20 @@ public class HelpScreen extends Screen {
         // button layout for top part of screen
         HBox topRowButtonLayout = super.getButtonLayout(screenController);
 
+
         // following is for the content of the help screen
         this.helpPanesVBox = new VBox();
         helpPanesVBox.setMinSize(0, 0);
         helpPanesVBox.setSpacing(30);
         helpPanesVBox.setStyle(Screen.DARK_HI);
+
+
+        Text titleText = new Text("Help!");
+        titleText.setFill(Color.WHITE);
+        titleText.setFont(new Font(100.0));
+        titleText.setSmooth(true);
+        helpPanesVBox.getChildren().add(titleText);
+
 
         this.helpPaneList = new ArrayList<>(Arrays.asList(
                 new HelpPane(getERDiagramText(), "View ER Diagram",
@@ -67,6 +79,10 @@ public class HelpScreen extends Screen {
                 new HelpPane(getRemoveFileStructureText(), "View Remove Rile Structure Diagram",
                         Diagram.Type.REMOVE_FILE_STRUCTURE)
         ));
+
+        // give the last help pane list some bottom slack so that it doesn't get cut off at the bottom
+        VBox.setMargin(helpPaneList.get(helpPaneList.size() - 1).getHelpPane(),
+                new Insets(0, 0, 30, 0));
 
         helpPanesVBox.getChildren().addAll(
                 helpPaneList

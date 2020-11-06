@@ -47,6 +47,7 @@ public class Diagram extends Stage {
         imageWhiteSpacePadding.setPrefWidth(1080);
         imageWhiteSpacePadding.setPrefHeight(720);
         imageWhiteSpacePadding.setCenter(imageView);
+        BorderPane.setMargin(imageView, new Insets(0, 30, 30, 30));
         imageWhiteSpacePadding.setBackground(
                 new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY)));
 
@@ -59,6 +60,9 @@ public class Diagram extends Stage {
 
         // allow the user to scroll around the image
         ScrollPane scrollPane = new ScrollPane(containsEverything);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHvalue(0.5);
         scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
 
         Scene scene = new Scene(scrollPane, 1080, 720);

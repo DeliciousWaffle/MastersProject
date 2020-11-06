@@ -24,7 +24,7 @@ public class TablePrivilegesTest {
 
     @BeforeAll
     static void init() {
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
     }
 
     @Test

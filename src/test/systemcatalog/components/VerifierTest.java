@@ -34,7 +34,8 @@ public class VerifierTest {
     @BeforeAll
     static void init() {
         verifier = new Verifier();
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES),
+                false);
         users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
         /*System.out.println("Tables ----------------------------------------------------------------------------------");
         tables.forEach(System.out::println);

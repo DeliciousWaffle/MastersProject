@@ -8,7 +8,10 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -108,7 +111,8 @@ public class HelpPane {
         helpPane.setBottom(button);
         BorderPane.setMargin(text, new Insets(15));
         BorderPane.setMargin(button, new Insets(15));
-        helpPane.setStyle(Screen.DARK_MED);
+        helpPane.setBackground(new Background(new BackgroundFill(Color.rgb(50, 50, 50),
+                new CornerRadii(5), Insets.EMPTY)));
         helpPane.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
     }

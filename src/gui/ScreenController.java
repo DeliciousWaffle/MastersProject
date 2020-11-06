@@ -26,10 +26,10 @@ public class ScreenController {
         primaryStage.setHeight(Screen.defaultHeight);
 
         terminalScreen = new TerminalScreen(this, systemCatalog);
-        tablesScreen   = new TablesScreen(this, systemCatalog);
-        usersScreen    = new UsersScreen(this, systemCatalog);
-        optionsScreen  = new OptionsScreen(this, systemCatalog);
-        helpScreen     = new HelpScreen(this, systemCatalog);
+        tablesScreen = new TablesScreen(this, systemCatalog);
+        usersScreen = new UsersScreen(this, systemCatalog);
+        optionsScreen = new OptionsScreen(this, systemCatalog);
+        helpScreen = new HelpScreen(this, systemCatalog);
 
         setScreen(Screen.Type.TERMINAL_SCREEN);
 
@@ -75,11 +75,12 @@ public class ScreenController {
 
     // sets all UI elements to light mode
     public void setToLightMode() {
-        terminalScreen.setToLightMode();
+
+        /*terminalScreen.setToLightMode();
         tablesScreen.setToLightMode();
         usersScreen.setToLightMode();
         optionsScreen.setToLightMode();
-        helpScreen.setToLightMode();
+        helpScreen.setToLightMode();*/
     }
 
     // sets all UI elements to dark mode

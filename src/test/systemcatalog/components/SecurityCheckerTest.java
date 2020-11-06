@@ -34,7 +34,7 @@ public class SecurityCheckerTest {
     @BeforeAll
     static void init() {
         securityChecker = new SecurityChecker();
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
         dba = User.DatabaseAdministrator(tables);
         noPrivilegeGuy = new User("No Privilege Guy", new ArrayList<>(), new ArrayList<>());

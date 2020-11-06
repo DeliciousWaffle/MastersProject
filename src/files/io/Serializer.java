@@ -268,9 +268,10 @@ public class Serializer {
      * Formats raw table file data into something usable. Basically takes the contents of
      * the tables file, parsers it, and returns a list of Tables.
      * @param serializedTables is data about the tables in the system
+     * @param unSerializingCurrentTableData is whether we will be un-serializing the current table data
      * @return list of tables within the system
      */
-    public static List<Table> unSerializeTables(String serializedTables) {
+    public static List<Table> unSerializeTables(String serializedTables, boolean unSerializingCurrentTableData) {
 
         String[] lines = serializedTables.split("\n");
 
@@ -355,8 +356,9 @@ public class Serializer {
                             table.setClusteredWith(data);
                             break;
                         case "TableDataFilename":
-                            String serializedTableData =
-                                    IO.readCurrentTableData(FileType.CurrentTableData.CURRENT_TABLE_DATA, data);
+                            String serializedTableData = unSerializingCurrentTableData
+                                    ? IO.readCurrentTableData(FileType.CurrentTableData.CURRENT_TABLE_DATA, data)
+                                    : IO.readOriginalTableData(FileType.OriginalTableData.ORIGINAL_TABLE_DATA, data);
                             TableData tableData = unSerializeTableData(serializedTableData, table);
                             table.setTableData(tableData);
                             break;

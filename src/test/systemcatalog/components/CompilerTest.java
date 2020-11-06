@@ -39,7 +39,7 @@ public class CompilerTest {
     public static void init() {
         optimizer = new Optimizer();
         compiler = new Compiler();
-        tablesForQuery = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tablesForQuery = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         users = Serializer.unSerializeUsers(IO.readOriginalData(FileType.OriginalData.ORIGINAL_USERS));
     }
 
@@ -112,7 +112,7 @@ public class CompilerTest {
 
     @Test
     public void testCreateTable() {
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         String input = "CREATE TABLE Blah1(Col1 NUMBER(2, 1), Col2 CHAR(3), Col3 DATE, Col4 CHAR(10))";
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
@@ -130,7 +130,7 @@ public class CompilerTest {
 
     @Test
     public void testDropTable() {
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         String input = "DROP TABLE Customers";
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
@@ -150,7 +150,7 @@ public class CompilerTest {
             "ALTER TABLE Customers DROP LastName"
     })
     public void testAlterTable(String input) {
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.ALTER_TABLE, tokens, tables, users);
@@ -163,7 +163,7 @@ public class CompilerTest {
     public void testInsert() {
 
         String input = "INSERT INTO Customers VALUES(-1, \"Blah\", \"Blah\")";
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.INSERT, tokens, tables, users);
@@ -172,7 +172,7 @@ public class CompilerTest {
                 .forEach(System.out::println);
 
         input = "INSERT INTO Customers VALUES(-2)";
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.INSERT, tokens, tables, users);
@@ -181,7 +181,7 @@ public class CompilerTest {
                 .forEach(System.out::println);
 
         input = "INSERT INTO Customers VALUES(-3, \"A Very Long Name That Should Be Cut Off\")";
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.INSERT, tokens, tables, users);
@@ -194,7 +194,7 @@ public class CompilerTest {
     public void testDelete() {
 
         String input = "DELETE FROM Customers WHERE CustomerID = 1";
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.DELETE, tokens, tables, users);
@@ -203,7 +203,7 @@ public class CompilerTest {
                 .forEach(System.out::println);
 
         input = "DELETE FROM CustomerPurchaseDetails WHERE PaymentMethod = \"Check\"";
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.DELETE, tokens, tables, users);
@@ -216,7 +216,7 @@ public class CompilerTest {
     public void testUpdate() {
 
         String input = "UPDATE Customers SET FirstName = \"Blah\" WHERE CustomerID = 1";
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.UPDATE, tokens, tables, users);
@@ -225,7 +225,7 @@ public class CompilerTest {
                 .forEach(System.out::println);
 
         input = "UPDATE CustomerPurchaseDetails SET PaymentMethod = \"Blah\" WHERE PaymentMethod = \"Check\"";
-        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.UPDATE, tokens, tables, users);
@@ -242,7 +242,7 @@ public class CompilerTest {
             "BUILD CLUSTERED FILE ON Customers AND CustomerPurchaseDetails"
     })
     public void testBuildFileStructure(String input) {
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.BUILD_FILE_STRUCTURE, tokens, tables, users);
@@ -263,7 +263,7 @@ public class CompilerTest {
             "BUILD CLUSTERED FILE ON Customers AND CustomerPurchaseDetails,REMOVE CLUSTERED FILE ON Customers AND CustomerPurchaseDetails"
     })
     public void testRemoveFileStructure(String buildFileStructure, String removeFileStructure) {
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         System.out.println(removeFileStructure);
         String[] tokens = Utilities.filterInput(buildFileStructure);
         compiler.executeDML(InputType.BUILD_FILE_STRUCTURE, tokens, tables, users);
@@ -280,7 +280,7 @@ public class CompilerTest {
 
     @Test
     public void testGrant() {
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         String input = "GRANT ALTER, DELETE, INDEX ON Customers TO Jango";
         System.out.println(input);
         String[] tokens = Utilities.filterInput(input);
@@ -316,7 +316,7 @@ public class CompilerTest {
 
     @Test
     public void testRevoke() {
-        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES));
+        List<Table> tables = Serializer.unSerializeTables(IO.readOriginalData(FileType.OriginalData.ORIGINAL_TABLES), false);
         String input = "GRANT ALL PRIVILEGES ON Customers TO Jango WITH GRANT OPTION";
         String[] tokens = Utilities.filterInput(input);
         compiler.executeDML(InputType.GRANT, tokens, tables, users);

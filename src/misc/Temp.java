@@ -26,7 +26,7 @@ public class Temp {
 
     public static void main(String[] args) {
 
-        Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES)).forEach(System.out::println);
+        Serializer.unSerializeTables(IO.readCurrentData(FileType.CurrentData.CURRENT_TABLES), true).forEach(System.out::println);
 
         /*List<Table> tables = Arrays.asList(
                 customers(),
