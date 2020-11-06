@@ -59,7 +59,7 @@ public class RecommendedFileStructuresWindow extends Stage {
         List<String> distinctTableNames = new ArrayList<>();
 
         for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
-            String tableName = recommendedFileStructure.getSecond();
+            String tableName = recommendedFileStructure.getFirst();
             boolean foundDuplicate = false;
             for (String distinctTableName : distinctTableNames) {
                 if (tableName.equalsIgnoreCase(distinctTableName)) {
@@ -94,10 +94,10 @@ public class RecommendedFileStructuresWindow extends Stage {
             StringBuilder stringBuilder = new StringBuilder();
 
             for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
-                if (recommendedFileStructure.getSecond().equalsIgnoreCase(tableName)) {
-                    String columnName = recommendedFileStructure.getFirst();
+                if (recommendedFileStructure.getFirst().equalsIgnoreCase(tableName)) {
+                    String columnName = recommendedFileStructure.getSecond();
                     String fileStructure = recommendedFileStructure.getThird();
-                    stringBuilder.append(fileStructure).append(" on column ").append(columnName).append("\n");
+                    stringBuilder.append(fileStructure).append(" on ").append(columnName).append("\n");
                 }
             }
 
@@ -151,8 +151,8 @@ public class RecommendedFileStructuresWindow extends Stage {
 
             for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
 
-                String columnName = recommendedFileStructure.getFirst();
-                String tableName = recommendedFileStructure.getSecond();
+                String tableName = recommendedFileStructure.getFirst();
+                String columnName = recommendedFileStructure.getSecond();
                 String fileStructure = recommendedFileStructure.getThird();
 
                 Table referencedTable = Utilities.getReferencedTable(tableName, systemCatalog.getTables());

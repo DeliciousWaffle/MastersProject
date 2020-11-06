@@ -6,8 +6,10 @@ import gui.ScreenController;
 import gui.screens.Screen;
 import gui.screens.options.popupwindows.OptionsScreenPopUps;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -18,6 +20,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import systemcatalog.SystemCatalog;
 
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,56 +41,89 @@ public class OptionsScreen extends Screen {
         this.buttonList = new ArrayList<>();
         this.contentList = new ArrayList<>();
 
-        // lightDarkModeContent ----------------------------------------------------------------------------------------
+        HBox topRowButtonLayout = super.getButtonLayout(screenController);
+
+        // container for almost everything
+        VBox vBoxContainer = new VBox(30.0);
+        vBoxContainer.setAlignment(Pos.TOP_CENTER);
+        vBoxContainer.setBackground(new Background(
+                new BackgroundFill(Color.rgb(30, 30, 30), CornerRadii.EMPTY, Insets.EMPTY)));
+
+
+        // title text
+        Text titleText = new Text("Options");
+        titleText.setFill(Color.WHITE);
+        titleText.setFont(new Font(100.0));
+        titleText.setSmooth(true);
+        vBoxContainer.getChildren().add(titleText);
+
+
+        // light / dark mode area, contains text, a button for light mode, and a button for dark mode ------------------
+        BorderPane lightDarkModeArea = new BorderPane();
+        lightDarkModeArea.setBackground(new Background(
+                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
+        lightDarkModeArea.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
         Text lightDarkModeText = new Text("Light or Dark Mode:");
         lightDarkModeText.setFont(new Font(50));
         lightDarkModeText.setFill(Color.WHITE);
-        BorderPane.setMargin(lightDarkModeText, new Insets(20, 0, 0, 20));
-        textList.add(lightDarkModeText);
 
+        BorderPane.setAlignment(lightDarkModeText, Pos.CENTER);
+        BorderPane.setMargin(lightDarkModeText, new Insets(0, 0, 0, 15));
+        lightDarkModeArea.setLeft(lightDarkModeText);
+
+        BorderPane lightDarkModeButtons = new BorderPane();
+
+        Button lightModeButton = new Button();
+        lightModeButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        lightModeButton.setOnAction(e -> screenController.setToLightMode());
         Image sunImage = IO.readAsset(FileType.Asset.SUN_IMAGE);
         ImageView sunImageView = new ImageView(sunImage);
         sunImageView.setFitWidth(100);
         sunImageView.setFitHeight(80);
         sunImageView.setSmooth(true);
-        Button lightModeButton = new Button();
         lightModeButton.setGraphic(sunImageView);
-        lightModeButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        lightModeButton.setOnAction(e -> screenController.setToLightMode());
-        buttonList.add(lightModeButton);
 
+        lightDarkModeButtons.setLeft(lightModeButton);
+
+        Button darkModeButton = new Button();
+        darkModeButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        darkModeButton.setOnAction(e -> screenController.setToDarkMode());
         Image moonImage = IO.readAsset(FileType.Asset.MOON_IMAGE);
         ImageView moonImageView = new ImageView(moonImage);
         moonImageView.setFitWidth(100);
         moonImageView.setFitHeight(80);
         moonImageView.setSmooth(true);
-        Button darkModeButton = new Button();
         darkModeButton.setGraphic(moonImageView);
-        darkModeButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        darkModeButton.setOnAction(e -> screenController.setToDarkMode());
-        buttonList.add(darkModeButton);
 
-        BorderPane lightAndDarkModeButtons = new BorderPane();
-        lightAndDarkModeButtons.setLeft(lightModeButton);
-        lightAndDarkModeButtons.setRight(darkModeButton);
+        lightDarkModeButtons.setRight(darkModeButton);
+
         BorderPane.setMargin(lightModeButton, new Insets(10, 5, 10, 10));
         BorderPane.setMargin(darkModeButton, new Insets(10, 10, 10, 5));
 
-        BorderPane lightDarkModeContent = new BorderPane();
-        lightDarkModeContent.setLeft(lightDarkModeText);
-        lightDarkModeContent.setRight(lightAndDarkModeButtons);
-        lightDarkModeContent.setBackground(new Background(
-                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
-        lightDarkModeContent.setEffect(
-                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        contentList.add(lightDarkModeContent);
+        lightDarkModeArea.setRight(lightDarkModeButtons);
 
-        // verifierContent ---------------------------------------------------------------------------------------------
+        VBox.setMargin(lightDarkModeArea, new Insets(0, 30, 0, 30));
+        vBoxContainer.getChildren().add(lightDarkModeArea);
+
+
+        // toggle the verifier area contains text, toggle button, and an info button -----------------------------------
+        BorderPane verifierContentArea = new BorderPane();
+        verifierContentArea.setBackground(new Background(
+                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
+        verifierContentArea.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
         Text verifierToggleText = new Text("Toggle Verifier:");
         verifierToggleText.setFont(new Font(50));
         verifierToggleText.setFill(Color.WHITE);
-        BorderPane.setMargin(verifierToggleText, new Insets(20, 0, 0, 20));
-        textList.add(verifierToggleText);
+
+        BorderPane.setAlignment(verifierToggleText, Pos.CENTER);
+        BorderPane.setMargin(verifierToggleText, new Insets(0, 0, 0, 15));
+        verifierContentArea.setLeft(verifierToggleText);
+
+        BorderPane verifierToggleButtonAndInfoButtons = new BorderPane();
 
         Button verifierToggleButton = new Button("On");
         verifierToggleButton.setFont(new Font(40));
@@ -95,159 +131,214 @@ public class OptionsScreen extends Screen {
         verifierToggleButton.setPrefSize(120, 80);
         verifierToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         verifierToggleButton.setOnAction(e -> {
-            //systemCatalog.toggleVerifier();
-            verifierToggleButton.setText(verifierToggleButton.getText()
-                    .equalsIgnoreCase("On") ? "Off" : "On");
+            if (systemCatalog.isVerifierOn()) {
+                systemCatalog.turnOffVerifier();
+                verifierToggleButton.setText("Off");
+            } else {
+                systemCatalog.turnOnVerifier();
+                verifierToggleButton.setText("On");
+            }
         });
-        buttonList.add(verifierToggleButton);
 
-        Image questionImage1 = IO.readAsset(FileType.Asset.QUESTION_MARK);
-        ImageView questionImageView1 = new ImageView(questionImage1);
-        questionImageView1.setFitWidth(100);
-        questionImageView1.setFitHeight(80);
-        questionImageView1.setSmooth(true);
+        BorderPane.setMargin(verifierToggleButton, new Insets(10, 5, 10, 10));
+        verifierToggleButtonAndInfoButtons.setLeft(verifierToggleButton);
+
         Button verifierToggleInfoButton = new Button();
-        verifierToggleInfoButton.setGraphic(questionImageView1);
+        Image questionImage = IO.readAsset(FileType.Asset.QUESTION_MARK);
+        ImageView questionImageView = new ImageView(questionImage);
+        questionImageView.setFitWidth(100);
+        questionImageView.setFitHeight(80);
+        questionImageView.setSmooth(true);
+        verifierToggleInfoButton.setGraphic(questionImageView);
         verifierToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
         verifierToggleInfoButton.setOnAction(e -> new OptionsScreenPopUps.VerifierToggleWindow());
-        buttonList.add(verifierToggleInfoButton);
 
-        BorderPane verifierToggleAndInfoButtons = new BorderPane();
-        verifierToggleAndInfoButtons.setLeft(verifierToggleButton);
-        verifierToggleAndInfoButtons.setRight(verifierToggleInfoButton);
-        BorderPane.setMargin(verifierToggleButton, new Insets(10, 5, 10, 10));
+        verifierToggleButtonAndInfoButtons.setRight(verifierToggleInfoButton);
         BorderPane.setMargin(verifierToggleInfoButton, new Insets(10, 10, 10, 5));
 
-        BorderPane verifierContent = new BorderPane();
-        verifierContent.setLeft(verifierToggleText);
-        verifierContent.setRight(verifierToggleAndInfoButtons);
-        verifierContent.setBackground(new Background(
+        verifierContentArea.setRight(verifierToggleButtonAndInfoButtons);
+
+        VBox.setMargin(verifierContentArea, new Insets(0, 30, 0, 30));
+        vBoxContainer.getChildren().add(verifierContentArea);
+
+
+        // security checker toggle area contains text, toggle button, and info button ----------------------------------
+        BorderPane securityCheckerContentArea = new BorderPane();
+        securityCheckerContentArea.setBackground(new Background(
                 new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
-        verifierContent.setEffect(
+        securityCheckerContentArea.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        contentList.add(verifierContent);
 
-        // joinOptimizationContent -------------------------------------------------------------------------------------
-        Text joinOptimizationText = new Text("Join Optimization:");
-        joinOptimizationText.setFont(new Font(50));
-        joinOptimizationText.setFill(Color.WHITE);
-        BorderPane.setMargin(joinOptimizationText, new Insets(20, 0, 0, 20));
-        textList.add(joinOptimizationText);
+        Text securityCheckerToggleText = new Text("Toggle Security Checker:");
+        securityCheckerToggleText.setFont(new Font(50));
+        securityCheckerToggleText.setFill(Color.WHITE);
 
-        Button joinOptimizationToggleButton = new Button("On");
-        joinOptimizationToggleButton.setFont(new Font(40));
-        joinOptimizationToggleButton.setTextFill(Color.WHITE);
-        joinOptimizationToggleButton.setPrefSize(120, 80);
-        joinOptimizationToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        joinOptimizationToggleButton.setOnAction(e -> {
-            systemCatalog.turnOnJoinOptimization();
-            joinOptimizationToggleButton.setText(joinOptimizationToggleButton
-                    .getText().equalsIgnoreCase("On") ? "Off" : "On");
+        BorderPane.setAlignment(securityCheckerToggleText, Pos.CENTER);
+        BorderPane.setMargin(securityCheckerToggleText, new Insets(0, 0, 0, 15));
+        securityCheckerContentArea.setLeft(securityCheckerToggleText);
+
+        BorderPane securityCheckerToggleAndInfoButtons = new BorderPane();
+
+        Button securityCheckerToggleButton = new Button("On");
+        securityCheckerToggleButton.setFont(new Font(40));
+        securityCheckerToggleButton.setTextFill(Color.WHITE);
+        securityCheckerToggleButton.setPrefSize(120, 80);
+        securityCheckerToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        securityCheckerToggleButton.setOnAction(e -> {
+            if (systemCatalog.isSecurityCheckerOn()) {
+                systemCatalog.turnOffSecurityChecker();
+                securityCheckerToggleButton.setText("Off");
+            } else {
+                systemCatalog.turnOnSecurityChecker();
+                securityCheckerToggleButton.setText("On");
+            }
         });
-        buttonList.add(joinOptimizationToggleButton);
 
-        Image questionImage2 = IO.readAsset(FileType.Asset.QUESTION_MARK);
-        ImageView questionImageView2 = new ImageView(questionImage2);
-        questionImageView2.setFitWidth(100);
-        questionImageView2.setFitHeight(80);
-        questionImageView2.setSmooth(true);
-        Button joinOptimizationToggleInfoButton = new Button();
-        joinOptimizationToggleInfoButton.setGraphic(questionImageView2);
-        joinOptimizationToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        joinOptimizationToggleInfoButton.setOnAction(e -> new OptionsScreenPopUps.JoinOptimizationWindow());
-        buttonList.add(joinOptimizationToggleInfoButton);
+        BorderPane.setMargin(securityCheckerToggleButton, new Insets(10, 5, 10, 10));
+        securityCheckerToggleAndInfoButtons.setLeft(securityCheckerToggleButton);
 
-        BorderPane joinOptimizationToggleAndInfoButtons = new BorderPane();
-        joinOptimizationToggleAndInfoButtons.setLeft(joinOptimizationToggleButton);
-        joinOptimizationToggleAndInfoButtons.setRight(joinOptimizationToggleInfoButton);
-        BorderPane.setMargin(joinOptimizationToggleButton, new Insets(10, 5, 10, 10));
-        BorderPane.setMargin(joinOptimizationToggleInfoButton, new Insets(10, 10, 10, 5));
+        Button securityCheckerToggleInfoButton = new Button();
+        questionImage = IO.readAsset(FileType.Asset.QUESTION_MARK);
+        questionImageView = new ImageView(questionImage);
+        questionImageView.setFitWidth(100);
+        questionImageView.setFitHeight(80);
+        questionImageView.setSmooth(true);
+        securityCheckerToggleInfoButton.setGraphic(questionImageView);
+        securityCheckerToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        securityCheckerToggleInfoButton.setOnAction(e -> new OptionsScreenPopUps.SecurityCheckerToggleWindow());
 
-        BorderPane joinOptimizationContent = new BorderPane();
-        joinOptimizationContent.setLeft(joinOptimizationText);
-        joinOptimizationContent.setRight(joinOptimizationToggleAndInfoButtons);
-        joinOptimizationContent.setBackground(new Background(
+        securityCheckerToggleAndInfoButtons.setRight(securityCheckerToggleInfoButton);
+        BorderPane.setMargin(securityCheckerToggleInfoButton, new Insets(10, 10, 10, 5));
+
+        securityCheckerContentArea.setRight(securityCheckerToggleAndInfoButtons);
+
+        VBox.setMargin(securityCheckerContentArea, new Insets(0, 30, 0, 30));
+        vBoxContainer.getChildren().add(securityCheckerContentArea);
+
+
+        // save content ------------------------------------------------------------------------------------------------
+        BorderPane saveDataArea = new BorderPane();
+        saveDataArea.setBackground(new Background(
                 new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
-        joinOptimizationContent.setEffect(
+        saveDataArea.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        contentList.add(joinOptimizationContent);
 
-        // restoreDatabaseContent --------------------------------------------------------------------------------------
-        Text restoreDatabaseText = new Text("Restore Database:");
-        restoreDatabaseText.setFont(new Font(50));
-        restoreDatabaseText.setFill(Color.WHITE);
-        BorderPane.setMargin(restoreDatabaseText, new Insets(20, 0, 0, 20));
-        textList.add(restoreDatabaseText);
+        Text saveDataText = new Text("Save Data:");
+        saveDataText.setFont(new Font(50));
+        saveDataText.setFill(Color.WHITE);
 
+        BorderPane.setAlignment(saveDataText, Pos.CENTER);
+        BorderPane.setMargin(saveDataText, new Insets(0, 0, 0, 15));
+        saveDataArea.setLeft(saveDataText);
+
+        BorderPane saveDatabaseAndInfoButtons = new BorderPane();
+
+        Button saveDataButton = new Button();
+        Image saveImage = IO.readAsset(FileType.Asset.SAVE_IMAGE);
+        ImageView saveImageView = new ImageView(saveImage);
+        saveImageView.setFitWidth(100);
+        saveImageView.setFitHeight(80);
+        saveImageView.setSmooth(true);
+        saveDataButton.setGraphic(saveImageView);
+        saveDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        saveDataButton.setOnAction(e -> systemCatalog.saveChanges());
+
+        BorderPane.setMargin(saveDataButton, new Insets(10, 5, 10, 10));
+        saveDatabaseAndInfoButtons.setLeft(saveDataButton);
+
+        Button saveDataInfoButton = new Button();
+        questionImage = IO.readAsset(FileType.Asset.QUESTION_MARK);
+        questionImageView = new ImageView(questionImage);
+        questionImageView.setFitWidth(100);
+        questionImageView.setFitHeight(80);
+        questionImageView.setSmooth(true);
+        saveDataInfoButton.setGraphic(questionImageView);
+        saveDataInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        saveDataInfoButton.setOnAction(e -> new OptionsScreenPopUps.SaveDataWindow());
+
+        saveDatabaseAndInfoButtons.setRight(saveDataInfoButton);
+        BorderPane.setMargin(saveDataInfoButton, new Insets(10, 10, 10, 5));
+
+        saveDataArea.setRight(saveDatabaseAndInfoButtons);
+
+        VBox.setMargin(saveDataArea, new Insets(0, 30, 0, 30));
+        vBoxContainer.getChildren().add(saveDataArea);
+
+
+        // restore data area -------------------------------------------------------------------------------------------
+        BorderPane restoreDataArea = new BorderPane();
+        restoreDataArea.setBackground(new Background(
+                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
+        restoreDataArea.setEffect(
+                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+
+        Text restoreDataText = new Text("Restore Data:");
+        restoreDataText.setFont(new Font(50));
+        restoreDataText.setFill(Color.WHITE);
+
+        BorderPane.setAlignment(restoreDataText, Pos.CENTER);
+        BorderPane.setMargin(restoreDataText, new Insets(0, 0, 0, 15));
+        restoreDataArea.setLeft(restoreDataText);
+
+        BorderPane restoreDataAndInfoButtons = new BorderPane();
+
+        Button restoreDataButton = new Button();
         Image refreshImage = IO.readAsset(FileType.Asset.REFRESH_IMAGE);
         ImageView refreshImageView = new ImageView(refreshImage);
         refreshImageView.setFitWidth(100);
         refreshImageView.setFitHeight(80);
         refreshImageView.setSmooth(true);
-        Button restoreDatabaseButton = new Button();
-        restoreDatabaseButton.setGraphic(refreshImageView);
-        restoreDatabaseButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        restoreDatabaseButton.setOnAction(e -> systemCatalog.restoreDatabase());
-        buttonList.add(restoreDatabaseButton);
+        restoreDataButton.setGraphic(refreshImageView);
+        restoreDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        restoreDataButton.setOnAction(e -> systemCatalog.saveChanges());
 
-        Image questionImage3 = IO.readAsset(FileType.Asset.QUESTION_MARK);
-        ImageView questionImageView3 = new ImageView(questionImage3);
-        questionImageView3.setFitWidth(100);
-        questionImageView3.setFitHeight(80);
-        questionImageView3.setSmooth(true);
-        Button restoreDatabaseInfoButton = new Button();
-        restoreDatabaseInfoButton.setGraphic(questionImageView3);
-        restoreDatabaseInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        restoreDatabaseInfoButton.setOnAction(e -> new OptionsScreenPopUps.RestoreDatabaseWindow());
-        buttonList.add(restoreDatabaseInfoButton);
+        BorderPane.setMargin(restoreDataButton, new Insets(10, 5, 10, 10));
+        restoreDataAndInfoButtons.setLeft(restoreDataButton);
 
-        BorderPane restoreDatabaseToggleAndInfoButtons = new BorderPane();
-        restoreDatabaseToggleAndInfoButtons.setLeft(restoreDatabaseButton);
-        restoreDatabaseToggleAndInfoButtons.setRight(restoreDatabaseInfoButton);
-        BorderPane.setMargin(restoreDatabaseButton, new Insets(10, 5, 10, 10));
-        BorderPane.setMargin(restoreDatabaseInfoButton, new Insets(10, 10, 10, 5));
+        Button restoreDataInfoButton = new Button();
+        questionImage = IO.readAsset(FileType.Asset.QUESTION_MARK);
+        questionImageView = new ImageView(questionImage);
+        questionImageView.setFitWidth(100);
+        questionImageView.setFitHeight(80);
+        questionImageView.setSmooth(true);
+        restoreDataInfoButton.setGraphic(questionImageView);
+        restoreDataInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        restoreDataInfoButton.setOnAction(e -> new OptionsScreenPopUps.RestoreDataWindow());
 
-        BorderPane restoreDatabaseContent = new BorderPane();
-        restoreDatabaseContent.setLeft(restoreDatabaseText);
-        restoreDatabaseContent.setRight(restoreDatabaseToggleAndInfoButtons);
-        restoreDatabaseContent.setBackground(new Background(
-                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
-        restoreDatabaseContent.setEffect(
-                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-        contentList.add(restoreDatabaseContent);
+        restoreDataAndInfoButtons.setRight(restoreDataInfoButton);
+        BorderPane.setMargin(restoreDataInfoButton, new Insets(10, 10, 10, 5));
 
-        // options content layout for storing option panes -------------------------------------------------------------
-        VBox optionsContentLayout = new VBox();
-        optionsContentLayout.getChildren().addAll(lightDarkModeContent, verifierContent, joinOptimizationContent,
-                restoreDatabaseContent);
-        VBox.setMargin(lightDarkModeContent, new Insets(0, 20, 10, 20));
-        VBox.setMargin(verifierContent, new Insets(10, 20, 10, 20));
-        VBox.setMargin(joinOptimizationContent, new Insets(10, 20, 10, 20));
-        VBox.setMargin(restoreDatabaseContent, new Insets(10, 20, 10, 20));
+        restoreDataArea.setRight(restoreDataAndInfoButtons);
 
-        optionsContentBackground = new BorderPane();
-        optionsContentBackground.setCenter(optionsContentLayout);
-        optionsContentBackground.setBackground(new Background(new BackgroundFill(Color.rgb(40, 40, 40),
-                new CornerRadii(5), new Insets(-20, 0, 0, 0))));
-        optionsContentBackground.setEffect(
-                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
+        VBox.setMargin(restoreDataArea, new Insets(0, 30, 30, 30));
+        vBoxContainer.getChildren().add(restoreDataArea);
 
-        // top row of buttons for switching between screens ------------------------------------------------------------
-        HBox buttonLayout = super.getButtonLayout(screenController);
 
-        // container for everything ------------------------------------------------------------------------------------
-        optionsScreenLayout = new BorderPane();
-        optionsScreenLayout.setTop(buttonLayout);
-        optionsScreenLayout.setCenter(optionsContentBackground);
-        optionsScreenLayout.setPrefSize(defaultWidth, defaultHeight);
-        optionsScreenLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
-        BorderPane.setMargin(optionsContentBackground, new Insets(70, 50, 30, 50));
+        // scroll pane -------------------------------------------------------------------------------------------------
+        ScrollPane scrollPane = new ScrollPane(vBoxContainer);
+        scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
 
-        this.optionsScreen = new Scene(optionsScreenLayout);
+        BorderPane overallContainer = new BorderPane();
+        overallContainer.setMinSize(Screen.defaultWidth, Screen.defaultHeight);
+        overallContainer.setTop(topRowButtonLayout);
+        overallContainer.setBottom(scrollPane);
+        overallContainer.setBackground(new Background(new BackgroundFill(Color.rgb(30, 30, 30),
+                CornerRadii.EMPTY, Insets.EMPTY)));
+
+        optionsScreen = new Scene(overallContainer);
 
         optionsScreen.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = (double) newValue;
+            topRowButtonLayout.setMaxWidth(newWidth);
             super.adjustButtonWidth(newWidth);
+            overallContainer.setMinWidth(newWidth);
+        });
+
+        optionsScreen.heightProperty().addListener((observable, oldValue, newValue) -> {
+            double newHeight = (double) newValue;
+            overallContainer.setMinHeight(newHeight);
         });
     }
 

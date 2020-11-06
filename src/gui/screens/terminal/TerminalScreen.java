@@ -120,7 +120,6 @@ public class TerminalScreen extends Screen {
 
         // tell the system catalog to execute the input
         executeButton.setOnAction(e -> {
-            systemCatalog.saveChanges();
             output.clear();
             String input = terminal.getText();
             // get the content on the text area up until the first semicolon is reached

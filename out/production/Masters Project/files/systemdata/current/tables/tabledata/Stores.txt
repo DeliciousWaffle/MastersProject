@@ -12,4 +12,4 @@ StoreID StoreName                 Address                        City           
 10      JBPenney                  8537 Victory Terrace           Eirunepé                  AR    28        
 11      Jakestrom                 6795 Thames Wharf              Żabieniec                 AK    31        
 12      By-Vee                    6504 W Back Esplanade          Qalaikhumb                VT    35        
-13      Another Store Name        6901 E Allington Loan          Banjar Bongangede         GA    39
+13      Another Store Name        6901 E Allington Loan          Banjar Bongangede         GA    39        

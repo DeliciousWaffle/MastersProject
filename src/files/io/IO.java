@@ -70,14 +70,12 @@ public final class IO {
 
     // only allowed to overwrite current data, not original data
     public static void writeCurrentData(String data, FileType.CurrentData currentDataFileType) {
-        System.out.println(currentDataFileType.getPath().resolve("txt") + "\n" + data);
-        //write(data, currentDataFileType.getPath()); // resolve txt
+        write(data, currentDataFileType.getPath());
     }
 
     public static void writeCurrentTableData(String data, FileType.CurrentTableData currentTableDataFileType,
                                              String tableName) {
-        System.out.println(currentTableDataFileType.getPath().resolve(tableName).resolve("txt") + "\n" + data);
-        //write(data, currentTableDataFileType.getPath().resolve(tableName).resolve("txt"));
+        write(data, currentTableDataFileType.getPath().resolve(tableName + ".txt"));
     }
 
     private static void write(String data, Path path) {

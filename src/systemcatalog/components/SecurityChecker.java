@@ -53,6 +53,10 @@ public class SecurityChecker {
         isOn = false;
     }
 
+    public boolean isOn() {
+        return isOn;
+    }
+
     /**
      * Returns whether the following input is valid with respect to the current user's privileges.
      * @param inputType is the type of input

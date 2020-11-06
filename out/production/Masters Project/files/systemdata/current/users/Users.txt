@@ -1,444 +1,330 @@
-User: Bob
-    TablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: CustomerID FirstName LastName
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: CustomerID FirstName LastName
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: ProductID ProductName Price
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: ProductID ProductName Price
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: CustomerID ProductID Quantity PaymentMethod
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: CustomerID ProductID Quantity PaymentMethod
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-    TABLE PRIVILEGES LIST DONE
-    PassableTablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: CustomerID FirstName LastName
-            UPDATE PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: REFERENCES
-                ReferencesColumns: ProductID ProductName Price
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: ALTER
-            Privilege: DELETE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-        TABLE PRIVILEGES DONE
-    PASSABLE TABLE PRIVILEGES LIST DONE
-USER DONE
 User: Sally
-    TablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-    TABLE PRIVILEGES LIST DONE
-    PassableTablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-    PASSABLE TABLE PRIVILEGES LIST DONE
+	TablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+	TABLE PRIVILEGES LIST DONE
+	PassableTablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: EmployeeID FirstName LastName PhoneNumber Address City State Salary
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: EmployeeID ProductID Quantity PaymentMethod DiscountAmount
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+	PASSABLE TABLE PRIVILEGES LIST DONE
 USER DONE
 User: John
-    TablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: StoreID ManagerID StoreName Address City State
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: StoreID ManagerID StoreName Address City State
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: SupplierID SupplierName PhoneNumber Address City State
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: SupplierID SupplierName PhoneNumber Address City State
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: SupplierID StoreID ProductID Quantity DateShipped DateArrived
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: SupplierID StoreID ProductID Quantity DateShipped DateArrived
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: StoreID ProductID Quantity
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: StoreID ProductID Quantity
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-    TABLE PRIVILEGES LIST DONE
-    PassableTablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: StoreID ManagerID StoreName Address City State
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: StoreID ManagerID StoreName Address City State
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: INSERT
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: SupplierID SupplierName PhoneNumber Address City State
-            UPDATE PRIVILEGE DONE
-            Privilege: REFERENCES
-                ReferencesColumns: SupplierID SupplierName PhoneNumber Address City State
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-            Privilege: DELETE
-            Privilege: INDEX
-            Privilege: SELECT
-            Privilege: REFERENCES
-                ReferencesColumns: SupplierID StoreID ProductID Quantity DateShipped DateArrived
-            REFERENCES PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-            Privilege: ALTER
-            Privilege: DELETE
-            Privilege: SELECT
-            Privilege: UPDATE
-                UpdateColumns: StoreID ProductID Quantity
-            UPDATE PRIVILEGE DONE
-        TABLE PRIVILEGES DONE
-    PASSABLE TABLE PRIVILEGES LIST DONE
+	TablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: StoreID ManagerID StoreName Address City State
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: StoreID ManagerID StoreName Address City State
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: SupplierID SupplierName PhoneNumber Address City State
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: SupplierID SupplierName PhoneNumber Address City State
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: SupplierID StoreID ProductID Quantity DateShipped DateArrived
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: SupplierID StoreID ProductID Quantity DateShipped DateArrived
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: StoreID ProductID Quantity
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: StoreID ProductID Quantity
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+	TABLE PRIVILEGES LIST DONE
+	PassableTablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: StoreID ManagerID StoreName Address City State
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: StoreID ManagerID StoreName Address City State
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: INSERT
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: SupplierID SupplierName PhoneNumber Address City State
+			UPDATE PRIVILEGE DONE
+			Privilege: REFERENCES
+				ReferencesColumns: SupplierID SupplierName PhoneNumber Address City State
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+			Privilege: DELETE
+			Privilege: INDEX
+			Privilege: SELECT
+			Privilege: REFERENCES
+				ReferencesColumns: SupplierID StoreID ProductID Quantity DateShipped DateArrived
+			REFERENCES PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+			Privilege: ALTER
+			Privilege: DELETE
+			Privilege: SELECT
+			Privilege: UPDATE
+				UpdateColumns: StoreID ProductID Quantity
+			UPDATE PRIVILEGE DONE
+		TABLE PRIVILEGES DONE
+	PASSABLE TABLE PRIVILEGES LIST DONE
 USER DONE
 User: Fred
-    TablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-    TABLE PRIVILEGES LIST DONE
-    PassableTablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-            Privilege: SELECT
-        TABLE PRIVILEGES DONE
-    PASSABLE TABLE PRIVILEGES LIST DONE
+	TablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+	TABLE PRIVILEGES LIST DONE
+	PassableTablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+			Privilege: SELECT
+		TABLE PRIVILEGES DONE
+	PASSABLE TABLE PRIVILEGES LIST DONE
 USER DONE
 User: Jango
-    TablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-        TABLE PRIVILEGES DONE
-    TABLE PRIVILEGES LIST DONE
-    PassableTablePrivilegesList: NOT EMPTY
-        TablePrivileges: Customers
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Products
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Employees
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Stores
-        TABLE PRIVILEGES DONE
-        TablePrivileges: Suppliers
-        TABLE PRIVILEGES DONE
-        TablePrivileges: CustomerPurchaseDetails
-        TABLE PRIVILEGES DONE
-        TablePrivileges: EmployeePurchaseDetails
-        TABLE PRIVILEGES DONE
-        TablePrivileges: ShippingDetails
-        TABLE PRIVILEGES DONE
-        TablePrivileges: InventoryDetails
-        TABLE PRIVILEGES DONE
-    PASSABLE TABLE PRIVILEGES LIST DONE
+	TablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+		TABLE PRIVILEGES DONE
+	TABLE PRIVILEGES LIST DONE
+	PassableTablePrivilegesList: NOT EMPTY
+		TablePrivileges: Customers
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Products
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Employees
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Stores
+		TABLE PRIVILEGES DONE
+		TablePrivileges: Suppliers
+		TABLE PRIVILEGES DONE
+		TablePrivileges: CustomerPurchaseDetails
+		TABLE PRIVILEGES DONE
+		TablePrivileges: EmployeePurchaseDetails
+		TABLE PRIVILEGES DONE
+		TablePrivileges: ShippingDetails
+		TABLE PRIVILEGES DONE
+		TablePrivileges: InventoryDetails
+		TABLE PRIVILEGES DONE
+	PASSABLE TABLE PRIVILEGES LIST DONE
 USER DONE

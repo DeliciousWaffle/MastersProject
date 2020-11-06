@@ -42,25 +42,29 @@ import static utilities.OptimizerUtilities.*;
 public class Optimizer {
 
     private final RuleGraph queryRuleGraph;
-    private boolean joinOptimizationIsOn;
+    private boolean isJoinOptimizationOn;
 
     public Optimizer() {
         queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
-        joinOptimizationIsOn = true;
+        isJoinOptimizationOn = true;
     }
 
     /**
      * Turns the join rearrangement on.
      */
     public void turnOnJoinOptimization() {
-        joinOptimizationIsOn = true;
+        isJoinOptimizationOn = true;
     }
 
     /**
      * Turns the join rearrangement off.
      */
     public void turnOffJoinOptimization() {
-        joinOptimizationIsOn = false;
+        isJoinOptimizationOn = false;
+    }
+
+    public boolean isJoinOptimizationOn() {
+        return isJoinOptimizationOn;
     }
 
     public List<QueryTree> getQueryTreeStates(String[] filteredInput, List<Table> tables) {
@@ -587,7 +591,7 @@ public class Optimizer {
      */
     public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) {
 
-        if (! joinOptimizationIsOn) {
+        if (!isJoinOptimizationOn) {
             return new QueryTree(queryTree);
         }
 
@@ -810,8 +814,10 @@ public class Optimizer {
 
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
-        // the triplet is composed of column name, table name, and the file structure to use
+        // the triplet is composed of table name, column name, and the file structure to use
         List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>();
+
+        // TODO double check the table name, column name, and file structure for utils
 
         // will build file structures on columns referenced in where clause first
         List<SimpleSelection> simpleSelections =

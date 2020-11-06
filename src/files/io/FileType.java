@@ -97,6 +97,7 @@ public final class FileType {
         QUESTION_MARK("optionsscreen/QuestionMark.png"),
         REFRESH_IMAGE("optionsscreen/Refresh.png"),
         SUN_IMAGE("optionsscreen/Sun.png"),
+        SAVE_IMAGE("optionsscreen/Save.png"),
 
         // tables screen assets
         FOREIGN_KEY_IMAGE("tablesscreen/ForeignKey.png"),

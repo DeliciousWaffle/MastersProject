@@ -290,6 +290,10 @@ public class SystemCatalog {
         verifier.turnOff();
     }
 
+    public boolean isVerifierOn() {
+        return verifier.isOn();
+    }
+
     /**
      * Turns on the Security Checker component of the system catalog.
      */
@@ -304,6 +308,10 @@ public class SystemCatalog {
         securityChecker.turnOff();
     }
 
+    public boolean isSecurityCheckerOn() {
+        return securityChecker.isOn();
+    }
+
     /**
      * Turns join optimization on which has a large impact on query tree structure and query cost.
      */
@@ -316,6 +324,10 @@ public class SystemCatalog {
      */
     public void turnOffJoinOptimization() {
         optimizer.turnOffJoinOptimization();
+    }
+
+    public boolean isJoinOptimizationOn() {
+        return optimizer.isJoinOptimizationOn();
     }
 
     /**

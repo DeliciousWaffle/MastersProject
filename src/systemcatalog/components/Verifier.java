@@ -62,6 +62,10 @@ public class Verifier {
         isOn = false;
     }
 
+    public boolean isOn() {
+        return isOn;
+    }
+
     /**
      * Determines whether the input is valid with respect to the data on the system. This involves checking
      * that tables/users exist in the system if they are referenced. Making sure that the columns of tables exist
