@@ -21,8 +21,6 @@ import systemcatalog.SystemCatalog;
 public class ColumnPane {
 
     private BorderPane columnPane;
-    private Text columnText;
-    private ChoiceBox<String> fileStructureChoiceBox;
 
     public ColumnPane(Column column, Table columnsTable,
                       SystemCatalog systemCatalog, ScreenController screenController) {
@@ -52,12 +50,12 @@ public class ColumnPane {
 
         String decimalSizeFormatted = decimalSize > 0 ? ", " + decimalSize : "";
 
-        columnText = new Text(columnName + ": " + dataTypeFormatted + "(" + size + decimalSizeFormatted + ")");
+        Text columnText = new Text(columnName + ": " + dataTypeFormatted + "(" + size + decimalSizeFormatted + ")");
         columnText.setFont(new Font(25.0));
         columnText.fillProperty().set(Color.WHITE);
 
         // creating a choice box for the data structure to build on for this column
-        fileStructureChoiceBox = new ChoiceBox<>();
+        ChoiceBox<String> fileStructureChoiceBox = new ChoiceBox<>();
 
         fileStructureChoiceBox.getItems().addAll(
                 "Secondary B-Tree",
@@ -146,21 +144,5 @@ public class ColumnPane {
 
     public BorderPane getColumnPane() {
         return columnPane;
-    }
-
-    public void setToLightMode() {
-        this.columnText.setFill(Color.BLACK);
-        //this.dataTypeAndSizeText.setFill(Color.BLACK);
-        this.fileStructureChoiceBox.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_CHOICE_BOX_STYLE));
-        this.columnPane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY)));
-    }
-
-    public void setToDarkMode() {
-        this.columnText.setFill(Color.WHITE);
-        //this.dataTypeAndSizeText.setFill(Color.WHITE);
-        this.fileStructureChoiceBox.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
-        this.columnPane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));
     }
 }

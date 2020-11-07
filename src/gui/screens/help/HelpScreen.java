@@ -26,11 +26,6 @@ public class HelpScreen extends Screen {
 
     private Scene helpScreen;
 
-    private VBox helpPanesVBox;
-    private BorderPane helpScreenLayout;
-    private List<HelpPane> helpPaneList;
-    private ScrollPane scrollHelpPanes;
-
     public HelpScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
         // button layout for top part of screen
@@ -38,7 +33,7 @@ public class HelpScreen extends Screen {
 
 
         // following is for the content of the help screen
-        this.helpPanesVBox = new VBox();
+        VBox helpPanesVBox = new VBox();
         helpPanesVBox.setMinSize(0, 0);
         helpPanesVBox.setSpacing(30);
         helpPanesVBox.setStyle(Screen.DARK_HI);
@@ -51,7 +46,7 @@ public class HelpScreen extends Screen {
         helpPanesVBox.getChildren().add(titleText);
 
 
-        this.helpPaneList = new ArrayList<>(Arrays.asList(
+        List<HelpPane> helpPaneList = new ArrayList<>(Arrays.asList(
                 new HelpPane(getERDiagramText(), "View ER Diagram",
                         Diagram.Type.ER_DIAGRAM),
                 new HelpPane(getSchemaText(), "View Schema Diagram",
@@ -95,13 +90,13 @@ public class HelpScreen extends Screen {
         VBox.setMargin(helpPanesVBox, new Insets(0, 30, 0, 30));
 
         // add the centered help panels to the scroll pane
-        this.scrollHelpPanes = new ScrollPane(helpPanesVBox);
+        ScrollPane scrollHelpPanes = new ScrollPane(helpPanesVBox);
         scrollHelpPanes.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollHelpPanes.setFitToWidth(true);
         scrollHelpPanes.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
 
         // add the button layout and content layout to overall screen
-        this.helpScreenLayout = new BorderPane();
+        BorderPane helpScreenLayout = new BorderPane();
         helpScreenLayout.setTop(topRowButtonLayout);
         helpScreenLayout.setBottom(scrollHelpPanes);
 
@@ -124,20 +119,6 @@ public class HelpScreen extends Screen {
     @Override
     public Scene getScreen() {
         return helpScreen;
-    }
-
-    public void setToLightMode() {
-        this.helpPanesVBox.setStyle(Screen.LIGHT_LOW);
-        this.helpScreenLayout.setStyle(Screen.LIGHT_LOW);
-        this.helpPaneList.forEach(HelpPane::setToLightMode);
-        this.scrollHelpPanes.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
-    }
-
-    public void setToDarkMode() {
-        this.helpPanesVBox.setStyle(Screen.DARK_HI);
-        this.helpScreenLayout.setStyle(Screen.DARK_HI);
-        this.helpPaneList.forEach(HelpPane::setToDarkMode);
-        this.scrollHelpPanes.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
     }
 
     private String getERDiagramText() {

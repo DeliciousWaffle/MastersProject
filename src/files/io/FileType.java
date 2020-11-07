@@ -93,10 +93,8 @@ public final class FileType {
         UPDATE_DIAGRAM("helpscreen/UpdateDiagram.png"),
 
         // options screen assets
-        MOON_IMAGE("optionsscreen/Moon.png"),
         QUESTION_MARK("optionsscreen/QuestionMark.png"),
         REFRESH_IMAGE("optionsscreen/Refresh.png"),
-        SUN_IMAGE("optionsscreen/Sun.png"),
         SAVE_IMAGE("optionsscreen/Save.png"),
 
         // tables screen assets

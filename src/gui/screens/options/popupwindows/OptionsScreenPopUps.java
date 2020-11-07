@@ -55,16 +55,6 @@ public class OptionsScreenPopUps {
             scrollPane.setFitToWidth(true);
             scrollPane.setFitToHeight(true);
 
-            /*this.widthProperty().addListener((observable, oldValue, newValue) -> {
-                double newWidth = (double) newValue;
-                scrollPane.setMinWidth(newWidth);
-            });
-
-            this.heightProperty().addListener((observable, oldValue, newValue) -> {
-                double newHeight = (double) newValue;
-                scrollPane.setMinHeight(newHeight);
-            });*/
-
             Scene scene = new Scene(scrollPane);
             scene.setFill(Color.rgb(30, 30, 30));
 

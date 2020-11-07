@@ -27,47 +27,31 @@ import java.util.stream.Collectors;
 public class UsersScreen extends Screen {
 
     private Scene usersScreen;
-    private VBox userContentContainerLayout;
-    private Text playingAsDBAText, tablePrivilegesText, usersText;
-    private BorderPane playingAsContainer, leftSideContainer, rightSideContainer, usersScreenLayout;
-    private ScrollPane userContentScrollPane, tablePrivilegeListLayoutScrollPane;
-
-    private List<BorderPane> userContentContainerList;
-
-    private List<List<TablePrivilegePane>> listOfTablePrivilegePaneLists;
-    private List<Text> passableTablePrivilegesTextList;
-    private List<List<TablePrivilegePane>> listOfPassableTablePrivilegePaneLists;
-
-    private List<VBox> listOfTablePrivilegePaneListLayouts;
 
     public UsersScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
         List<User> users = systemCatalog.getUsers();
 
-        this.userContentContainerLayout = new VBox();
+        VBox userContentContainerLayout = new VBox();
         userContentContainerLayout.setStyle("-fx-background-color: rgb(30, 30, 30);");
         userContentContainerLayout.setMinSize(0, 0);
 
-        this.listOfTablePrivilegePaneListLayouts = new ArrayList<>();
-        this.tablePrivilegeListLayoutScrollPane = new ScrollPane();
+        List<VBox> listOfTablePrivilegePaneListLayouts = new ArrayList<>();
+        ScrollPane tablePrivilegeListLayoutScrollPane = new ScrollPane();
         tablePrivilegeListLayoutScrollPane.setMinSize(0, 0);
 
-        this.userContentContainerList = new ArrayList<>();
-
-        this.listOfTablePrivilegePaneLists = new ArrayList<>();
-        this.passableTablePrivilegesTextList = new ArrayList<>();
-        this.listOfPassableTablePrivilegePaneLists = new ArrayList<>();
+        List<BorderPane> userContentContainerList = new ArrayList<>();
 
         // used for displaying who the user is currently playing as (defaults to the DBA)
-        this.playingAsDBAText = new Text("Currently Playing As: DBA");
+        Text playingAsDBAText = new Text("Currently Playing As: DBA");
         playingAsDBAText.setFont(new Font(50));
         playingAsDBAText.setFill(Color.WHITE);
-        playingAsContainer = new BorderPane(playingAsDBAText);
+        BorderPane playingAsContainer = new BorderPane(playingAsDBAText);
         playingAsContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
         playingAsContainer.setMinSize(0, 0);
 
         // show's whose privileges are displayed (defaults to the DBA)
-        tablePrivilegesText = new Text("DBA's Privileges:");
+        Text tablePrivilegesText = new Text("DBA's Privileges:");
 
         // adding all the content for the users screen in the most god awful way imaginable
         for(User user : users) {
@@ -84,16 +68,12 @@ public class UsersScreen extends Screen {
                 tablePrivilegePaneList.add(tablePrivilegePane);
             }
 
-            listOfTablePrivilegePaneLists.add(tablePrivilegePaneList);
-
             // current user's passable table privileges ----------------------------------------------------------------
             Text passableTablePrivilegesText = new Text("Passable Privileges:");
             passableTablePrivilegesText.setFont(new Font(50));
             passableTablePrivilegesText.setFill(Color.WHITE);
             BorderPane.setAlignment(passableTablePrivilegesText, Pos.CENTER);
             VBox.setMargin(passableTablePrivilegesText, new Insets(10, 20, 10, 20));
-
-            passableTablePrivilegesTextList.add(passableTablePrivilegesText);
 
             List<TablePrivilegePane> passableTablePrivilegePaneList = new ArrayList<>();
 
@@ -104,8 +84,6 @@ public class UsersScreen extends Screen {
                         passableTablePrivilege.getReferenceColumns());
                 passableTablePrivilegePaneList.add(passableTablePrivilegePane);
             }
-
-            listOfPassableTablePrivilegePaneLists.add(passableTablePrivilegePaneList);
 
             // adding the aforementioned content in a vertical layout --------------------------------------------------
             VBox tablePrivilegePaneListLayout = new VBox();
@@ -181,22 +159,22 @@ public class UsersScreen extends Screen {
         userContentContainerLayout.getChildren().addAll(userContentContainerList);
 
         // container for everything on left side of screen -------------------------------------------------------------
-        this.usersText = new Text("Users:");
+        Text usersText = new Text("Users:");
         usersText.setFont(new Font(50));
         usersText.setFill(Color.WHITE);
         BorderPane.setAlignment(usersText, Pos.CENTER);
 
-        this.userContentScrollPane = new ScrollPane();
+        ScrollPane userContentScrollPane = new ScrollPane();
         userContentScrollPane.setContent(userContentContainerLayout);
         userContentScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
 
-        this.leftSideContainer = new BorderPane();
+        BorderPane leftSideContainer = new BorderPane();
         leftSideContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
         leftSideContainer.setTop(usersText);
         leftSideContainer.setBottom(userContentScrollPane);
 
         // container for everything on right side of screen ------------------------------------------------------------
-        this.tablePrivilegesText.setFont(new Font(50));
+        tablePrivilegesText.setFont(new Font(50));
         tablePrivilegesText.setFill(Color.WHITE);
         BorderPane.setAlignment(tablePrivilegesText, Pos.CENTER);
 
@@ -204,7 +182,7 @@ public class UsersScreen extends Screen {
         tablePrivilegeListLayoutScrollPane.setContent(listOfTablePrivilegePaneListLayouts.get(0));
         tablePrivilegeListLayoutScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
 
-        this.rightSideContainer = new BorderPane();
+        BorderPane rightSideContainer = new BorderPane();
         rightSideContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
         rightSideContainer.setTop(tablePrivilegesText);
         rightSideContainer.setBottom(tablePrivilegeListLayoutScrollPane);
@@ -218,7 +196,7 @@ public class UsersScreen extends Screen {
         topContainer.setBottom(playingAsContainer);
 
         // overall layout for the user screen --------------------------------------------------------------------------
-        this.usersScreenLayout = new BorderPane();
+        BorderPane usersScreenLayout = new BorderPane();
         usersScreenLayout.setTop(topContainer);
         usersScreenLayout.setLeft(leftSideContainer);
         usersScreenLayout.setRight(rightSideContainer);
@@ -250,47 +228,5 @@ public class UsersScreen extends Screen {
     @Override
     public Scene getScreen() {
         return usersScreen;
-    }
-
-    @Override
-    public void setToLightMode() {
-        super.setToLightMode();
-        this.userContentContainerLayout.setStyle(Screen.LIGHT_LOW);
-        this.playingAsDBAText.setFill(Color.BLACK);
-        this.tablePrivilegesText.setFill(Color.BLACK);
-        this.usersText.setFill(Color.BLACK);
-        this.playingAsContainer.setStyle(Screen.LIGHT_LOW);
-        this.leftSideContainer.setStyle(Screen.LIGHT_LOW);
-        this.rightSideContainer.setStyle(Screen.LIGHT_LOW);
-        this.usersScreenLayout.setStyle(Screen.LIGHT_LOW);
-        this.userContentScrollPane.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
-        this.userContentContainerList.forEach(e -> e.setBackground(new Background(
-                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY))));
-        this.tablePrivilegeListLayoutScrollPane
-                .getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
-        this.listOfTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToLightMode));
-        this.passableTablePrivilegesTextList.forEach(e -> e.setFill(Color.BLACK));
-        this.listOfPassableTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToLightMode));
-    }
-
-    @Override
-    public void setToDarkMode() {
-        super.setToDarkMode();
-        this.userContentContainerLayout.setStyle(Screen.DARK_HI);
-        this.playingAsDBAText.setFill(Color.WHITE);
-        this.tablePrivilegesText.setFill(Color.WHITE);
-        this.usersText.setFill(Color.WHITE);
-        this.playingAsContainer.setStyle(Screen.DARK_HI);
-        this.leftSideContainer.setStyle(Screen.DARK_HI);
-        this.rightSideContainer.setStyle(Screen.DARK_HI);
-        this.usersScreenLayout.setStyle(Screen.DARK_HI);
-        this.userContentScrollPane.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
-        this.userContentContainerList.forEach(e -> e.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY))));
-        this.tablePrivilegeListLayoutScrollPane
-                .getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
-        this.listOfTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToDarkMode));
-        this.passableTablePrivilegesTextList.forEach(e -> e.setFill(Color.WHITE));
-        this.listOfPassableTablePrivilegePaneLists.forEach(e -> e.forEach(TablePrivilegePane::setToDarkMode));
     }
 }

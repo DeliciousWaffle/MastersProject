@@ -36,13 +36,6 @@ public class TerminalScreen extends Screen {
 
     private Scene terminalScreen;
 
-    private Text inputAreaText, outputAreaText;
-    private TextArea terminal, output;
-    private Button executeButton, relationalAlgebraButton, queryTreeStatesButton, queryCostButton,
-            recommendedFileStructuresButton;
-    private VBox rightColumnButtonLayout;
-    private BorderPane terminalScreenLayout;
-
     private static final int ICON_WIDTH = 120, ICON_HEIGHT = 66;
 
     public TerminalScreen(ScreenController screenController, SystemCatalog systemCatalog) {
@@ -53,11 +46,11 @@ public class TerminalScreen extends Screen {
         // terminal area -----------------------------------------------------------------------------------------------
         BorderPane terminalAreaLayout = new BorderPane();
 
-        this.inputAreaText = new Text("Input Area:");
+        Text inputAreaText = new Text("Input Area:");
         inputAreaText.setFont(new Font(40));
         inputAreaText.setFill(Color.WHITE);
 
-        this.terminal = new TextArea();
+        TextArea terminal = new TextArea();
         terminal.setFont(new Font(40));
         terminal.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_TEXT_AREA_STYLE));
         terminal.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
@@ -72,11 +65,11 @@ public class TerminalScreen extends Screen {
         // output area -------------------------------------------------------------------------------------------------
         BorderPane outputAreaLayout = new BorderPane();
 
-        this.outputAreaText = new Text("Output Area:");
+        Text outputAreaText = new Text("Output Area:");
         outputAreaText.setFont(new Font(40));
         outputAreaText.setFill(Color.WHITE);
 
-        this.output = new TextArea();
+        TextArea output = new TextArea();
         output.setMinHeight(0);
         output.setFont(new Font(40));
         output.setEditable(false);
@@ -98,7 +91,7 @@ public class TerminalScreen extends Screen {
         // right column of buttons for executing the input, if the input is a query, shows the
         // relational algebra, query tree states, query cost, and recommended file structures
         // -------------------------------------------------------------------------------------------------------------
-        this.rightColumnButtonLayout = new VBox();
+        VBox rightColumnButtonLayout = new VBox();
         rightColumnButtonLayout.setSpacing(10);
         rightColumnButtonLayout.setBackground(new Background(new BackgroundFill(
                 Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
@@ -106,7 +99,7 @@ public class TerminalScreen extends Screen {
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         // execute button ..............................................................................................
-        this.executeButton = new Button();
+        Button executeButton = new Button();
 
         ImageView imageView = new ImageView(IO.readAsset(FileType.Asset.PLAY_IMAGE));
         imageView.setFitWidth(ICON_WIDTH);
@@ -193,7 +186,7 @@ public class TerminalScreen extends Screen {
         resultSetButton.setTooltip(tooltip);
 
         // relational algebra button ...................................................................................
-        this.relationalAlgebraButton = new Button();
+        Button relationalAlgebraButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.X_IMAGE));
         imageView.setFitWidth(ICON_WIDTH);
@@ -221,7 +214,7 @@ public class TerminalScreen extends Screen {
         relationalAlgebraButton.setTooltip(tooltip);
 
         // query tree states button ...................................................................................
-        this.queryTreeStatesButton = new Button();
+        Button queryTreeStatesButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.TREE_IMAGE));
         imageView.setFitWidth(ICON_WIDTH);
@@ -248,7 +241,7 @@ public class TerminalScreen extends Screen {
         queryTreeStatesButton.setTooltip(tooltip);
 
         // query cost button ...........................................................................................
-        this.queryCostButton = new Button();
+        Button queryCostButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.DOLLAR_SIGN_IMAGE));
         imageView.setFitWidth(ICON_WIDTH);
@@ -274,7 +267,7 @@ public class TerminalScreen extends Screen {
         queryCostButton.setTooltip(tooltip);
 
         // query cost button ...........................................................................................
-        this.recommendedFileStructuresButton = new Button();
+        Button recommendedFileStructuresButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.FOLDER_IMAGE));
         imageView.setFitWidth(ICON_WIDTH);
@@ -291,20 +284,6 @@ public class TerminalScreen extends Screen {
             boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
             boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
             if (wasSuccessfullyExecuted && executedQuery) {
-                //String recommendedFileStructures = systemCatalog.getRecommendedFileStructures();
-                /*List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>(Arrays.asList(
-                        new Triple<>("CustomerID", "Customers", "Secondary B-Tree"),
-                        new Triple<>("FirstName", "Customers", "Clustered B-Tree"),
-                        new Triple<>("ProductID", "Products", "Secondary B-Tree"),
-                        new Triple<>("ProductName", "Products", "Hash Table"),
-                        new Triple<>("Price", "Products", "Secondary B-Tree"),
-                        new Triple<>("StoreID", "Stores", "Clustered B-Tree"),
-                        new Triple<>("StoreName", "Stores", "Clustered B-Tree")
-                ));
-                List<Pair<String, String>> clusteredTables = new ArrayList<>(Arrays.asList(
-                        //new Pair<>("CustomerPurchaseDetails", "EmployeePurchaseDetails"),
-                        //new Pair<>("Suppliers", "InventoryDetails")
-                ));*/
                 Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures =
                         systemCatalog.getRecommendedFileStructures();
                 List<Triple<String, String, String>> fileStructures = recommendedFileStructures.getFirst();
@@ -330,7 +309,7 @@ public class TerminalScreen extends Screen {
         VBox.setMargin(recommendedFileStructuresButton, new Insets(0, 10, 10, 10));
 
         // layout container for everything
-        this.terminalScreenLayout = new BorderPane();
+        BorderPane terminalScreenLayout = new BorderPane();
         terminalScreenLayout.setTop(topRowButtonLayout);
         terminalScreenLayout.setLeft(ioAreaLayout);
         terminalScreenLayout.setRight(rightColumnButtonLayout);
@@ -364,39 +343,5 @@ public class TerminalScreen extends Screen {
     @Override
     public Scene getScreen() {
         return terminalScreen;
-    }
-
-    @Override
-    public void setToLightMode() {
-        this.inputAreaText.setFill(Color.BLACK);
-        this.outputAreaText.setFill(Color.BLACK);
-        this.terminal.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_TEXT_AREA_STYLE));
-        this.terminal.getStylesheets().addAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
-        this.output.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_TEXT_AREA_STYLE));
-        this.output.getStylesheets().addAll(IO.readCSS(FileType.CSS.LIGHT_SCROLL_PANE_STYLE));
-        this.executeButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        this.relationalAlgebraButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        this.queryTreeStatesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        this.queryCostButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        this.recommendedFileStructuresButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        this.rightColumnButtonLayout.setStyle(Screen.LIGHT_MED);
-        this.terminalScreenLayout.setStyle(Screen.LIGHT_HI);
-    }
-
-    @Override
-    public void setToDarkMode() {
-        this.inputAreaText.setFill(Color.WHITE);
-        this.outputAreaText.setFill(Color.WHITE);
-        this.terminal.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_TEXT_AREA_STYLE));
-        this.terminal.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
-        this.output.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_TEXT_AREA_STYLE));
-        this.output.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
-        this.executeButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        this.relationalAlgebraButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        this.queryTreeStatesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        this.queryCostButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        this.recommendedFileStructuresButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        this.rightColumnButtonLayout.setStyle(Screen.DARK_MED);
-        this.terminalScreenLayout.setStyle(Screen.DARK_HI);
     }
 }

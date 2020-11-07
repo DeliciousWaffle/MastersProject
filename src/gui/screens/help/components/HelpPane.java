@@ -20,8 +20,6 @@ import javafx.scene.text.TextAlignment;
 public class HelpPane {
 
     private BorderPane helpPane;
-    private Text text;
-    private Button button;
 
     public HelpPane(String helpText, String buttonText, Diagram.Type diagramType) {
 
@@ -32,14 +30,14 @@ public class HelpPane {
         double textWrappingSize = Screen.defaultWidth - 250.0;
 
         // creating text
-        this.text = new Text(buttonWidth, buttonHeight, helpText);
+        Text text = new Text(buttonWidth, buttonHeight, helpText);
         text.setFont(new Font(fontSize));
         text.setTextAlignment(TextAlignment.CENTER);
         text.setWrappingWidth(textWrappingSize);
         text.setFill(Color.WHITE);
 
         // creating the button
-        this.button = new Button(buttonText);
+        Button button = new Button(buttonText);
         button.setMinSize(0, 0);
         button.setPrefSize(buttonWidth, buttonHeight);
         button.setFont(new Font(fontSize));
@@ -119,17 +117,5 @@ public class HelpPane {
 
     public BorderPane getHelpPane() {
         return helpPane;
-    }
-
-    public void setToLightMode() {
-        this.text.setFill(Color.BLACK);
-        this.button.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        helpPane.setStyle(Screen.LIGHT_MED);
-    }
-
-    public void setToDarkMode() {
-        this.text.setFill(Color.WHITE);
-        this.button.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        helpPane.setStyle(Screen.DARK_MED);
     }
 }

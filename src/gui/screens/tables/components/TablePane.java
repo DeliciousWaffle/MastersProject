@@ -31,10 +31,6 @@ import java.util.stream.Collectors;
 public class TablePane {
 
     private BorderPane tablePane;
-    private Text tableNameText;
-    private List<ColumnPane> columnPaneList;
-    //private ChoiceBox<String> clusteredFileTableOptions;
-    private Button viewTableDataButton;
 
     public TablePane(Table table, SystemCatalog systemCatalog, ScreenController screenController) {
 
@@ -187,21 +183,5 @@ public class TablePane {
 
     public BorderPane getTablePane() {
         return tablePane;
-    }
-
-    public void setToLightMode() {
-        this.tableNameText.setFill(Color.BLACK);
-        this.columnPaneList.forEach(ColumnPane::setToLightMode);
-        this.viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        this.tablePane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY)));;
-    }
-
-    public void setToDarkMode() {
-        this.tableNameText.setFill(Color.WHITE);
-        this.columnPaneList.forEach(ColumnPane::setToDarkMode);
-        this.viewTableDataButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        this.tablePane.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));;
     }
 }

@@ -28,18 +28,7 @@ public class OptionsScreen extends Screen {
 
     private Scene optionsScreen;
 
-    // for adjust for later
-    private List<Text> textList;
-    private List<Button> buttonList;
-    private List<BorderPane> contentList;
-    private BorderPane optionsContentBackground;
-    private BorderPane optionsScreenLayout;
-
     public OptionsScreen(ScreenController screenController, SystemCatalog systemCatalog) {
-
-        this.textList = new ArrayList<>();
-        this.buttonList = new ArrayList<>();
-        this.contentList = new ArrayList<>();
 
         HBox topRowButtonLayout = super.getButtonLayout(screenController);
 
@@ -58,57 +47,7 @@ public class OptionsScreen extends Screen {
         vBoxContainer.getChildren().add(titleText);
 
 
-        // light / dark mode area, contains text, a button for light mode, and a button for dark mode ------------------
-        BorderPane lightDarkModeArea = new BorderPane();
-        lightDarkModeArea.setBackground(new Background(
-                new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
-        lightDarkModeArea.setEffect(
-                new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
-
-        Text lightDarkModeText = new Text("Light or Dark Mode:");
-        lightDarkModeText.setFont(new Font(50));
-        lightDarkModeText.setFill(Color.WHITE);
-
-        BorderPane.setAlignment(lightDarkModeText, Pos.CENTER);
-        BorderPane.setMargin(lightDarkModeText, new Insets(0, 0, 0, 15));
-        lightDarkModeArea.setLeft(lightDarkModeText);
-
-        BorderPane lightDarkModeButtons = new BorderPane();
-
-        Button lightModeButton = new Button();
-        lightModeButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        lightModeButton.setOnAction(e -> screenController.setToLightMode());
-        Image sunImage = IO.readAsset(FileType.Asset.SUN_IMAGE);
-        ImageView sunImageView = new ImageView(sunImage);
-        sunImageView.setFitWidth(100);
-        sunImageView.setFitHeight(80);
-        sunImageView.setSmooth(true);
-        lightModeButton.setGraphic(sunImageView);
-
-        lightDarkModeButtons.setLeft(lightModeButton);
-
-        Button darkModeButton = new Button();
-        darkModeButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        darkModeButton.setOnAction(e -> screenController.setToDarkMode());
-        Image moonImage = IO.readAsset(FileType.Asset.MOON_IMAGE);
-        ImageView moonImageView = new ImageView(moonImage);
-        moonImageView.setFitWidth(100);
-        moonImageView.setFitHeight(80);
-        moonImageView.setSmooth(true);
-        darkModeButton.setGraphic(moonImageView);
-
-        lightDarkModeButtons.setRight(darkModeButton);
-
-        BorderPane.setMargin(lightModeButton, new Insets(10, 5, 10, 10));
-        BorderPane.setMargin(darkModeButton, new Insets(10, 10, 10, 5));
-
-        lightDarkModeArea.setRight(lightDarkModeButtons);
-
-        VBox.setMargin(lightDarkModeArea, new Insets(0, 30, 0, 30));
-        vBoxContainer.getChildren().add(lightDarkModeArea);
-
-
-        // toggle the verifier area contains text, toggle button, and an info button -----------------------------------
+        // toggle the verifier area
         BorderPane verifierContentArea = new BorderPane();
         verifierContentArea.setBackground(new Background(
                 new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
@@ -162,7 +101,7 @@ public class OptionsScreen extends Screen {
         vBoxContainer.getChildren().add(verifierContentArea);
 
 
-        // security checker toggle area contains text, toggle button, and info button ----------------------------------
+        // security checker toggle area
         BorderPane securityCheckerContentArea = new BorderPane();
         securityCheckerContentArea.setBackground(new Background(
                 new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
@@ -216,8 +155,7 @@ public class OptionsScreen extends Screen {
         vBoxContainer.getChildren().add(securityCheckerContentArea);
 
 
-        // join optimization toggle area -------------------------------------------------------------------------------
-        // security checker toggle area contains text, toggle button, and info button ----------------------------------
+        // join optimization toggle area
         BorderPane joinOptimizationToggleArea = new BorderPane();
         joinOptimizationToggleArea.setBackground(new Background(
                 new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
@@ -271,7 +209,7 @@ public class OptionsScreen extends Screen {
         vBoxContainer.getChildren().add(joinOptimizationToggleArea);
 
 
-        // save content ------------------------------------------------------------------------------------------------
+        // save content
         BorderPane saveDataArea = new BorderPane();
         saveDataArea.setBackground(new Background(
                 new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
@@ -320,7 +258,7 @@ public class OptionsScreen extends Screen {
         vBoxContainer.getChildren().add(saveDataArea);
 
 
-        // restore data area -------------------------------------------------------------------------------------------
+        // restore data area
         BorderPane restoreDataArea = new BorderPane();
         restoreDataArea.setBackground(new Background(
                 new BackgroundFill(Color.rgb(50, 50, 50), new CornerRadii(5), Insets.EMPTY)));
@@ -369,7 +307,7 @@ public class OptionsScreen extends Screen {
         vBoxContainer.getChildren().add(restoreDataArea);
 
 
-        // scroll pane -------------------------------------------------------------------------------------------------
+        // scroll pane
         ScrollPane scrollPane = new ScrollPane(vBoxContainer);
         scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
         scrollPane.setFitToWidth(true);
@@ -398,31 +336,7 @@ public class OptionsScreen extends Screen {
     }
 
     @Override
-    public Scene getScreen() {
+    public Scene getScreen()  {
         return optionsScreen;
-    }
-
-    @Override
-    public void setToLightMode() {
-        super.setToLightMode();
-        textList.forEach(e -> e.setFill(Color.BLACK));
-        buttonList.forEach(e -> e.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE)));
-        contentList.forEach(e -> e.setBackground(new Background(new BackgroundFill(Color.rgb(190, 190, 190),
-                new CornerRadii(5), Insets.EMPTY))));
-        optionsContentBackground.setBackground(new Background(new BackgroundFill(Color.rgb(150, 150, 150),
-                new CornerRadii(5), new Insets(-20, 0, 0, 0))));
-        optionsScreenLayout.setStyle(Screen.LIGHT_LOW);
-    }
-
-    @Override
-    public void setToDarkMode() {
-        super.setToDarkMode();
-        textList.forEach(e -> e.setFill(Color.WHITE));
-        buttonList.forEach(e -> e.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE)));
-        contentList.forEach(e -> e.setBackground(new Background(new BackgroundFill(Color.rgb(90, 90, 90),
-                new CornerRadii(5), Insets.EMPTY))));
-        optionsContentBackground.setBackground(new Background(new BackgroundFill(Color.rgb(60, 60, 60),
-                new CornerRadii(5), new Insets(-20, 0, 0, 0))));
-        optionsScreenLayout.setStyle(Screen.DARK_HI);
     }
 }
