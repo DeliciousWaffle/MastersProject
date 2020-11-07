@@ -35,7 +35,7 @@ public class TerminalScreen extends Screen {
 
     private Scene terminalScreen;
 
-    private static final int ICON_WIDTH = 120, ICON_HEIGHT = 66;
+    private int ICON_WIDTH = 120, ICON_HEIGHT = 66;
 
     public TerminalScreen(ScreenController screenController, SystemCatalog systemCatalog) {
 
@@ -46,11 +46,12 @@ public class TerminalScreen extends Screen {
         BorderPane terminalAreaLayout = new BorderPane();
 
         Text inputAreaText = new Text("Input Area:");
-        inputAreaText.setFont(new Font(40));
+        inputAreaText.setFont(new Font(35));
         inputAreaText.setFill(Color.WHITE);
 
         TextArea terminal = new TextArea();
-        terminal.setFont(new Font(40));
+        terminal.setMaxSize(877.5, 287.5);
+        terminal.setFont(new Font(35));
         terminal.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
         terminal.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         terminal.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
@@ -65,12 +66,12 @@ public class TerminalScreen extends Screen {
         BorderPane outputAreaLayout = new BorderPane();
 
         Text outputAreaText = new Text("Output Area:");
-        outputAreaText.setFont(new Font(40));
+        outputAreaText.setFont(new Font(35));
         outputAreaText.setFill(Color.WHITE);
 
         TextArea output = new TextArea();
-        output.setMinHeight(0);
-        output.setFont(new Font(40));
+        output.setMaxSize(877.5, 200);
+        output.setFont(new Font(35));
         output.setEditable(false);
         output.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
         output.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
@@ -306,11 +307,17 @@ public class TerminalScreen extends Screen {
         VBox.setMargin(queryCostButton, new Insets(0, 10, 0, 10));
         VBox.setMargin(recommendedFileStructuresButton, new Insets(0, 10, 10, 10));
 
+        // contains the input area, output area, and the right column button layout
+        BorderPane contentLayout = new BorderPane();
+        contentLayout.setLeft(ioAreaLayout);
+        contentLayout.setRight(rightColumnButtonLayout);
+        contentLayout.setMaxSize(Screen.defaultWidth, Screen.defaultHeight - 107.5);
+        BorderPane.setAlignment(contentLayout, Pos.CENTER);
+
         // layout container for everything
         BorderPane terminalScreenLayout = new BorderPane();
         terminalScreenLayout.setTop(topRowButtonLayout);
-        terminalScreenLayout.setLeft(ioAreaLayout);
-        terminalScreenLayout.setRight(rightColumnButtonLayout);
+        terminalScreenLayout.setCenter(contentLayout);
 
         BorderPane.setMargin(ioAreaLayout, new Insets(0, 5, 10, 10));
         BorderPane.setMargin(rightColumnButtonLayout, new Insets(0, 10, 10, 5));
@@ -324,17 +331,15 @@ public class TerminalScreen extends Screen {
             double newWidth = (double) newValue;
             topRowButtonLayout.setMaxWidth(newWidth);
             super.adjustButtonWidth(newWidth);
-            terminal.setPrefWidth(newWidth - 190);
-            output.setPrefWidth(newWidth - 190);
+            double scaleX = newWidth / Screen.defaultWidth;
+            contentLayout.setScaleX(newWidth > Screen.defaultWidth ? scaleX : 1.0);
 
         });
 
         terminalScreen.heightProperty().addListener((observable, oldValue, newValue) -> {
             double newHeight = (double) newValue;
-            terminal.setMinHeight(300);
-            output.setMinHeight(160);
-            terminal.setPrefHeight(newHeight - 420 + 40);
-            output.setPrefHeight(newHeight - 560 + 40);
+            double scaleY = newHeight / Screen.defaultHeight;
+            contentLayout.setScaleY(newHeight > Screen.defaultHeight ? scaleY : 1.0);
         });
     }
 

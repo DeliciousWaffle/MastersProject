@@ -301,8 +301,8 @@ public class QueryTreeGUI {
 
         // finally add everything to the container
         container.setContent(centerScrollPane);
-        container.setPrefSize(prefContainerWidth, prefContainerHeight);
-        container.setMinSize(0, 0);
+        container.setFitToHeight(true);
+        container.setFitToWidth(true);
     }
 
     public ScrollPane getContainer() {

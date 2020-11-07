@@ -92,14 +92,14 @@ public class QueryTreeWindow extends Stage {
         });
 
         // adjusting the area in which the query tree is displayed upon window resize
-        this.widthProperty().addListener((observable, oldValue, newValue) -> { // change back to this
+        this.widthProperty().addListener((observable, oldValue, newValue) -> {
             double width = (Double) newValue;
             for(QueryTreeGUI queryTreeGUI : queryTreeGUIStates) {
                 queryTreeGUI.adjustWidth(width);
             }
         });
 
-        this.heightProperty().addListener((observable, oldValue, newValue) -> { // change back to this
+        this.heightProperty().addListener((observable, oldValue, newValue) -> {
 
             double height = (Double) newValue;
 
