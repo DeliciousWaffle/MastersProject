@@ -1,6 +1,5 @@
 package gui;
 
-import datastructures.relation.table.Table;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.options.OptionsScreen;
@@ -34,7 +33,7 @@ public class ScreenController {
         setScreen(Screen.Type.TERMINAL_SCREEN);
 
         // icon on the taskbar
-        primaryStage.getIcons().add(IO.readAsset(FileType.Asset.X_IMAGE));
+        primaryStage.getIcons().add(IO.readAsset(FileType.Asset.PI_IMAGE));
     }
 
     /**

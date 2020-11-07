@@ -93,7 +93,7 @@ public class HelpScreen extends Screen {
         ScrollPane scrollHelpPanes = new ScrollPane(helpPanesVBox);
         scrollHelpPanes.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollHelpPanes.setFitToWidth(true);
-        scrollHelpPanes.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollHelpPanes.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
 
         // add the button layout and content layout to overall screen
         BorderPane helpScreenLayout = new BorderPane();

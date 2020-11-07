@@ -12,16 +12,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import systemcatalog.SystemCatalog;
 
 import java.util.List;
@@ -60,7 +56,7 @@ public class TablePane {
         BorderPane keyButtonsContainer = new BorderPane();
 
         Button primaryKeysButton = new Button("Primary Key(s)");
-        primaryKeysButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        primaryKeysButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         primaryKeysButton.setFont(new Font(25.0));
         primaryKeysButton.setOnAction(e -> new KeyWindow("Primary Key(s):", primaryKeys));
 
@@ -68,7 +64,7 @@ public class TablePane {
         keyButtonsContainer.setLeft(primaryKeysButton);
 
         Button foreignKeysButton = new Button("Foreign Key(s)");
-        foreignKeysButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        foreignKeysButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         foreignKeysButton.setFont(new Font(25.0));
 
         List<String> formattedForeignKeys = foreignKeys
@@ -145,7 +141,7 @@ public class TablePane {
             screenController.setScreen(Screen.Type.TABLES_SCREEN);
         });
 
-        clusteredFileTableOptions.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_CHOICE_BOX_STYLE));
+        clusteredFileTableOptions.getStylesheets().add(IO.readCSS(FileType.CSS.CHOICE_BOX_STYLE));
         clusteredFileTableOptions.setStyle("-fx-font-size: 25; -fx-pref-width: 360;");
         clusteredFileTableOptions.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
@@ -163,7 +159,7 @@ public class TablePane {
 
         // add a button to view the table data
         Button viewTableDataButton = new Button("View Table Data");
-        viewTableDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        viewTableDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         viewTableDataButton.setFont(new Font(25.0));
 
         viewTableDataButton.setOnAction(e -> {

@@ -9,7 +9,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontSmoothingType;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import java.util.List;
@@ -20,7 +19,7 @@ public class KeyWindow extends Stage {
 
         // create the top part of the screen
         Text keyText = new Text(keyType);
-        keyText.setFont(new Font("Ariel", 100.0));
+        keyText.setFont(new Font(100.0));
         keyText.setFill(Color.WHITE);
         keyText.setSmooth(true);
 
@@ -41,16 +40,20 @@ public class KeyWindow extends Stage {
         container.setTop(keyText);
         BorderPane.setAlignment(keyText, Pos.CENTER);
         container.setCenter(keysText);
+        BorderPane.setMargin(keysText, new Insets(30, 0, 0, 0));
         BorderPane.setAlignment(keysText, Pos.TOP_CENTER);
         container.setPrefSize(1080, 720);
         container.setStyle("-fx-background-color: rgb(30, 30, 30);");
 
         // allow the user to scroll around the image
         ScrollPane scrollPane = new ScrollPane(container);
-        scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         scrollPane.setHvalue(0.5);
 
         Scene scene = new Scene(scrollPane);
+        scene.setFill(Color.rgb(30, 30, 30));
 
         scene.widthProperty().addListener((observable, oldValue, newValue) -> {
             double newWidth = (double) newValue;

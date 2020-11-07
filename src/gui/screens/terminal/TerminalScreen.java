@@ -21,6 +21,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -28,8 +29,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import systemcatalog.SystemCatalog;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class TerminalScreen extends Screen {
@@ -52,8 +51,8 @@ public class TerminalScreen extends Screen {
 
         TextArea terminal = new TextArea();
         terminal.setFont(new Font(40));
-        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_TEXT_AREA_STYLE));
-        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
+        terminal.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         terminal.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         terminalAreaLayout.setTop(inputAreaText);
@@ -73,8 +72,8 @@ public class TerminalScreen extends Screen {
         output.setMinHeight(0);
         output.setFont(new Font(40));
         output.setEditable(false);
-        output.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_TEXT_AREA_STYLE));
-        output.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        output.getStylesheets().add(IO.readCSS(FileType.CSS.TEXT_AREA_STYLE));
+        output.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         output.setEffect(new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         outputAreaLayout.setTop(outputAreaText);
@@ -107,7 +106,7 @@ public class TerminalScreen extends Screen {
         imageView.setSmooth(true);
 
         executeButton.setGraphic(imageView);
-        executeButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        executeButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         executeButton.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
@@ -144,7 +143,7 @@ public class TerminalScreen extends Screen {
         imageView.setSmooth(true);
 
         clearButton.setGraphic(imageView);
-        clearButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        clearButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         clearButton.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
@@ -168,7 +167,7 @@ public class TerminalScreen extends Screen {
         imageView.setSmooth(true);
 
         resultSetButton.setGraphic(imageView);
-        resultSetButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        resultSetButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         resultSetButton.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
@@ -187,14 +186,13 @@ public class TerminalScreen extends Screen {
 
         // relational algebra button ...................................................................................
         Button relationalAlgebraButton = new Button();
-
-        imageView = new ImageView(IO.readAsset(FileType.Asset.X_IMAGE));
+        imageView = new ImageView(IO.readAsset(FileType.Asset.PI_IMAGE));
         imageView.setFitWidth(ICON_WIDTH);
         imageView.setFitHeight(ICON_HEIGHT);
         imageView.setSmooth(true);
 
         relationalAlgebraButton.setGraphic(imageView);
-        relationalAlgebraButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        relationalAlgebraButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         relationalAlgebraButton.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
@@ -222,7 +220,7 @@ public class TerminalScreen extends Screen {
         imageView.setSmooth(true);
 
         queryTreeStatesButton.setGraphic(imageView);
-        queryTreeStatesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        queryTreeStatesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         queryTreeStatesButton.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
@@ -249,7 +247,7 @@ public class TerminalScreen extends Screen {
         imageView.setSmooth(true);
 
         queryCostButton.setGraphic(imageView);
-        queryCostButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        queryCostButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         queryCostButton.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
@@ -275,7 +273,7 @@ public class TerminalScreen extends Screen {
         imageView.setSmooth(true);
 
         recommendedFileStructuresButton.setGraphic(imageView);
-        recommendedFileStructuresButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        recommendedFileStructuresButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         recommendedFileStructuresButton.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 

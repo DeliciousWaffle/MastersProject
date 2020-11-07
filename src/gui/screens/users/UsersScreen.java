@@ -92,12 +92,12 @@ public class UsersScreen extends Screen {
 
             List<BorderPane> blah1 = tablePrivilegePaneList
                     .stream()
-                    .map(TablePrivilegePane::getRoot)
+                    .map(TablePrivilegePane::getTablePrivilegePane)
                     .collect(Collectors.toList());
 
             List<BorderPane> blah2 = passableTablePrivilegePaneList
                     .stream()
-                    .map(TablePrivilegePane::getRoot)
+                    .map(TablePrivilegePane::getTablePrivilegePane)
                     .collect(Collectors.toList());
 
             blah1.forEach(e -> VBox.setMargin(e, new Insets(10, 20, 10, 20)));
@@ -117,7 +117,7 @@ public class UsersScreen extends Screen {
             Button userButton = new Button(username + "'s Privileges");
             userButton.setFont(new Font(30));
             userButton.setTextFill(Color.WHITE);
-            userButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+            userButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
             BorderPane.setMargin(userButton, new Insets(10, 5, 10, 10));
             userButton.setEffect(
                     new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
@@ -132,7 +132,7 @@ public class UsersScreen extends Screen {
             Button playAsButton = new Button("Play");
             playAsButton.setFont(new Font(30));
             playAsButton.setTextFill(Color.WHITE);
-            playAsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+            playAsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
             BorderPane.setMargin(playAsButton, new Insets(10, 10, 10, 5));
             playAsButton.setEffect(
                     new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
@@ -166,7 +166,7 @@ public class UsersScreen extends Screen {
 
         ScrollPane userContentScrollPane = new ScrollPane();
         userContentScrollPane.setContent(userContentContainerLayout);
-        userContentScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        userContentScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
 
         BorderPane leftSideContainer = new BorderPane();
         leftSideContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");
@@ -180,7 +180,7 @@ public class UsersScreen extends Screen {
 
         // DBA's table privileges shown first
         tablePrivilegeListLayoutScrollPane.setContent(listOfTablePrivilegePaneListLayouts.get(0));
-        tablePrivilegeListLayoutScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        tablePrivilegeListLayoutScrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
 
         BorderPane rightSideContainer = new BorderPane();
         rightSideContainer.setStyle("-fx-background-color: rgb(30, 30, 30);");

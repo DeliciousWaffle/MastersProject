@@ -97,11 +97,6 @@ public final class FileType {
         REFRESH_IMAGE("optionsscreen/Refresh.png"),
         SAVE_IMAGE("optionsscreen/Save.png"),
 
-        // tables screen assets
-        FOREIGN_KEY_IMAGE("tablesscreen/ForeignKey.png"),
-        NO_KEY_IMAGE("tablesscreen/NoKey.png"),
-        PRIMARY_KEY_IMAGE("tablesscreen/PrimaryKey.png"),
-
         // terminal screen assets
         DOLLAR_SIGN_IMAGE("terminalscreen/DollarSign.png"),
         ERASER_IMAGE("terminalscreen/Eraser.png"),
@@ -109,7 +104,7 @@ public final class FileType {
         PLAY_IMAGE("terminalscreen/Play.png"),
         RESULT_SET_IMAGE("terminalscreen/ResultSet.png"),
         TREE_IMAGE("terminalscreen/Tree.png"),
-        X_IMAGE("terminalscreen/X.png");
+        PI_IMAGE("terminalscreen/PI.png");
 
         private final String path;
 
@@ -125,16 +120,10 @@ public final class FileType {
     public enum CSS {
 
         // dark ui
-        DARK_BUTTON_STYLE("darkui/DarkButtonStyle.css"),
-        DARK_CHOICE_BOX_STYLE("darkui/DarkChoiceBoxStyle.css"),
-        DARK_SCROLL_PANE_STYLE("darkui/DarkScrollPaneStyle.css"),
-        DARK_TEXT_AREA_STYLE("darkui/DarkTextAreaStyle.css"),
-
-        // light ui
-        LIGHT_BUTTON_STYLE("lightui/LightButtonStyle.css"),
-        LIGHT_CHOICE_BOX_STYLE("lightui/LightChoiceBoxStyle.css"),
-        LIGHT_SCROLL_PANE_STYLE("lightui/LightScrollPaneStyle.css"),
-        LIGHT_TEXT_AREA_STYLE("lightui/LightTextAreaStyle.css");
+        BUTTON_STYLE("ButtonStyle.css"),
+        CHOICE_BOX_STYLE("ChoiceBoxStyle.css"),
+        SCROLL_PANE_STYLE("ScrollPaneStyle.css"),
+        TEXT_AREA_STYLE("TextAreaStyle.css");
 
         private final String path;
 

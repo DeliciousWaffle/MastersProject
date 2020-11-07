@@ -145,7 +145,7 @@ public class RecommendedFileStructuresWindow extends Stage {
         // if the user wishes to build these recommended file structures
         Button buildRecommendedFileStructuresButton = new Button("Build Recommended File Structures");
         buildRecommendedFileStructuresButton.setFont(new Font(35.0));
-        buildRecommendedFileStructuresButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        buildRecommendedFileStructuresButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
 
         buildRecommendedFileStructuresButton.setOnAction(e -> {
 
@@ -207,7 +207,7 @@ public class RecommendedFileStructuresWindow extends Stage {
 
         // scroll pane to hold the vBox container
         ScrollPane scrollPane = new ScrollPane(overallContainer);
-        scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 

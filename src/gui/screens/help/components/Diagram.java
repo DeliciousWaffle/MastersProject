@@ -63,7 +63,7 @@ public class Diagram extends Stage {
         scrollPane.setFitToHeight(true);
         scrollPane.setFitToWidth(true);
         scrollPane.setHvalue(0.5);
-        scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
 
         Scene scene = new Scene(scrollPane, 1080, 720);
 

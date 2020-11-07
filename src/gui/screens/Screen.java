@@ -69,11 +69,11 @@ public abstract class Screen {
         helpButton.setFont(new Font(fontSize));
 
         // setting some styling
-        terminalButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        tablesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        usersButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        optionsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        helpButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        terminalButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
+        tablesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
+        usersButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
+        optionsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
+        helpButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
 
         // setting what screen to go on press
         terminalButton.setOnAction(e -> {
@@ -111,21 +111,5 @@ public abstract class Screen {
         usersButton.setPrefWidth(newScreenWidth / 5.0);
         optionsButton.setPrefWidth(newScreenWidth / 5.0);
         helpButton.setPrefWidth(newScreenWidth / 5.0);
-    }
-
-    public void setToLightMode() {
-        terminalButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        tablesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        usersButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        optionsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-        helpButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.LIGHT_BUTTON_STYLE));
-    }
-
-    public void setToDarkMode() {
-        terminalButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        tablesButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        usersButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        optionsButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
-        helpButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
     }
 }

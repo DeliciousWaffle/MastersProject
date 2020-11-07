@@ -51,7 +51,7 @@ public class OptionsScreenPopUps {
 
             ScrollPane scrollPane = new ScrollPane(container);
             scrollPane.setMinSize(1080, 720);
-            scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+            scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
             scrollPane.setFitToWidth(true);
             scrollPane.setFitToHeight(true);
 

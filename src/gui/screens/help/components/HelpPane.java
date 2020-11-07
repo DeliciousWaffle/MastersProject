@@ -41,7 +41,7 @@ public class HelpPane {
         button.setMinSize(0, 0);
         button.setPrefSize(buttonWidth, buttonHeight);
         button.setFont(new Font(fontSize));
-        button.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        button.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
 
         // if the button is clicked, what kind of window does it launch?
         switch(diagramType) {

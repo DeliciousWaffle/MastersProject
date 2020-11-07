@@ -98,7 +98,7 @@ public class RelationalAlgebraWindow extends Stage {
 
         // scroll pane to hold the vBox container
         ScrollPane scrollPane = new ScrollPane(overallContainer);
-        scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         scrollPane.setHvalue(0.5);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);

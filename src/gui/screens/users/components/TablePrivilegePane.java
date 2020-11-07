@@ -19,27 +19,24 @@ import java.util.List;
  */
 public class TablePrivilegePane {
 
-    private BorderPane root;
-    private Text tableNameText;
-    private VBox privilegeListContainer;
-    private List<Text> privilegeTextList;
-    private List<BorderPane> privilegeTextContainerList;
+    private BorderPane tablePrivilegePane;
 
-    public TablePrivilegePane(String tableName, List<Privilege> privileges, List<String> updateColumns, List<String> referenceColumns) {
+    public TablePrivilegePane(String tableName, List<Privilege> privileges, List<String> updateColumns,
+                              List<String> referenceColumns) {
 
         // will contain everything
-        this.root = new BorderPane();
+        this.tablePrivilegePane = new BorderPane();
 
-        this.tableNameText = new Text("Privileges on " + tableName + ":");
+        Text tableNameText = new Text("Privileges on " + tableName + ":");
         tableNameText.setFont(new Font(35));
         tableNameText.setFill(Color.WHITE);
 
         // list of privilege containers (privilege container is text within a border pane)
-        this.privilegeListContainer = new VBox();
+        VBox privilegeListContainer = new VBox();
         privilegeListContainer.setStyle("-fx-background-color: rgb(60, 60, 60);");
 
-        this.privilegeTextList = new ArrayList<>();
-        this.privilegeTextContainerList = new ArrayList<>();
+        List<Text> privilegeTextList = new ArrayList<>();
+        List<BorderPane> privilegeTextContainerList = new ArrayList<>();
 
         for(int i = 0; i < privileges.size(); i++) {
 
@@ -117,11 +114,11 @@ public class TablePrivilegePane {
         // add the privilege container to the list of privilege containers
         privilegeListContainer.getChildren().addAll(privilegeTextContainerList);
 
-        root.setTop(tableNameText);
-        root.setBottom(privilegeListContainer);
-        root.setBackground(new Background(
+        tablePrivilegePane.setTop(tableNameText);
+        tablePrivilegePane.setBottom(privilegeListContainer);
+        tablePrivilegePane.setBackground(new Background(
                 new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));
-        root.setEffect(
+        tablePrivilegePane.setEffect(
                 new DropShadow(BlurType.TWO_PASS_BOX, Color.BLACK, 10, 0.2, 3, 3));
 
         BorderPane.setAlignment(tableNameText, Pos.CENTER);
@@ -129,29 +126,7 @@ public class TablePrivilegePane {
         BorderPane.setMargin(privilegeListContainer, new Insets(0, 10, 10, 10));
     }
 
-    public BorderPane getRoot() {
-        return root;
-    }
-
-    public void setToLightMode() {
-        this.root.setBackground(new Background(
-                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY)));
-        this.tableNameText.setFill(Color.BLACK);
-        this.privilegeListContainer.setBackground(new Background(
-                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY)));
-        this.privilegeTextList.forEach(e -> e.setFill(Color.BLACK));
-        this.privilegeTextContainerList.forEach(e -> e.setBackground(new Background(
-                new BackgroundFill(Color.rgb(150, 150, 150), new CornerRadii(5), Insets.EMPTY))));
-    }
-
-    public void setToDarkMode() {
-        this.root.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));
-        this.tableNameText.setFill(Color.WHITE);
-        this.privilegeListContainer.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY)));
-        this.privilegeTextList.forEach(e -> e.setFill(Color.WHITE));
-        this.privilegeTextContainerList.forEach(e -> e.setBackground(new Background(
-                new BackgroundFill(Color.rgb(60, 60, 60), new CornerRadii(5), Insets.EMPTY))));
+    public BorderPane getTablePrivilegePane() {
+        return tablePrivilegePane;
     }
 }

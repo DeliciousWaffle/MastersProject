@@ -38,7 +38,7 @@ public class TablesScreen extends Screen {
 
         // adding the centered layout to a scroll pane because the data may go off screen
         ScrollPane tablePanesScrollLayout = new ScrollPane(tablePanesLayout);
-        tablePanesScrollLayout.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        tablePanesScrollLayout.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         tablePanesLayout.setPadding(new Insets(10, 20, 20, 20));
 
         // add the button layout and content layout to overall screen

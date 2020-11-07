@@ -68,7 +68,7 @@ public class OptionsScreen extends Screen {
         verifierToggleButton.setFont(new Font(40));
         verifierToggleButton.setTextFill(Color.WHITE);
         verifierToggleButton.setPrefSize(120, 80);
-        verifierToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        verifierToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         verifierToggleButton.setOnAction(e -> {
             if (systemCatalog.isVerifierOn()) {
                 systemCatalog.turnOffVerifier();
@@ -89,7 +89,7 @@ public class OptionsScreen extends Screen {
         questionImageView.setFitHeight(80);
         questionImageView.setSmooth(true);
         verifierToggleInfoButton.setGraphic(questionImageView);
-        verifierToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        verifierToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         verifierToggleInfoButton.setOnAction(e -> new OptionsScreenPopUps.VerifierToggleWindow());
 
         verifierToggleButtonAndInfoButtons.setRight(verifierToggleInfoButton);
@@ -122,7 +122,7 @@ public class OptionsScreen extends Screen {
         securityCheckerToggleButton.setFont(new Font(40));
         securityCheckerToggleButton.setTextFill(Color.WHITE);
         securityCheckerToggleButton.setPrefSize(120, 80);
-        securityCheckerToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        securityCheckerToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         securityCheckerToggleButton.setOnAction(e -> {
             if (systemCatalog.isSecurityCheckerOn()) {
                 systemCatalog.turnOffSecurityChecker();
@@ -143,7 +143,7 @@ public class OptionsScreen extends Screen {
         questionImageView.setFitHeight(80);
         questionImageView.setSmooth(true);
         securityCheckerToggleInfoButton.setGraphic(questionImageView);
-        securityCheckerToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        securityCheckerToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         securityCheckerToggleInfoButton.setOnAction(e -> new OptionsScreenPopUps.SecurityCheckerToggleWindow());
 
         securityCheckerToggleAndInfoButtons.setRight(securityCheckerToggleInfoButton);
@@ -176,7 +176,7 @@ public class OptionsScreen extends Screen {
         joinOptimizationToggleButton.setFont(new Font(40));
         joinOptimizationToggleButton.setTextFill(Color.WHITE);
         joinOptimizationToggleButton.setPrefSize(120, 80);
-        joinOptimizationToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        joinOptimizationToggleButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         joinOptimizationToggleButton.setOnAction(e -> {
             if (systemCatalog.isJoinOptimizationOn()) {
                 systemCatalog.turnOffJoinOptimization();
@@ -197,7 +197,7 @@ public class OptionsScreen extends Screen {
         questionImageView.setFitHeight(80);
         questionImageView.setSmooth(true);
         joinOptimizationToggleInfoButton.setGraphic(questionImageView);
-        joinOptimizationToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        joinOptimizationToggleInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         joinOptimizationToggleInfoButton.setOnAction(e -> new OptionsScreenPopUps.JoinOptimizationToggleWindow());
 
         joinOptimizationToggleAndInfoButtons.setRight(joinOptimizationToggleInfoButton);
@@ -233,7 +233,7 @@ public class OptionsScreen extends Screen {
         saveImageView.setFitHeight(80);
         saveImageView.setSmooth(true);
         saveDataButton.setGraphic(saveImageView);
-        saveDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        saveDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         saveDataButton.setOnAction(e -> systemCatalog.saveChanges());
 
         BorderPane.setMargin(saveDataButton, new Insets(10, 5, 10, 10));
@@ -246,7 +246,7 @@ public class OptionsScreen extends Screen {
         questionImageView.setFitHeight(80);
         questionImageView.setSmooth(true);
         saveDataInfoButton.setGraphic(questionImageView);
-        saveDataInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        saveDataInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         saveDataInfoButton.setOnAction(e -> new OptionsScreenPopUps.SaveDataWindow());
 
         saveDatabaseAndInfoButtons.setRight(saveDataInfoButton);
@@ -282,7 +282,7 @@ public class OptionsScreen extends Screen {
         refreshImageView.setFitHeight(80);
         refreshImageView.setSmooth(true);
         restoreDataButton.setGraphic(refreshImageView);
-        restoreDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        restoreDataButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         restoreDataButton.setOnAction(e -> systemCatalog.restoreDatabase());
 
         BorderPane.setMargin(restoreDataButton, new Insets(10, 5, 10, 10));
@@ -295,7 +295,7 @@ public class OptionsScreen extends Screen {
         questionImageView.setFitHeight(80);
         questionImageView.setSmooth(true);
         restoreDataInfoButton.setGraphic(questionImageView);
-        restoreDataInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        restoreDataInfoButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         restoreDataInfoButton.setOnAction(e -> new OptionsScreenPopUps.RestoreDataWindow());
 
         restoreDataAndInfoButtons.setRight(restoreDataInfoButton);
@@ -309,7 +309,7 @@ public class OptionsScreen extends Screen {
 
         // scroll pane
         ScrollPane scrollPane = new ScrollPane(vBoxContainer);
-        scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.getStylesheets().addAll(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
 

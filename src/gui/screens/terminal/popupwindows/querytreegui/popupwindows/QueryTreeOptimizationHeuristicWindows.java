@@ -70,7 +70,8 @@ public class QueryTreeOptimizationHeuristicWindows {
             super(new Text(
                     "Relational Algebra Axiom Used:\n" +
                     "• Cascade of Selection:\n" +
-                    "σ (" + C + "₁∧" + C + "₂∧...∧" + C + N + " (\uD835\uDCE1)) ≡ σ(" + C + "₁) " + "[σ(" + C + "₂) ... [σ(" + C + N + ") [" + R + "]]]" + "\n" +
+                    "σ (" + C + "₁∧" + C + "₂∧...∧" + C + N + " (\uD835\uDCE1)) ≡ σ(" + C + "₁) " + "[σ(" + C + "₂) " +
+                            "... [σ(" + C + N + ") [" + R + "]]]" + "\n" +
                     "Where " + C + "is some condition and \uD835\uDCE1 is some Relation"
                 ),
                 "Cascaded Selections Info"
@@ -88,7 +89,8 @@ public class QueryTreeOptimizationHeuristicWindows {
                     "π(" + L + "₁) [σ(" +  C + "₁) [" + R + "]] ≡ σ(" + C + "₁) [π(" + L + "₁) [" + R + "]]\n" +
                     "• Commutativity of Selection and Join/Cartesian Product:\n" +
                             "σ(" + C + "₁) [" + R + "₁ ⨝ " + R + "₂] ≡ [σ(" + C + "₁) [" + R + "₁ ⨝ " + R + "₂] \n" +
-                            "Where " + C + " is some condition, " + R + " is some relation, and " + L + " is a list of columns"
+                            "Where " + C + " is some condition, " + R + " is some relation, and " + L +
+                            " is a list of columns"
             ), "Moved Down Selections Info");
         }
     }
@@ -96,7 +98,8 @@ public class QueryTreeOptimizationHeuristicWindows {
     public static class FormedJoins extends HeuristicWindow {
         public FormedJoins() {
             super(new Text(
-                    "Combination of a Selection (σ) containing a join criteria as a\ncondition and a Cartesian Product (✕) to form a Join (⨝)"
+                    "Combination of a Selection (σ) containing a join criteria as a\ncondition and a Cartesian " +
+                            "Product (✕) to form a Join (⨝)"
             ), "Formed Joins Info");
         }
     }
@@ -105,7 +108,8 @@ public class QueryTreeOptimizationHeuristicWindows {
         public RearrangedJoins() {
             super(new Text(
                     "Rearrange the ordering of Joins such that smaller subtrees are executed first.\n" +
-                    "This reduces the cost of storing data in intermediary steps,\nthus, reducing overall Write To Disk Cost.\n" +
+                    "This reduces the cost of storing data in intermediary steps,\nthus, reducing overall " +
+                            "Write To Disk Cost.\n" +
                     "Relational Algebra Axiom Used:\n" +
                     "• Commutativity of Joins:\n" +
                     R + "₁ ⨝ " + R + "₂ ≡ " + R + "₂ ⨝ " + R + "₁\n" +
@@ -122,7 +126,8 @@ public class QueryTreeOptimizationHeuristicWindows {
                     "π(" + L + "₁) [π(" + L + "₂) ... [π(" + L + N + ") [" + R + "]]] ≡ π ("+ L + "₁) [" + R + "]\n" +
                     "• Commutativity of Selection and Projection:\n" +
                     "π(" + L + "₁) [σ(" + C + "₁) [" + R + "]] ≡ σ(" + C + "₁) [π(" + L + "₁) [" + R + "]]\n" +
-                            "Where " + C + " is some condition, " + R + " is some Relation,\nand " + L + " is some List of Columns"
+                            "Where " + C + " is some condition, " + R + " is some Relation,\nand " + L + " " +
+                            "is some List of Columns"
             ), "Moved Down Projections Info");
         }
     }

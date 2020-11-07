@@ -44,12 +44,12 @@ public class QueryTreeWindow extends Stage {
         leftButton.setText("Previous State");
         leftButton.setFont(new Font(25));
         leftButton.setVisible(false);
-        leftButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        leftButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
 
         rightButton = new Button();
         rightButton.setText("Next State");
         rightButton.setFont(new Font(25));
-        rightButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+        rightButton.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
 
         BorderPane infoContainer = new BorderPane();
         infoContainer.setLeft(leftButton);
@@ -157,7 +157,7 @@ public class QueryTreeWindow extends Stage {
             button.setFont(new Font(25));
             button.setTextFill(Color.WHITE);
             button.setAlignment(Pos.CENTER);
-            button.getStylesheets().setAll(IO.readCSS(FileType.CSS.DARK_BUTTON_STYLE));
+            button.getStylesheets().setAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
         }
     }
 
@@ -167,7 +167,7 @@ public class QueryTreeWindow extends Stage {
         leftButton.setVisible(true);
         rightButton.setVisible(true);
 
-        if(stateIndex <= 0) {
+        if (stateIndex <= 0) {
             stateIndex = 0;
             leftButton.setVisible(false);
         }
@@ -179,7 +179,7 @@ public class QueryTreeWindow extends Stage {
         rightButton.setVisible(true);
         leftButton.setVisible(true);
 
-        if(stateIndex >= queryTreeGUIStates.size() - 1) {
+        if (stateIndex >= queryTreeGUIStates.size() - 1) {
             stateIndex = queryTreeGUIStates.size() - 1;
             rightButton.setVisible(false);
         }

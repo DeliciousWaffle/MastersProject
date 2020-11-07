@@ -50,7 +50,7 @@ public class QueryTreeGUI {
 
         // contains the canvas, allows to scroll horizontally or vertically, which is nifty
         this.container = new ScrollPane();
-        container.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        container.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
         container.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         container.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         container.setHvalue(0.5); // set scroll bar in the middle by default

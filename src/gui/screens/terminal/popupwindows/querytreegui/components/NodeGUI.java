@@ -61,11 +61,13 @@ public class NodeGUI {
 
         // background border
         gc.setFill(Color.BLACK);
-        gc.fillRoundRect(x - 2 - 10 - width / 2, y - 2 - height + 10 - 5, width + 4 + 20, height + 4 + 10, 20, 20);
+        gc.fillRoundRect(x - 2 - 10 - width / 2, y - 2 - height + 10 - 5, width + 4 + 20, height + 4 + 10,
+                20, 20);
 
         // background
         gc.setFill(Color.rgb(90, 90, 90));
-        gc.fillRoundRect(x - 10 - width / 2, y - height + 10 - 5, width + 20, height + 10, 20, 20);
+        gc.fillRoundRect(x - 10 - width / 2, y - height + 10 - 5, width + 20, height + 10, 20,
+                20);
 
         // text
         gc.setFill(Color.WHITE);

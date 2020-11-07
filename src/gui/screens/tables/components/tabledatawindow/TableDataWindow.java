@@ -114,7 +114,7 @@ public class TableDataWindow extends Stage {
         scrollPane.setContent(resultSetLayout);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
-        scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.DARK_SCROLL_PANE_STYLE));
+        scrollPane.getStylesheets().add(IO.readCSS(FileType.CSS.SCROLL_PANE_STYLE));
 
         // increase scroll speed
         resultSetLayout.setOnScroll(e -> {
