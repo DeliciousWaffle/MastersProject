@@ -13,6 +13,7 @@ import utilities.OptimizerUtilities;
 import utilities.QueryCost;
 import utilities.Utilities;
 
+import javax.rmi.CORBA.Util;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -711,7 +712,8 @@ public class Optimizer {
      */
     public String getNaiveRelationAlgebra(List<QueryTree> queryTreeStates) {
 
-        QueryTree initialQueryTree = queryTreeStates.get(0);
+        QueryTree initialQueryTree = new QueryTree(queryTreeStates.get(0));
+        removePrefixedColumnNamesFromQueryTrees(initialQueryTree);
 
         StringBuilder naiveRelationalAlgebra = new StringBuilder();
         StringBuilder closingBrackets = new StringBuilder();
@@ -756,7 +758,16 @@ public class Optimizer {
      */
     public String getOptimizedRelationalAlgebra(List<QueryTree> queryTreeStates) {
 
-        List<QueryTree> pipelinedQueryTrees = queryTreeStates.subList(6, queryTreeStates.size());
+        List<QueryTree> pipelinedQueryTrees = queryTreeStates.subList(6, queryTreeStates.size())
+                .stream()
+                .map(QueryTree::new)
+                .collect(Collectors.toList());
+
+        // TODO change how to get optimized relational algebra, won't get from pipelined expression, do the stack tree thing
+        // get the first query tree right before pipelining for this
+        System.out.println("Before: "+pipelinedQueryTrees.get(0));
+        removePrefixedColumnNamesFromQueryTrees(pipelinedQueryTrees.get(0));
+        System.out.println("After: "+pipelinedQueryTrees.get(0));
 
         StringBuilder optimizedRelationalAlgebra = new StringBuilder();
 
@@ -788,7 +799,9 @@ public class Optimizer {
         });
 
         // remove "\n"
-        optimizedRelationalAlgebra.deleteCharAt(optimizedRelationalAlgebra.length() - 1);
+        if (optimizedRelationalAlgebra.length() != 0) {
+            optimizedRelationalAlgebra.deleteCharAt(optimizedRelationalAlgebra.length() - 1);
+        }
 
         // remove "P = " junk
         if (pipelinedQueryTrees.size() == 1) {
@@ -807,10 +820,12 @@ public class Optimizer {
      * are typically used to speed up joins, but incur a high storage cost and can only be built on tables.
      * They also prevent the other file structures from being built within these tables.
      * @param queryTreeStates is a list of query tree states produced after the optimization process
+     * @param isVerifierOn is whether the verifier is on, if off, will never recommend to build clustered files
+     * because it is uncertain if the tables exist
      * @return a recommendation of file structures to build for a particular query
      */
     public Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> getRecommendedFileStructures(
-            List<QueryTree> queryTreeStates) {
+            List<QueryTree> queryTreeStates, boolean isVerifierOn) {
 
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
@@ -914,6 +929,11 @@ public class Optimizer {
             }
         }
 
+        // can't recommend clustered files on tables that we are not sure even exist
+        if (! isVerifierOn) {
+            return new Pair<>(recommendedFileStructures, new ArrayList<>());
+        }
+
         // check to see if clustering the two tables would perform better than the previous recommendations
         // in order to do this, will need to calculate the total cost of the query tree with the file structures
         // already built and compare them to each possible clustered file orientation's query tree cost
@@ -930,11 +950,21 @@ public class Optimizer {
      * the total execution cost, the total write to disk cost, and a string containing info about how these
      * costs were generated. Essentially, shows the work that was done to get these costs.
      * @param queryTreeStates is a list of query tree states produced after the optimization process
+     * @param tables are the tables of the system
+     * @param isVerifierOn is whether the verifier is on, if off, will simply return because we can't retrieve data
+     * from tables that we don't know exist
      * @return the total execution cost, the total write to disk cost, and a string representation
      * of how these costs were produced
      */
-    public Triple<Double, Double, String> getCostAnalysis(List<QueryTree> queryTreeStates, List<Table> tables) {
+    public Triple<Double, Double, String> getCostAnalysis(List<QueryTree> queryTreeStates, List<Table> tables,
+                                                          boolean isVerifierOn) {
 
+        if (! isVerifierOn) {
+            return new Triple<>(0.0, 0.0, "");
+        }
+if (true) {
+    return new Triple<>(0.0, 0.0, "");
+}
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
         double totalCost = 0;

@@ -96,7 +96,7 @@ public final class QueryTree {
         for (Map.Entry<Operator, List<Traversal>> entry : operatorsAndLocations.entrySet()) {
             Operator operator = entry.getKey();
             List<Traversal> traversals = entry.getValue();
-            this.add(traversals, NONE, operator);
+            this.add(copyTraversalList(traversals), NONE, operator.copy(operator));
         }
     }
 

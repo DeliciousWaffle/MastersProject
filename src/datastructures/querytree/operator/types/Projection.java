@@ -5,6 +5,7 @@ import utilities.OptimizerUtilities;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Projection extends Operator {
 
@@ -51,16 +52,10 @@ public class Projection extends Operator {
 
         if (columnNames.size() == 1) {
             String columnName = columnNames.get(0);
-            if (! OptimizerUtilities.isAmbiguousColumnName(columnName, columnNames)) {
-                columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
-            }
             print.append(columnName);
 
         } else {
             for (String columnName : columnNames) {
-                if (! OptimizerUtilities.isAmbiguousColumnName(columnName, columnNames)) {
-                    columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
-                }
                 print.append(columnName).append(", ");
             }
             // remove ", "

@@ -142,7 +142,7 @@ public class SystemCatalog {
             }
 
             // validation using each system catalog component
-            if (! parser.isValid(inputType, filteredInput)) {
+            if (! parser.isValid(inputType, filteredInput, verifier.isOn())) {
                 executionMessage = parser.getErrorMessage();
                 return;
             }
@@ -162,16 +162,28 @@ public class SystemCatalog {
                 queryTreeStates = optimizer.getQueryTreeStates(filteredInput, tables);
                 naiveRelationalAlgebra = optimizer.getNaiveRelationAlgebra(queryTreeStates);
                 optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra(queryTreeStates);
-                recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates);
-                //costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables);
+                recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates, verifier.isOn());
+                costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables, verifier.isOn());
             }
 
-            if (inputType == InputType.QUERY) {
-                resultSet = compiler.executeQuery(queryTreeStates, tables);
-                executionMessage = "QUERY was successfully executed!";
+            // only execute the input if the verifier is on
+            if (verifier.isOn()) {
+                if (inputType == InputType.QUERY) {
+                    resultSet = compiler.executeQuery(queryTreeStates, tables);
+                    executionMessage = "QUERY was successfully executed!";
+                } else {
+                    compiler.executeDML(inputType, filteredInput, tables, users);
+                    executionMessage = "DML statement was successfully executed!";
+                }
             } else {
-                compiler.executeDML(inputType, filteredInput, tables, users);
-                executionMessage = "DML statement was successfully executed!";
+                if (inputType == InputType.QUERY) {
+                    executionMessage = "QUERY was successfully executed!\nQuery Tree States, Relational Algebra, and " +
+                            "Recommended File Structures were produced.\nTo view Result Set data and Cost Analysis, " +
+                            "turn on the Verifier.";
+                } else {
+                    executionMessage = "DML statement was successfully executed!\nTo see changes reflected, turn on " +
+                            "the Verifier.";
+                }
             }
 
             // at this point, the query/DML statement was successfully executed

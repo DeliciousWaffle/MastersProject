@@ -1,7 +1,6 @@
 package utilities;
 
 import datastructures.misc.Pair;
-import datastructures.relation.resultset.ResultSet;
 import datastructures.relation.table.Table;
 import datastructures.relation.table.component.Column;
 import datastructures.relation.table.component.DataType;
@@ -416,7 +415,7 @@ public final class Utilities {
      * @return whether the value encountered in the WHERE clause is actually a join predicate
      */
     public static boolean hasWhereClauseJoinPredicate(String candidate, List<Table> tables) {
-        if (OptimizerUtilities.hasPrefixedTableName(candidate)) {
+        if (OptimizerUtilities.isPrefixed(candidate)) {
             String tableName = candidate.split("\\.")[0];
             String columnName = candidate.split("\\.")[1];
             Table referencedTable = getReferencedTable(tableName, tables);

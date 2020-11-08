@@ -91,7 +91,7 @@ class ParserTest {
     void testValidQueries(String query) {
         System.out.println(query);
         String[] filtered = Utilities.filterInput(query);
-        boolean isValid = parser.isValid(InputType.QUERY, filtered);
+        boolean isValid = parser.isValid(InputType.QUERY, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -139,7 +139,7 @@ class ParserTest {
     void testInvalidQueries(String query) {
         System.out.println(query);
         String[] filtered = Utilities.filterInput(query);
-        boolean isValid = parser.isValid(InputType.QUERY, filtered);
+        boolean isValid = parser.isValid(InputType.QUERY, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         parser.resetErrorMessage();
         assertFalse(isValid);
@@ -156,7 +156,7 @@ class ParserTest {
     void testValidCreateTableCommands(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = parser.isValid(InputType.CREATE_TABLE, filtered);
+        boolean isValid = parser.isValid(InputType.CREATE_TABLE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -183,7 +183,7 @@ class ParserTest {
     void testInvalidCreateTableCommands(String createTable) {
         System.out.println(createTable);
         String[] filtered = Utilities.filterInput(createTable);
-        boolean isValid = parser.isValid(InputType.CREATE_TABLE, filtered);
+        boolean isValid = parser.isValid(InputType.CREATE_TABLE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -197,7 +197,7 @@ class ParserTest {
     void testValidDropTableCommands(String dropTable) {
         System.out.println(dropTable);
         String[] filtered = Utilities.filterInput(dropTable);
-        boolean isValid = parser.isValid(InputType.DROP_TABLE, filtered);
+        boolean isValid = parser.isValid(InputType.DROP_TABLE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -216,7 +216,7 @@ class ParserTest {
     void testInvalidDropTableCommands(String dropTable) {
         System.out.println(dropTable);
         String[] filtered = Utilities.filterInput(dropTable);
-        boolean isValid = parser.isValid(InputType.DROP_TABLE, filtered);
+        boolean isValid = parser.isValid(InputType.DROP_TABLE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -240,7 +240,7 @@ class ParserTest {
     void testValidAlterTableCommand(String alterTable) {
         System.out.println(alterTable);
         String[] filtered = Utilities.filterInput(alterTable);
-        boolean isValid = parser.isValid(InputType.ALTER_TABLE, filtered);
+        boolean isValid = parser.isValid(InputType.ALTER_TABLE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -259,7 +259,7 @@ class ParserTest {
     void testInvalidAlterTableCommand(String alterTable) {
         System.out.println(alterTable);
         String[] filtered = Utilities.filterInput(alterTable);
-        boolean isValid = parser.isValid(InputType.ALTER_TABLE, filtered);
+        boolean isValid = parser.isValid(InputType.ALTER_TABLE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -274,7 +274,7 @@ class ParserTest {
     void testValidInsertCommands(String insert) {
         System.out.println(insert);
         String[] filtered = Utilities.filterInput(insert);
-        boolean isValid = parser.isValid(InputType.INSERT, filtered);
+        boolean isValid = parser.isValid(InputType.INSERT, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -293,7 +293,7 @@ class ParserTest {
     void testInvalidInsertCommands(String insert) {
         System.out.println(insert);
         String[] filtered = Utilities.filterInput(insert);
-        boolean isValid = parser.isValid(InputType.INSERT, filtered);
+        boolean isValid = parser.isValid(InputType.INSERT, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -312,7 +312,7 @@ class ParserTest {
     void testValidDeleteCommands(String delete) {
         System.out.println(delete);
         String[] filtered = Utilities.filterInput(delete);
-        boolean isValid = parser.isValid(InputType.DELETE, filtered);
+        boolean isValid = parser.isValid(InputType.DELETE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -330,7 +330,7 @@ class ParserTest {
     void testInvalidDeleteCommands(String delete) {
         System.out.println(delete);
         String[] filtered = Utilities.filterInput(delete);
-        boolean isValid = parser.isValid(InputType.DELETE, filtered);
+        boolean isValid = parser.isValid(InputType.DELETE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -346,7 +346,7 @@ class ParserTest {
     void testValidUpdateCommands(String update) {
         System.out.println(update);
         String[] filtered = Utilities.filterInput(update);
-        boolean isValid = parser.isValid(InputType.UPDATE, filtered);
+        boolean isValid = parser.isValid(InputType.UPDATE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -367,7 +367,7 @@ class ParserTest {
     void testInValidUpdateCommands(String update) {
         System.out.println(update);
         String[] filtered = Utilities.filterInput(update);
-        boolean isValid = parser.isValid(InputType.UPDATE, filtered);
+        boolean isValid = parser.isValid(InputType.UPDATE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -395,7 +395,7 @@ class ParserTest {
     void testValidGrantCommands(String grant) {
         System.out.println(grant);
         String[] filtered = Utilities.filterInput(grant);
-        boolean isValid = parser.isValid(InputType.GRANT, filtered);
+        boolean isValid = parser.isValid(InputType.GRANT, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -418,7 +418,7 @@ class ParserTest {
     void testInvalidGrantCommands(String grant) {
         System.out.println(grant);
         String[] filtered = Utilities.filterInput(grant);
-        boolean isValid = parser.isValid(InputType.GRANT, filtered);
+        boolean isValid = parser.isValid(InputType.GRANT, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -445,7 +445,7 @@ class ParserTest {
     void testValidRevokeCommands(String revoke) {
         System.out.println(revoke);
         String[] filtered = Utilities.filterInput(revoke);
-        boolean isValid = parser.isValid(InputType.REVOKE, filtered);
+        boolean isValid = parser.isValid(InputType.REVOKE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -469,7 +469,7 @@ class ParserTest {
     void testInvalidRevokeCommands(String revoke) {
         System.out.println(revoke);
         String[] filtered = Utilities.filterInput(revoke);
-        boolean isValid = parser.isValid(InputType.REVOKE, filtered);
+        boolean isValid = parser.isValid(InputType.REVOKE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -486,7 +486,7 @@ class ParserTest {
     void testValidBuildFileStructureCommand(String buildFileStructure) {
         System.out.println(buildFileStructure);
         String[] filtered = Utilities.filterInput(buildFileStructure);
-        boolean isValid = parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered);
+        boolean isValid = parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -502,7 +502,7 @@ class ParserTest {
     void testInvalidBuildFileStructureCommand(String buildFileStructure) {
         System.out.println(buildFileStructure);
         String[] filtered = Utilities.filterInput(buildFileStructure);
-        boolean isValid = parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered);
+        boolean isValid = parser.isValid(InputType.BUILD_FILE_STRUCTURE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -517,7 +517,7 @@ class ParserTest {
     void testValidRemoveFileStructureCommand(String removeFileStructure) {
         System.out.println(removeFileStructure);
         String[] filtered = Utilities.filterInput(removeFileStructure);
-        boolean isValid = parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered);
+        boolean isValid = parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertTrue(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");
@@ -532,7 +532,7 @@ class ParserTest {
     void testInvalidRemoveFileStructureCommand(String removeFileStructure) {
         System.out.println(removeFileStructure);
         String[] filtered = Utilities.filterInput(removeFileStructure);
-        boolean isValid = parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered);
+        boolean isValid = parser.isValid(InputType.REMOVE_FILE_STRUCTURE, filtered, true);
         System.out.println("Error Code: " + parser.getErrorMessage());
         assertFalse(isValid);
         System.out.println("-----------------------------------------------------------------------------------------");

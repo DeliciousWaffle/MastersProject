@@ -143,67 +143,72 @@ public class RecommendedFileStructuresWindow extends Stage {
 
 
         // if the user wishes to build these recommended file structures
-        Button buildRecommendedFileStructuresButton = new Button("Build Recommended File Structures");
-        buildRecommendedFileStructuresButton.setFont(new Font(35.0));
-        buildRecommendedFileStructuresButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
+        // only create this if the verifier is on
+        if (systemCatalog.isVerifierOn()) {
 
-        buildRecommendedFileStructuresButton.setOnAction(e -> {
+            Button buildRecommendedFileStructuresButton = new Button("Build Recommended File Structures");
+            buildRecommendedFileStructuresButton.setFont(new Font(35.0));
+            buildRecommendedFileStructuresButton.getStylesheets().addAll(IO.readCSS(FileType.CSS.BUTTON_STYLE));
 
-            for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
+            buildRecommendedFileStructuresButton.setOnAction(e -> {
 
-                String tableName = recommendedFileStructure.getFirst();
-                String columnName = recommendedFileStructure.getSecond();
-                String fileStructure = recommendedFileStructure.getThird();
+                for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
 
-                Table referencedTable = Utilities.getReferencedTable(tableName, systemCatalog.getTables());
-                assert referencedTable != null;
-                Column referencedColumn = referencedTable.getColumn(columnName);
-                assert referencedColumn != null;
+                    String tableName = recommendedFileStructure.getFirst();
+                    String columnName = recommendedFileStructure.getSecond();
+                    String fileStructure = recommendedFileStructure.getThird();
 
-                switch (fileStructure) {
-                    case "Hash Table":
-                        referencedColumn.setFileStructure(FileStructure.HASH_TABLE);
-                        break;
-                    case "Clustered B-Tree":
-                        referencedColumn.setFileStructure(FileStructure.CLUSTERED_B_TREE);
-                        break;
-                    case "Secondary B-Tree":
-                        referencedColumn.setFileStructure(FileStructure.SECONDARY_B_TREE);
-                        break;
-                }
-            }
+                    Table referencedTable = Utilities.getReferencedTable(tableName, systemCatalog.getTables());
+                    assert referencedTable != null;
+                    Column referencedColumn = referencedTable.getColumn(columnName);
+                    assert referencedColumn != null;
 
-            for (Pair<String, String> clusteredFile : clusteredTables) {
-
-                String firstTableName = clusteredFile.getFirst();
-                String secondTableName = clusteredFile.getSecond();
-
-                systemCatalog.getTables().forEach(table -> {
-                    if (table.getClusteredWithTableName().equalsIgnoreCase(firstTableName) ||
-                            table.getClusteredWithTableName().equalsIgnoreCase(secondTableName)) {
-                        table.setClusteredWith("none");
+                    switch (fileStructure) {
+                        case "Hash Table":
+                            referencedColumn.setFileStructure(FileStructure.HASH_TABLE);
+                            break;
+                        case "Clustered B-Tree":
+                            referencedColumn.setFileStructure(FileStructure.CLUSTERED_B_TREE);
+                            break;
+                        case "Secondary B-Tree":
+                            referencedColumn.setFileStructure(FileStructure.SECONDARY_B_TREE);
+                            break;
                     }
-                });
+                }
 
-                Table firstTableReference =
-                        Utilities.getReferencedTable(clusteredFile.getFirst(), systemCatalog.getTables());
-                assert firstTableReference != null;
-                Table secondTableReference =
-                        Utilities.getReferencedTable(clusteredFile.getSecond(), systemCatalog.getTables());
-                assert secondTableReference != null;
+                for (Pair<String, String> clusteredFile : clusteredTables) {
 
-                firstTableReference.setClusteredWith(secondTableName);
-                firstTableReference.getColumns().forEach(c -> c.setFileStructure(FileStructure.NONE));
-                secondTableReference.setClusteredWith(firstTableName);
-                secondTableReference.getColumns().forEach(c -> c.setFileStructure(FileStructure.NONE));
-            }
+                    String firstTableName = clusteredFile.getFirst();
+                    String secondTableName = clusteredFile.getSecond();
 
-            // force refresh to display changes
-            screenController.refresh(systemCatalog);
-        });
+                    systemCatalog.getTables().forEach(table -> {
+                        if (table.getClusteredWithTableName().equalsIgnoreCase(firstTableName) ||
+                                table.getClusteredWithTableName().equalsIgnoreCase(secondTableName)) {
+                            table.setClusteredWith("none");
+                        }
+                    });
 
-        VBox.setMargin(buildRecommendedFileStructuresButton, new Insets(0, 0, 30, 0));
-        overallContainer.getChildren().add(buildRecommendedFileStructuresButton);
+                    Table firstTableReference =
+                            Utilities.getReferencedTable(clusteredFile.getFirst(), systemCatalog.getTables());
+                    assert firstTableReference != null;
+                    Table secondTableReference =
+                            Utilities.getReferencedTable(clusteredFile.getSecond(), systemCatalog.getTables());
+                    assert secondTableReference != null;
+
+                    firstTableReference.setClusteredWith(secondTableName);
+                    firstTableReference.getColumns().forEach(c -> c.setFileStructure(FileStructure.NONE));
+                    secondTableReference.setClusteredWith(firstTableName);
+                    secondTableReference.getColumns().forEach(c -> c.setFileStructure(FileStructure.NONE));
+                }
+
+                // force refresh to display changes
+                screenController.refresh(systemCatalog);
+            });
+
+            VBox.setMargin(buildRecommendedFileStructuresButton, new Insets(0, 0, 30, 0));
+
+            overallContainer.getChildren().add(buildRecommendedFileStructuresButton);
+        }
 
         // scroll pane to hold the vBox container
         ScrollPane scrollPane = new ScrollPane(overallContainer);

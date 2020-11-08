@@ -76,7 +76,7 @@ public class OptimizerTest {
         List<QueryTree> queryTrees = optimizer.getQueryTreeStates(filtered, tables);
 
         Parser p = new Parser();
-        if (! p.isValid(InputType.QUERY, filtered)) {
+        if (! p.isValid(InputType.QUERY, filtered, true)) {
             System.out.println(p.getErrorMessage());
             fail();
         }

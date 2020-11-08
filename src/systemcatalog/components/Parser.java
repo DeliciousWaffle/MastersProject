@@ -4,7 +4,10 @@ import datastructures.misc.Pair;
 import datastructures.rulegraph.RuleGraph;
 import datastructures.rulegraph.types.RuleGraphTypes;
 import enums.InputType;
+import utilities.OptimizerUtilities;
 import utilities.Utilities;
+
+import java.util.List;
 
 /**
  * Responsible for checking the syntax of the input to ensure it is syntactically correct along with some other
@@ -38,12 +41,14 @@ public class Parser {
      * Returns whether the syntax of the input is syntactically correct along with some other basic error checking.
      * @param inputType is the type of input
      * @param filteredInput is input that has already been filtered for use
+     * @param isVerifierOn is whether the verifier is off, when off, each column name must be prefixed with its
+     * respective table name for a QUERY
      * @return whether the input is syntactically correct
      */
-    public boolean isValid(InputType inputType, String[] filteredInput) {
+    public boolean isValid(InputType inputType, String[] filteredInput, boolean isVerifierOn) {
         switch (inputType) {
             case QUERY:
-                return isValidQuery(filteredInput);
+                return isValidQuery(filteredInput, isVerifierOn);
             case CREATE_TABLE:
                 return isValidCreateTable(filteredInput);
             case DROP_TABLE:
@@ -72,9 +77,11 @@ public class Parser {
 
     /**
      * @param filteredInput is the input after being filtered
+     * @param isVerifierOn is whether the verifier is off, when off, each column name must be prefixed with its
+     * respective table name
      * @return whether this is a valid QUERY
      */
-    private boolean isValidQuery(String[] filteredInput) {
+    private boolean isValidQuery(String[] filteredInput, boolean isVerifierOn) {
 
         RuleGraph queryRuleGraph = RuleGraphTypes.getQueryRuleGraph();
 
@@ -101,6 +108,27 @@ public class Parser {
         }
 
         errorMessage = isValid ? "" : "Parser error when validating Query:\n" + queryRuleGraph.getErrorMessage();
+
+        // if the verifier is off, check that each column name referenced is prefixed with a table name
+        if (! isVerifierOn) {
+            List<String> columnNames = queryRuleGraph.getTokensAt(filteredInput, 2, 9, 20, 27, 29, 43, 52);
+            for (String columnName : columnNames) {
+                if (! OptimizerUtilities.isPrefixed(columnName)) {
+                    errorMessage = "Parser error when validating Query:\n" +
+                    "When the Verifier is off, each column name must be\n" +
+                    "prefixed with the table that it belongs to like this:\n" +
+                    "<Table Name>.<Column Name>";
+                    return false;
+                }
+            }
+            // also don't allow the user of "*"
+            if (! queryRuleGraph.getTokensAt(filteredInput, 1).isEmpty()) {
+                errorMessage = "Parser error when validating Query:\n" +
+                        "When the Verifier is off, \"*\" cannot be used.";
+                return false;
+            }
+        }
+
         return isValid;
     }
 

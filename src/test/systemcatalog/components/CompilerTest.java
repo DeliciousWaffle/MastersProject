@@ -98,7 +98,7 @@ public class CompilerTest {
         System.out.println(resultSet);
 
         Parser p = new Parser();
-        if (! p.isValid(InputType.QUERY, filtered)) {
+        if (! p.isValid(InputType.QUERY, filtered, true)) {
             System.out.println(p.getErrorMessage());
             fail();
         }

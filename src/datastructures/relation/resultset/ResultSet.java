@@ -6,6 +6,7 @@ import datastructures.relation.table.Table;
 import datastructures.relation.table.component.DataType;
 import enums.Keyword;
 import enums.Symbol;
+import utilities.OptimizerUtilities;
 import utilities.Utilities;
 
 import java.math.BigInteger;

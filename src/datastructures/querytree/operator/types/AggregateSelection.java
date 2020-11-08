@@ -2,6 +2,7 @@ package datastructures.querytree.operator.types;
 
 import datastructures.querytree.operator.Operator;
 import datastructures.relation.table.component.DataType;
+import systemcatalog.components.Optimizer;
 import utilities.OptimizerUtilities;
 import utilities.Utilities;
 
@@ -99,22 +100,14 @@ public class AggregateSelection extends Operator {
             String symbol = symbols.get(i);
             String value = values.get(i);
 
-            String formattedColumnName = columnName;
-            String formattedValue = value;
-
-            if (! OptimizerUtilities.isJoinPredicate(columnName, value) &&
-                    ! OptimizerUtilities.isAmbiguousColumnName(formattedColumnName, columnNames)) {
-                formattedColumnName = OptimizerUtilities.removePrefixedColumnName(formattedColumnName);
-            }
-
             // enclose date and char values in quotes only if the value is not a join predicate and not a number
-            if (! OptimizerUtilities.isJoinPredicate(columnName, value) && ! Utilities.isNumeric(value)) {
-                formattedValue = "\"" + formattedValue + "\"";
+            if (! Utilities.isNumeric(value) && ! OptimizerUtilities.isPrefixed(value)) {
+                value = "\"" + value + "\"";
             }
 
             // build the string
-            print.append(aggregateType).append("(").append(formattedColumnName).append(")");
-            print.append(" ").append(symbol).append(" ").append(formattedValue);
+            print.append(aggregateType).append("(").append(columnName).append(")");
+            print.append(" ").append(symbol).append(" ").append(value);
 
             // logical conjunction unicode value
             print.append(" ").append("∧").append(" ");

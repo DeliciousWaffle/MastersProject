@@ -77,15 +77,9 @@ public class Aggregation extends Operator {
 
         if (groupByColumnNames.size() == 1) {
             String groupByColumnName = groupByColumnNames.get(0);
-            if (! OptimizerUtilities.isAmbiguousColumnName(groupByColumnName, getReferencedColumnNames())) {
-                groupByColumnName = OptimizerUtilities.removePrefixedColumnName(groupByColumnName);
-            }
             print.append(groupByColumnName);
         } else if(groupByColumnNames.size() > 1) {
             for (String groupByColumnName : groupByColumnNames) {
-                if (! OptimizerUtilities.isAmbiguousColumnName(groupByColumnName, getReferencedColumnNames())) {
-                    groupByColumnName = OptimizerUtilities.removePrefixedColumnName(groupByColumnName);
-                }
                 print.append(groupByColumnName).append(", ");
             }
             // remove ", "
@@ -102,18 +96,12 @@ public class Aggregation extends Operator {
 
         if (aggregatedColumnNames.size() == 1) {
             String aggregatedColumnName = aggregatedColumnNames.get(0);
-            if (! OptimizerUtilities.isAmbiguousColumnName(aggregatedColumnName, getReferencedColumnNames())) {
-                aggregatedColumnName = OptimizerUtilities.removePrefixedColumnName(aggregatedColumnName);
-            }
             aggregatedColumnName = aggregationTypes.get(0) + "(" + aggregatedColumnName + ")";
             print.append(aggregatedColumnName);
         } else {
             for (int i = 0; i < aggregationTypes.size(); i++) {
                 String aggregationType = aggregationTypes.get(i);
                 String aggregatedColumnName = aggregatedColumnNames.get(i);
-                if (! OptimizerUtilities.isAmbiguousColumnName(aggregatedColumnName, getReferencedColumnNames())) {
-                    aggregatedColumnName = OptimizerUtilities.removePrefixedColumnName(aggregatedColumnName);
-                }
                 aggregatedColumnName = aggregationType + "(" + aggregatedColumnName + ")";
                 print.append(aggregatedColumnName).append(", ");
             }

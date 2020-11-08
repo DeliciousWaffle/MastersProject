@@ -13,6 +13,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import utilities.OptimizerUtilities;
+import utilities.Utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +32,8 @@ public class QueryTreeWindow extends Stage {
 
         // root container to hold all of our junk, query tree states will be held above while buttons below
         BorderPane root = new BorderPane();
+
+        //OptimizerUtilities.removePrefixedColumnNamesFromQueryTrees(queryTreeStates);
 
         // user will be able to click left or right buttons to switch between different states of the query tree
         queryTreeGUIStates = queryTreeStates.stream()

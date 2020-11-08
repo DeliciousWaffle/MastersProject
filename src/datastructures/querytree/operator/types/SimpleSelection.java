@@ -70,18 +70,13 @@ public class SimpleSelection extends Operator {
     @Override
     public String toString() {
 
-        String formattedColumnName = columnName;
         String formattedValue = value;
 
-        if (! OptimizerUtilities.isJoinPredicate(columnName, value)) {
-            formattedColumnName = OptimizerUtilities.removePrefixedColumnName(formattedColumnName);
-        }
-
         // enclose date and char values in quotes only if the value is not a join predicate and not a number
-        if (! OptimizerUtilities.isJoinPredicate(columnName, value) && ! Utilities.isNumeric(value)) {
+        if (! Utilities.isNumeric(value) && ! OptimizerUtilities.isPrefixed(value)) {
             formattedValue = "\"" + value + "\"";
         }
 
-        return "σ" + " (" + formattedColumnName + " " + symbol + " " + formattedValue + ")";
+        return "σ" + " (" + columnName + " " + symbol + " " + formattedValue + ")";
     }
 }

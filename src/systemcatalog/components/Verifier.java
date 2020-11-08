@@ -163,7 +163,7 @@ public class Verifier {
         // check that prefixed columns exist
         for (String columnName : columnNames) {
 
-            boolean isPrefixed = OptimizerUtilities.hasPrefixedTableName(columnName);
+            boolean isPrefixed = OptimizerUtilities.isPrefixed(columnName);
 
             if (isPrefixed) {
 
@@ -628,7 +628,7 @@ public class Verifier {
         // make sure foreign key exists
         if (hasForeignKey) {
 
-            boolean isPrefixed = OptimizerUtilities.hasPrefixedTableName(columnName);
+            boolean isPrefixed = OptimizerUtilities.isPrefixed(columnName);
 
             if (! isPrefixed) {
                 errorMessage = "Column needs to be prefixed with table name like this <table name>.<column name>";

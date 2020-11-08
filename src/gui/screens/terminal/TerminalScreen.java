@@ -9,10 +9,7 @@ import files.io.FileType;
 import files.io.IO;
 import gui.ScreenController;
 import gui.screens.Screen;
-import gui.screens.terminal.popupwindows.QueryTreeWindow;
-import gui.screens.terminal.popupwindows.RecommendedFileStructuresWindow;
-import gui.screens.terminal.popupwindows.RelationalAlgebraWindow;
-import gui.screens.terminal.popupwindows.ResultSetWindow;
+import gui.screens.terminal.popupwindows.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -175,7 +172,8 @@ public class TerminalScreen extends Screen {
         resultSetButton.setOnAction(e -> {
             boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
             boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
-            if (wasSuccessfullyExecuted && executedQuery) {
+            boolean isVerifierOn = systemCatalog.isVerifierOn();
+            if (wasSuccessfullyExecuted && executedQuery && isVerifierOn) {
                 ResultSet resultSet = systemCatalog.getResultSet();
                 new ResultSetWindow(resultSet);
             }
@@ -256,8 +254,9 @@ public class TerminalScreen extends Screen {
         queryCostButton.setOnAction(e -> {
             boolean wasSuccessfullyExecuted = systemCatalog.wasSuccessfullyExecuted();
             boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
-            if (wasSuccessfullyExecuted && executedQuery) {
-
+            boolean isVerifierOn = systemCatalog.isVerifierOn();
+            if (wasSuccessfullyExecuted && executedQuery && isVerifierOn) {
+                new QueryCostWindow(); // TODO
             }
         });
 
