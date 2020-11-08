@@ -474,128 +474,123 @@ public final class OptimizerUtilities {
 
     public static void removePrefixedColumnNamesFromQueryTrees(QueryTree queryTree) {
 
-        //for (QueryTree queryTree : queryTrees) {
+        List<Operator> operators = new ArrayList<>(queryTree.getOperatorsAndLocations(PREORDER).keySet());
+        List<String> allReferencedColumns = operators
+                .stream()
+                .map(Operator::getReferencedColumnNames)
+                .flatMap(Collection::stream)
+                .distinct()
+                .collect(Collectors.toList());
 
-            List<Operator> operators = new ArrayList<>(queryTree.getOperatorsAndLocations(PREORDER).keySet());
-            List<String> allReferencedColumns = operators
-                    .stream()
-                    .map(Operator::getReferencedColumnNames)
-                    .flatMap(Collection::stream)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            System.out.println("All referenced: " + allReferencedColumns);
-
-            for (Operator operator : operators) {
-                switch (operator.getType()) {
-                    case AGGREGATE_SELECTION: {
-                        AggregateSelection aggregateSelection = (AggregateSelection) operator;
-                        List<String> columnNames = aggregateSelection.getColumnNames()
-                                .stream()
-                                .map(columnName -> {
-                                    if (!isAmbiguousColumnName(columnName, allReferencedColumns)) {
-                                        return removePrefixedColumnName(columnName);
-                                    }
-                                    return columnName;
-                                })
-                                .collect(Collectors.toList());
-                        aggregateSelection.setColumnNames(columnNames);
-                        break;
-                    }
-                    case AGGREGATION: {
-                        Aggregation aggregation = (Aggregation) operator;
-                        List<String> groupByColumnNames = aggregation.getGroupByColumnNames()
-                                .stream()
-                                .map(groupByColumnName -> {
-                                    if (!isAmbiguousColumnName(groupByColumnName, allReferencedColumns)) {
-                                        return removePrefixedColumnName(groupByColumnName);
-                                    }
-                                    return groupByColumnName;
-                                })
-                                .collect(Collectors.toList());
-                        aggregation.setGroupByColumnNames(groupByColumnNames);
-                        List<String> aggregatedColumnNames = aggregation.getAggregatedColumnNames()
-                                .stream()
-                                .map(aggregatedColumnName -> {
-                                    if (!isAmbiguousColumnName(aggregatedColumnName, allReferencedColumns)) {
-                                        return removePrefixedColumnName(aggregatedColumnName);
-                                    }
-                                    return aggregatedColumnName;
-                                })
-                                .collect(Collectors.toList());
-                        aggregation.setAggregatedColumnNames(aggregatedColumnNames);
-                        break;
-                    }
-                    case COMPOUND_SELECTION: {
-                        CompoundSelection compoundSelection = (CompoundSelection) operator;
-                        List<String> columnNames = compoundSelection.getColumnNames()
-                                .stream()
-                                .map(columnName -> {
-                                    if (!isAmbiguousColumnName(columnName, allReferencedColumns)) {
-                                        return removePrefixedColumnName(columnName);
-                                    }
-                                    return columnName;
-                                })
-                                .collect(Collectors.toList());
-                        compoundSelection.setColumnNames(columnNames);
-                        // there may be join columns present
-                        List<String> joinColumnNames = compoundSelection.getValues();
-                        for (int i = 0; i < joinColumnNames.size(); i++) {
-                            String joinColumnName = joinColumnNames.get(i);
-                            if ((isPrefixed(joinColumnName) && ! Utilities.isNumeric(joinColumnName)) &&
-                                    ! isAmbiguousColumnName(joinColumnName, allReferencedColumns)) {
-                                joinColumnNames.set(i, OptimizerUtilities.removePrefixedColumnName(joinColumnName));
-                            }
+        for (Operator operator : operators) {
+            switch (operator.getType()) {
+                case AGGREGATE_SELECTION: {
+                    AggregateSelection aggregateSelection = (AggregateSelection) operator;
+                    List<String> columnNames = aggregateSelection.getColumnNames()
+                            .stream()
+                            .map(columnName -> {
+                                if (! isAmbiguousColumnName(columnName, allReferencedColumns)) {
+                                    return removePrefixedColumnName(columnName);
+                                }
+                                return columnName;
+                            })
+                            .collect(Collectors.toList());
+                    aggregateSelection.setColumnNames(columnNames);
+                    break;
+                }
+                case AGGREGATION: {
+                    Aggregation aggregation = (Aggregation) operator;
+                    List<String> groupByColumnNames = aggregation.getGroupByColumnNames()
+                            .stream()
+                            .map(groupByColumnName -> {
+                                if (!isAmbiguousColumnName(groupByColumnName, allReferencedColumns)) {
+                                    return removePrefixedColumnName(groupByColumnName);
+                                }
+                                return groupByColumnName;
+                            })
+                            .collect(Collectors.toList());
+                    aggregation.setGroupByColumnNames(groupByColumnNames);
+                    List<String> aggregatedColumnNames = aggregation.getAggregatedColumnNames()
+                            .stream()
+                            .map(aggregatedColumnName -> {
+                                if (!isAmbiguousColumnName(aggregatedColumnName, allReferencedColumns)) {
+                                    return removePrefixedColumnName(aggregatedColumnName);
+                                }
+                                return aggregatedColumnName;
+                            })
+                            .collect(Collectors.toList());
+                    aggregation.setAggregatedColumnNames(aggregatedColumnNames);
+                    break;
+                }
+                case COMPOUND_SELECTION: {
+                    CompoundSelection compoundSelection = (CompoundSelection) operator;
+                    List<String> columnNames = compoundSelection.getColumnNames()
+                            .stream()
+                            .map(columnName -> {
+                                if (!isAmbiguousColumnName(columnName, allReferencedColumns)) {
+                                    return removePrefixedColumnName(columnName);
+                                }
+                                return columnName;
+                            })
+                            .collect(Collectors.toList());
+                    compoundSelection.setColumnNames(columnNames);
+                    // there may be join columns present
+                    List<String> joinColumnNames = compoundSelection.getValues();
+                    for (int i = 0; i < joinColumnNames.size(); i++) {
+                        String joinColumnName = joinColumnNames.get(i);
+                        if ((isPrefixed(joinColumnName) && ! Utilities.isNumeric(joinColumnName)) &&
+                                ! isAmbiguousColumnName(joinColumnName, allReferencedColumns)) {
+                            joinColumnNames.set(i, OptimizerUtilities.removePrefixedColumnName(joinColumnName));
                         }
-                        compoundSelection.setValues(joinColumnNames);
-                        break;
                     }
-                    case INNER_JOIN: {
-                        InnerJoin innerJoin = (InnerJoin) operator;
-                        String firstJoinColumnName = innerJoin.getFirstJoinColumnName();
-                        if (! OptimizerUtilities.isAmbiguousColumnName(firstJoinColumnName, allReferencedColumns)) {
-                            firstJoinColumnName = OptimizerUtilities.removePrefixedColumnName(firstJoinColumnName);
-                        }
-                        innerJoin.setFirstJoinColumnName(firstJoinColumnName);
-                        String secondJoinColumnName = innerJoin.getSecondJoinColumnName();
-                        if (! OptimizerUtilities.isAmbiguousColumnName(secondJoinColumnName, allReferencedColumns)) {
-                            secondJoinColumnName = OptimizerUtilities.removePrefixedColumnName(secondJoinColumnName);
-                        }
-                        innerJoin.setSecondJoinColumnName(secondJoinColumnName);
-                        break;
+                    compoundSelection.setValues(joinColumnNames);
+                    break;
+                }
+                case INNER_JOIN: {
+                    InnerJoin innerJoin = (InnerJoin) operator;
+                    String firstJoinColumnName = innerJoin.getFirstJoinColumnName();
+                    if (! OptimizerUtilities.isAmbiguousColumnName(firstJoinColumnName, allReferencedColumns)) {
+                        firstJoinColumnName = OptimizerUtilities.removePrefixedColumnName(firstJoinColumnName);
                     }
-                    case PROJECTION: {
-                        Projection projection = (Projection) operator;
-                        List<String> columnNames = projection.getColumnNames()
-                                .stream()
-                                .map(columnName -> {
-                                    if (! OptimizerUtilities.isAmbiguousColumnName(columnName, allReferencedColumns)) {
-                                        return OptimizerUtilities.removePrefixedColumnName(columnName);
-                                    }
-                                    return columnName;
-                                })
-                                .collect(Collectors.toList());
-                        projection.setColumnNames(columnNames);
-                        break;
+                    innerJoin.setFirstJoinColumnName(firstJoinColumnName);
+                    String secondJoinColumnName = innerJoin.getSecondJoinColumnName();
+                    if (! OptimizerUtilities.isAmbiguousColumnName(secondJoinColumnName, allReferencedColumns)) {
+                        secondJoinColumnName = OptimizerUtilities.removePrefixedColumnName(secondJoinColumnName);
                     }
-                    case SIMPLE_SELECTION: {
-                        SimpleSelection simpleSelection = (SimpleSelection) operator;
-                        String columnName = simpleSelection.getColumnName();
-                        if (! OptimizerUtilities.isAmbiguousColumnName(columnName, allReferencedColumns)) {
-                            columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
-                        }
-                        simpleSelection.setColumnName(columnName);
-                        // there may be a join column present
-                        String joinColumnName = simpleSelection.getValue();
-                        if ((! Utilities.isNumeric(joinColumnName) && OptimizerUtilities.isPrefixed(joinColumnName)) &&
-                                ! OptimizerUtilities.isAmbiguousColumnName(joinColumnName, allReferencedColumns)) {
+                    innerJoin.setSecondJoinColumnName(secondJoinColumnName);
+                    break;
+                }
+                case PROJECTION: {
+                    Projection projection = (Projection) operator;
+                    List<String> columnNames = projection.getColumnNames()
+                            .stream()
+                            .map(columnName -> {
+                                if (! OptimizerUtilities.isAmbiguousColumnName(columnName, allReferencedColumns)) {
+                                    return OptimizerUtilities.removePrefixedColumnName(columnName);
+                                }
+                                return columnName;
+                            })
+                            .collect(Collectors.toList());
+                    projection.setColumnNames(columnNames);
+                    break;
+                }
+                case SIMPLE_SELECTION: {
+                    SimpleSelection simpleSelection = (SimpleSelection) operator;
+                    String columnName = simpleSelection.getColumnName();
+                    if (! OptimizerUtilities.isAmbiguousColumnName(columnName, allReferencedColumns)) {
+                        columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
+                    }
+                    simpleSelection.setColumnName(columnName);
+                    // there may be a join column present
+                    String joinColumnName = simpleSelection.getValue();
+                    if ((! Utilities.isNumeric(joinColumnName) && OptimizerUtilities.isPrefixed(joinColumnName)) &&
+                            ! OptimizerUtilities.isAmbiguousColumnName(joinColumnName, allReferencedColumns)) {
                             joinColumnName = OptimizerUtilities.removePrefixedColumnName(joinColumnName);
-                        }
-                        simpleSelection.setValue(joinColumnName);
-                        break;
                     }
+                    simpleSelection.setValue(joinColumnName);
+                    break;
                 }
             }
-        //}
+        }
     }
 }

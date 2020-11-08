@@ -33,10 +33,13 @@ public class QueryTreeWindow extends Stage {
         // root container to hold all of our junk, query tree states will be held above while buttons below
         BorderPane root = new BorderPane();
 
-        //OptimizerUtilities.removePrefixedColumnNamesFromQueryTrees(queryTreeStates);
-
         // user will be able to click left or right buttons to switch between different states of the query tree
         queryTreeGUIStates = queryTreeStates.stream()
+                .map(queryTree -> {
+                    QueryTree copy = new QueryTree(queryTree);
+                    OptimizerUtilities.removePrefixedColumnNamesFromQueryTrees(copy);
+                    return copy;
+                })
                 .map(QueryTreeGUI::new)
                 .collect(Collectors.toList());
         stateIndex = 0;

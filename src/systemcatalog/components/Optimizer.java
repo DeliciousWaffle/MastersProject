@@ -758,18 +758,15 @@ public class Optimizer {
      */
     public String getOptimizedRelationalAlgebra(List<QueryTree> queryTreeStates) {
 
-        List<QueryTree> pipelinedQueryTrees = queryTreeStates.subList(6, queryTreeStates.size())
-                .stream()
-                .map(QueryTree::new)
-                .collect(Collectors.toList());
-
-        // TODO change how to get optimized relational algebra, won't get from pipelined expression, do the stack tree thing
-        // get the first query tree right before pipelining for this
-        System.out.println("Before: "+pipelinedQueryTrees.get(0));
-        removePrefixedColumnNamesFromQueryTrees(pipelinedQueryTrees.get(0));
-        System.out.println("After: "+pipelinedQueryTrees.get(0));
+        // get the query tree before pipelining
+        QueryTree temp = new QueryTree(queryTreeStates.get(5));
+        // remove any unnecessary prefixing
+        removePrefixedColumnNamesFromQueryTrees(temp);
+        // getting the pipelined query trees
+        List<QueryTree> pipelinedQueryTrees = pipelineSubtrees(temp);
 
         StringBuilder optimizedRelationalAlgebra = new StringBuilder();
+
 
         // for each pipelined query tree, add all pipelined expressions that appear to this list
         List<PipelinedExpression> pipelinedExpressions = new ArrayList<>();
