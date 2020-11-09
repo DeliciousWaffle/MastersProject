@@ -1,6 +1,7 @@
 package systemcatalog;
 
 import datastructures.misc.Pair;
+import datastructures.misc.Quadruple;
 import datastructures.misc.Triple;
 import datastructures.relation.resultset.ResultSet;
 import datastructures.rulegraph.RuleGraph;
@@ -60,7 +61,7 @@ public class SystemCatalog {
     private List<QueryTree> queryTreeStates;
     private String naiveRelationalAlgebra, optimizedRelationalAlgebra;
     private Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures;
-    private Triple<Double, Double, String> costAnalysis;
+    private Quadruple<Double, Double, String, String> costAnalysis;
 
     public SystemCatalog() {
 
@@ -109,7 +110,7 @@ public class SystemCatalog {
         naiveRelationalAlgebra = "";
         optimizedRelationalAlgebra = "";
         recommendedFileStructures = new Pair<>(new ArrayList<>(), new ArrayList<>());
-        costAnalysis = new Triple<>(0.0, 0.0, "");
+        costAnalysis = new Quadruple<>(0.0, 0.0, "", "");
     }
 
     // execution -------------------------------------------------------------------------------------------------------
@@ -284,7 +285,7 @@ public class SystemCatalog {
     /**
      * @return the cost analysis of the last successfully executed QUERY
      */
-    public Triple<Double, Double, String> getCostAnalysis() {
+    public Quadruple<Double, Double, String, String> getCostAnalysis() {
         return costAnalysis;
     }
 
@@ -399,6 +400,6 @@ public class SystemCatalog {
         naiveRelationalAlgebra = "";
         optimizedRelationalAlgebra = "";
         recommendedFileStructures = new Pair<>(new ArrayList<>(), new ArrayList<>());
-        costAnalysis = new Triple<>(0.0, 0.0, "");
+        costAnalysis = new Quadruple<>(0.0, 0.0, "", "");
     }
 }

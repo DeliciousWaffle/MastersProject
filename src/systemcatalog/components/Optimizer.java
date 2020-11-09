@@ -1,6 +1,7 @@
 package systemcatalog.components;
 
 import datastructures.misc.Pair;
+import datastructures.misc.Quadruple;
 import datastructures.misc.Triple;
 import datastructures.querytree.operator.types.*;
 import datastructures.relation.resultset.ResultSet;
@@ -950,23 +951,24 @@ public class Optimizer {
      * @param tables are the tables of the system
      * @param isVerifierOn is whether the verifier is on, if off, will simply return because we can't retrieve data
      * from tables that we don't know exist
-     * @return the total execution cost, the total write to disk cost, and a string representation
-     * of how these costs were produced
+     * @return the total production cost, the total write to disk cost, and a string showing the work to get to
+     * the total production cost, and a string showing the work to get to the write to disk cost
      */
-    public Triple<Double, Double, String> getCostAnalysis(List<QueryTree> queryTreeStates, List<Table> tables,
-                                                          boolean isVerifierOn) {
+    public Quadruple<Double, Double, String, String> getCostAnalysis(List<QueryTree> queryTreeStates,
+                                                                     List<Table> tables, boolean isVerifierOn) {
 
         if (! isVerifierOn) {
-            return new Triple<>(0.0, 0.0, "");
+            return new Quadruple<>(0.0, 0.0, "", "");
         }
 if (true) {
-    return new Triple<>(0.0, 0.0, "");
+    return new Quadruple<>(0.0, 0.0, "", "");
 }
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
-        double totalCost = 0;
+        double totalProductionCost = 0;
         double totalWriteToDiskCost = 0;
-        StringBuilder showWork = new StringBuilder();
+        StringBuilder productionCostWork = new StringBuilder();
+        StringBuilder writeToDiskCostWork = new StringBuilder();
 
         Deque<Operator> startingStack =
                 setToDeque(queryTreeBeforePipelining.getOperatorsAndLocations(PREORDER).keySet());
@@ -1040,6 +1042,7 @@ if (true) {
             }
         }
 
-        return new Triple<>(totalCost, totalWriteToDiskCost, showWork.toString());
+        return new Quadruple<>(totalProductionCost, totalWriteToDiskCost,
+                productionCostWork.toString(), writeToDiskCostWork.toString());
     }
 }

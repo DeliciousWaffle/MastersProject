@@ -1,6 +1,7 @@
 package gui.screens.terminal;
 
 import datastructures.misc.Pair;
+import datastructures.misc.Quadruple;
 import datastructures.misc.Triple;
 import datastructures.querytree.QueryTree;
 import datastructures.relation.resultset.ResultSet;
@@ -256,7 +257,10 @@ public class TerminalScreen extends Screen {
             boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
             boolean isVerifierOn = systemCatalog.isVerifierOn();
             if (wasSuccessfullyExecuted && executedQuery && isVerifierOn) {
-                new QueryCostWindow(); // TODO
+                Quadruple<Double, Double, String, String> costAnalysis = systemCatalog.getCostAnalysis();
+
+                new QueryCostWindow(new Quadruple<>(0d, 0d, "Blah\nBlah\nBlah\nBlah\nBlah\nBlah\nBlah\nBlah",
+                        "BlahBlah\nBlah\nBlah\nBlah\nBlah\nBlah\nBlah"));
             }
         });
 
