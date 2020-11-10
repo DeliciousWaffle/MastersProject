@@ -61,7 +61,7 @@ public class SystemCatalog {
     private List<QueryTree> queryTreeStates;
     private String naiveRelationalAlgebra, optimizedRelationalAlgebra;
     private Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures;
-    private Quadruple<Double, Double, String, String> costAnalysis;
+    private Quadruple<Integer, Integer, String, String> costAnalysis;
 
     public SystemCatalog() {
 
@@ -110,7 +110,7 @@ public class SystemCatalog {
         naiveRelationalAlgebra = "";
         optimizedRelationalAlgebra = "";
         recommendedFileStructures = new Pair<>(new ArrayList<>(), new ArrayList<>());
-        costAnalysis = new Quadruple<>(0.0, 0.0, "", "");
+        costAnalysis = new Quadruple<>(0, 0, "", "");
     }
 
     // execution -------------------------------------------------------------------------------------------------------
@@ -285,7 +285,7 @@ public class SystemCatalog {
     /**
      * @return the cost analysis of the last successfully executed QUERY
      */
-    public Quadruple<Double, Double, String, String> getCostAnalysis() {
+    public Quadruple<Integer, Integer, String, String> getCostAnalysis() {
         return costAnalysis;
     }
 
@@ -400,6 +400,6 @@ public class SystemCatalog {
         naiveRelationalAlgebra = "";
         optimizedRelationalAlgebra = "";
         recommendedFileStructures = new Pair<>(new ArrayList<>(), new ArrayList<>());
-        costAnalysis = new Quadruple<>(0.0, 0.0, "", "");
+        costAnalysis = new Quadruple<>(0, 0, "", "");
     }
 }

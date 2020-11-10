@@ -1,6 +1,6 @@
 package utilities;
 
-import datastructures.relation.table.Table;
+
 import datastructures.relation.table.component.Column;
 
 import java.util.List;
@@ -37,8 +37,8 @@ public final class QueryCost {
     // starting calculations -------------------------------------------------------------------------------------------
 
     // r - number of records in the file
-    public static int numberRecords(Table table) {
-        return table.getNumRecords();
+    public static int numberRecords(List<List<String>> data) {
+        return data.size();
     }
 
     // |r| - record size
@@ -58,22 +58,9 @@ public final class QueryCost {
         return (int) Math.ceil((double) numRecords / blockingFactor);
     }
 
-    /**
-     * @param table is the table that the column provided belongs to
-     * @param column is the column to look through
-     * @return the number of distinct values that appear in the column provided
-     */
-    public static int distinctValues(Table table, Column column) {
-        List<Column> columns = table.getColumns();
-        int colLocation = -1;
-        for (int i = 0; i < columns.size(); i++) {
-            if (columns.get(i).getColumnName().equalsIgnoreCase(column.getColumnName())) {
-                colLocation = i;
-                break;
-            }
-        }
-        List<String> rowsOfColumn = table.getTableData().getRowsAt(colLocation);
-        return (int) rowsOfColumn.stream()
+    // d - distinct values
+    public static int distinctValues(List<String> columnData) {
+        return (int) columnData.stream()
                 .distinct()
                 .count();
     }

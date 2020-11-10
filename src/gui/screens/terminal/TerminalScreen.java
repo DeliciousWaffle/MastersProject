@@ -257,10 +257,8 @@ public class TerminalScreen extends Screen {
             boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
             boolean isVerifierOn = systemCatalog.isVerifierOn();
             if (wasSuccessfullyExecuted && executedQuery && isVerifierOn) {
-                Quadruple<Double, Double, String, String> costAnalysis = systemCatalog.getCostAnalysis();
-
-                new QueryCostWindow(new Quadruple<>(0d, 0d, "Blah\nBlah\nBlah\nBlah\nBlah\nBlah\nBlah\nBlah",
-                        "BlahBlah\nBlah\nBlah\nBlah\nBlah\nBlah\nBlah"));
+                Quadruple<Integer, Integer, String, String> costAnalysis = systemCatalog.getCostAnalysis();
+                new QueryCostWindow(costAnalysis);
             }
         });
 

@@ -1,18 +1,12 @@
 package gui.screens.terminal.popupwindows;
 
-import datastructures.misc.Pair;
 import datastructures.misc.Quadruple;
-import datastructures.misc.Triple;
-import datastructures.relation.table.Table;
-import datastructures.relation.table.component.Column;
-import datastructures.relation.table.component.FileStructure;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.Screen;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -21,18 +15,15 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import utilities.Utilities;
 
-import java.util.ArrayList;
-import java.util.List;
 
 public class QueryCostWindow extends Stage {
 
-    public QueryCostWindow(Quadruple<Double, Double, String, String> costAnalysis) {
+    public QueryCostWindow(Quadruple<Integer, Integer, String, String> costAnalysis) {
 
         // unwrapping the values that we need
-        Double totalProductionCost = costAnalysis.getFirst();
-        Double totalWriteToDiskCost = costAnalysis.getSecond();
+        int totalProductionCost = costAnalysis.getFirst();
+        int totalWriteToDiskCost = costAnalysis.getSecond();
         String productionCostWork = costAnalysis.getThird();
         String writeToDiskCostWork = costAnalysis.getFourth();
 

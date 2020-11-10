@@ -12,47 +12,39 @@ public class PipelinedExpression extends Operator {
     private final List<Operator> pipelinedOperators;
 
     public PipelinedExpression(List<Operator> pipelinedOperators, int subscript) {
-
         this.pipelinedOperators = pipelinedOperators;
-
-        switch (subscript) {
-            case 1:
-                this.subscript = "₁";
-                break;
-            case 2:
-                this.subscript = "₂";
-                break;
-            case 3:
-                this.subscript = "₃";
-                break;
-            case 4:
-                this.subscript = "₄";
-                break;
-            case 5:
-                this.subscript = "₅";
-                break;
-            case 6:
-                this.subscript = "₆";
-                break;
-            case 7:
-                this.subscript = "₇";
-                break;
-            case 8:
-                this.subscript = "₈";
-                break;
-            case 9:
-                this.subscript = "₉";
-                break;
-            default:
-                this.subscript = "₀";
-                break;
-        }
+        this.subscript = toSubscript(subscript);
     }
 
     public PipelinedExpression(PipelinedExpression toCopy) {
         this.subscript = toCopy.subscript;
         this.pipelinedOperators = new ArrayList<>();
         toCopy.pipelinedOperators.forEach(e -> pipelinedOperators.add(e.copy(e)));
+    }
+
+    public static String toSubscript(int value) {
+        switch (value) {
+            case 1:
+                return "₁";
+            case 2:
+                return "₂";
+            case 3:
+                return "₃";
+            case 4:
+                return "₄";
+            case 5:
+                return "₅";
+            case 6:
+                return "₆";
+            case 7:
+                return "₇";
+            case 8:
+                return "₈";
+            case 9:
+                return "₉";
+            default:
+                return "₀";
+        }
     }
 
     public String getRelationalAlgebra() {
