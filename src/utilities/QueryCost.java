@@ -196,7 +196,7 @@ public final class QueryCost {
 
     // can't do ranged queries with hash tables!
     public static int hashTableRange() {
-        return Integer.MIN_VALUE;
+        return 0;
     }
 
     public static int hashTablePrintUnsorted(int numBins, int numRecords) {
@@ -205,7 +205,7 @@ public final class QueryCost {
 
     // can't print sorted with hash tables!
     public static int hashTablePrintSorted() {
-        return Integer.MIN_VALUE;
+        return 0;
     }
 
     // clustered file costs --------------------------------------------------------------------------------------------

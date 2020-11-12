@@ -230,7 +230,9 @@ public class TerminalScreen extends Screen {
             boolean executedQuery = systemCatalog.getInputType() == InputType.QUERY;
             if (wasSuccessfullyExecuted && executedQuery) {
                 List<QueryTree> queryTreeStates = systemCatalog.getQueryTreeStates();
-                new QueryTreeWindow(queryTreeStates);
+                String productionCost = systemCatalog.getCostAnalysis().getThird();
+                String writeToDiskCost = systemCatalog.getCostAnalysis().getFourth();
+                new QueryTreeWindow(queryTreeStates, productionCost, writeToDiskCost);
             }
         });
 
@@ -266,7 +268,7 @@ public class TerminalScreen extends Screen {
         tooltip.setFont(new Font(20));
         queryCostButton.setTooltip(tooltip);
 
-        // query cost button ...........................................................................................
+        // recommended file structures button ..........................................................................
         Button recommendedFileStructuresButton = new Button();
 
         imageView = new ImageView(IO.readAsset(FileType.Asset.FOLDER_IMAGE));

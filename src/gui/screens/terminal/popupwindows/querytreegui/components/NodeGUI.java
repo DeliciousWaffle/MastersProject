@@ -2,6 +2,7 @@ package gui.screens.terminal.popupwindows.querytreegui.components;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
@@ -12,12 +13,16 @@ public class NodeGUI {
     private double x, y;
     private final double width, height;
     private final double textSize;
+    private Color color;
+    private final boolean isPipelined;
 
-    public NodeGUI(String text, double x, double y) {
+    public NodeGUI(String text, double x, double y, boolean isPipelined) {
 
         this.text = text;
         this.x = x;
         this.y = y;
+        this.isPipelined = isPipelined;
+        this.color = Color.rgb(90, 90, 90);
 
         this.textSize = 35;
 
@@ -57,6 +62,20 @@ public class NodeGUI {
         return height;
     }
 
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
+    public boolean isPipelined() {
+        return isPipelined;
+    }
+
+    public boolean contains(double mouseX, double mouseY) {
+        Rectangle rectangle = new Rectangle(x - 2 - 10 - width / 2, y - 2 - height + 10 - 5, width + 4 + 20,
+                height + 4 + 10);
+        return rectangle.contains(mouseX, mouseY);
+    }
+
     public void render(GraphicsContext gc) {
 
         // background border
@@ -65,7 +84,7 @@ public class NodeGUI {
                 20, 20);
 
         // background
-        gc.setFill(Color.rgb(90, 90, 90));
+        gc.setFill(color);
         gc.fillRoundRect(x - 10 - width / 2, y - height + 10 - 5, width + 20, height + 10, 20,
                 20);
 

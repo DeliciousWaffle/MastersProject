@@ -1,6 +1,5 @@
-package gui.screens.terminal.popupwindows;
+package gui.screens.terminal.popupwindows.querytreegui.components;
 
-import datastructures.misc.Quadruple;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.Screen;
@@ -10,22 +9,18 @@ import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.layout.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+public class QueryCostForNodeWindow extends Stage {
 
-public class QueryCostWindow extends Stage {
-
-    public QueryCostWindow(Quadruple<Integer, Integer, String, String> costAnalysis) {
-
-        // unwrapping the values that we need
-        int totalProductionCost = costAnalysis.getFirst();
-        int totalWriteToDiskCost = costAnalysis.getSecond();
-        String productionCostWork = costAnalysis.getThird();
-        String writeToDiskCostWork = costAnalysis.getFourth();
+    public QueryCostForNodeWindow(String node, String productionCostWork, String writeToDiskCostWork) {
 
         // vBox container to hold the title, a panel containing the production cost/work, and a panel
         // containing the write to disk cost/work
@@ -38,7 +33,7 @@ public class QueryCostWindow extends Stage {
 
 
         // title text
-        Text titleText = new Text("Query Costs");
+        Text titleText = new Text("Query Costs For " + node);
         titleText.setFont(new Font(75.0));
         titleText.setFill(Color.WHITE);
         titleText.setSmooth(true);
@@ -69,12 +64,6 @@ public class QueryCostWindow extends Stage {
         VBox.setMargin(productionCostWorkText, new Insets(5, 0, 5, 0));
         productionCostArea.getChildren().add(productionCostWorkText);
 
-        Text totalProductionCostText = new Text("Total Production Cost: " + totalProductionCost);
-        totalProductionCostText.setFont(new Font(40));
-        totalProductionCostText.setFill(Color.GREEN);
-
-        VBox.setMargin(totalProductionCostText, new Insets(5, 0, 10, 0));
-        productionCostArea.getChildren().add(totalProductionCostText);
 
         VBox.setMargin(productionCostArea, new Insets(10, 20, 10, 20));
         overallContainer.getChildren().add(productionCostArea);
@@ -102,12 +91,6 @@ public class QueryCostWindow extends Stage {
         VBox.setMargin(writeToDiskCostWorkText, new Insets(5, 0, 5, 0));
         writeToDiskCostArea.getChildren().add(writeToDiskCostWorkText);
 
-        Text totalWriteToDiskCostText = new Text("Total Write To Disk Cost: " + totalWriteToDiskCost);
-        totalWriteToDiskCostText.setFont(new Font(40));
-        totalWriteToDiskCostText.setFill(Color.GREEN);
-
-        VBox.setMargin(totalWriteToDiskCostText, new Insets(5, 0, 10, 0));
-        writeToDiskCostArea.getChildren().add(totalWriteToDiskCostText);
 
         VBox.setMargin(writeToDiskCostArea, new Insets(10, 20, 50, 20));
         overallContainer.getChildren().add(writeToDiskCostArea);
@@ -133,7 +116,7 @@ public class QueryCostWindow extends Stage {
             overallContainer.setPrefHeight(newHeight);
         });
 
-        this.setTitle("Query Costs:");
+        this.setTitle("Query Costs For " + node);
         this.setScene(scene);
         this.show();
     }

@@ -17,7 +17,6 @@ import utilities.QueryCost;
 import utilities.QueryCostToString;
 import utilities.Utilities;
 
-import javax.management.Query;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -833,8 +832,6 @@ public class Optimizer {
         // the triplet is composed of table name, column name, and the file structure to use
         List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>();
 
-        // TODO double check the table name, column name, and file structure for utils
-
         // will build file structures on columns referenced in where clause first
         List<SimpleSelection> simpleSelections =
                 queryTreeBeforePipelining.getOperatorsAndLocationsOfType(SIMPLE_SELECTION, PREORDER)
@@ -972,12 +969,19 @@ public class Optimizer {
         StringBuilder productionCostWork = new StringBuilder();
         StringBuilder writeToDiskCostWork = new StringBuilder();
 
+        Deque<String> productionCostStack = new ArrayDeque<>();
+        Deque<String> writeToDiskCostStack = new ArrayDeque<>();
+
         Deque<Operator> startingStack =
                 setToDeque(queryTreeBeforePipelining.getOperatorsAndLocations(PREORDER).keySet());
         Deque<ResultSet> workingStack = new ArrayDeque<>();
 
         // used for write to disk cost
         int subscript = 0;
+
+        // commit the working production cost when a projection, or aggregation is found
+        StringBuilder workingProductionCost = new StringBuilder();
+        int workingProductionCostVal = 0;
 
         while (! startingStack.isEmpty()) {
             Operator operator = startingStack.pop();
@@ -991,25 +995,17 @@ public class Optimizer {
                     ResultSet resultSet = new ResultSet(table);
                     workingStack.push(resultSet);
 
-                    // only record if there are no selections and only one relation
-                    boolean hasNoSelection = queryTreeBeforePipelining.getTypeOccurrence(SIMPLE_SELECTION) == 0;
-                    boolean hasOneRelation = queryTreeBeforePipelining.getTypeOccurrence(RELATION) == 1;
+                    int recordSize = QueryCost.recordSize(resultSet.getColumns()); // |r|
+                    int numRecords = QueryCost.numberRecords(resultSet.getData()); // r
+                    int blockingFactor = QueryCost.blockingFactor(recordSize); // bf
+                    int blocks = QueryCost.blocks(numRecords, blockingFactor); // b
 
-                    if (hasNoSelection && hasOneRelation) {
+                    workingProductionCostVal = blocks;
 
-                        int recordSize = QueryCost.recordSize(resultSet.getColumns()); // |r|
-                        int numRecords = QueryCost.numberRecords(resultSet.getData()); // r
-                        int blockingFactor = QueryCost.blockingFactor(recordSize); // bf
-                        int blocks = QueryCost.blocks(numRecords, blockingFactor); // b
-
-                        totalProductionCost += blocks;
-
-                        productionCostWork.append(table.getTableName()).append(":\n");
-                        productionCostWork.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
-                        productionCostWork.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
-                        productionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
-                        productionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n\n");
-                    }
+                    workingProductionCost.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
+                    workingProductionCost.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
+                    workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                    workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
 
                     break;
                 }
@@ -1048,49 +1044,86 @@ public class Optimizer {
                             .count();
                     int selectivity = QueryCost.selectivity(numRecords, numDistinctValues); // s
 
-                    productionCostWork.append("Produce ").append(PipelinedExpression.SYMBOL).append(subscript)
-                            .append(":\n");
+                    workingProductionCost = new StringBuilder();
+                    workingProductionCost.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
+                    workingProductionCost.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
+                    workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                    workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
 
                     switch (fileStructure) {
                         case NONE: {
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
-                                // *** delete production cost work for the relation
                                 if (isUniqueValue) {
-                                    productionCostWork.append(QueryCostToString.unsortedUnique(blocks)).append("\n");
+                                    workingProductionCostVal = QueryCost.unsortedUnique(blocks);
+                                    workingProductionCost.append(QueryCostToString.unsortedUnique(blocks)).append("\n");
                                 } else {
-                                    productionCostWork.append(QueryCostToString.unsortedNonUnique(blocks)).append("\n");
+                                    workingProductionCostVal = QueryCost.unsortedNonUnique(blocks);
+                                    workingProductionCost
+                                            .append(QueryCostToString.unsortedNonUnique(blocks)).append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                productionCostWork.append(QueryCostToString.unsortedRange(blocks)).append("\n");
+                                workingProductionCostVal = QueryCost.unsortedRange(blocks);
+                                workingProductionCost.append(QueryCostToString.unsortedRange(blocks)).append("\n");
                             }
                             break;
                         }
                         case SECONDARY_B_TREE: {
+
+                            workingProductionCost.append("\n");
+                            workingProductionCost.append("Key Size = ").append(keySize).append("\n");
+                            workingProductionCost.append(QueryCostToString.degree(keySize)).append("\n");
+                            workingProductionCost.append(QueryCostToString.levels(numRecords, degree)).append("\n");
+                            workingProductionCost.append(QueryCostToString.terminalLevelNodes(numRecords, degree))
+                                    .append("\n");
+                            workingProductionCost.append("d = ").append(numDistinctValues).append("\n");
+                            workingProductionCost.append(QueryCostToString.selectivity(numRecords, numDistinctValues))
+                                    .append("\n\n");
+
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                                 if (isUniqueValue) {
-                                    productionCostWork.append(QueryCostToString.secondaryBTreeUnique(levels))
+                                    workingProductionCostVal = QueryCost.secondaryBTreeUnique(levels);
+                                    workingProductionCost.append(QueryCostToString.secondaryBTreeUnique(levels))
                                             .append("\n");
                                 } else {
-                                    productionCostWork.append(QueryCostToString.secondaryBTreeNonUnique(
+                                    workingProductionCostVal = QueryCost.secondaryBTreeNonUnique(levels, degree,
+                                            selectivity);
+                                    workingProductionCost.append(QueryCostToString.secondaryBTreeNonUnique(
                                             levels, degree, selectivity)).append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                productionCostWork.append(QueryCostToString.secondaryBTreeRange(
+                                workingProductionCostVal = QueryCost.secondaryBTreeRange(levels, terminalLevelNodes,
+                                        numRecords);
+                                workingProductionCost.append(QueryCostToString.secondaryBTreeRange(
                                         levels, terminalLevelNodes, numRecords)).append("\n");
                             }
                             break;
                         }
                         case CLUSTERED_B_TREE: {
+
+                            workingProductionCost.append("\n");
+                            workingProductionCost.append("Key Size = ").append(keySize).append("\n");
+                            workingProductionCost.append(QueryCostToString.degree(keySize)).append("\n");
+                            workingProductionCost.append(QueryCostToString.levels(numRecords, degree)).append("\n");
+                            workingProductionCost.append(QueryCostToString.terminalLevelNodes(numRecords, degree))
+                                    .append("\n");
+                            workingProductionCost.append("d = ").append(numDistinctValues).append("\n");
+                            workingProductionCost.append(QueryCostToString.selectivity(numRecords, numDistinctValues))
+                                    .append("\n\n");
+
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                                 if (isUniqueValue) {
-                                    productionCostWork.append(QueryCostToString.clusteredBTreeUnique(levels))
+                                    workingProductionCostVal = QueryCost.clusteredBTreeUnique(levels);
+                                    workingProductionCost.append(QueryCostToString.clusteredBTreeUnique(levels))
                                             .append("\n");
                                 } else {
-                                    productionCostWork.append(QueryCostToString.clusteredBTReeNonUnique(
+                                    workingProductionCostVal = QueryCost.clusteredBTreeNonUnique(levels, selectivity,
+                                            degree);
+                                    workingProductionCost.append(QueryCostToString.clusteredBTreeNonUnique(
                                             levels, selectivity, degree)).append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                productionCostWork.append(QueryCostToString.clusteredBTreeRange(
+                                workingProductionCostVal = QueryCost.clusteredBTreeRange(levels, terminalLevelNodes);
+                                workingProductionCost.append(QueryCostToString.clusteredBTreeRange(
                                         levels, terminalLevelNodes)).append("\n");
                             }
                             break;
@@ -1098,20 +1131,21 @@ public class Optimizer {
                         case HASH_TABLE: {
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                                 if (isUniqueValue) {
-                                    productionCostWork.append(QueryCostToString.hashTableUnique())
+                                    workingProductionCostVal = QueryCost.hashTableUnique();
+                                    workingProductionCost.append(QueryCostToString.hashTableUnique())
                                             .append("\n");
                                 } else {
-                                    productionCostWork.append(QueryCostToString.hashTableNonUnique(selectivity))
+                                    workingProductionCostVal = QueryCost.hashTableNonUnique(selectivity);
+                                    workingProductionCost.append(QueryCostToString.hashTableNonUnique(selectivity))
                                             .append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                productionCostWork.append(QueryCostToString.hashTableRange()).append("\n");
+                                workingProductionCostVal = QueryCost.hashTableRange();
+                                workingProductionCost.append(QueryCostToString.hashTableRange()).append("\n");
                             }
                             break;
                         }
                     }
-
-                    productionCostWork.append("\n");
 
                     break;
                 }
@@ -1122,26 +1156,39 @@ public class Optimizer {
                     ResultSet resultSet = workingStack.pop().projection(columnNames);
                     workingStack.push(resultSet);
 
+                    // get result set data (may or may not be used depending on the situation)
+                    int recordSize = QueryCost.recordSize(resultSet.getColumns());
+                    int numRecords = QueryCost.numberRecords(resultSet.getData());
+                    int blockingFactor = QueryCost.blockingFactor(recordSize);
+                    int blocks = QueryCost.blocks(numRecords, blockingFactor);
+
+                    // will need to record the production cost only if the temp is empty
+                    if (workingProductionCost.length() == 0) {
+                        workingProductionCost.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
+                        workingProductionCost.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
+                        workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                        workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
+                    }
+
+                    productionCostStack.push(workingProductionCost.toString());
+                    totalProductionCost += workingProductionCostVal;
+
+                    workingProductionCostVal = 0;
+                    workingProductionCost = new StringBuilder();
+
+                    // handle write to disk cost
                     boolean lastProjection = startingStack.isEmpty();
 
                     if (! lastProjection) {
 
-                        int recordSize = QueryCost.recordSize(resultSet.getColumns());
-                        int numRecords = QueryCost.numberRecords(resultSet.getData());
-                        int blockingFactor = QueryCost.blockingFactor(recordSize);
-                        int blocks = QueryCost.blocks(numRecords, blockingFactor);
                         totalWriteToDiskCost += blocks;
-
-                        writeToDiskCostWork.append("Write to Disk ").append(PipelinedExpression.SYMBOL)
-                                .append(PipelinedExpression.toSubscript(subscript)).append(":\n");
-                        writeToDiskCostWork.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
-                        writeToDiskCostWork.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
-                        writeToDiskCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
-                        writeToDiskCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
+                        StringBuilder temp = new StringBuilder();
+                        temp.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
+                        temp.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
+                        temp.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                        temp.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
+                        writeToDiskCostStack.push(temp.toString());
                     }
-
-                    subscript++;
-                    writeToDiskCostWork.append("\n");
 
                     break;
                 }
@@ -1156,23 +1203,37 @@ public class Optimizer {
                     workingStack.push(firstResultSet.innerJoin(
                             secondResultSet, firstJoinColumnName, joinSymbolName, secondJoinColumnName));
 
+                    // pop off the strings for the production and write to disk costs
+                    String blah1 = productionCostStack.pop();
+                    blah1 = "Produce " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
+                            ":\n\n" + blah1 + "\n----------------------------------------------------------------\n\n";
+                    productionCostWork.append(blah1);
+                    String meh1 = writeToDiskCostStack.pop();
+                    meh1 = "Write To Disk " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
+                            ":\n\n" + meh1 + "\n----------------------------------------------------------------\n\n";
+                    writeToDiskCostWork.append(meh1);
+                    subscript++;
+
+                    String blah2 = productionCostStack.pop();
+                    blah2 = "Produce " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
+                            ":\n\n" + blah2 + "\n----------------------------------------------------------------\n\n";
+                    productionCostWork.append(blah2);
+                    String meh2 = writeToDiskCostStack.pop();
+                    meh2 = "Write To Disk " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
+                            ":\n\n" + meh2 + "\n----------------------------------------------------------------\n\n";
+                    writeToDiskCostWork.append(meh2);
+                    subscript++;
+
                     Column firstJoinColumn = firstResultSet.getColumnFromColumnName(firstJoinColumnName);
                     Column secondJoinColumn = secondResultSet.getColumnFromColumnName(secondJoinColumnName);
 
-                    Table firstTable = Utilities.getReferencedTable(
-                            firstJoinColumn.getColumnName().split("\\.")[0], tables);
-                    Table secondTable = Utilities.getReferencedTable(
-                            secondJoinColumn.getColumnName().split("\\.")[0], tables);
-
-                    assert firstTable != null && secondTable != null;
-
-                    int firstTableRecordSize = QueryCost.recordSize(firstTable.getColumns());
-                    int firstTableNumRecords = QueryCost.numberRecords(firstTable.getTableData().getData());
+                    int firstTableRecordSize = QueryCost.recordSize(firstResultSet.getColumns());
+                    int firstTableNumRecords = QueryCost.numberRecords(firstResultSet.getData());
                     int firstTableBlockingFactor = QueryCost.blockingFactor(firstTableRecordSize);
                     int firstTableBlocks = QueryCost.blocks(firstTableNumRecords, firstTableBlockingFactor);
 
-                    int secondTableRecordSize = QueryCost.recordSize(secondTable.getColumns());
-                    int secondTableNumRecords = QueryCost.numberRecords(secondTable.getTableData().getData());
+                    int secondTableRecordSize = QueryCost.recordSize(secondResultSet.getColumns());
+                    int secondTableNumRecords = QueryCost.numberRecords(secondResultSet.getData());
                     int secondTableBlockingFactor = QueryCost.blockingFactor(secondTableRecordSize);
                     int secondTableBlocks = QueryCost.blocks(secondTableNumRecords, secondTableBlockingFactor);
 
@@ -1187,22 +1248,33 @@ public class Optimizer {
                     int secondColumnForeignKeySelectivity =
                             QueryCost.foreignKeySelectivity(secondTableNumRecords, firstTableNumRecords);
 
-                    productionCostWork.append(firstTable.getTableName()).append(":\n");
-                    productionCostWork.append(QueryCostToString.recordSize(firstTable.getColumns())).append("\n");
-                    productionCostWork.append(QueryCostToString.numberRecords(firstTable.getTableData().getData()))
+                    workingProductionCost = new StringBuilder();
+                    workingProductionCost.append("First Relation:\n");
+                    workingProductionCost.append(QueryCostToString.recordSize(firstResultSet.getColumns()))
                             .append("\n");
-                    productionCostWork.append(QueryCostToString.blockingFactor(firstTableRecordSize)).append("\n");
-                    productionCostWork.append(QueryCostToString.blocks(firstTableNumRecords, firstTableBlockingFactor))
-                            .append("\n\n");
+                    workingProductionCost.append(QueryCostToString.numberRecords(firstResultSet.getData()))
+                            .append("\n");
+                    workingProductionCost.append(QueryCostToString.blockingFactor(firstTableRecordSize)).append("\n");
+                    workingProductionCost.append(QueryCostToString.blocks(firstTableNumRecords,
+                            firstTableBlockingFactor));
+                    workingProductionCost.append("\n\n");
 
-                    productionCostWork.append(secondTable.getTableName()).append(":\n");
-                    productionCostWork.append(QueryCostToString.recordSize(secondTable.getColumns())).append("\n");
-                    productionCostWork.append(QueryCostToString.numberRecords(secondTable.getTableData().getData()))
+                    workingProductionCost.append("Second Relation:\n");
+                    workingProductionCost.append(QueryCostToString.recordSize(secondResultSet.getColumns()))
                             .append("\n");
-                    productionCostWork.append(QueryCostToString.blockingFactor(secondTableRecordSize)).append("\n");
-                    productionCostWork
+                    workingProductionCost.append(QueryCostToString.numberRecords(secondResultSet.getData()))
+                            .append("\n");
+                    workingProductionCost.append(QueryCostToString.blockingFactor(secondTableRecordSize)).append("\n");
+                    workingProductionCost
                             .append(QueryCostToString.blocks(secondTableNumRecords, secondTableBlockingFactor))
                             .append("\n\n");
+
+                    Table firstTable = Utilities.getReferencedTable(
+                            firstJoinColumn.getColumnName().split("\\.")[0], tables);
+                    Table secondTable = Utilities.getReferencedTable(
+                            secondJoinColumn.getColumnName().split("\\.")[0], tables);
+
+                    assert firstTable != null && secondTable != null;
 
                     boolean isClustered = firstTable.getClusteredWithTableName()
                             .equalsIgnoreCase(secondTable.getTableName()) && secondTable.getClusteredWithTableName()
@@ -1211,11 +1283,11 @@ public class Optimizer {
                     if (isClustered) {
 
                         int clusteredJoinCost = QueryCost.clusteredJoin(firstTableBlocks, secondTableBlocks);
-                        totalProductionCost += clusteredJoinCost;
+                        workingProductionCostVal = clusteredJoinCost;
 
-                        productionCostWork.append("Cluster Join:\n");
-                        productionCostWork.append(QueryCostToString.clusteredJoin(firstTableBlocks, secondTableBlocks))
-                                .append("\n");
+                        workingProductionCost.append("Cluster Join:\n");
+                        workingProductionCost.append(QueryCostToString.clusteredJoin(firstTableBlocks,
+                                secondTableBlocks)).append("\n");
 
                     // not clustered
                     } else {
@@ -1226,10 +1298,10 @@ public class Optimizer {
                         if (noFileStructuresBuilt) {
 
                             int nestedLoopJoinCost = QueryCost.nestedLoopJoin(firstTableBlocks, secondTableBlocks);
-                            totalProductionCost += nestedLoopJoinCost;
+                            workingProductionCostVal = nestedLoopJoinCost;
 
-                            productionCostWork.append("Nested Loop Join:\n");
-                            productionCostWork.append(QueryCostToString.nestedLoopJoin(firstTableBlocks,
+                            workingProductionCost.append("Nested Loop Join:\n");
+                            workingProductionCost.append(QueryCostToString.nestedLoopJoin(firstTableBlocks,
                                     secondTableBlocks)).append("\n");
 
                         // has a file structure built on one of the columns, if both, choose lowest produced cost
@@ -1248,23 +1320,21 @@ public class Optimizer {
                                         secondColumnNumLevels, secondColumnForeignKeySelectivity);
                             }
 
-                            productionCostWork.append("B-Tree Join:\n");
+                            workingProductionCost.append("B-Tree Join:\n");
 
                             if (firstBTreeJoinCost < secondBTreeJoinCost) {
-                                totalProductionCost += firstBTreeJoinCost;
-                                productionCostWork.append(QueryCostToString.bTreeJoin(secondTableBlocks,
+                                workingProductionCostVal = firstBTreeJoinCost;
+                                workingProductionCost.append(QueryCostToString.bTreeJoin(secondTableBlocks,
                                         secondTableNumRecords, firstColumnNumLevels, firstColumnForeignKeySelectivity))
                                 .append("\n");
                             } else {
-                                totalProductionCost += secondBTreeJoinCost;
-                                productionCostWork.append(QueryCostToString.bTreeJoin(firstTableBlocks,
+                                workingProductionCostVal = secondBTreeJoinCost;
+                                workingProductionCost.append(QueryCostToString.bTreeJoin(firstTableBlocks,
                                         firstTableNumRecords, secondColumnNumLevels,
                                         secondColumnForeignKeySelectivity)).append("\n");
                             }
                         }
                     }
-
-                    productionCostWork.append("\n");
 
                     break;
                 }
@@ -1280,13 +1350,15 @@ public class Optimizer {
                     int blockingFactor = QueryCost.blockingFactor(recordSize);
                     int blocks = QueryCost.blocks(numRecords, blockingFactor);
 
-                    totalProductionCost += blocks;
+                    workingProductionCostVal = blocks;
 
-                    productionCostWork.append("Cartesian Product:\n");
-                    productionCostWork.append(QueryCostToString.recordSize(cartesianProduct.getColumns())).append("\n");
-                    productionCostWork.append(QueryCostToString.numberRecords(cartesianProduct.getData())).append("\n");
-                    productionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
-                    productionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n\n");
+                    workingProductionCost.append("Cartesian Product:\n");
+                    workingProductionCost.append(QueryCostToString.recordSize(cartesianProduct.getColumns()))
+                            .append("\n");
+                    workingProductionCost.append(QueryCostToString.numberRecords(cartesianProduct.getData()))
+                            .append("\n");
+                    workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                    workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
 
                     break;
                 }
@@ -1315,6 +1387,11 @@ public class Optimizer {
                 }
             }
         }
+
+        String blah2 = productionCostStack.pop();
+        blah2 = "Produce" + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
+                ":\n\n" + blah2 + "\n----------------------------------------------------------------\n\n";
+        productionCostWork.append(blah2);
 
         return new Quadruple<>(totalProductionCost, totalWriteToDiskCost,
                 productionCostWork.toString(), writeToDiskCostWork.toString());

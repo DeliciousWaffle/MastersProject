@@ -4,7 +4,9 @@ import datastructures.querytree.QueryTree;
 import datastructures.querytree.operator.Operator;
 import files.io.FileType;
 import files.io.IO;
+import gui.screens.terminal.popupwindows.QueryCostWindow;
 import gui.screens.terminal.popupwindows.querytreegui.components.NodeGUI;
+import gui.screens.terminal.popupwindows.querytreegui.components.QueryCostForNodeWindow;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
@@ -20,9 +22,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +33,7 @@ public class QueryTreeGUI {
     private final ScrollPane container;
     private final BorderPane centerScrollPane;
 
-    public QueryTreeGUI(QueryTree queryTree) {
+    public QueryTreeGUI(QueryTree queryTree, String productionCostWork, String writeToDiskCostWork) {
 
         // pref screen width and height of the container
         double prefContainerWidth = 1080;
@@ -183,7 +183,7 @@ public class QueryTreeGUI {
                 }
             }
             // create the node
-            nodeGUIList.add(new NodeGUI(text, x, y));
+            nodeGUIList.add(new NodeGUI(text, x, y, text.contains("\uD835\uDCAB")));
         }
 
         // will need to resize the canvas if any nodes go offscreen, prevents them from being clipped
@@ -282,6 +282,56 @@ public class QueryTreeGUI {
         for(NodeGUI nodeGUI : nodeGUIList) {
             nodeGUI.render(gc);
         }
+
+        // when the user clicks on the canvas, get the location and see whether it intersects with a pipelined node gui
+        // if it does, display a new window showing the production and write to disk costs
+        canvas.setOnMouseClicked(e -> {
+
+            double x = e.getX();
+            double y = e.getY();
+
+            for (NodeGUI nodeGUI : nodeGUIList) {
+                if (nodeGUI.contains(x, y) && nodeGUI.isPipelined()) {
+
+                    String[] productionCostWorkTokens = productionCostWork
+                            .split("\n----------------------------------------------------------------\n\n");
+                    String productionCostWorkSection = "";
+
+                    for (String productionCostWorkToken : productionCostWorkTokens) {
+                        if (productionCostWorkToken.contains(nodeGUI.getText())) {
+                            productionCostWorkSection = productionCostWorkToken;
+                            break;
+                        }
+                    }
+
+                    String[] writeToDiskCostWorkTokens = writeToDiskCostWork
+                            .split("\n----------------------------------------------------------------\n\n");
+                    String writeToDiskCostWorkSection = "";
+
+                    for (String writeToDiskCostToken : writeToDiskCostWorkTokens) {
+                        if (writeToDiskCostToken.contains(nodeGUI.getText())) {
+                            writeToDiskCostWorkSection = writeToDiskCostToken;
+                        }
+                    }
+
+                    new QueryCostForNodeWindow(nodeGUI.getText(), productionCostWorkSection,
+                            writeToDiskCostWorkSection);
+                }
+            }
+        });
+
+        canvas.setOnMouseMoved(e -> {
+            double x = e.getX();
+            double y = e.getY();
+            for (NodeGUI nodeGUI : nodeGUIList) {
+                if (nodeGUI.contains(x, y)) {
+                    nodeGUI.setColor(Color.GREEN);
+                } else {
+                    nodeGUI.setColor(Color.rgb(90, 90, 90));
+                }
+                nodeGUI.render(gc);
+            }
+        });
 
         // will add the canvas to a border pane which will recenter the whole tree when window is resized
         centerScrollPane = new BorderPane();

@@ -28,7 +28,7 @@ public class QueryTreeWindow extends Stage {
     private int stateIndex;
     private Button rightButton, leftButton;
 
-    public QueryTreeWindow(List<QueryTree> queryTreeStates) {
+    public QueryTreeWindow(List<QueryTree> queryTreeStates, String productionCost, String writeToDiskCost) {
 
         // root container to hold all of our junk, query tree states will be held above while buttons below
         BorderPane root = new BorderPane();
@@ -40,7 +40,7 @@ public class QueryTreeWindow extends Stage {
                     OptimizerUtilities.removePrefixedColumnNamesFromQueryTrees(copy);
                     return copy;
                 })
-                .map(QueryTreeGUI::new)
+                .map(queryTree -> new QueryTreeGUI(queryTree, productionCost, writeToDiskCost))
                 .collect(Collectors.toList());
         stateIndex = 0;
 
@@ -75,6 +75,7 @@ public class QueryTreeWindow extends Stage {
 
         // on left click, go to previous state in query tree
         leftButton.setOnAction(e -> {
+
             decrementStateIndex();
             root.setTop(queryTreeGUIStates.get(stateIndex).getContainer());
 
