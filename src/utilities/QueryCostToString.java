@@ -28,7 +28,7 @@ public final class QueryCostToString {
 
     public static String blockingFactor(int recordSize) {
         return "bf = ⌊BlockSize / |r|⌋\n" +
-                "bf = ⌊" + QueryCost.BLOCK_SIZE + " / |" + recordSize + "|⌋\n" +
+                "bf = ⌊" + QueryCost.BLOCK_SIZE + " / " + recordSize + "⌋\n" +
                 "bf = " + QueryCost.blockingFactor(recordSize);
     }
 
@@ -43,8 +43,8 @@ public final class QueryCostToString {
     }
 
     public static String selectivity(int numRecords, int distinctValues) {
-        return "s = r/d\n" +
-                "s = " + numRecords + "/" + distinctValues + "\n" +
+        return "s = r / d\n" +
+                "s = " + numRecords + " / " + distinctValues + "\n" +
                 "s = " + QueryCost.selectivity(numRecords, distinctValues);
     }
 
@@ -211,7 +211,7 @@ public final class QueryCostToString {
     }
 
     public static String hashTableNonUnique(int selectivity) {
-        return "Cost Hash Table Non-Unique = 1 + " + selectivity + "\n" +
+        return "Cost Hash Table Non-Unique = 1 + s\n" +
                 "Cost Hash Table Non-Unique = 1 + " + selectivity + "\n" +
                 "Cost Hash Table Non-Unique = " + QueryCost.hashTableNonUnique(selectivity);
     }
@@ -288,7 +288,7 @@ public final class QueryCostToString {
                 firstTableColSelectivity);
     }
 
-    public static String clusteredJoin(int table1Blocks, int table2Blocks) {
+    public static String clusteredFileJoin(int table1Blocks, int table2Blocks) {
         return "Clustered File Join = bR + bS\n" +
                 "Clustered File Join = " + table1Blocks + " + " + table2Blocks +
                 "Clustered File Join = " + QueryCost.clusteredJoin(table1Blocks, table2Blocks);

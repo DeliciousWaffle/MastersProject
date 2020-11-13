@@ -820,16 +820,40 @@ public class Optimizer {
      * are typically used to speed up joins, but incur a high storage cost and can only be built on tables.
      * They also prevent the other file structures from being built within these tables.
      * @param queryTreeStates is a list of query tree states produced after the optimization process
+     * @param tables are the system tables (used if the verifier is on)
      * @param isVerifierOn is whether the verifier is on, if off, will never recommend to build clustered files
      * because it is uncertain if the tables exist
-     * @return a recommendation of file structures to build for a particular query
+     * @return a recommendation of file structures to build for a particular query (a list of items consisting of the
+     * a table name, column name, and file structure to build; a list of two tables that are clustered together)
      */
     public Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> getRecommendedFileStructures(
-            List<QueryTree> queryTreeStates, boolean isVerifierOn) {
+            List<QueryTree> queryTreeStates, List<Table> tables, boolean isVerifierOn) {
 
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
-        // the triplet is composed of table name, column name, and the file structure to use
+        Pair<List<Triple<String, String, String>>, List<Pair<String, String>>> recommendedFileStructures =
+                new Pair<>(getRecommendedFileStructuresWithoutVerifier(queryTreeBeforePipelining), new ArrayList<>());
+
+        if (isVerifierOn) {
+            return getRecommendedFileStructuresWithVerifier(recommendedFileStructures.getFirst(), queryTreeStates,
+                    tables);
+        }
+
+        return recommendedFileStructures;
+    }
+
+    /**
+     * Helper method that returns the recommended file structures without the verifier. Simply looks at the symbols
+     * used on a selection/inner join and suggests a file structure, resolving conflicts with b-trees. Will never
+     * recommend clustered files because the verifier is off, meaning we can't calculate how well a clustered file
+     * will perform. Also won't recommend "no file structure" as an option because of the same reason.
+     * @param queryTreeBeforePipelining is self explanatory
+     * @return recommended file structures when verifier is off
+     */
+    private List<Triple<String, String, String>> getRecommendedFileStructuresWithoutVerifier(
+            QueryTree queryTreeBeforePipelining) {
+
+        // a list that contains triplets which are composed of table name, column name, and the file structure to use
         List<Triple<String, String, String>> recommendedFileStructures = new ArrayList<>();
 
         // will build file structures on columns referenced in where clause first
@@ -858,7 +882,7 @@ public class Optimizer {
                     new Triple<>(tableName, columnName, fileStructure);
 
             // if there's a conflict, don't add, but instead replace the existing recommendation with a secondary b-tree
-            int replaceIndex = hasFileStructureConflictAtIndex(recommendedFileStructure, recommendedFileStructures);
+            int replaceIndex = getFileStructureConflictLocation(recommendedFileStructure, recommendedFileStructures);
             boolean hasConflict = replaceIndex != -1;
 
             if (hasConflict) {
@@ -869,7 +893,8 @@ public class Optimizer {
             }
         }
 
-        // suggest file structures to build on for joins
+        // suggest file structures to build on for joins (either secondary/clustered b-tree, no support for hash tables
+        // and clustered files are computed later if verifier is on)
         List<InnerJoin> innerJoins =
                 queryTreeBeforePipelining.getOperatorsAndLocationsOfType(INNER_JOIN, PREORDER)
                         .keySet()
@@ -890,8 +915,8 @@ public class Optimizer {
             String symbol = innerJoin.getSymbol();
 
             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
-                firstFileStructure = "Hash Table";
-                secondFileStructure = "Hash Table";
+                firstFileStructure = "Secondary B-Tree";
+                secondFileStructure = "Secondary B-Tree";
             } else { // >, <, >=, <=
                 firstFileStructure = "Clustered B-Tree";
                 secondFileStructure = "Clustered B-Tree";
@@ -901,7 +926,7 @@ public class Optimizer {
                     new Triple<>(firstTableName, firstColumnName, firstFileStructure);
 
             int replaceIndex =
-                    hasFileStructureConflictAtIndex(firstRecommendedFileStructure, recommendedFileStructures);
+                    getFileStructureConflictLocation(firstRecommendedFileStructure, recommendedFileStructures);
             boolean hasConflict = replaceIndex != -1;
 
             if (hasConflict) {
@@ -915,7 +940,7 @@ public class Optimizer {
                     new Triple<>(secondTableName, secondColumnName, secondFileStructure);
 
             replaceIndex =
-                    hasFileStructureConflictAtIndex(secondRecommendedFileStructure, recommendedFileStructures);
+                    getFileStructureConflictLocation(secondRecommendedFileStructure, recommendedFileStructures);
             hasConflict = replaceIndex != -1;
 
             if (hasConflict) {
@@ -927,20 +952,192 @@ public class Optimizer {
             }
         }
 
-        // can't recommend clustered files on tables that we are not sure even exist
-        if (! isVerifierOn) {
-            return new Pair<>(recommendedFileStructures, new ArrayList<>());
+        return distinctFileStructures(recommendedFileStructures);
+    }
+
+    /**
+     * Helper method that returns the recommended file structures with the verifier. Will use the above method as
+     * a starting place. Main difference is that clustered files could be recommended as well as the option for
+     * "no file structure" as a recommendation.
+     * @param recommendedFileStructures are the file structures recommended so far based on the verifier being off
+     * @param queryTreeStates are the states of the query tree
+     * @param tables are the tables of the system
+     * @return recommended file structures when verifier is on
+     */
+    private Pair<List<Triple<String, String, String>>, List<Pair<String, String>>>
+        getRecommendedFileStructuresWithVerifier(List<Triple<String, String, String>> recommendedFileStructures,
+                                                 List<QueryTree> queryTreeStates, List<Table> tables) {
+
+        // check each file structure recommended to see if not building a file structure will yield a better result
+        for (int i = 0; i < recommendedFileStructures.size(); i++) {
+
+            Triple<String, String, String> recommendedFileStructure = recommendedFileStructures.get(i);
+
+            // create a deep copy of the system tables, apply the file structure for the given table, and see if
+            // the cost of producing the query tree is lower than with the file structure
+            List<Table> tablesCopy = tables
+                    .stream()
+                    .map(Table::new)
+                    .collect(Collectors.toList());
+
+            removeAllFileStructures(tablesCopy);
+
+            String tableName = recommendedFileStructure.getFirst();
+            String columnName = recommendedFileStructure.getSecond();
+            String fileStructureString = recommendedFileStructure.getThird();
+
+            FileStructure fileStructure = FileStructure.NONE;
+
+            switch (fileStructureString) {
+                case "Secondary B-Tree":
+                    fileStructure = FileStructure.SECONDARY_B_TREE;
+                    break;
+                case "Clustered B-Tree":
+                    fileStructure = FileStructure.CLUSTERED_B_TREE;
+                    break;
+                case "Hash Table":
+                    fileStructure = FileStructure.HASH_TABLE;
+                    break;
+            }
+
+            Table referencedTable = Utilities.getReferencedTable(tableName, tablesCopy);
+            assert referencedTable != null;
+            Column referencedColumn = referencedTable.getColumn(columnName);
+            assert referencedColumn != null;
+            referencedColumn.setFileStructure(fileStructure);
+
+            // with file structure built
+            int productionCostWithFileStructure =
+                    getCostAnalysis(queryTreeStates, tablesCopy, true).getFirst();
+
+            // without file structure built
+            referencedColumn.setFileStructure(FileStructure.NONE);
+            int productionCostWithoutFileStructure =
+                    getCostAnalysis(queryTreeStates, tablesCopy, true).getFirst();
+
+            if (productionCostWithFileStructure > productionCostWithoutFileStructure) {
+                System.out.println("Changing " + recommendedFileStructure + " to no file structure"); // TODO remove me
+                System.out.println("Production Cost With: " + productionCostWithFileStructure + " without: " + productionCostWithoutFileStructure);
+                recommendedFileStructures.set(i, new Triple<>(tableName, columnName, "None"));
+            }
         }
 
-        // check to see if clustering the two tables would perform better than the previous recommendations
-        // in order to do this, will need to calculate the total cost of the query tree with the file structures
-        // already built and compare them to each possible clustered file orientation's query tree cost
-        List<Pair<String, String>> clusteredFiles = new ArrayList<>();
+        // check to see if clustering the two tables would perform better than the previous file structure
+        // recommendations, in order to do this, will need to calculate the total cost of the query tree with the
+        // file structures already built and compare them to each possible clustered file query tree cost
 
-        // after that, if a clustered file is recommended for a join, remove any file structures that
-        // were built on columns belonging to the tables being joined together
+        // copying the tables and building all recommended file structures
+        List<Table> tablesCopy = tables
+                .stream()
+                .map(Table::new)
+                .collect(Collectors.toList());
 
-        return new Pair<>(recommendedFileStructures, clusteredFiles);
+        removeAllFileStructures(tablesCopy);
+
+        for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
+
+            String tableName = recommendedFileStructure.getFirst();
+            String columnName = recommendedFileStructure.getSecond();
+            String fileStructureString = recommendedFileStructure.getThird();
+
+            FileStructure fileStructure = FileStructure.NONE;
+
+            switch (fileStructureString) {
+                case "Secondary B-Tree":
+                    fileStructure = FileStructure.SECONDARY_B_TREE;
+                    break;
+                case "Clustered B-Tree":
+                    fileStructure = FileStructure.CLUSTERED_B_TREE;
+                    break;
+                case "Hash Table":
+                    fileStructure = FileStructure.HASH_TABLE;
+                    break;
+                case "None":
+                    fileStructure = FileStructure.NONE;
+            }
+
+            Table referencedTable = Utilities.getReferencedTable(tableName, tablesCopy);
+            assert referencedTable != null;
+            Column referencedColumn = referencedTable.getColumn(columnName);
+            assert referencedColumn != null;
+            referencedColumn.setFileStructure(fileStructure);
+        }
+
+        int productionCostWithoutClustering = getCostAnalysis(queryTreeStates, tablesCopy, true).getFirst();
+
+        // getting all possible table pairs (does not include duplicates like <T1, T2> and <T2, T1>)
+        List<Pair<String, String>> allPossibleTablePairs = getAllPossibleTablePairs(tables
+                .stream()
+                .map(Table::getTableName)
+                .collect(Collectors.toList())
+        );
+
+        // what table pairs to keep, if any
+        List<Pair<String, String>> clusteredTables = new ArrayList<>();
+
+        // the mapped cost of each clustered table (if there is any), will be used to resolve conflicts like
+        // <T1, T2> and <T2, T3> (T2 is shared which is big no no, choose smallest)
+        List<Integer> clusteredTablesCost = new ArrayList<>();
+
+        for (Pair<String, String> tablePair : allPossibleTablePairs) {
+
+            removeAllFileStructures(tablesCopy);
+
+            String firstTableName = tablePair.getFirst();
+            String secondTableName = tablePair.getSecond();
+            Table firstTable = Utilities.getReferencedTable(firstTableName, tablesCopy);
+            Table secondTable = Utilities.getReferencedTable(secondTableName, tablesCopy);
+
+            assert firstTable != null && secondTable != null;
+
+            firstTable.setClusteredWith(secondTableName);
+            secondTable.setClusteredWith(firstTableName);
+
+            int productionCostWithClustering = getCostAnalysis(queryTreeStates, tablesCopy, true).getFirst();
+
+            if (productionCostWithClustering < productionCostWithoutClustering) {
+                clusteredTables.add(tablePair);
+                clusteredTablesCost.add(productionCostWithClustering);
+            }
+        }
+
+        // if there are any conflicts (the <T1, T2> and <T2, T3> thing) choose the one with the lowest cost
+        List<Pair<String, String>> clusteredTablesToKeep = new ArrayList<>();
+
+        for (int i = 0; i < clusteredTables.size(); i++) {
+
+            Pair<String, String> tablePair = clusteredTables.get(i);
+            int costOfTablePair = clusteredTablesCost.get(i);
+
+            for (int j = 0; j < clusteredTables.size(); j++) {
+
+                if (i == j) {
+                    continue;
+                }
+
+                Pair<String, String> tablePairToCheck = clusteredTables.get(j);
+                int costOfPairToCheck = clusteredTablesCost.get(j);
+
+                boolean hasConflict = tablePair.getFirst().equalsIgnoreCase(tablePairToCheck.getFirst()) ||
+                        tablePair.getFirst().equalsIgnoreCase(tablePairToCheck.getSecond()) ||
+                        tablePair.getSecond().equalsIgnoreCase(tablePairToCheck.getFirst()) ||
+                        tablePair.getSecond().equalsIgnoreCase(tablePairToCheck.getSecond());
+
+                if (hasConflict) {
+                    if (costOfTablePair < costOfPairToCheck) {
+                        clusteredTablesToKeep.add(tablePair);
+                    } else {
+                        clusteredTablesToKeep.add(tablePairToCheck);
+                    }
+                }
+            }
+
+        }
+
+        // may have duplicates?
+        clusteredTables = clusteredTablesToKeep.stream().distinct().collect(Collectors.toList());
+
+        return new Pair<>(recommendedFileStructures, clusteredTables);
     }
 
     /**
@@ -955,7 +1152,7 @@ public class Optimizer {
      * the total production cost, and a string showing the work to get to the write to disk cost
      */
     public Quadruple<Integer, Integer, String, String> getCostAnalysis(List<QueryTree> queryTreeStates,
-                                                                     List<Table> tables, boolean isVerifierOn) {
+                                                                       List<Table> tables, boolean isVerifierOn) {
 
         if (! isVerifierOn) {
             return new Quadruple<>(0, 0, "", "");
@@ -963,28 +1160,31 @@ public class Optimizer {
 
         QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
 
+        // the stuff to return
         int totalProductionCost = 0;
         int totalWriteToDiskCost = 0;
-
         StringBuilder productionCostWork = new StringBuilder();
         StringBuilder writeToDiskCostWork = new StringBuilder();
 
-        Deque<String> productionCostStack = new ArrayDeque<>();
-        Deque<String> writeToDiskCostStack = new ArrayDeque<>();
-
-        Deque<Operator> startingStack =
+        // used for producing result sets
+        Deque<Operator> operatorStack =
                 setToDeque(queryTreeBeforePipelining.getOperatorsAndLocations(PREORDER).keySet());
-        Deque<ResultSet> workingStack = new ArrayDeque<>();
+        Deque<ResultSet> workingOperatorStack = new ArrayDeque<>();
 
-        // used for write to disk cost
+        // makes sure that the pipelined nodes are not getting mixed up
+        Deque<String> pipelinedProductionCostWorkStack = new ArrayDeque<>();
+        Deque<String> pipelinedWriteToDiskCostWorkStack = new ArrayDeque<>();
         int subscript = 0;
 
-        // commit the working production cost when a projection, or aggregation is found
-        StringBuilder workingProductionCost = new StringBuilder();
-        int workingProductionCostVal = 0;
+        // production costs may change depending on the node encountered while going through a pipelined subtree
+        // write to disk cost doesn't need this as it is recorded as soon as a projection (not the last one) is found
+        StringBuilder pipelinedProductionCostWork = new StringBuilder();
+        int pipelinedProductionCost = 0;
 
-        while (! startingStack.isEmpty()) {
-            Operator operator = startingStack.pop();
+        while (! operatorStack.isEmpty()) {
+
+            Operator operator = operatorStack.pop();
+
             switch (operator.getType()) {
                 case RELATION: {
 
@@ -993,19 +1193,24 @@ public class Optimizer {
                     Table table = Utilities.getReferencedTable(tableName, tables);
                     assert table != null;
                     ResultSet resultSet = new ResultSet(table);
-                    workingStack.push(resultSet);
+                    workingOperatorStack.push(resultSet);
 
+                    // get the table's information (will likely get overwritten if a selection, inner join,
+                    // or cartesian product is encountered
                     int recordSize = QueryCost.recordSize(resultSet.getColumns()); // |r|
                     int numRecords = QueryCost.numberRecords(resultSet.getData()); // r
                     int blockingFactor = QueryCost.blockingFactor(recordSize); // bf
                     int blocks = QueryCost.blocks(numRecords, blockingFactor); // b
 
-                    workingProductionCostVal = blocks;
+                    pipelinedProductionCost = blocks;
 
-                    workingProductionCost.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
-                    workingProductionCost.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
-                    workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
-                    workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.recordSize(resultSet.getColumns()))
+                            .append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.numberRecords(resultSet.getData()))
+                            .append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor))
+                            .append("\n");
 
                     break;
                 }
@@ -1015,9 +1220,11 @@ public class Optimizer {
                     String columnName = simpleSelection.getColumnName();
                     String symbol = simpleSelection.getSymbol();
                     String value = simpleSelection.getValue();
-                    ResultSet resultSet = workingStack.pop();
-                    workingStack.push(resultSet.selection(columnName, symbol, value));
+                    ResultSet resultSet = workingOperatorStack.pop();
+                    workingOperatorStack.push(resultSet.selection(columnName, symbol, value));
 
+                    // get the data from the result set before applying the projection, this will overwrite any data
+                    // that is found in working production val and working production cost
                     Column column = resultSet.getColumnFromColumnName(columnName);
                     FileStructure fileStructure = column.getFileStructure();
 
@@ -1044,86 +1251,99 @@ public class Optimizer {
                             .count();
                     int selectivity = QueryCost.selectivity(numRecords, numDistinctValues); // s
 
-                    workingProductionCost = new StringBuilder();
-                    workingProductionCost.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
-                    workingProductionCost.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
-                    workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
-                    workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
+                    pipelinedProductionCostWork = new StringBuilder();
+                    pipelinedProductionCostWork.append(QueryCostToString.recordSize(resultSet.getColumns()))
+                            .append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.numberRecords(resultSet.getData()))
+                            .append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor))
+                            .append("\n");
+                    pipelinedProductionCostWork.append("d = ").append(numDistinctValues).append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.selectivity(numRecords, numDistinctValues))
+                            .append("\n");
 
+                    // production cost will be dependent on the type of file structure currently built on the column
                     switch (fileStructure) {
                         case NONE: {
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                                 if (isUniqueValue) {
-                                    workingProductionCostVal = QueryCost.unsortedUnique(blocks);
-                                    workingProductionCost.append(QueryCostToString.unsortedUnique(blocks)).append("\n");
+                                    pipelinedProductionCost = QueryCost.unsortedUnique(blocks);
+                                    pipelinedProductionCostWork.append(QueryCostToString.unsortedUnique(blocks))
+                                            .append("\n");
                                 } else {
-                                    workingProductionCostVal = QueryCost.unsortedNonUnique(blocks);
-                                    workingProductionCost
+                                    pipelinedProductionCost = QueryCost.unsortedNonUnique(blocks);
+                                    pipelinedProductionCostWork
                                             .append(QueryCostToString.unsortedNonUnique(blocks)).append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                workingProductionCostVal = QueryCost.unsortedRange(blocks);
-                                workingProductionCost.append(QueryCostToString.unsortedRange(blocks)).append("\n");
+                                pipelinedProductionCost = QueryCost.unsortedRange(blocks);
+                                pipelinedProductionCostWork.append(QueryCostToString.unsortedRange(blocks))
+                                        .append("\n");
                             }
                             break;
                         }
                         case SECONDARY_B_TREE: {
 
-                            workingProductionCost.append("\n");
-                            workingProductionCost.append("Key Size = ").append(keySize).append("\n");
-                            workingProductionCost.append(QueryCostToString.degree(keySize)).append("\n");
-                            workingProductionCost.append(QueryCostToString.levels(numRecords, degree)).append("\n");
-                            workingProductionCost.append(QueryCostToString.terminalLevelNodes(numRecords, degree))
+                            pipelinedProductionCostWork.append("\n");
+                            pipelinedProductionCostWork.append("Key Size = ").append(keySize).append("\n");
+                            pipelinedProductionCostWork.append(QueryCostToString.degree(keySize)).append("\n");
+                            pipelinedProductionCostWork.append(QueryCostToString.levels(numRecords, degree))
                                     .append("\n");
-                            workingProductionCost.append("d = ").append(numDistinctValues).append("\n");
-                            workingProductionCost.append(QueryCostToString.selectivity(numRecords, numDistinctValues))
+                            pipelinedProductionCostWork.append(QueryCostToString.terminalLevelNodes(numRecords, degree))
+                                    .append("\n");
+                            pipelinedProductionCostWork.append("d = ").append(numDistinctValues).append("\n");
+                            pipelinedProductionCostWork.append(QueryCostToString.selectivity(numRecords,
+                                    numDistinctValues))
                                     .append("\n\n");
 
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                                 if (isUniqueValue) {
-                                    workingProductionCostVal = QueryCost.secondaryBTreeUnique(levels);
-                                    workingProductionCost.append(QueryCostToString.secondaryBTreeUnique(levels))
+                                    pipelinedProductionCost = QueryCost.secondaryBTreeUnique(levels);
+                                    pipelinedProductionCostWork.append(QueryCostToString.secondaryBTreeUnique(levels))
                                             .append("\n");
                                 } else {
-                                    workingProductionCostVal = QueryCost.secondaryBTreeNonUnique(levels, degree,
+                                    pipelinedProductionCost = QueryCost.secondaryBTreeNonUnique(levels, degree,
                                             selectivity);
-                                    workingProductionCost.append(QueryCostToString.secondaryBTreeNonUnique(
+                                    pipelinedProductionCostWork.append(QueryCostToString.secondaryBTreeNonUnique(
                                             levels, degree, selectivity)).append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                workingProductionCostVal = QueryCost.secondaryBTreeRange(levels, terminalLevelNodes,
+                                pipelinedProductionCost = QueryCost.secondaryBTreeRange(levels, terminalLevelNodes,
                                         numRecords);
-                                workingProductionCost.append(QueryCostToString.secondaryBTreeRange(
+                                pipelinedProductionCostWork.append(QueryCostToString.secondaryBTreeRange(
                                         levels, terminalLevelNodes, numRecords)).append("\n");
                             }
                             break;
                         }
                         case CLUSTERED_B_TREE: {
 
-                            workingProductionCost.append("\n");
-                            workingProductionCost.append("Key Size = ").append(keySize).append("\n");
-                            workingProductionCost.append(QueryCostToString.degree(keySize)).append("\n");
-                            workingProductionCost.append(QueryCostToString.levels(numRecords, degree)).append("\n");
-                            workingProductionCost.append(QueryCostToString.terminalLevelNodes(numRecords, degree))
+                            pipelinedProductionCostWork.append("\n");
+                            pipelinedProductionCostWork.append("Key Size = ").append(keySize).append("\n");
+                            pipelinedProductionCostWork.append(QueryCostToString.degree(keySize)).append("\n");
+                            pipelinedProductionCostWork.append(QueryCostToString.levels(numRecords, degree))
                                     .append("\n");
-                            workingProductionCost.append("d = ").append(numDistinctValues).append("\n");
-                            workingProductionCost.append(QueryCostToString.selectivity(numRecords, numDistinctValues))
+                            pipelinedProductionCostWork.append(QueryCostToString.terminalLevelNodes(numRecords, degree))
+                                    .append("\n");
+                            pipelinedProductionCostWork.append("d = ").append(numDistinctValues).append("\n");
+                            pipelinedProductionCostWork.append(QueryCostToString.selectivity(numRecords,
+                                    numDistinctValues))
                                     .append("\n\n");
 
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                                 if (isUniqueValue) {
-                                    workingProductionCostVal = QueryCost.clusteredBTreeUnique(levels);
-                                    workingProductionCost.append(QueryCostToString.clusteredBTreeUnique(levels))
+                                    pipelinedProductionCost = QueryCost.clusteredBTreeUnique(levels);
+                                    pipelinedProductionCostWork.append(QueryCostToString.clusteredBTreeUnique(levels))
                                             .append("\n");
                                 } else {
-                                    workingProductionCostVal = QueryCost.clusteredBTreeNonUnique(levels, selectivity,
+                                    pipelinedProductionCost = QueryCost.clusteredBTreeNonUnique(levels, selectivity,
                                             degree);
-                                    workingProductionCost.append(QueryCostToString.clusteredBTreeNonUnique(
+                                    pipelinedProductionCostWork.append(QueryCostToString.clusteredBTreeNonUnique(
                                             levels, selectivity, degree)).append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                workingProductionCostVal = QueryCost.clusteredBTreeRange(levels, terminalLevelNodes);
-                                workingProductionCost.append(QueryCostToString.clusteredBTreeRange(
+                                pipelinedProductionCost = QueryCost.clusteredBTreeRange(levels, terminalLevelNodes);
+                                pipelinedProductionCostWork.append(QueryCostToString.clusteredBTreeRange(
                                         levels, terminalLevelNodes)).append("\n");
                             }
                             break;
@@ -1131,17 +1351,17 @@ public class Optimizer {
                         case HASH_TABLE: {
                             if (symbol.equalsIgnoreCase("=") || symbol.equalsIgnoreCase("!=")) {
                                 if (isUniqueValue) {
-                                    workingProductionCostVal = QueryCost.hashTableUnique();
-                                    workingProductionCost.append(QueryCostToString.hashTableUnique())
+                                    pipelinedProductionCost = QueryCost.hashTableUnique();
+                                    pipelinedProductionCostWork.append(QueryCostToString.hashTableUnique())
                                             .append("\n");
                                 } else {
-                                    workingProductionCostVal = QueryCost.hashTableNonUnique(selectivity);
-                                    workingProductionCost.append(QueryCostToString.hashTableNonUnique(selectivity))
-                                            .append("\n");
+                                    pipelinedProductionCost = QueryCost.hashTableNonUnique(selectivity);
+                                    pipelinedProductionCostWork
+                                            .append(QueryCostToString.hashTableNonUnique(selectivity)).append("\n");
                                 }
                             } else { // >, <, >=, <=
-                                workingProductionCostVal = QueryCost.hashTableRange();
-                                workingProductionCost.append(QueryCostToString.hashTableRange()).append("\n");
+                                pipelinedProductionCost = QueryCost.hashTableRange();
+                                pipelinedProductionCostWork.append(QueryCostToString.hashTableRange()).append("\n");
                             }
                             break;
                         }
@@ -1153,31 +1373,36 @@ public class Optimizer {
 
                     Projection projection = (Projection) operator;
                     List<String> columnNames = projection.getColumnNames();
-                    ResultSet resultSet = workingStack.pop().projection(columnNames);
-                    workingStack.push(resultSet);
+                    ResultSet resultSet = workingOperatorStack.pop().projection(columnNames);
+                    workingOperatorStack.push(resultSet);
 
-                    // get result set data (may or may not be used depending on the situation)
+                    // get result set data (will only be used if and only if the working production cost is empty
+                    // which means that it wasn't written to from previous operator nodes encountered)
                     int recordSize = QueryCost.recordSize(resultSet.getColumns());
                     int numRecords = QueryCost.numberRecords(resultSet.getData());
                     int blockingFactor = QueryCost.blockingFactor(recordSize);
                     int blocks = QueryCost.blocks(numRecords, blockingFactor);
 
-                    // will need to record the production cost only if the temp is empty
-                    if (workingProductionCost.length() == 0) {
-                        workingProductionCost.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
-                        workingProductionCost.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
-                        workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
-                        workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
+                    if (pipelinedProductionCostWork.length() == 0) {
+                        pipelinedProductionCostWork.append(QueryCostToString.recordSize(resultSet.getColumns()))
+                                .append("\n");
+                        pipelinedProductionCostWork.append(QueryCostToString.numberRecords(resultSet.getData()))
+                                .append("\n");
+                        pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                        pipelinedProductionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor))
+                                .append("\n");
                     }
 
-                    productionCostStack.push(workingProductionCost.toString());
-                    totalProductionCost += workingProductionCostVal;
+                    // add the working production cost to the stack to preserve correct pipelining ordering
+                    pipelinedProductionCostWorkStack.push(pipelinedProductionCostWork.toString());
+                    totalProductionCost += pipelinedProductionCost;
 
-                    workingProductionCostVal = 0;
-                    workingProductionCost = new StringBuilder();
+                    // reset these
+                    pipelinedProductionCost = 0;
+                    pipelinedProductionCostWork = new StringBuilder();
 
-                    // handle write to disk cost
-                    boolean lastProjection = startingStack.isEmpty();
+                    // handling write to disk cost which is more straight forward than production cost
+                    boolean lastProjection = operatorStack.isEmpty();
 
                     if (! lastProjection) {
 
@@ -1187,7 +1412,7 @@ public class Optimizer {
                         temp.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
                         temp.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
                         temp.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
-                        writeToDiskCostStack.push(temp.toString());
+                        pipelinedWriteToDiskCostWorkStack.push(temp.toString());
                     }
 
                     break;
@@ -1198,30 +1423,34 @@ public class Optimizer {
                     String firstJoinColumnName = innerJoin.getFirstJoinColumnName();
                     String joinSymbolName = innerJoin.getSymbol();
                     String secondJoinColumnName = innerJoin.getSecondJoinColumnName();
-                    ResultSet firstResultSet = workingStack.pop();
-                    ResultSet secondResultSet = workingStack.pop();
-                    workingStack.push(firstResultSet.innerJoin(
+                    ResultSet firstResultSet = workingOperatorStack.pop();
+                    ResultSet secondResultSet = workingOperatorStack.pop();
+                    workingOperatorStack.push(firstResultSet.innerJoin(
                             secondResultSet, firstJoinColumnName, joinSymbolName, secondJoinColumnName));
 
-                    // pop off the strings for the production and write to disk costs
-                    String blah1 = productionCostStack.pop();
-                    blah1 = "Produce " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
-                            ":\n\n" + blah1 + "\n----------------------------------------------------------------\n\n";
-                    productionCostWork.append(blah1);
-                    String meh1 = writeToDiskCostStack.pop();
-                    meh1 = "Write To Disk " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
-                            ":\n\n" + meh1 + "\n----------------------------------------------------------------\n\n";
-                    writeToDiskCostWork.append(meh1);
+                    // pop off the strings for the production and write to disk costs and add append these to the work
+                    String productionCostWorkTemp1 = pipelinedProductionCostWorkStack.pop();
+                    productionCostWorkTemp1 = "Produce " + PipelinedExpression.SYMBOL +
+                            PipelinedExpression.toSubscript(subscript) + ":\n\n" + productionCostWorkTemp1 +
+                            "\n----------------------------------------------------------------\n\n";
+                    productionCostWork.append(productionCostWorkTemp1);
+                    String writeToDiskCostWorkTemp1 = pipelinedWriteToDiskCostWorkStack.pop();
+                    writeToDiskCostWorkTemp1 = "Write To Disk " + PipelinedExpression.SYMBOL +
+                            PipelinedExpression.toSubscript(subscript) + ":\n\n" + writeToDiskCostWorkTemp1 +
+                            "\n----------------------------------------------------------------\n\n";
+                    writeToDiskCostWork.append(writeToDiskCostWorkTemp1);
                     subscript++;
 
-                    String blah2 = productionCostStack.pop();
-                    blah2 = "Produce " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
-                            ":\n\n" + blah2 + "\n----------------------------------------------------------------\n\n";
-                    productionCostWork.append(blah2);
-                    String meh2 = writeToDiskCostStack.pop();
-                    meh2 = "Write To Disk " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
-                            ":\n\n" + meh2 + "\n----------------------------------------------------------------\n\n";
-                    writeToDiskCostWork.append(meh2);
+                    String productionCostWorkTemp2 = pipelinedProductionCostWorkStack.pop();
+                    productionCostWorkTemp2 = "Produce " + PipelinedExpression.SYMBOL +
+                            PipelinedExpression.toSubscript(subscript) + ":\n\n" + productionCostWorkTemp2 +
+                            "\n----------------------------------------------------------------\n\n";
+                    productionCostWork.append(productionCostWorkTemp2);
+                    String writeToDiskCostWorkTemp2 = pipelinedWriteToDiskCostWorkStack.pop();
+                    writeToDiskCostWorkTemp2 = "Write To Disk " + PipelinedExpression.SYMBOL +
+                            PipelinedExpression.toSubscript(subscript) + ":\n\n" + writeToDiskCostWorkTemp2 +
+                            "\n----------------------------------------------------------------\n\n";
+                    writeToDiskCostWork.append(writeToDiskCostWorkTemp2);
                     subscript++;
 
                     Column firstJoinColumn = firstResultSet.getColumnFromColumnName(firstJoinColumnName);
@@ -1248,24 +1477,26 @@ public class Optimizer {
                     int secondColumnForeignKeySelectivity =
                             QueryCost.foreignKeySelectivity(secondTableNumRecords, firstTableNumRecords);
 
-                    workingProductionCost = new StringBuilder();
-                    workingProductionCost.append("First Relation:\n");
-                    workingProductionCost.append(QueryCostToString.recordSize(firstResultSet.getColumns()))
+                    pipelinedProductionCostWork = new StringBuilder();
+                    pipelinedProductionCostWork.append("First Relation (Left Subtree):\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.recordSize(firstResultSet.getColumns()))
                             .append("\n");
-                    workingProductionCost.append(QueryCostToString.numberRecords(firstResultSet.getData()))
+                    pipelinedProductionCostWork.append(QueryCostToString.numberRecords(firstResultSet.getData()))
                             .append("\n");
-                    workingProductionCost.append(QueryCostToString.blockingFactor(firstTableRecordSize)).append("\n");
-                    workingProductionCost.append(QueryCostToString.blocks(firstTableNumRecords,
+                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(firstTableRecordSize))
+                            .append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.blocks(firstTableNumRecords,
                             firstTableBlockingFactor));
-                    workingProductionCost.append("\n\n");
+                    pipelinedProductionCostWork.append("\n\n");
 
-                    workingProductionCost.append("Second Relation:\n");
-                    workingProductionCost.append(QueryCostToString.recordSize(secondResultSet.getColumns()))
+                    pipelinedProductionCostWork.append("Second Relation (Right Subtree):\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.recordSize(secondResultSet.getColumns()))
                             .append("\n");
-                    workingProductionCost.append(QueryCostToString.numberRecords(secondResultSet.getData()))
+                    pipelinedProductionCostWork.append(QueryCostToString.numberRecords(secondResultSet.getData()))
                             .append("\n");
-                    workingProductionCost.append(QueryCostToString.blockingFactor(secondTableRecordSize)).append("\n");
-                    workingProductionCost
+                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(secondTableRecordSize))
+                            .append("\n");
+                    pipelinedProductionCostWork
                             .append(QueryCostToString.blocks(secondTableNumRecords, secondTableBlockingFactor))
                             .append("\n\n");
 
@@ -1283,10 +1514,9 @@ public class Optimizer {
                     if (isClustered) {
 
                         int clusteredJoinCost = QueryCost.clusteredJoin(firstTableBlocks, secondTableBlocks);
-                        workingProductionCostVal = clusteredJoinCost;
+                        pipelinedProductionCost = clusteredJoinCost;
 
-                        workingProductionCost.append("Cluster Join:\n");
-                        workingProductionCost.append(QueryCostToString.clusteredJoin(firstTableBlocks,
+                        pipelinedProductionCostWork.append(QueryCostToString.clusteredFileJoin(firstTableBlocks,
                                 secondTableBlocks)).append("\n");
 
                     // not clustered
@@ -1298,10 +1528,9 @@ public class Optimizer {
                         if (noFileStructuresBuilt) {
 
                             int nestedLoopJoinCost = QueryCost.nestedLoopJoin(firstTableBlocks, secondTableBlocks);
-                            workingProductionCostVal = nestedLoopJoinCost;
+                            pipelinedProductionCost = nestedLoopJoinCost;
 
-                            workingProductionCost.append("Nested Loop Join:\n");
-                            workingProductionCost.append(QueryCostToString.nestedLoopJoin(firstTableBlocks,
+                            pipelinedProductionCostWork.append(QueryCostToString.nestedLoopJoin(firstTableBlocks,
                                     secondTableBlocks)).append("\n");
 
                         // has a file structure built on one of the columns, if both, choose lowest produced cost
@@ -1320,16 +1549,15 @@ public class Optimizer {
                                         secondColumnNumLevels, secondColumnForeignKeySelectivity);
                             }
 
-                            workingProductionCost.append("B-Tree Join:\n");
-
                             if (firstBTreeJoinCost < secondBTreeJoinCost) {
-                                workingProductionCostVal = firstBTreeJoinCost;
-                                workingProductionCost.append(QueryCostToString.bTreeJoin(secondTableBlocks,
+                                pipelinedProductionCost = firstBTreeJoinCost;
+                                pipelinedProductionCostWork.append(QueryCostToString.bTreeJoin(secondTableBlocks,
                                         secondTableNumRecords, firstColumnNumLevels, firstColumnForeignKeySelectivity))
                                 .append("\n");
+
                             } else {
-                                workingProductionCostVal = secondBTreeJoinCost;
-                                workingProductionCost.append(QueryCostToString.bTreeJoin(firstTableBlocks,
+                                pipelinedProductionCost = secondBTreeJoinCost;
+                                pipelinedProductionCostWork.append(QueryCostToString.bTreeJoin(firstTableBlocks,
                                         firstTableNumRecords, secondColumnNumLevels,
                                         secondColumnForeignKeySelectivity)).append("\n");
                             }
@@ -1340,25 +1568,25 @@ public class Optimizer {
                 }
                 case CARTESIAN_PRODUCT: {
 
-                    ResultSet firstResultSet = workingStack.pop();
-                    ResultSet secondResultSet = workingStack.pop();
+                    ResultSet firstResultSet = workingOperatorStack.pop();
+                    ResultSet secondResultSet = workingOperatorStack.pop();
                     ResultSet cartesianProduct = firstResultSet.cartesianProduct(secondResultSet);
-                    workingStack.push(cartesianProduct);
+                    workingOperatorStack.push(cartesianProduct);
 
                     int recordSize = QueryCost.recordSize(cartesianProduct.getColumns());
                     int numRecords = QueryCost.numberRecords(cartesianProduct.getData());
                     int blockingFactor = QueryCost.blockingFactor(recordSize);
                     int blocks = QueryCost.blocks(numRecords, blockingFactor);
 
-                    workingProductionCostVal = blocks;
+                    pipelinedProductionCost = blocks;
 
-                    workingProductionCost.append("Cartesian Product:\n");
-                    workingProductionCost.append(QueryCostToString.recordSize(cartesianProduct.getColumns()))
+                    pipelinedProductionCostWork.append(QueryCostToString.recordSize(cartesianProduct.getColumns()))
                             .append("\n");
-                    workingProductionCost.append(QueryCostToString.numberRecords(cartesianProduct.getData()))
+                    pipelinedProductionCostWork.append(QueryCostToString.numberRecords(cartesianProduct.getData()))
                             .append("\n");
-                    workingProductionCost.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
-                    workingProductionCost.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
+                    pipelinedProductionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor))
+                            .append("\n");
 
                     break;
                 }
@@ -1368,7 +1596,7 @@ public class Optimizer {
                     List<String> groupByColumnNames = aggregation.getGroupByColumnNames();
                     List<String> aggregationTypes = aggregation.getAggregationTypes();
                     List<String> aggregatedColumnNames = aggregation.getAggregatedColumnNames();
-                    workingStack.push(workingStack.pop().aggregate(
+                    workingOperatorStack.push(workingOperatorStack.pop().aggregate(
                             groupByColumnNames, aggregationTypes, aggregatedColumnNames));
 
                     break;
@@ -1380,7 +1608,7 @@ public class Optimizer {
                     List<String> aggregatedColumnNames = aggregateSelection.getColumnNames();
                     List<String> symbols = aggregateSelection.getSymbols();
                     List<String> values = aggregateSelection.getValues();
-                    workingStack.push(workingStack.pop().having(
+                    workingOperatorStack.push(workingOperatorStack.pop().having(
                             aggregationTypes, aggregatedColumnNames, symbols, values));
 
                     break;
@@ -1388,10 +1616,10 @@ public class Optimizer {
             }
         }
 
-        String blah2 = productionCostStack.pop();
-        blah2 = "Produce" + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
-                ":\n\n" + blah2 + "\n----------------------------------------------------------------\n\n";
-        productionCostWork.append(blah2);
+        String finalRelationWork = pipelinedProductionCostWorkStack.pop();
+        finalRelationWork = "Produce " + PipelinedExpression.SYMBOL + PipelinedExpression.toSubscript(subscript) +
+                ":\n\n" + finalRelationWork + "\n----------------------------------------------------------------\n\n";
+        productionCostWork.append(finalRelationWork);
 
         return new Quadruple<>(totalProductionCost, totalWriteToDiskCost,
                 productionCostWork.toString(), writeToDiskCostWork.toString());

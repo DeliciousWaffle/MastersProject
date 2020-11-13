@@ -1,10 +1,13 @@
 package utilities;
 
+import datastructures.misc.Pair;
 import datastructures.misc.Triple;
 import datastructures.querytree.operator.types.*;
 import datastructures.relation.table.Table;
 import datastructures.querytree.QueryTree;
 import datastructures.querytree.operator.Operator;
+import datastructures.relation.table.component.Column;
+import datastructures.relation.table.component.FileStructure;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -383,7 +386,8 @@ public final class OptimizerUtilities {
      * @param recommendedFileStructures is a list of triplets containing table name, column name, and file
      * structure in that order
      */
-    public static int hasFileStructureConflictAtIndex(Triple<String, String, String> candidate, List<Triple<String, String, String>> recommendedFileStructures) {
+    public static int getFileStructureConflictLocation(Triple<String, String, String> candidate,
+                                                       List<Triple<String, String, String>> recommendedFileStructures) {
 
         String candidateTableName = candidate.getFirst();
         String candidateColumnName = candidate.getSecond();
@@ -400,6 +404,75 @@ public final class OptimizerUtilities {
         }
 
         return -1;
+    }
+
+    public static List<Triple<String, String,String>> distinctFileStructures(
+            List<Triple<String, String, String>> recommendedFileStructures) {
+
+        List<Triple<String, String, String>> distinctFileStructures = new ArrayList<>();
+
+        for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
+            boolean containsRecommendedFileStructure = false;
+            for (Triple<String, String, String> distinctFileStructure : distinctFileStructures) {
+                boolean isEqual =
+                        recommendedFileStructure.getFirst().equalsIgnoreCase(distinctFileStructure.getFirst()) &&
+                        recommendedFileStructure.getSecond().equalsIgnoreCase(distinctFileStructure.getSecond()) &&
+                        recommendedFileStructure.getThird().equalsIgnoreCase(distinctFileStructure.getThird());
+                if (isEqual) {
+                    containsRecommendedFileStructure = true;
+                    break;
+                }
+            }
+            if (! containsRecommendedFileStructure) {
+                distinctFileStructures.add(recommendedFileStructure);
+            }
+        }
+
+        return distinctFileStructures;
+    }
+
+    public static void removeAllFileStructures(List<Table> tables) {
+        for (Table table : tables) {
+            for (Column column : table.getColumns()) {
+                column.setFileStructure(FileStructure.NONE);
+            }
+        }
+    }
+
+    /**
+     * Doesn't keep inverted table names eg. <T1, T2> and <T2, T1>
+     * @param tableNames
+     * @return
+     */
+    public static List<Pair<String, String>> getAllPossibleTablePairs(List<String> tableNames) {
+
+        List<Pair<String, String>> allPossibleTablePairs = new ArrayList<>();
+
+        for (String currentTableName : tableNames) {
+            for (String tableName : tableNames) {
+
+                if (currentTableName.equalsIgnoreCase(tableName)) {
+                    continue;
+                }
+
+                Pair<String, String> toAdd = new Pair<>(currentTableName, tableName);
+                boolean isSwappedDuplicate = false;
+
+                for (Pair<String, String> tablePair : allPossibleTablePairs) {
+                    if (tablePair.getFirst().equalsIgnoreCase(toAdd.getSecond()) &&
+                            tablePair.getSecond().equalsIgnoreCase(toAdd.getFirst())) {
+                        isSwappedDuplicate = true;
+                        break;
+                    }
+                }
+
+                if (! isSwappedDuplicate) {
+                    allPossibleTablePairs.add(toAdd);
+                }
+            }
+        }
+
+        return allPossibleTablePairs;
     }
 
     /**

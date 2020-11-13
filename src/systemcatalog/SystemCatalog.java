@@ -163,7 +163,8 @@ public class SystemCatalog {
                 queryTreeStates = optimizer.getQueryTreeStates(filteredInput, tables);
                 naiveRelationalAlgebra = optimizer.getNaiveRelationAlgebra(queryTreeStates);
                 optimizedRelationalAlgebra = optimizer.getOptimizedRelationalAlgebra(queryTreeStates);
-                recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates, verifier.isOn());
+                recommendedFileStructures = optimizer.getRecommendedFileStructures(queryTreeStates, tables,
+                        verifier.isOn());
                 costAnalysis = optimizer.getCostAnalysis(queryTreeStates, tables, verifier.isOn());
             }
 

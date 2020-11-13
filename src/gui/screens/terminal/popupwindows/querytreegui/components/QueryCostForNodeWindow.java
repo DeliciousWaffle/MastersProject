@@ -33,7 +33,7 @@ public class QueryCostForNodeWindow extends Stage {
 
 
         // title text
-        Text titleText = new Text("Query Costs For " + node);
+        Text titleText = new Text("Query Costs Of Subtree " + node);
         titleText.setFont(new Font(75.0));
         titleText.setFill(Color.WHITE);
         titleText.setSmooth(true);
@@ -116,7 +116,7 @@ public class QueryCostForNodeWindow extends Stage {
             overallContainer.setPrefHeight(newHeight);
         });
 
-        this.setTitle("Query Costs For " + node);
+        this.setTitle("Query Costs Of Subtree " + node);
         this.setScene(scene);
         this.show();
     }
