@@ -1,6 +1,7 @@
 package gui.screens.terminal.popupwindows;
 
 import datastructures.querytree.QueryTree;
+import datastructures.querytree.operator.types.PipelinedExpression;
 import files.io.FileType;
 import files.io.IO;
 import gui.screens.terminal.popupwindows.querytreegui.QueryTreeGUI;
@@ -151,7 +152,8 @@ public class QueryTreeWindow extends Stage {
         movedDownProjections.setOnAction(e -> new QueryTreeOptimizationHeuristicWindows.MovedDownProjections());
 
         // identifying subtrees that can be pipelined
-        Button pipeliningSubtrees = new Button("Pipelining Subtrees");
+        Button pipeliningSubtrees = new Button("Pipelining Subtrees (Click on a " + PipelinedExpression.SYMBOL +
+                " Node)");
         pipeliningSubtrees.setOnAction(e -> new QueryTreeOptimizationHeuristicWindows.PipeliningSubtrees());
 
         // making the list and adding all the labels

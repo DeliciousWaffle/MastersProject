@@ -22,17 +22,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import systemcatalog.SystemCatalog;
-import utilities.OptimizerUtilities;
 import utilities.Utilities;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class RecommendedFileStructuresWindow extends Stage {
 
-    // recommended file structures -> column name, table name, file structure
-    // clustered tables -> table name, table name
     public RecommendedFileStructuresWindow(List<Triple<String, String, String>> recommendedFileStructures,
                                            List<Pair<String, String>> clusteredTables, SystemCatalog systemCatalog,
                                            ScreenController screenController) {
@@ -141,7 +137,6 @@ public class RecommendedFileStructuresWindow extends Stage {
             overallContainer.getChildren().add(clusteredTablePaneArea);
         }
 
-
         // if the user wishes to build these recommended file structures
         // only create this if the verifier is on
         if (systemCatalog.isVerifierOn()) {
@@ -152,11 +147,23 @@ public class RecommendedFileStructuresWindow extends Stage {
 
             buildRecommendedFileStructuresButton.setOnAction(e -> {
 
+                buildRecommendedFileStructuresButton.setText("File Structures Built!");
+
                 for (Triple<String, String, String> recommendedFileStructure : recommendedFileStructures) {
 
                     String tableName = recommendedFileStructure.getFirst();
                     String columnName = recommendedFileStructure.getSecond();
                     String fileStructure = recommendedFileStructure.getThird();
+
+                    // remove any clustering if there is any
+                    systemCatalog.getTables().forEach(table -> {
+                        if (table.getTableName().equalsIgnoreCase(tableName)) {
+                            table.setClusteredWith("none");
+                        }
+                        if (table.getClusteredWithTableName().equalsIgnoreCase(tableName)) {
+                            table.setClusteredWith("none");
+                        }
+                    });
 
                     Table referencedTable = Utilities.getReferencedTable(tableName, systemCatalog.getTables());
                     assert referencedTable != null;
@@ -172,6 +179,9 @@ public class RecommendedFileStructuresWindow extends Stage {
                             break;
                         case "Secondary B-Tree":
                             referencedColumn.setFileStructure(FileStructure.SECONDARY_B_TREE);
+                            break;
+                        case "No File Structure":
+                            referencedColumn.setFileStructure(FileStructure.NONE);
                             break;
                     }
                 }

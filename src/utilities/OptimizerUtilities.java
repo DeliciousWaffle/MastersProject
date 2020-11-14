@@ -437,6 +437,7 @@ public final class OptimizerUtilities {
                 column.setFileStructure(FileStructure.NONE);
             }
         }
+        tables.forEach(table -> table.setClusteredWith("none"));
     }
 
     /**
@@ -444,7 +445,7 @@ public final class OptimizerUtilities {
      * @param tableNames
      * @return
      */
-    public static List<Pair<String, String>> getAllPossibleTablePairs(List<String> tableNames) {
+    public static List<Pair<String, String>> getTablePairs(List<String> tableNames) {
 
         List<Pair<String, String>> allPossibleTablePairs = new ArrayList<>();
 

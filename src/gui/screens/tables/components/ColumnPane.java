@@ -122,10 +122,10 @@ public class ColumnPane {
                         }
                     });
                 }
-                // force refresh
-                screenController.refresh(systemCatalog);
-                screenController.setScreen(Screen.Type.TABLES_SCREEN);
             }
+            // force refresh
+            screenController.refresh(systemCatalog);
+            screenController.setScreen(Screen.Type.TABLES_SCREEN);
         });
 
         columnPane = new BorderPane();

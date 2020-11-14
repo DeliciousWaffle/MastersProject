@@ -29,7 +29,7 @@ import java.util.List;
  */
 public final class QueryCost {
 
-    public static final int BLOCK_SIZE = 1024;
+    public static final int BLOCK_SIZE = 128;
 
     // can't instantiate me!
     private QueryCost() {}

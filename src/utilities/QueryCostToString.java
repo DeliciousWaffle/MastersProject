@@ -290,7 +290,7 @@ public final class QueryCostToString {
 
     public static String clusteredFileJoin(int table1Blocks, int table2Blocks) {
         return "Clustered File Join = bR + bS\n" +
-                "Clustered File Join = " + table1Blocks + " + " + table2Blocks +
+                "Clustered File Join = " + table1Blocks + " + " + table2Blocks + "\n" +
                 "Clustered File Join = " + QueryCost.clusteredJoin(table1Blocks, table2Blocks);
     }
 }

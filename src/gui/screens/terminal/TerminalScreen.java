@@ -336,7 +336,6 @@ public class TerminalScreen extends Screen {
             super.adjustButtonWidth(newWidth);
             double scaleX = newWidth / Screen.defaultWidth;
             contentLayout.setScaleX(newWidth > Screen.defaultWidth ? scaleX : 1.0);
-
         });
 
         terminalScreen.heightProperty().addListener((observable, oldValue, newValue) -> {
