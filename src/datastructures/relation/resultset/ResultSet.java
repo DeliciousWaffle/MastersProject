@@ -353,7 +353,6 @@ public class ResultSet {
         // copy the columns to keep
         List<Column> joinColumns = new ArrayList<>();
         cartesianProductResultSet.columns.forEach(column -> joinColumns.add(new Column(column)));
-
         // get the index locations of the columns to perform the join on
         int firstColumnIndex = cartesianProductResultSet.getColumnLocation(
                 cartesianProductResultSet.getColumnFromColumnName(firstColumnToJoin));

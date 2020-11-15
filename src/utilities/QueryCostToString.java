@@ -185,7 +185,7 @@ public final class QueryCostToString {
     }
 
     public static String clusteredBTreeRange(int levels, int terminalLevelNodes) {
-        return "Cost Clustered B-Tree Range = L + bL/2" +
+        return "Cost Clustered B-Tree Range = L + bL/2\n" +
                 "Cost Clustered B-Tree Range = " + levels + " + " + terminalLevelNodes + "/2\n" +
                 "Cost Clustered B-Tree Range = " + QueryCost.clusteredBTreeRange(levels, terminalLevelNodes);
     }

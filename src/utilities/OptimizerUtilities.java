@@ -204,7 +204,7 @@ public final class OptimizerUtilities {
                 SimpleSelection currentSimpleSelection = (SimpleSelection) selections.get(i);
                 String value = currentSimpleSelection.getValue();
 
-                if (value.contains(".")) {
+                if (value.contains(".") && ! Utilities.isNumeric(value)) {
                     selectionsWithJoinConditions.add(selections.remove(i));
                     madeModification = true;
                     break;

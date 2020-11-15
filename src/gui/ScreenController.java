@@ -42,7 +42,7 @@ public class ScreenController {
      * @param screen is the screen to display
      */
     public void setScreen(Screen.Type screen) {
-        switch(screen) {
+        switch (screen) {
             case TERMINAL_SCREEN:
                 primaryStage.setScene(terminalScreen.getScreen());
                 primaryStage.show();
@@ -66,7 +66,9 @@ public class ScreenController {
         }
     }
 
-    // a bit of a hack to refresh data that might have been modified during execution of the input
+    /**
+     * Refreshes data that might have changed during execution of input.
+     */
     public void refresh(SystemCatalog systemCatalog) {
         tablesScreen = new TablesScreen(this, systemCatalog);
         usersScreen = new UsersScreen(this, systemCatalog);

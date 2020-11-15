@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Note that none of the commands end with a ";", this gets automatically removed when retrieving
  * input from the terminal and is unnecessary here.
  */
-class ParserTest {
+public class ParserTest {
 
     private static Parser parser;
 

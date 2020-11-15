@@ -78,12 +78,13 @@ public class Optimizer {
         QueryTree afterPushingDownSelections = pushDownSelections(new QueryTree(afterCascadingSelections));
         QueryTree afterFormingJoins = formJoins(new QueryTree(afterPushingDownSelections));
         QueryTree afterPushingDownProjections = pushDownProjections(new QueryTree(afterFormingJoins));
-        QueryTree afterRearrangingJoins = rearrangeJoins(new QueryTree(afterFormingJoins), filteredInput, tables);
-        List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterPushingDownProjections));
+        QueryTree afterRearrangingJoins = rearrangeJoins(new QueryTree(afterPushingDownProjections), filteredInput,
+                tables);
+        List<QueryTree> afterPipeliningSubtrees = pipelineSubtrees(new QueryTree(afterRearrangingJoins));
 
         List<QueryTree> queryTreeStates = new ArrayList<>(Arrays.asList(
                 queryTree, afterCascadingSelections, afterPushingDownSelections, afterFormingJoins,
-                afterRearrangingJoins, afterPushingDownProjections
+                afterPushingDownProjections, afterRearrangingJoins
         ));
 
         queryTreeStates.addAll(afterPipeliningSubtrees);
@@ -314,8 +315,7 @@ public class Optimizer {
         }
 
         // get a list of selections that contain join conditions, these will be dealt with later
-        List<Operator> selectionsWithJoinConditions =
-                OptimizerUtilities.getSelectionsWithJoinConditions(simpleSelections);
+        List<Operator> selectionsWithJoinConditions = getSelectionsWithJoinConditions(simpleSelections);
 
         // place the remaining selections right above their respective relations
         Map<Operator, List<QueryTree.Traversal>> relationsAndLocations =
@@ -595,7 +595,7 @@ public class Optimizer {
      */
     public QueryTree rearrangeJoins(QueryTree queryTree, String[] input, List<Table> tables) {
 
-        if (!isJoinOptimizationOn) {
+        if (! isJoinOptimizationOn) {
             return new QueryTree(queryTree);
         }
 
@@ -604,7 +604,7 @@ public class Optimizer {
         boolean hasOneOrLessInnerJoins = queryTree.getTypeOccurrence(INNER_JOIN) <= 1;
 
         if (hasOneRelation || hasOneOrLessInnerJoins) {
-            return queryTree;
+            return new QueryTree(queryTree);
         }
 
         // permuting a list of all possible relation locations which will produce a list of all
@@ -615,11 +615,12 @@ public class Optimizer {
 
         List<QueryTree> permutedQueryTrees = new ArrayList<>();
 
-        for (int i = 0; i < permutedTableNames.size(); i++) {
-            QueryTree permutedQueryTree = createQueryTree(input, tables, permutedTableNames.get(i));
+        for (List<String> permutedTableName : permutedTableNames) {
+            QueryTree permutedQueryTree = createQueryTree(input, tables, permutedTableName);
             permutedQueryTree = cascadeSelections(permutedQueryTree);
             permutedQueryTree = pushDownSelections(permutedQueryTree);
             permutedQueryTree = formJoins(permutedQueryTree);
+            permutedQueryTree = pushDownProjections(permutedQueryTree);
             permutedQueryTrees.add(permutedQueryTree);
         }
 
@@ -628,38 +629,31 @@ public class Optimizer {
 
         // finding the query tree that executes its smallest relations first
         QueryTree smallestPermutedQueryTree = permutedQueryTrees.get(0);
-        int smallestBlockingSize = Integer.MAX_VALUE;
+        int smallestProductionCost = Integer.MAX_VALUE;
+
+        // creating a deep copy of the system tables and removing any file structures built, if any
+        List<Table> tablesCopy = tables
+                .stream()
+                .map(Table::new)
+                .collect(Collectors.toList());
+
+        removeAllFileStructures(tablesCopy);
 
         for (QueryTree permutedQueryTree : permutedQueryTrees) {
+            // there might be some bad apples generated through permutation, only worry about the valid ones
+            try {
+                int productionCost = getCostAnalysis(Arrays.asList(permutedQueryTree), tablesCopy, true)
+                        .getFirst();
+                if (productionCost < smallestProductionCost) {
+                    smallestPermutedQueryTree = permutedQueryTree;
+                    smallestProductionCost = productionCost;
+                }
+            } catch (Exception e) {
 
-            // mapping each relation to the number of blocks it contains
-            List<Integer> blockSizeOfEachTableInPermutedQueryTree =
-                    permutedQueryTree.getOperatorsAndLocationsOfType(RELATION, PREORDER)
-                    .keySet()
-                    .stream()
-                    .map(relation -> ((Relation) relation).getTableName())
-                    .map(tableName -> Utilities.getReferencedTable(tableName, tables))
-                    .map(table -> {
-                        assert table != null;
-                        int recordSize = QueryCost.recordSize(table.getColumns());
-                        int numRecords = QueryCost.numberRecords(table.getTableData().getData());
-                        int blockingFactor = QueryCost.blockingFactor(recordSize);
-                        return QueryCost.blocks(numRecords, blockingFactor);
-                    })
-                    .collect(Collectors.toList());
-
-            // this is not a perfect science, just adding the deepest tables blocks together first
-            // and if there are matches, choose the query with the largest table that's executed last
-            int leftDeepNodeBlocks = blockSizeOfEachTableInPermutedQueryTree.get(0);
-            int rightDeepNodeBlocks = blockSizeOfEachTableInPermutedQueryTree.get(1);
-
-            if (leftDeepNodeBlocks + rightDeepNodeBlocks < smallestBlockingSize) {
-                smallestBlockingSize = leftDeepNodeBlocks + rightDeepNodeBlocks;
-                smallestPermutedQueryTree = permutedQueryTree;
             }
         }
 
-        return smallestPermutedQueryTree;
+        return new QueryTree(smallestPermutedQueryTree);
     }
 
     /**
@@ -1082,7 +1076,7 @@ public class Optimizer {
         );
 
         // composed of the table pair along with its cost, gets added to if the cost of clustering is lower than
-        // building the file structures
+        // that of building the file structures
         List<Triple<String, String, Integer>> tablePairsWithCostsToKeep = new ArrayList<>();
 
         for (Pair<String, String> tablePair : tablePairs) {
@@ -1101,6 +1095,7 @@ public class Optimizer {
 
             int productionCostWithClustering = getCostAnalysis(queryTreeStates, tablesCopy, true).getFirst();
 
+            // the cost with clustering is lower than that of building file structures, add that pair
             if (productionCostWithClustering < productionCostWithoutClustering) {
                 tablePairsWithCostsToKeep.add(new Triple<>(firstTableName, secondTableName,
                         productionCostWithClustering));
@@ -1108,85 +1103,67 @@ public class Optimizer {
         }
 
         // if there are any conflicts (stuff like <T1, T2> and <T2, T3> because of T2) choose the lowest costing one
-        // from the table pairs to keep for clustering
 
-        // getting each distinct FIRST table name eg. [<T1, T2>, <T1, T3>, <T2, T3>, <T3, T4>] -> [T1, T2, T3]
-        List<Pair<String, String, Integer>> lowestFirstTableOfPair = new ArrayList<>();
-        List<String> distinctTableNames = tablePairsWithCostsToKeep
+        // getting each distinct table that appears first in the pair
+        // transforms something like this [<T1, T2>, <T1, T3>, <T2, T3>, <T3, T4>] to this [T1, T2, T3]
+        List<String> distinctFirstTables = tablePairsWithCostsToKeep
                 .stream()
                 .map(Triple::getFirst)
                 .distinct()
                 .collect(Collectors.toList());
 
-        for (String distinctTableName : distinctTableNames) {
+        // keep the lowest costing conflicts
+        List<Triple<String, String, Integer>> lowestCostingPairs = new ArrayList<>();
 
-            Triple<String, String, Integer> lowestCosting = null;
-            int lowestCostingCost = Integer.MAX_VALUE;
+        for (String distinctFirstTable : distinctFirstTables) {
 
-            for (Triple<String, String, Integer> tablePairWithCost : tablePairsWithCostsToKeep) {
+            Triple<String, String, Integer> lowestCostingPair = null;
+            int lowestCostingPairsCost = Integer.MAX_VALUE;
 
-                String firstTableName = tablePairWithCost.getFirst();
-                int costOfPair = tablePairWithCost.getThird();
+            for (Triple<String, String, Integer> tablePairWithCostToKeep : tablePairsWithCostsToKeep) {
 
-                if (firstTableName.equalsIgnoreCase(distinctTableName)) {
-                    if (costOfPair < lowestCostingCost) {
-                        lowestCosting = tablePairWithCost;
-                        lowestCostingCost = costOfPair;
-                    }
+                String firstTable = tablePairWithCostToKeep.getFirst();
+                int costOfPair = tablePairWithCostToKeep.getThird();
+
+                if (firstTable.equalsIgnoreCase(distinctFirstTable) && costOfPair < lowestCostingPairsCost) {
+                    lowestCostingPair = tablePairWithCostToKeep;
+                    lowestCostingPairsCost = costOfPair;
                 }
             }
-// TODO finish up the second table name thing for query cost, double check the costs, continue optimizer testing
-            assert lowestCosting != null;
-            lowestFirstTableOfPair.add(lowestCosting);
+
+            assert lowestCostingPair != null && lowestCostingPairsCost != Integer.MAX_VALUE;
+            lowestCostingPairs.add(lowestCostingPair);
         }
 
-        // doing something similar, except looking at the second table name
-        List<String> distinctSecondTableNames = lowestFirstTableOfPair
+        // doing something similar as above, except looking at the second table present in the lowest cost pairs
+        List<String> distinctSecondTables = lowestCostingPairs
                 .stream()
                 .map(Triple::getSecond)
                 .distinct()
                 .collect(Collectors.toList());
 
+        // keep the lowest costing conflicts
+        List<Pair<String, String>> clusteredTables = new ArrayList<>();
 
+        for (String distinctSecondTable : distinctSecondTables) {
 
-        /*List<Pair<String, String>> clusteredTablesToKeep = new ArrayList<>();
+            Pair<String, String> clusteredTable = null;
+            int lowestClusteredTable = Integer.MAX_VALUE;
 
-        for (int i = 0; i < clusteredTables.size(); i++) {
+            for (Triple<String, String, Integer> lowestCostingPair : lowestCostingPairs) {
 
-            Pair<String, String> tablePair = clusteredTables.get(i);
-            int costOfTablePair = clusteredTablesCost.get(i);
+                String secondTable = lowestCostingPair.getSecond();
+                int costOfPair = lowestCostingPair.getThird();
 
-            // check each other table pair to see if it conflicts with this one
-            for (int j = 0; j < clusteredTables.size(); j++) {
-
-                if (i == j) {
-                    continue;
-                }
-
-                Pair<String, String> tablePairToCheck = clusteredTables.get(j);
-                int costOfPairToCheck = clusteredTablesCost.get(j);
-
-                boolean hasConflict = tablePair.getFirst().equalsIgnoreCase(tablePairToCheck.getFirst()) ||
-                        tablePair.getFirst().equalsIgnoreCase(tablePairToCheck.getSecond()) ||
-                        tablePair.getSecond().equalsIgnoreCase(tablePairToCheck.getFirst()) ||
-                        tablePair.getSecond().equalsIgnoreCase(tablePairToCheck.getSecond());
-
-                if (hasConflict) {
-                    if (costOfTablePair < costOfPairToCheck) {
-                        clusteredTablesToKeep.add(tablePair);
-                    } else {
-                        clusteredTablesToKeep.add(tablePairToCheck);
-                    }
+                if (secondTable.equalsIgnoreCase(distinctSecondTable) && costOfPair < lowestClusteredTable) {
+                    clusteredTable = new Pair<>(lowestCostingPair.getFirst(), lowestCostingPair.getSecond());
+                    lowestClusteredTable = costOfPair;
                 }
             }
-        }*/
 
-        //System.out.println(clusteredTablesToKeep);
-        // may have duplicates?
-        clusteredTables = lowestFirstTableOfPair
-                .stream()
-                .distinct()
-                .collect(Collectors.toList());
+            assert clusteredTable != null && lowestClusteredTable != Integer.MAX_VALUE;
+            clusteredTables.add(clusteredTable);
+        }
 
         return new Pair<>(recommendedFileStructures, clusteredTables);
     }
@@ -1209,7 +1186,10 @@ public class Optimizer {
             return new Quadruple<>(0, 0, "", "");
         }
 
-        QueryTree queryTreeBeforePipelining = queryTreeStates.get(5);
+        // handle method called from rearrangeJoins which will only contain a single tree, otherwise get at ind 5
+        QueryTree queryTreeBeforePipelining = queryTreeStates.size() == 1
+                ? queryTreeStates.get(0)
+                : queryTreeStates.get(5);
 
         // the stuff to return
         int totalProductionCost = 0;
@@ -1233,8 +1213,8 @@ public class Optimizer {
         int pipelinedProductionCost = 0;
 
         // when performing a join or cartesian product, this will hold the max number of records of the two
-        // those two relations
-        int maxNumRecs = 0;
+        // those two relations, this will be used to obtain r, was previously using the result set data which is no no
+        int maxNumRecsFromJoining = 0;
 
         while (! operatorStack.isEmpty()) {
 
@@ -1434,15 +1414,18 @@ public class Optimizer {
                     // get result set data (will only be used if and only if the working production cost is empty
                     // which means that it wasn't written to from previous operator nodes encountered)
                     int recordSize = QueryCost.recordSize(resultSet.getColumns());
-                    int numRecords = QueryCost.numberRecords(resultSet.getData());
+                    int numRecords = maxNumRecsFromJoining == 0
+                            ? QueryCost.numberRecords(resultSet.getData())
+                            : maxNumRecsFromJoining;
                     int blockingFactor = QueryCost.blockingFactor(recordSize);
                     int blocks = QueryCost.blocks(numRecords, blockingFactor);
 
                     if (pipelinedProductionCostWork.length() == 0) {
                         pipelinedProductionCostWork.append(QueryCostToString.recordSize(resultSet.getColumns()))
                                 .append("\n");
-                        pipelinedProductionCostWork.append(QueryCostToString.numberRecords(resultSet.getData()))
-                                .append("\n");
+                        pipelinedProductionCostWork.append(maxNumRecsFromJoining == 0
+                                ? QueryCostToString.numberRecords(resultSet.getData())
+                                : "r = " + maxNumRecsFromJoining).append("\n");
                         pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
                         pipelinedProductionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor))
                                 .append("\n");
@@ -1464,7 +1447,9 @@ public class Optimizer {
                         totalWriteToDiskCost += blocks;
                         StringBuilder temp = new StringBuilder();
                         temp.append(QueryCostToString.recordSize(resultSet.getColumns())).append("\n");
-                        temp.append(QueryCostToString.numberRecords(resultSet.getData())).append("\n");
+                        temp.append(maxNumRecsFromJoining == 0
+                                ? QueryCostToString.numberRecords(resultSet.getData())
+                                : "r = " + maxNumRecsFromJoining).append("\n");
                         temp.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
                         temp.append(QueryCostToString.blocks(numRecords, blockingFactor)).append("\n");
                         pipelinedWriteToDiskCostWorkStack.push(temp.toString());
@@ -1512,26 +1497,36 @@ public class Optimizer {
                     Column firstJoinColumn = innerJoinResultSet.getColumnFromColumnName(firstJoinColumnName);
                     Column secondJoinColumn = innerJoinResultSet.getColumnFromColumnName(secondJoinColumnName);
 
-                    int firstTableRecordSize = QueryCost.recordSize(firstResultSet.getColumns());
-                    int firstTableNumRecords = QueryCost.numberRecords(firstResultSet.getData());
-                    int firstTableBlockingFactor = QueryCost.blockingFactor(firstTableRecordSize);
-                    int firstTableBlocks = QueryCost.blocks(firstTableNumRecords, firstTableBlockingFactor);
+                    int firstResultSetRecordSize = QueryCost.recordSize(firstResultSet.getColumns());
+                    // only use the result set if this is the first join, otherwise, use the max number of records
+                    // that can be generated from previous joins (a more realistic approach to estimation)
+                    int firstResultSetNumRecords = maxNumRecsFromJoining == 0
+                            ? QueryCost.numberRecords(firstResultSet.getData()) // (this is the 1st join)
+                            : maxNumRecsFromJoining; // (this is not the first join)
+                    int firstResultSetBlockingFactor = QueryCost.blockingFactor(firstResultSetRecordSize);
+                    int firstResultSetBlocks = QueryCost.blocks(firstResultSetNumRecords, firstResultSetBlockingFactor);
 
-                    int secondTableRecordSize = QueryCost.recordSize(secondResultSet.getColumns());
-                    int secondTableNumRecords = QueryCost.numberRecords(secondResultSet.getData());
-                    int secondTableBlockingFactor = QueryCost.blockingFactor(secondTableRecordSize);
-                    int secondTableBlocks = QueryCost.blocks(secondTableNumRecords, secondTableBlockingFactor);
+                    int secondResultSetRecordSize = QueryCost.recordSize(secondResultSet.getColumns());
+                    int secondResultSetNumRecords = QueryCost.numberRecords(secondResultSet.getData());
+                    int secondResultSetBlockingFactor = QueryCost.blockingFactor(secondResultSetRecordSize);
+                    int secondResultSetBlocks = QueryCost.blocks(secondResultSetNumRecords,
+                            secondResultSetBlockingFactor);
+
+                    // update this for future reference if joining again
+                    maxNumRecsFromJoining = maxNumRecsFromJoining == 0
+                            ? Math.max(firstResultSetNumRecords, secondResultSetNumRecords)
+                            : Math.max(maxNumRecsFromJoining, secondResultSetNumRecords);
 
                     int firstColumnDegree = QueryCost.degree(firstJoinColumn.size());
-                    int firstColumnNumLevels = QueryCost.levels(firstTableNumRecords, firstColumnDegree);
+                    int firstColumnNumLevels = QueryCost.levels(firstResultSetNumRecords, firstColumnDegree);
 
                     int secondColumnDegree = QueryCost.degree(secondJoinColumn.size());
-                    int secondColumnNumLevels = QueryCost.levels(secondTableNumRecords, secondColumnDegree);
+                    int secondColumnNumLevels = QueryCost.levels(secondResultSetNumRecords, secondColumnDegree);
 
                     int firstColumnForeignKeySelectivity =
-                            QueryCost.foreignKeySelectivity(firstTableNumRecords, secondTableNumRecords);
+                            QueryCost.foreignKeySelectivity(firstResultSetNumRecords, secondResultSetNumRecords);
                     int secondColumnForeignKeySelectivity =
-                            QueryCost.foreignKeySelectivity(secondTableNumRecords, firstTableNumRecords);
+                            QueryCost.foreignKeySelectivity(secondResultSetNumRecords, firstResultSetNumRecords);
 
                     pipelinedProductionCostWork = new StringBuilder();
                     pipelinedProductionCostWork.append("First Relation (Left Subtree):\n");
@@ -1539,10 +1534,10 @@ public class Optimizer {
                             .append("\n");
                     pipelinedProductionCostWork.append(QueryCostToString.numberRecords(firstResultSet.getData()))
                             .append("\n");
-                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(firstTableRecordSize))
+                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(firstResultSetRecordSize))
                             .append("\n");
-                    pipelinedProductionCostWork.append(QueryCostToString.blocks(firstTableNumRecords,
-                            firstTableBlockingFactor));
+                    pipelinedProductionCostWork.append(QueryCostToString.blocks(firstResultSetNumRecords,
+                            firstResultSetBlockingFactor));
                     pipelinedProductionCostWork.append("\n\n");
 
                     pipelinedProductionCostWork.append("Second Relation (Right Subtree):\n");
@@ -1550,10 +1545,10 @@ public class Optimizer {
                             .append("\n");
                     pipelinedProductionCostWork.append(QueryCostToString.numberRecords(secondResultSet.getData()))
                             .append("\n");
-                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(secondTableRecordSize))
+                    pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(secondResultSetRecordSize))
                             .append("\n");
                     pipelinedProductionCostWork
-                            .append(QueryCostToString.blocks(secondTableNumRecords, secondTableBlockingFactor))
+                            .append(QueryCostToString.blocks(secondResultSetNumRecords, secondResultSetBlockingFactor))
                             .append("\n\n");
 
                     Table firstTable = Utilities.getReferencedTable(
@@ -1569,11 +1564,11 @@ public class Optimizer {
 
                     if (isClustered) {
 
-                        int clusteredJoinCost = QueryCost.clusteredJoin(firstTableBlocks, secondTableBlocks);
+                        int clusteredJoinCost = QueryCost.clusteredJoin(firstResultSetBlocks, secondResultSetBlocks);
                         pipelinedProductionCost = clusteredJoinCost;
 
-                        pipelinedProductionCostWork.append(QueryCostToString.clusteredFileJoin(firstTableBlocks,
-                                secondTableBlocks)).append("\n");
+                        pipelinedProductionCostWork.append(QueryCostToString.clusteredFileJoin(firstResultSetBlocks,
+                                secondResultSetBlocks)).append("\n");
 
                     // not clustered
                     } else {
@@ -1583,11 +1578,12 @@ public class Optimizer {
 
                         if (noFileStructuresBuilt) {
 
-                            int nestedLoopJoinCost = QueryCost.nestedLoopJoin(firstTableBlocks, secondTableBlocks);
+                            int nestedLoopJoinCost = QueryCost.nestedLoopJoin(firstResultSetBlocks,
+                                    secondResultSetBlocks);
                             pipelinedProductionCost = nestedLoopJoinCost;
 
-                            pipelinedProductionCostWork.append(QueryCostToString.nestedLoopJoin(firstTableBlocks,
-                                    secondTableBlocks)).append("\n");
+                            pipelinedProductionCostWork.append(QueryCostToString.nestedLoopJoin(firstResultSetBlocks,
+                                    secondResultSetBlocks)).append("\n");
 
                         // has a file structure built on one of the columns, if both, choose lowest produced cost
                         } else {
@@ -1596,30 +1592,33 @@ public class Optimizer {
                             int secondBTreeJoinCost = Integer.MAX_VALUE;
 
                             if (firstJoinColumn.getFileStructure() != FileStructure.NONE) {
-                                firstBTreeJoinCost = QueryCost.bTreeJoin(secondTableBlocks, secondTableNumRecords,
+                                firstBTreeJoinCost = QueryCost.bTreeJoin(secondResultSetBlocks,
+                                        secondResultSetNumRecords,
                                         firstColumnNumLevels, firstColumnForeignKeySelectivity);
                             }
 
                             if (secondJoinColumn.getFileStructure() != FileStructure.NONE) {
-                                secondBTreeJoinCost = QueryCost.bTreeJoin(firstTableBlocks, firstTableNumRecords,
+                                secondBTreeJoinCost = QueryCost.bTreeJoin(firstResultSetBlocks,
+                                        firstResultSetNumRecords,
                                         secondColumnNumLevels, secondColumnForeignKeySelectivity);
                             }
 
                             if (firstBTreeJoinCost < secondBTreeJoinCost) {
                                 pipelinedProductionCost = firstBTreeJoinCost;
-                                pipelinedProductionCostWork.append(QueryCostToString.bTreeJoin(secondTableBlocks,
-                                        secondTableNumRecords, firstColumnNumLevels, firstColumnForeignKeySelectivity))
+                                pipelinedProductionCostWork.append(QueryCostToString.bTreeJoin(secondResultSetBlocks,
+                                        secondResultSetNumRecords, firstColumnNumLevels,
+                                        firstColumnForeignKeySelectivity))
                                 .append("\n");
 
                             } else {
                                 pipelinedProductionCost = secondBTreeJoinCost;
-                                pipelinedProductionCostWork.append(QueryCostToString.bTreeJoin(firstTableBlocks,
-                                        firstTableNumRecords, secondColumnNumLevels,
+                                pipelinedProductionCostWork.append(QueryCostToString.bTreeJoin(firstResultSetBlocks,
+                                        firstResultSetNumRecords, secondColumnNumLevels,
                                         secondColumnForeignKeySelectivity)).append("\n");
                             }
                         }
                     }
-//System.out.println(pipelinedProductionCostWork.toString());
+
                     break;
                 }
                 case CARTESIAN_PRODUCT: {
@@ -1720,7 +1719,9 @@ public class Optimizer {
                     // get result set data (will only be used if and only if the working production cost is empty
                     // which means that it wasn't written to from previous operator nodes encountered)
                     int recordSize = QueryCost.recordSize(resultSet.getColumns());
-                    int numRecords = QueryCost.numberRecords(resultSet.getData());
+                    int numRecords = maxNumRecsFromJoining == 0
+                            ? QueryCost.numberRecords(resultSet.getData())
+                            : maxNumRecsFromJoining;
                     int blockingFactor = QueryCost.blockingFactor(recordSize);
                     int blocks = QueryCost.blocks(numRecords, blockingFactor);
                     pipelinedProductionCost = blocks;
@@ -1728,8 +1729,9 @@ public class Optimizer {
                     if (pipelinedProductionCostWork.length() == 0) {
                         pipelinedProductionCostWork.append(QueryCostToString.recordSize(resultSet.getColumns()))
                                 .append("\n");
-                        pipelinedProductionCostWork.append(QueryCostToString.numberRecords(resultSet.getData()))
-                                .append("\n");
+                        pipelinedProductionCostWork.append(maxNumRecsFromJoining == 0
+                                ? QueryCostToString.numberRecords(resultSet.getData())
+                                : "r = " + maxNumRecsFromJoining).append("\n");
                         pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
                         pipelinedProductionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor))
                                 .append("\n");
@@ -1759,7 +1761,9 @@ public class Optimizer {
                     // get result set data (will only be used if and only if the working production cost is empty
                     // which means that it wasn't written to from previous operator nodes encountered)
                     int recordSize = QueryCost.recordSize(resultSet.getColumns());
-                    int numRecords = QueryCost.numberRecords(resultSet.getData());
+                    int numRecords = maxNumRecsFromJoining == 0
+                            ? QueryCost.numberRecords(resultSet.getData())
+                            : maxNumRecsFromJoining;
                     int blockingFactor = QueryCost.blockingFactor(recordSize);
                     int blocks = QueryCost.blocks(numRecords, blockingFactor);
                     pipelinedProductionCost = blocks;
@@ -1767,8 +1771,9 @@ public class Optimizer {
                     if (pipelinedProductionCostWork.length() == 0) {
                         pipelinedProductionCostWork.append(QueryCostToString.recordSize(resultSet.getColumns()))
                                 .append("\n");
-                        pipelinedProductionCostWork.append(QueryCostToString.numberRecords(resultSet.getData()))
-                                .append("\n");
+                        pipelinedProductionCostWork.append(maxNumRecsFromJoining == 0
+                                ? QueryCostToString.numberRecords(resultSet.getData())
+                                : "r = " + maxNumRecsFromJoining).append("\n");
                         pipelinedProductionCostWork.append(QueryCostToString.blockingFactor(recordSize)).append("\n");
                         pipelinedProductionCostWork.append(QueryCostToString.blocks(numRecords, blockingFactor))
                                 .append("\n");

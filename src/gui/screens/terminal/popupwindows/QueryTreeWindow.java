@@ -143,13 +143,13 @@ public class QueryTreeWindow extends Stage {
         Button formedJoins = new Button("Formed Joins");
         formedJoins.setOnAction(e -> new QueryTreeOptimizationHeuristicWindows.FormedJoins());
 
-        // rearrangement of joins to reduce query tree cost
-        Button rearrangedJoins = new Button("Rearranged Joins");
-        rearrangedJoins.setOnAction(e -> new QueryTreeOptimizationHeuristicWindows.RearrangedJoins());
-
         // moving projections as far down the query tree as possible
         Button movedDownProjections = new Button("Moved Down Projections");
         movedDownProjections.setOnAction(e -> new QueryTreeOptimizationHeuristicWindows.MovedDownProjections());
+
+        // rearrangement of joins to reduce query tree cost
+        Button rearrangedJoins = new Button("Rearranged Joins");
+        rearrangedJoins.setOnAction(e -> new QueryTreeOptimizationHeuristicWindows.RearrangedJoins());
 
         // identifying subtrees that can be pipelined
         Button pipeliningSubtrees = new Button("Pipelining Subtrees (Click on a " + PipelinedExpression.SYMBOL +
@@ -159,8 +159,8 @@ public class QueryTreeWindow extends Stage {
         // making the list and adding all the labels
         this.optimizationInfoButtons = new ArrayList<>();
 
-        optimizationInfoButtons.addAll(Arrays.asList(initialState, cascadedSelections, movedDownSelections,
-                formedJoins, rearrangedJoins, movedDownProjections, pipeliningSubtrees));
+        optimizationInfoButtons.addAll(new ArrayList<>(Arrays.asList(initialState, cascadedSelections,
+                movedDownSelections, formedJoins, movedDownProjections, rearrangedJoins, pipeliningSubtrees)));
 
         // adjusting the labels and tooltips
         for (Button button : optimizationInfoButtons) {
