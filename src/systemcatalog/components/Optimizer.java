@@ -710,7 +710,7 @@ public class Optimizer {
     public String getNaiveRelationAlgebra(List<QueryTree> queryTreeStates) {
 
         QueryTree initialQueryTree = new QueryTree(queryTreeStates.get(0));
-        removePrefixedColumnNamesFromQueryTrees(initialQueryTree);
+        removePrefixedColumnNamesFromQueryTree(initialQueryTree);
 
         StringBuilder naiveRelationalAlgebra = new StringBuilder();
         StringBuilder closingBrackets = new StringBuilder();
@@ -758,7 +758,7 @@ public class Optimizer {
         // get the query tree before pipelining
         QueryTree temp = new QueryTree(queryTreeStates.get(5));
         // remove any unnecessary prefixing
-        removePrefixedColumnNamesFromQueryTrees(temp);
+        removePrefixedColumnNamesFromQueryTree(temp);
         // getting the pipelined query trees
         List<QueryTree> pipelinedQueryTrees = pipelineSubtrees(temp);
 

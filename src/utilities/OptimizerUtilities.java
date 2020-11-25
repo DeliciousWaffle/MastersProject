@@ -536,24 +536,42 @@ public final class OptimizerUtilities {
                 .count() >= 2;
     }
 
-    public static boolean isJoinPredicate(String firstColumnName, String secondColumnName) {
-        return firstColumnName.contains(".") && (! isNumeric(secondColumnName) && secondColumnName.contains("."));
-    }
-
     public static <T> void reverseList(List<T> list) {
         for (int i = 0; i < list.size() / 2; i++) {
             swap(i, list.size() - i - 1, list);
         }
     }
 
-    public static void removePrefixedColumnNamesFromQueryTrees(QueryTree queryTree) {
+    // first column name will always be prefixed with a table name, second column name may or may not
+    public static boolean isJoinCondition(String firstColumnName, String secondColumnName, List<String> tableNames) {
+
+        // second value is prefixed, high indicator that this is a join column, however, might be a decimal value
+        if (secondColumnName.contains(".")) {
+            String possibleTableName = secondColumnName.split("\\.")[0];
+            return tableNames
+                    .stream()
+                    .anyMatch(tableName -> tableName.equalsIgnoreCase(possibleTableName));
+        }
+
+        // second value is not prefixed, no possibility that this is a join column
+        return false;
+    }
+
+    public static void removePrefixedColumnNamesFromQueryTree(QueryTree queryTree) {
 
         List<Operator> operators = new ArrayList<>(queryTree.getOperatorsAndLocations(PREORDER).keySet());
+
         List<String> allReferencedColumns = operators
                 .stream()
                 .map(Operator::getReferencedColumnNames)
                 .flatMap(Collection::stream)
                 .distinct()
+                .collect(Collectors.toList());
+
+        List<String> allReferencedTables = operators
+                .stream()
+                .filter(operator -> operator.getType() == Operator.Type.RELATION)
+                .map(operator -> ((Relation) operator).getTableName())
                 .collect(Collectors.toList());
 
         for (Operator operator : operators) {
@@ -598,26 +616,42 @@ public final class OptimizerUtilities {
                 }
                 case COMPOUND_SELECTION: {
                     CompoundSelection compoundSelection = (CompoundSelection) operator;
-                    List<String> columnNames = compoundSelection.getColumnNames()
-                            .stream()
-                            .map(columnName -> {
-                                if (!isAmbiguousColumnName(columnName, allReferencedColumns)) {
-                                    return removePrefixedColumnName(columnName);
-                                }
-                                return columnName;
-                            })
-                            .collect(Collectors.toList());
-                    compoundSelection.setColumnNames(columnNames);
-                    // there may be join columns present
-                    List<String> joinColumnNames = compoundSelection.getValues();
-                    for (int i = 0; i < joinColumnNames.size(); i++) {
-                        String joinColumnName = joinColumnNames.get(i);
-                        if ((isPrefixed(joinColumnName) && ! Utilities.isNumeric(joinColumnName)) &&
-                                ! isAmbiguousColumnName(joinColumnName, allReferencedColumns)) {
-                            joinColumnNames.set(i, OptimizerUtilities.removePrefixedColumnName(joinColumnName));
+                    List<String> columnNames = compoundSelection.getColumnNames();
+                    List<String> values = compoundSelection.getValues();
+
+                    for (int i = 0; i < columnNames.size(); i++) {
+
+                        String columnName = columnNames.get(i);
+                        String value = values.get(i);
+
+                        boolean isJoinCondition = isJoinCondition(columnName, value, allReferencedTables);
+                        System.out.println(columnName + " " + value);
+                        System.out.println(isJoinCondition);
+
+                        if (isJoinCondition) {
+                            List<String> allReferencedColumnsAndValue = new ArrayList<>(allReferencedColumns);
+                            allReferencedColumnsAndValue.add(value);
+                            System.out.println("Before:" + columnNames + "\n" + values);
+                            if (! isAmbiguousColumnName(columnName, allReferencedColumnsAndValue)) {
+                                columnName = removePrefixedColumnName(columnName);
+                                columnNames.set(i, columnName);
+                            }
+                            if (! isAmbiguousColumnName(value, allReferencedColumnsAndValue)) {
+                                value = removePrefixedColumnName(value);
+                                values.set(i, value);
+                            }
+                            System.out.println("After:" + columnNames + "\n" + values);
+                        } else {
+                            if (! isAmbiguousColumnName(columnName, allReferencedColumns)) {
+                                columnName = removePrefixedColumnName(columnName);
+                                columnNames.set(i, columnName);
+                            }
                         }
                     }
-                    compoundSelection.setValues(joinColumnNames);
+
+                    compoundSelection.setColumnNames(columnNames);
+                    compoundSelection.setValues(values);
+
                     break;
                 }
                 case INNER_JOIN: {
@@ -651,17 +685,31 @@ public final class OptimizerUtilities {
                 case SIMPLE_SELECTION: {
                     SimpleSelection simpleSelection = (SimpleSelection) operator;
                     String columnName = simpleSelection.getColumnName();
-                    if (! OptimizerUtilities.isAmbiguousColumnName(columnName, allReferencedColumns)) {
-                        columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
+                    String value = simpleSelection.getValue();
+
+                    boolean isJoinCondition = isJoinCondition(columnName, value, allReferencedTables);
+
+                    if (isJoinCondition) {
+
+                        List<String> allReferencedColumnsAndValue = new ArrayList<>(allReferencedColumns);
+                        allReferencedColumnsAndValue.add(value);
+
+                        if (! OptimizerUtilities.isAmbiguousColumnName(columnName, allReferencedColumnsAndValue)) {
+                            columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
+                        }
+                        simpleSelection.setColumnName(columnName);
+
+                        if (! OptimizerUtilities.isAmbiguousColumnName(value, allReferencedColumnsAndValue)) {
+                            value = OptimizerUtilities.removePrefixedColumnName(value);
+                        }
+                        simpleSelection.setValue(value);
+
+                    } else {
+                        if (! OptimizerUtilities.isAmbiguousColumnName(columnName, allReferencedColumns)) {
+                            columnName = OptimizerUtilities.removePrefixedColumnName(columnName);
+                        }
+                        simpleSelection.setColumnName(columnName);
                     }
-                    simpleSelection.setColumnName(columnName);
-                    // there may be a join column present
-                    String joinColumnName = simpleSelection.getValue();
-                    if ((! Utilities.isNumeric(joinColumnName) && OptimizerUtilities.isPrefixed(joinColumnName)) &&
-                            ! OptimizerUtilities.isAmbiguousColumnName(joinColumnName, allReferencedColumns)) {
-                            joinColumnName = OptimizerUtilities.removePrefixedColumnName(joinColumnName);
-                    }
-                    simpleSelection.setValue(joinColumnName);
                     break;
                 }
             }

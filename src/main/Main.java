@@ -11,8 +11,7 @@ import systemcatalog.SystemCatalog;
  *
  * Application that is intended to emulate an SQL-like environment along with illustrating how queries get processed.
  * Tables and users exist like a typical database management system and commands can be used to either query or change
- * these variables. The app supports queries, create table, drop table, alter table,
- * JUnit 5 was the main source of testing
+ * these variables.
  */
 public class Main extends Application {
 

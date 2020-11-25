@@ -15,7 +15,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import utilities.OptimizerUtilities;
-import utilities.Utilities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,7 +37,7 @@ public class QueryTreeWindow extends Stage {
         queryTreeGUIStates = queryTreeStates.stream()
                 .map(queryTree -> {
                     QueryTree copy = new QueryTree(queryTree);
-                    OptimizerUtilities.removePrefixedColumnNamesFromQueryTrees(copy);
+                    OptimizerUtilities.removePrefixedColumnNamesFromQueryTree(copy);
                     return copy;
                 })
                 .map(queryTree -> new QueryTreeGUI(queryTree, productionCost, writeToDiskCost))

@@ -86,7 +86,8 @@ public class ParserTest {
             "SELECT Col1, SUM(Col2) FROM Tab1 INNER JOIN Tab2 ON Tab1.Col1 != Tab2.Col1 INNER JOIN Tab3 ON Tab2.Col2 > Tab3.Col2 INNER JOIN Tab4 ON Tab3.Col3 = Tab4.Col3 GROUP BY Col1 HAVING AVG(Col1) = 1",
             "SELECT Col1, SUM(Col2) FROM Tab1 WHERE Col1 = \"Blah\" GROUP BY Col1 HAVING SUM(Col1) = 1",
             "SELECT Col1, COUNT(Col1) FROM Tab1 GROUP BY Col1", // same columns referenced in select clause
-            "SELECT Col1 FROM Tab1, Tab2 WHERE Tab1.Col1 = Tab2.Col1" // having a join predicate in where clause
+            "SELECT Col1 FROM Tab1, Tab2 WHERE Tab1.Col1 = Tab2.Col1", // having a join predicate in where clause
+            "SELECT Col1, Col1 FROM Tab1", // duplicate columns in select clause
     })
     void testValidQueries(String query) {
         System.out.println(query);
@@ -111,7 +112,6 @@ public class ParserTest {
             "SELECT Col1 Col2 FROM Tab1", // missing commas in select clause
             "SELECT *, Col1 FROM Tab1", // "*" used with columns
             "SELECT *, MAX(Col1) FROM Tab1",
-            "SELECT Col1, Col1 FROM Tab1", // duplicate columns in select clause
             "SELECT MIN(MIN(Col1)) FROM Tab1", // using an aggregation within an aggregation
             "SELECT AVG(MIN) FROM Tab1", // illegal use of reserved words
             "SELECT Col1 FROM COUNT",
