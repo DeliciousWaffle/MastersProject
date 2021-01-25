@@ -13,6 +13,7 @@ also play as different users, each with their own set of privileges that govern 
 they are allowed to execute. 
 ## Query Syntax
 Below is a diagram showcasing the accepted syntax of a Query.
+![Screenshot](src/files/images/helpscreen/QueryDiagram.png)
 // TODO
 ## Other Commands
 Here are the other commands available. Diagrams for these commands can be found in src/files/images/helpscreen/
