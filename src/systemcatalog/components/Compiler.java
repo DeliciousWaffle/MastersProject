@@ -196,7 +196,7 @@ public class Compiler {
             }
 
             if (isDate) {
-                Column column = new Column(columnName, DataType.DATE, 0, 0);
+                Column column = new Column(columnName, DataType.DATE, 10, 0);
                 columns.add(column);
             }
         }

@@ -625,13 +625,11 @@ public final class OptimizerUtilities {
                         String value = values.get(i);
 
                         boolean isJoinCondition = isJoinCondition(columnName, value, allReferencedTables);
-                        System.out.println(columnName + " " + value);
-                        System.out.println(isJoinCondition);
 
                         if (isJoinCondition) {
                             List<String> allReferencedColumnsAndValue = new ArrayList<>(allReferencedColumns);
                             allReferencedColumnsAndValue.add(value);
-                            System.out.println("Before:" + columnNames + "\n" + values);
+
                             if (! isAmbiguousColumnName(columnName, allReferencedColumnsAndValue)) {
                                 columnName = removePrefixedColumnName(columnName);
                                 columnNames.set(i, columnName);
@@ -640,7 +638,7 @@ public final class OptimizerUtilities {
                                 value = removePrefixedColumnName(value);
                                 values.set(i, value);
                             }
-                            System.out.println("After:" + columnNames + "\n" + values);
+
                         } else {
                             if (! isAmbiguousColumnName(columnName, allReferencedColumns)) {
                                 columnName = removePrefixedColumnName(columnName);

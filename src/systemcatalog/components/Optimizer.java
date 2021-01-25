@@ -473,6 +473,10 @@ public class Optimizer {
             for (QueryTree.Traversal traversal : relationLocation) {
                 traversals.add(traversal);
                 Operator operator = queryTree.get(traversals, NONE);
+                // don't care about these
+                if (operator.getType() == SIMPLE_SELECTION) {
+                    continue;
+                }
                 // add the current operators data to the data that will be used for the projection node
                 columnNamesForProjection = OptimizerUtilities.addUniqueColumnNames(
                         columnNamesForProjection,
