@@ -7,10 +7,10 @@ students better understand topics that I had a hard time with in my database cla
 * Query Cost Analysis
 * File Structure Recommendations for Improving Query Costs
 
-    Additionally, this application also acts as a pseudo SQL emulator. Although writing queries is the main
-    focus of this application, you have the capability to create tables, query them, modify them, etc. You can
-    also play as different users, each with their own set of privileges that govern what kinds of commands
-    they are allowed to execute. 
+Additionally, this application also acts as a pseudo SQL emulator. Although writing queries is the main
+focus of this application, you have the capability to create tables, query them, modify them, etc. You can
+also play as different users, each with their own set of privileges that govern what kinds of commands
+they are allowed to execute. 
 ## Query Syntax
 Below is a diagram showcasing the accepted syntax of a Query.
 // TODO
