@@ -25,5 +25,24 @@ Here are the other commands available. Diagrams for these commands can be found 
 * DELETE
 * GRANT
 * REVOKE
-## Query Examples
-// TODO
+## Query Tree Example
+Here is an example of a query being transformed into a query tree. The query tree goes through an optimization process
+before being executed.
+SELECT FirstName, LastName
+FROM Customers, CustomerPurchaseDetails
+WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID
+    AND PaymentMethod = "Discover";
+### Initial Query Tree
+![Screenshot](src/files/images/readme/InitialQueryTree.png)
+### After Breaking Up Selections
+![Screenshot](src/files/images/readme/AfterBreakingUpSelections.png)
+### After Pushing Down Selections
+![Screenshot](src/files/images/readme/AfterPushingDownSelections.png)
+### After Forming Joins
+![Screenshot](src/files/images/readme/AfterFormingJoins.png)
+### After Cascading and Pushing Down Projections
+![Screenshot](src/files/images/readme/AfterCascadingAndPushingDownProjections.png)
+### Pipelining Subtrees
+![Screenshot](src/files/images/readme/AfterPipelining0.png)
+![Screenshot](src/files/images/readme/AfterPipelining1.png)
+![Screenshot](src/files/images/readme/AfterPipelining2.png)
