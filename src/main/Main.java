@@ -7,7 +7,6 @@ import systemcatalog.SystemCatalog;
 
 /**
  * @author Jake Bussa
- * @version 1.0
  *
  * Application that is intended to emulate an SQL-like environment along with illustrating how queries get processed.
  * Tables and users exist like a typical database management system and commands can be used to either query or change

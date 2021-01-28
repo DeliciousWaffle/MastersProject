@@ -1,7 +1,24 @@
 # SQL Emulator and Query Cost Analyzer
 ## Table of Contents
 1. [Introduction](#Introduction)
-2. [Query Syntax](#Query Syntax)
+2. [GUI at a Glance](#GUI at a Glance)
+    1. [Terminal Screen](#Terminal Screen)
+    2. [Tables Screen](#Tables Screen)
+    3. [Users Screen](#Users Screen)
+    4. [Options Screen](#Options Screen)
+    5. [Help Screen](#Help Screen)
+3. [ER Diagram](#ER Diagram)
+4. [Query Syntax](#Query Syntax)
+    1. [Query Examples](#Query Examples)
+5. [Query Tree Example](#Query Tree Example)
+    1. [Initial Query Tree](#Initial Query Tree)
+    2. [After Breaking Up Selections](#After Breaking Up Selections)
+    3. [After Pushing Down Selections](#After Pushing down Selections)
+    4. [After Forming Joins](#After Forming Joins)
+    5. [After Cascading and Pushing Down Projections](#After Cascading and Pushing Down Projections)
+    6. [Pipelining Subtrees](#Pipelining Subtrees)
+6. [Other Commands](#Other Commands)
+
 ## Introduction
 Hello! This was my Master's Project for Western Illinois University (Fall 2020). The goal of this project is to help
 students better understand topics that I had a hard time with in my database classes. These topics include:
@@ -45,11 +62,28 @@ back to the initial database.
 ### Help Screen
 This is where one can view the ER diagram representing the database or syntax diagrams of all the commands available.
 ![Screenshot](src/files/images/readme/HelpScreen.png)
+## ER Diagram
+Here is the ER Diagram representing the tables that you can query or manipulate in the application.
+![Screenshot](src/files/images/helpscreen/ERDiagram.png)
 ## Query Syntax
 Since queries are the main focus of this application, here is a diagram outlining a query's accepted syntax. Here are
 some things to note:
-* The case of keywords (strings in white nodes) does not matter
-* 
+* The case of strings does not matter. The following is valid, but painful to read.
+
+        SeLEcT fIrStNaME
+        FRoM CUsTOmerS;
+    
+* There must be at least one form of whitespace between strings. The following two examples are valid.
+
+        SELECT FirstName FROM Customers;
+        
+            SELECT     FirstName
+        FROM
+          
+          Customers;
+* A command must end with a semicolon.
+* Green nodes are user-supplied values
+
 ![Screenshot](src/files/images/helpscreen/QueryDiagram.png)
 ### Query Examples
 Here are some examples of queries that one can write.
@@ -67,16 +101,6 @@ Here are some examples of queries that one can write.
     FROM CustomerPurchaseDetails
     GROUP BY PaymentMethod
     HAVING COUNT(PaymentMethod) > 10;
-## Other Commands
-Here are the other commands available. Diagrams outlining their syntax can be found in src/files/images/helpscreen/
-* CREATE TABLE
-* ALTER TABLE
-* DROP TABLE
-* INSERT
-* UPDATE
-* DELETE
-* GRANT
-* REVOKE
 ## Query Tree Example
 Here is an example of a query being transformed into a query tree. The query tree goes through an optimization process
 before being executed. This is to make execution of a query more efficient. Each section will show the tree after 
@@ -104,3 +128,13 @@ applying a transformation. This is the query that we're working with.
 ![Screenshot](src/files/images/readme/AfterPipeliningSubtrees1.png)
 #### Third Iteration
 ![Screenshot](src/files/images/readme/AfterPipeliningSubtrees2.png)
+## Other Commands
+Here are the other commands available. Diagrams outlining their syntax can be found in src/files/images/helpscreen/
+* CREATE TABLE
+* ALTER TABLE
+* DROP TABLE
+* INSERT
+* UPDATE
+* DELETE
+* GRANT
+* REVOKE
