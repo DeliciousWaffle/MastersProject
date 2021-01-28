@@ -1,12 +1,16 @@
 # SQL Emulator and Query Cost Analyzer
 ## Table of Contents
 1. [Introduction](#Introduction)
+
 2. [GUI at a Glance](#GUI at a Glance)
+
     1. [Terminal Screen](#Terminal Screen)
+    
     2. [Tables Screen](#Tables Screen)
     3. [Users Screen](#Users Screen)
     4. [Options Screen](#Options Screen)
     5. [Help Screen](#Help Screen)
+    
 3. [ER Diagram](#ER Diagram)
 4. [Query Syntax](#Query Syntax)
     1. [Query Examples](#Query Examples)
