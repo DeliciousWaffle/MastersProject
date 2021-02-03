@@ -1,6 +1,5 @@
 package utilities;
 
-
 import datastructures.relation.table.component.Column;
 
 import java.util.List;
@@ -214,7 +213,8 @@ public final class QueryCost {
         return (int) log(table1Blocks + table2Blocks);
     }
 
-    public static int clusteredFileNonUnique(int table1Blocks, int table2Blocks, double selectivity, int blockingFactor) {
+    public static int clusteredFileNonUnique(int table1Blocks, int table2Blocks, double selectivity,
+                                             int blockingFactor) {
         return (int) (log(table1Blocks + table2Blocks) + Math.ceil(selectivity / blockingFactor) - 1);
     }
 
@@ -237,7 +237,8 @@ public final class QueryCost {
                 table2Blocks + (table2Blocks * table1Blocks);
     }
 
-    public static int bTreeJoin(int table2Blocks, int table2NumRecs, int table1IndColLevels, int table2IndColSelectivity) {
+    public static int bTreeJoin(int table2Blocks, int table2NumRecs, int table1IndColLevels,
+                                int table2IndColSelectivity) {
         return table2Blocks + table2NumRecs * (table1IndColLevels + table2IndColSelectivity);
     }
 
