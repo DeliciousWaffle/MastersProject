@@ -1,16 +1,12 @@
 # SQL Emulator and Query Cost Analyzer
 ## Table of Contents
 1. [Introduction](#Introduction)
-
 2. [GUI at a Glance](#GUI at a Glance)
-
     1. [Terminal Screen](#Terminal Screen)
-    
     2. [Tables Screen](#Tables Screen)
     3. [Users Screen](#Users Screen)
     4. [Options Screen](#Options Screen)
-    5. [Help Screen](#Help Screen)
-    
+    5. [Help Screen](#Help Screen) 
 3. [ER Diagram](#ER Diagram)
 4. [Query Syntax](#Query Syntax)
     1. [Query Examples](#Query Examples)
@@ -22,7 +18,6 @@
     5. [After Cascading and Pushing Down Projections](#After Cascading and Pushing Down Projections)
     6. [Pipelining Subtrees](#Pipelining Subtrees)
 6. [Other Commands](#Other Commands)
-
 ## Introduction
 Hello! This was my Master's Project for Western Illinois University (Fall 2020). The goal of this project is to help
 students better understand topics that I had a hard time with in my database classes. These topics include:
@@ -50,24 +45,30 @@ particular command, my application will either yell at you, blow up, or both.
 various states the tree takes on during the optimization process in this window.
 * Dollar Sign Button - Launches a new window displaying a breakdown of the cost of executing a query.
 * Folder Button - Launches a new window suggesting what file structures to build in order to improve query costs.
+
 ![Screenshot](src/files/images/readme/TerminalScreen.png)
 ### Tables Screen
 This is where one can browse through the various tables of the system. You can also build file structures on columns
 of tables in order to improve query costs.
+
 ![Screenshot](src/files/images/readme/TablesScreen.png)
 ### Users Screen
 This is where one can view and play as the various users of the system. The user that you choose determines what
 you are allowed to do in the system.
+
 ![Screenshot](src/files/images/readme/UsersScreen.png)
 ### Options Screen
 This is where one can change how to application behaves. There is also an option to save changes made or restore
 back to the initial database.
+
 ![Screenshot](src/files/images/readme/OptionsScreen.png)
 ### Help Screen
 This is where one can view the ER diagram representing the database or syntax diagrams of all the commands available.
+
 ![Screenshot](src/files/images/readme/HelpScreen.png)
 ## ER Diagram
 Here is the ER Diagram representing the tables that you can query or manipulate in the application.
+
 ![Screenshot](src/files/images/helpscreen/ERDiagram.png)
 ## Query Syntax
 Since queries are the main focus of this application, here is a diagram outlining a query's accepted syntax. Here are
