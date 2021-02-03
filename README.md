@@ -1,7 +1,7 @@
 # SQL Emulator and Query Cost Analyzer
 ## Table of Contents
 1. [Introduction](#Introduction)
-2. [GUI at a Glance](#GUI at a Glance)
+2. [GUI at a Glance](#GUIataGlance)
     1. [Terminal Screen](#Terminal Screen)
     2. [Tables Screen](#Tables Screen)
     3. [Users Screen](#Users Screen)
@@ -31,7 +31,7 @@ focus, you have the capability to create tables, modify them, etc. You can
 also play as different users, each with their own set of privileges that govern what kinds of commands
 they are allowed to execute. This application was developed using Java (Version 8), tested using JUnit 5, and uses
 JavaFX for GUI functionality.
-## GUI at a Glance
+## GUIataGlance
 This section is to show you what you're in for when you run the application. Each image is taken directly from the
 application. I'll describe what is going on in each screen.
 ### Terminal Screen
