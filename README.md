@@ -126,7 +126,7 @@ relational algebra. Both a straight conversion and an optimized one are provided
         WHERE Customers.CustomerID = CustomerPurchaseDetails.CustomerID
             AND PaymentMethod = "Discover";
             
-![](src/files/images/readme/RelationalAlgebra.png)
+![](src/files/images/readme/RelationalAlgebra.PNG)
 ## Query Tree Example
 Here is an example of a query being converted into a query tree. Using relational algebra axioms, we can transform the
 tree, making processing more efficient. Each section will show the tree after applying a transformation. This is the 
@@ -163,7 +163,7 @@ the variables and formulas used can be found in *src/utilities/QueryCost.java*. 
     SELECT *
     FROM Customers
     WHERE CustomerID = 1;
-![](src/files/images/readme/CostAnalysis.png)
+![](src/files/images/readme/QueryCostAnalysis.PNG)
 ## Recommended File Structures
 Depending on the type of query, we can use file structures to improve the cost of our queries. B-Trees, B+-Trees, and
 Hash Tables are built on columns of tables while Clustered Files are built on the tables themselves. Here is a list of
@@ -179,7 +179,7 @@ Here is an example of file structures being recommended on the following query.
     SELECT *
     FROM Employees
     WHERE State = "OH" AND Salary > 60000;
-![](src/files/images/readme/RecommendedFileStructures.png)
+![](src/files/images/readme/RecommendedFileStructures.PNG)
 ## Other Commands
 Although writing queries is the main focus of the application, there are other commands available that allow you to
 make changes to the system data.
